@@ -1,0 +1,400 @@
+﻿<views:MvxWpfView x:Name="WallpaperView"
+    xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
+    xmlns:mvx="clr-namespace:MvvmCross.Platforms.Wpf.Binding;assembly=MvvmCross.Platforms.Wpf"
+    x:Class="WallpaperFlux.WPF.Views.WallpaperFluxView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:util="clr-namespace:WallpaperFlux.WPF.Util"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:local="clr-namespace:WallpaperFlux.WPF.Views"
+    xmlns:adonisExtensions="clr-namespace:AdonisUI.Extensions;assembly=AdonisUI"
+    xmlns:adonisUi="clr-namespace:AdonisUI;assembly=AdonisUI"
+    xmlns:mvvmCross="clr-namespace:MvvmCross;assembly=MvvmCross"
+
+    xmlns:models="clr-namespace:WallpaperFlux.Core.Models;assembly=WallpaperFlux.Core"
+    xmlns:extensions="clr-namespace:LanceTools.WPF.Extensions;assembly=LanceTools.WPF"
+    xmlns:ffme="clr-namespace:Unosquare.FFME;assembly=ffme.win"
+    xmlns:core="clr-namespace:WallpaperFlux.Core;assembly=WallpaperFlux.Core"
+    xmlns:controls="clr-namespace:WallpaperFlux.Core.Models.Controls;assembly=WallpaperFlux.Core"
+    mc:Ignorable="d" FontSize="12" FontFamily="Segoe UI"
+    d:DesignHeight="450" d:DesignWidth="800">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="8"/>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="{adonisUi:Space 1}"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Button mvx:Bi.nd="Command NextWallpaperCommand" IsEnabled="{Binding CanNextWallpaper}" 
+            Grid.Row="1" Grid.Column="1" Width="135" Height="25" Content="Next Wallpaper" Margin="5"/>
+
+        <Button mvx:Bi.nd="Command PreviousWallpaperCommand" IsEnabled="{Binding CanPreviousWallpaper}"
+                Grid.Row="1" Grid.Column="2" Width="135" Height="25" Content="Previous Wallpaper" Margin="5"/>
+
+        <!-- Image Folders -->
+        <GroupBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="5">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0"/> <!-- Remove this at some point, will need to adjust columns -->
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="{adonisUi:Space 1}"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Button mvx:Bi.nd="Command AddFolderCommand" Grid.Row="1" Grid.Column="1" Width="135" Height="25" Content="Add Folder" Margin="10"
+                    adonisExtensions:CursorSpotlightExtension.BorderBrush="LimeGreen"
+                    adonisExtensions:RippleExtension.BackgroundBrush="LimeGreen" HorizontalAlignment="Stretch"/>
+                <Button mvx:Bi.nd="Command RemoveFolderCommand"
+                        Grid.Row="1" Grid.Column="2" Width="135" Height="25" Content="Remove Folder" Margin="5" 
+                        IsEnabled="{Binding CanRemoveWallpaper}"
+                        adonisExtensions:CursorSpotlightExtension.BorderBrush="Red"
+                        adonisExtensions:RippleExtension.BackgroundBrush="Red"/>
+
+                <GroupBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3"  adonisExtensions:LayerExtension.IncreaseLayer="True">
+                    <ListBox Width="400" Height="300"
+                             ItemsSource="{Binding ImageFolders}" SelectedItem="{Binding SelectedImageFolder}" SelectionMode="Extended"
+                             adonisExtensions:ScrollViewerExtension.HideScrollBarsUntilMouseOver="True"
+                             adonisExtensions:ScrollViewerExtension.VerticalScrollBarPlacement="Overlay"
+                             adonisExtensions:ScrollViewerExtension.HorizontalScrollBarPlacement="Overlay">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <CheckBox VerticalAlignment="Center" Margin="0 0 5 0" IsChecked="{Binding Active}"/>
+                                    <TextBlock Text="{Binding Path}" FontSize="14">
+                                        <TextBlock.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem Header="View Folder" mvx:Bi.nd="Command ViewFolderCommand"/> <!-- Command found in ImageFolderModel -->
+                                            </ContextMenu>
+                                        </TextBlock.ContextMenu>
+                                    </TextBlock>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </GroupBox>
+            </Grid>
+        </GroupBox>
+
+        <!-- Display Settings -->
+        <GroupBox Grid.Row="3" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0"/> <!-- Remove this at some point, will need to adjust columns -->
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="0"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header & Sync -->
+                <TextBlock Text="Display Settings" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" HorizontalAlignment="Center"  Margin="5" FontWeight="Bold"/>
+                <Button  Content="Sync" IsEnabled="{Binding CanSync}" mvx:Bi.nd="Command SyncCommand" Grid.Row="2" Grid.Column="1" Margin="5">
+                    <Button.ToolTip>
+                        'Syncing' display settings allows wallpapers to change simultaneously across multiple monitors
+                    </Button.ToolTip>
+                </Button>
+
+                <!-- Display Setting Template List -->
+                <GroupBox  Grid.Row="3" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True">
+                    <ListBox Width="310" MaxHeight="110"
+                             ItemsSource="{Binding DisplaySettings}"  SelectedItem="{Binding SelectedDisplaySetting}"
+                             adonisExtensions:ScrollViewerExtension.HideScrollBarsUntilMouseOver="True"
+                             adonisExtensions:ScrollViewerExtension.VerticalScrollBarPlacement="Overlay"
+                             adonisExtensions:ScrollViewerExtension.HorizontalScrollBarPlacement="Overlay"
+                             adonisExtensions:ScrollViewerExtension.HorizontalScrollBarExpansionMode="NeverExpand">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <!-- Display Index -->
+                                    <TextBlock Text="{Binding DisplayIndex, StringFormat=Display {0}}" Margin="8,2,8,2"/>
+
+                                    <!-- Interval Settings -->
+                                    <StackPanel Margin="8,2,8,2" Orientation="Horizontal">
+                                        <!-- Interval Value -->
+                                        <TextBox MinWidth="35" Margin="0 0 2 0"
+                                                 Text="{Binding DisplayInterval, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 IsEnabled="{Binding CanSetInterval}" GotFocus="TextBox_GotFocus_FocusText"
+                                                 ToolTip="Interval Value"/>
+                                        <!-- Interval Type -->
+                                        <ComboBox ItemsSource="{Binding Source={extensions:Enumeration {x:Type core:IntervalType}}}"
+                                                  DisplayMemberPath="Description"
+                                                  SelectedValue="{Binding DisplayIntervalType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                  SelectedValuePath="Value">
+                                            <ComboBox.ToolTip>
+                                                <ToolTip Content="Interval Type"/>
+                                            </ComboBox.ToolTip>
+                                        </ComboBox>
+                                    </StackPanel>
+
+                                    <!-- Style Setting -->
+                                    <ComboBox Margin="5,2,5,2"
+                                              ItemsSource="{Binding Source={extensions:Enumeration {x:Type core:WallpaperStyle}}}"
+                                              DisplayMemberPath="Description"
+                                              SelectedValue="{Binding DisplayStyle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              SelectedValuePath="Value">
+                                        <ComboBox.ToolTip>
+                                            <ToolTip Content="Style"/>
+                                        </ComboBox.ToolTip>
+                                    </ComboBox>
+
+                                    <!-- Time Remaining -->
+                                    <TextBlock Margin="12, 2, 8, 2"
+                                               Text="{Binding DisplayTimerCurrent, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </GroupBox>
+            </Grid>
+        </GroupBox>
+
+        <!-- Image Selector / Image Inspector -->
+        <GroupBox  Grid.Row="2" Grid.Column="4" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0"/>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="0"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Button mvx:Bi.nd="Command SelectImagesCommand" IsEnabled="{Binding CanSelectImages}" 
+                        Grid.Row="1" Grid.Column="1" Width="135" Height="25" Content="Select Image(s)" Margin="5"/>
+                <TextBlock x:Name="SelectedImagePathTextBox" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" Width="650" HorizontalAlignment="Center"/>
+                <TextBlock x:Name="SelectedImageDimensionsTextBox" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Center" />
+
+                <!-- Image Selector Tab Control -->
+                <GroupBox Grid.Row="4" Grid.Column="1" Width="650" Height="525" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="3">
+                    <TabControl ItemsSource="{Binding ImageSelectorTabs}" SelectedItem="{Binding SelectedImageSelectorTab, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" >
+
+                        <!-- Item Template [Header] -->
+                        <TabControl.ItemTemplate>
+                            <DataTemplate DataType="controls:ImageSelectorTabModel">
+                                <TextBlock Text="{Binding TabIndex}"/>
+                            </DataTemplate>
+                        </TabControl.ItemTemplate>
+
+                        <!-- Control Template [Enables Scrolling for the Tabs] -->
+                        <TabControl.Template>
+                            <ControlTemplate TargetType="{x:Type TabControl}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition/>
+                                    </Grid.RowDefinitions>
+                                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                                        <TabPanel x:Name="HeaderPanel" IsItemsHost="True" Margin="0,4,0,0"/>
+                                    </ScrollViewer>
+                                    <ContentPresenter x:Name="PART_SelectedContentHost" Margin="4" ContentSource="SelectedContent" Grid.Row="1"/>
+                                </Grid>
+                            </ControlTemplate>
+                        </TabControl.Template>
+
+                        <!-- Content Template [Core Content/ListBox] -->
+                        <TabControl.ContentTemplate>
+                            <DataTemplate DataType="controls:ImageSelectorTabModel">
+                                <ListBox x:Name="ImageSelectorTabListBox" ItemsSource="{Binding Images}" 
+                                         SelectedItem="{Binding SelectedImageSelectorImage}"
+                                         SelectionMode="Extended" SelectionChanged="ImageSelectorTabListBox_SelectionChanged">
+
+                                    <!-- Wrap Setup -->
+                                    <ListBox.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel Width="650" ItemWidth="150" ItemHeight="250" IsItemsHost="True" />
+                                        </ItemsPanelTemplate>
+                                    </ListBox.ItemsPanel>
+
+                                    <!-- //// Image Info Item Template //// -->
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate DataType="models:ImageModel">
+                                            <GroupBox HorizontalAlignment="Center">
+                                                <StackPanel Focusable="False">
+
+                                                    <!-- /// Thumbnail /// -->
+                                                    <ContentControl Content="{Binding}" HorizontalAlignment="Center">
+                                                        <!-- Binding to ImageModel -->
+                                                        <!-- Resources -->
+                                                        <ContentControl.Resources>
+                                                            <!-- Remember that the Binding context here refers to what's given in the Content of the ContentTemplate, not what ReSharper says -->
+
+                                                            <!-- // StaticOrGIFTemplate // -->
+                                                            <DataTemplate x:Key="StaticOrGIFTemplate">
+                                                                <Image ToolTipService.ShowDuration="{StaticResource MaxInt32}"
+                                                               Width="{Binding ImageSelectorThumbnailWidth}" 
+                                                               Height="{Binding ImageSelectorThumbnailHeight}"
+                                                               Margin="3"
+                                                               HorizontalAlignment="Center">
+                                                                    <Image.Source>
+                                                                        <!-- I'm sure that you only need to decode either Pixel Height or Width -->
+                                                                        <BitmapImage
+                                                                        DecodePixelHeight="{Binding ImageSelectorThumbnailHeight}" 
+                                                                        RenderOptions.BitmapScalingMode="LowQuality"
+                                                                        UriSource="{Binding Path}">
+                                                                        </BitmapImage>
+                                                                    </Image.Source>
+                                                                    <!-- Image Tooltip-->
+                                                                    <Image.ToolTip>
+                                                                        <ContentControl Content="{Binding}">
+                                                                            <!-- Resources -->
+                                                                            <ContentControl.Resources>
+                                                                                <DataTemplate x:Key="StaticTemplate">
+                                                                                    <Image Source="{Binding Path}"/>
+                                                                                </DataTemplate>
+                                                                                <DataTemplate x:Key="GIFTemplate">
+                                                                                    <ffme:MediaElement 
+                                                                                UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play" Loaded="MediaElement_OnLoaded"/>
+                                                                                </DataTemplate>
+                                                                            </ContentControl.Resources>
+                                                                            <!-- Template Control -->
+                                                                            <ContentControl.ContentTemplate>
+                                                                                <DataTemplate>
+                                                                                    <!-- Default Template -->
+                                                                                    <ContentControl Name="cc" Content="{Binding }" 
+                                                                                ContentTemplate="{StaticResource StaticTemplate}"/>
+                                                                                    <!-- Triggers -->
+                                                                                    <DataTemplate.Triggers>
+                                                                                        <DataTrigger Binding="{Binding IsGIF}" Value="True">
+                                                                                            <!-- Sets the ContentTemplate to be GIFTemplate instead of StaticTemplate -->
+                                                                                            <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource GIFTemplate}"/>
+                                                                                        </DataTrigger>
+                                                                                    </DataTemplate.Triggers>
+                                                                                </DataTemplate>
+                                                                            </ContentControl.ContentTemplate>
+                                                                        </ContentControl>
+                                                                    </Image.ToolTip>
+                                                                    <!-- Image Context Menu -->
+                                                                    <Image.ContextMenu>
+                                                                        <ContextMenu>
+                                                                            <MenuItem Header="Open File Location" mvx:Bi.nd="Command ViewFileCommand"/>
+                                                                            <MenuItem Header="Open File" mvx:Bi.nd="Command OpenFileCommand"/>
+                                                                            <MenuItem Header="Set As Wallpaper" mvx:Bi.nd="Command SetWallpaperCommand"/>
+                                                                        </ContextMenu>
+                                                                    </Image.ContextMenu>
+                                                                </Image>
+                                                            </DataTemplate>
+
+                                                            <!-- // VideoTemplate // -->
+                                                            <DataTemplate x:Key="VideoTemplate">
+                                                                <GroupBox adonisExtensions:LayerExtension.IncreaseLayer="False"
+                                                                  Width="{Binding ImageSelectorThumbnailWidthVideo}"
+                                                                  Height="{Binding ImageSelectorThumbnailHeight}" 
+                                                                  ToolTipService.ShowDuration="{StaticResource MaxInt32}"
+                                                                  HorizontalAlignment="Center">
+
+                                                                    <!-- The media element will fail to process the Tooltip & Context Menu, so we used a GroupBox -->
+                                                                    <!-- Media Element Tooltip-->
+                                                                    <GroupBox.ToolTip>
+                                                                        <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play" Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded"/>
+                                                                    </GroupBox.ToolTip>
+                                                                    <!-- Media Element Context Menu-->
+                                                                    <GroupBox.ContextMenu>
+                                                                        <ContextMenu>
+                                                                            <MenuItem Header="Open File Location" mvx:Bi.nd="Command ViewFileCommand"/>
+                                                                            <MenuItem Header="Open File" mvx:Bi.nd="Command OpenFileCommand"/>
+                                                                            <MenuItem Header="Set As Wallpaper" mvx:Bi.nd="Command SetWallpaperCommand"/>
+                                                                            <MenuItem Header="Volume" mvx:Bi.nd="Command SetVolumeCommand"/>
+                                                                            <MenuItem Header="Speed" mvx:Bi.nd="Command SetSpeedCommand"/>
+                                                                        </ContextMenu>
+                                                                    </GroupBox.ContextMenu>
+                                                                    <!-- Displays the first frame/thumbnail of videos due to the Loaded event -->
+                                                                    <ffme:MediaElement UnloadedBehavior="Play"  LoadedBehavior="Pause" Loaded="MediaElement_OnLoaded_SimulateThumbnail"/>
+                                                                </GroupBox>
+                                                                <!--</Border>-->
+                                                            </DataTemplate>
+                                                        </ContentControl.Resources>
+
+                                                        <!-- // Template Control // -->
+                                                        <ContentControl.ContentTemplate>
+                                                            <DataTemplate>
+                                                                <!-- Default Control -->
+                                                                <ContentControl Name="cc" Content="{Binding }" ContentTemplate="{StaticResource StaticOrGIFTemplate}"/>
+                                                                <!-- Triggers -->
+                                                                <DataTemplate.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsVideo}" Value="True">
+                                                                        <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource VideoTemplate}"/>
+                                                                    </DataTrigger>
+                                                                    <!--
+                                                            <DataTrigger Binding="{Binding IsStaticOrGIF}" Value="False">
+                                                                <Setter TargetName="StaticOrGIF" Property="ContentTemplate" Value="{StaticResource VideoTemplate}"/>
+                                                            </DataTrigger>
+                                                            -->
+                                                                </DataTemplate.Triggers>
+                                                            </DataTemplate>
+                                                        </ContentControl.ContentTemplate>
+                                                    </ContentControl>
+
+                                                    <!-- Edit Button -->
+                                                    <Button Content="Edit" Width="75" Height="{Binding ImageSelectorSettingsHeight}" Margin="3" 
+                                                        HorizontalAlignment="Center"/>
+
+                                                    <!-- Rank Handler Panel -->
+                                                    <StackPanel Orientation="Horizontal" Margin="3" Focusable="False" HorizontalAlignment="Center" >
+                                                        <!-- Decrease Rank Button -->
+                                                        <Button Width="25" Height="{Binding ImageSelectorSettingsHeight}" Margin="3" 
+                                                        adonisExtensions:CursorSpotlightExtension.BorderBrush="Red"
+                                                        adonisExtensions:RippleExtension.BorderBrush="Red">
+                                                            <TextBlock Text="-" FontSize="{Binding ImageSelectorSettingsHeight}"
+                                                               Foreground="Red" FontWeight="Bold" Margin="0 -10 0  0"/>
+                                                        </Button>
+                                                        <!-- Rank TextBox -->
+                                                        <TextBox Text="{Binding Rank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                         Width="50" Height="{Binding ImageSelectorSettingsHeight}" Margin="3"
+                                                         HorizontalContentAlignment="Center" GotFocus="TextBox_GotFocus_FocusText"/>
+                                                        <!-- Increase Rank Button -->
+                                                        <Button Width="25" Height="{Binding ImageSelectorSettingsHeight}" Margin="3" 
+                                                        adonisExtensions:CursorSpotlightExtension.BorderBrush="LimeGreen"
+                                                        adonisExtensions:RippleExtension.BorderBrush="LimeGreen">
+                                                            <TextBlock Text="+" FontSize="{Binding ImageSelectorSettingsHeight}"
+                                                               Foreground="LimeGreen" FontWeight="Bold" Margin="-5 -10 0  0"/>
+                                                        </Button>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </GroupBox>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </DataTemplate>
+                        </TabControl.ContentTemplate>
+                    </TabControl>
+                </GroupBox>
+            </Grid>
+        </GroupBox>
+
+        <!-- Options (Not a button to a new window, make a tab system) -->
+
+        <!-- Tagging (Not a button to a new window, make a tab system) --> 
+    </Grid>
+</views:MvxWpfView>

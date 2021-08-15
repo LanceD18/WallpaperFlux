@@ -1,0 +1,75 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text;
+using LanceTools.DiagnosticsUtil;
+using MvvmCross.Commands;
+using MvvmCross.ViewModels;
+using WallpaperFlux.Core.Util;
+
+namespace WallpaperFlux.Core.Models
+{
+    // the FolderModel will pick up every file within it and attempt to enable/disable it based on the model's active state & whether or not the file is within the theme
+    public class FolderModel : MvxNotifyPropertyChanged
+    {
+        private string _path;
+
+        public string Path
+        {
+            get => _path;
+            set
+            {
+                _path = value;
+                _images.Clear();
+                _images.AddRange(new DirectoryInfo(Path).GetFiles().Select((s) => s.FullName));
+            }
+        }
+
+        private bool _active;
+
+        public bool Active
+        {
+            get => _active;
+
+            set
+            {
+                _active = value;
+                RaisePropertyChanged(() => Active);
+                this.ValidateImageFolder();
+            }
+        }
+
+        private List<string> _images = new List<string>();
+
+        public FolderModel(string path, bool active)
+        {
+            //? internally adds the images to the model
+            Path = path;
+            //! this will internally validate the image folder so this must be placed after the images are added
+            Active = active;
+
+            ViewFolderCommand = new MvxCommand(ViewFolder);
+        }
+
+        public IMvxCommand ViewFolderCommand { get; set; }
+
+        public void ViewFolder()
+        {
+            if (!ValidationUtil.DirectoryExists(Path)) return;
+            ProcessUtil.OpenFile(Path);
+        }
+
+        public void ValidateImages()
+        {
+            foreach (string image in _images)
+            {
+                if (WallpaperUtil.Theme.Images.ContainsImage(image))
+                {
+                    WallpaperUtil.Theme.Images.GetImage(image).Active = Active;
+                }
+            }
+        }
+    }
+}

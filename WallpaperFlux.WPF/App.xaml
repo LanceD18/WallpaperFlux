@@ -1,0 +1,30 @@
+﻿<views:MvxApplication x:Class="WallpaperFlux.WPF.App"
+    xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:WallpaperFlux.WPF"
+    xmlns:converters="clr-namespace:LanceTools.WPF.Converters;assembly=LanceTools.WPF"
+    xmlns:adonisUi="clr-namespace:AdonisUI;assembly=AdonisUI"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
+    StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+
+            <!-- Property Elements (Must be either before or after content) -->
+                <!-- Converters -->
+            <converters:EnumToStringConverter x:Key="DefaultEnumToStringConverter"/>
+
+                <!-- Adonis -->
+            <system:Double x:Key="{x:Static adonisUi:Dimensions.CursorSpotlightRelativeSize}">0.75</system:Double>
+
+                <!-- Static Values -->
+            <x:Static x:Key="MaxInt32" Member="system:Int32.MaxValue"/>
+
+            <!-- Adonis -->
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/AdonisUI;component/ColorSchemes/Dark.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/AdonisUI.ClassicTheme;component/Resources.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</views:MvxApplication>

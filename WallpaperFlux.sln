@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30225.117
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WallpaperFlux.Core", "WallpaperFlux.Core\WallpaperFlux.Core.csproj", "{B8072397-E84F-4317-83C8-D0286C5E3FFE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WallpaperFlux.WPF", "WallpaperFlux.WPF\WallpaperFlux.WPF.csproj", "{DFCD2115-8318-43E0-8214-B52A2D1919AE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WallpaperFlux.Tests", "WallpaperFlux.Tests\WallpaperFlux.Tests.csproj", "{2AF605AF-4A9F-478B-8209-DFEB63D5163E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B8072397-E84F-4317-83C8-D0286C5E3FFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8072397-E84F-4317-83C8-D0286C5E3FFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B8072397-E84F-4317-83C8-D0286C5E3FFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B8072397-E84F-4317-83C8-D0286C5E3FFE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DFCD2115-8318-43E0-8214-B52A2D1919AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DFCD2115-8318-43E0-8214-B52A2D1919AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DFCD2115-8318-43E0-8214-B52A2D1919AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DFCD2115-8318-43E0-8214-B52A2D1919AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2AF605AF-4A9F-478B-8209-DFEB63D5163E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2AF605AF-4A9F-478B-8209-DFEB63D5163E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2AF605AF-4A9F-478B-8209-DFEB63D5163E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2AF605AF-4A9F-478B-8209-DFEB63D5163E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AC2CABA1-9F15-4D72-A490-1D949936DA8D}
+	EndGlobalSection
+EndGlobal
