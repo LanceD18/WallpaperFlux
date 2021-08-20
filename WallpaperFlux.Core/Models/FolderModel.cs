@@ -19,7 +19,7 @@ namespace WallpaperFlux.Core.Models
         public string Path
         {
             get => _path;
-            set
+            private set
             {
                 _path = value;
                 _images.Clear();
@@ -61,13 +61,20 @@ namespace WallpaperFlux.Core.Models
             ProcessUtil.OpenFile(Path);
         }
 
+        // updated the active state of each image based on the folder's active state
+        // if the image does not exist, add it to the theme, regardless of whether or not the folder is active
         public void ValidateImages()
         {
             foreach (string image in _images)
             {
-                if (WallpaperUtil.Theme.Images.ContainsImage(image))
+                if (DataUtil.Theme.Images.ContainsImage(image))
                 {
-                    WallpaperUtil.Theme.Images.GetImage(image).Active = Active;
+                    DataUtil.Theme.Images.GetImage(image).Active = Active;
+                }
+                else
+                {
+                    DataUtil.Theme.Images.AddImage(image);
+                    DataUtil.Theme.Images.GetImage(image).Active = Active;
                 }
             }
         }

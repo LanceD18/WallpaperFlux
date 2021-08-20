@@ -63,12 +63,12 @@ namespace WallpaperFlux.WPF
             };
         }
 
-        private void OnWallpaperChange(int index, string path = null)
+        private void OnWallpaperChange(int index, string path)
         {
             if (index != WallpaperIndex) return; // allows wallpapers to be changed independently of one another
 
             FileInfo wallpaperInfo;
-            string wallpaperPath = path ?? WallpaperUtil.GetWallpaperPath();
+            string wallpaperPath = path;
 
             if (!String.IsNullOrEmpty(wallpaperPath))
             {

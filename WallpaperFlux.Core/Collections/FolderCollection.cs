@@ -6,7 +6,7 @@ using WallpaperFlux.Core.Models;
 
 namespace WallpaperFlux.Core.Collections
 {
-    public class FolderList
+    public class FolderCollection
     {
         //List<FolderModel>
 

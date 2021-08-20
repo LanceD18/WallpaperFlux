@@ -101,7 +101,6 @@ namespace WallpaperFlux.Core.Models
             this.OnTimerReset = OnTimerReset;
         }
 
-
         //-----Methods-----
         private void TimerOnTick(object sender, EventArgs e)
         {

@@ -8,20 +8,50 @@ using AdonisUI.Controls;
 using LanceTools.DiagnosticsUtil;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using MvvmCross.Commands;
+using MvvmCross.ViewModels;
 using WallpaperFlux.Core.External;
 using WallpaperFlux.Core.Util;
 
 namespace WallpaperFlux.Core.Models
 {
     //TODO You should verify if the extension is valid (Look into the methods you used for this in WallpaperManager to determine said extensions)
-    public class ImageModel
+    public class ImageModel : MvxNotifyPropertyChanged
     {
         // Properties
         public string Path { get; set; }
 
-        public int Rank { get; set; }
+        public int Rank
+        {
+            get => _rank;
+            set
+            {
+                /*
+                if (ImageType == ImageType.None) // either this is an invalid file or the image has not been instantiated yet
+                {
 
+                }
+
+                if (ImageType == ImageType.None) // this is an invalid file, end
+                {
+                    // TODO Include with the UI Logger
+                    Debug.WriteLine("Invalid File Encountered: " + Path);
+                    return;
+                }
+                */
+
+                DataUtil.Theme.RankController.ModifyRank(this, _rank, ref value); //? this should be called first to allow the old rank to be identified
+                _rank = value;
+                RaisePropertyChanged(() => Rank);
+            }
+        }
+
+        public Action<int, int> OnRankChange;
+        private int _rank;
+
+        // Note: A rank 0 image is still active if able, it just has a 0% chance of being selected
         public bool Active { get; set; }
+
+        public ImageType ImageType { get; set; }
 
         // Video Properties
         public double Volume { get; set; } = 0.5;
@@ -29,6 +59,7 @@ namespace WallpaperFlux.Core.Models
         public double Speed { get; set; }
 
         // Type Checkers
+        // TODO Replace the external references to these values (The references in xaml) with the ImageType variable
         public bool IsStatic => !(new FileInfo(Path).Extension == ".gif" || WallpaperUtil.IsSupportedVideoType(Path));
         
         public bool IsGIF => new FileInfo(Path).Extension == ".gif";
@@ -42,6 +73,11 @@ namespace WallpaperFlux.Core.Models
 
         public IMvxCommand SetWallpaperCommand { get; set; }
 
+        public IMvxCommand DecreaseRankCommand { get; set; }
+
+        public IMvxCommand IncreaseRankCommand { get; set; }
+
+        /*x
         // IoC Property
         private IExternalImageSource _imageSource;
 
@@ -54,6 +90,7 @@ namespace WallpaperFlux.Core.Models
             }
             set { _imageSource = value; }
         }
+        */
 
         //xpublic IExternalImageSource ImageSource { get; set; }
 
@@ -66,13 +103,31 @@ namespace WallpaperFlux.Core.Models
 
         public int ImageSelectorThumbnailWidthVideo => ImageSelectorThumbnailWidth - 20; // until the GroupBox is no longer needed this will account for it
 
-        public ImageModel(IExternalImageSource imageSource)
+        public ImageModel(string path, int rank = 0)
+        {
+            Path = path;
+
+            ImageType = IsStatic ? ImageType.Static :
+                IsGIF ? ImageType.GIF : ImageType.Video;
+
+            Rank = rank;
+
+            InitCommands();
+        }
+
+        public void Dispose()
+        {
+
+        }
+
+        private void InitCommands()
         {
             ViewFileCommand = new MvxCommand(ViewFile);
             OpenFileCommand = new MvxCommand(OpenFile);
             SetWallpaperCommand = new MvxCommand(SetWallpaper);
 
-            ImageSource = imageSource;
+            DecreaseRankCommand = new MvxCommand(() => Rank--);
+            IncreaseRankCommand = new MvxCommand(() => Rank++);
         }
 
         #region Commands
@@ -94,9 +149,9 @@ namespace WallpaperFlux.Core.Models
         public void SetWallpaper()
         {
             int displayIndex = 0;
-            if (WallpaperUtil.DisplayCount > 1)
+            if (WallpaperUtil.DisplayCount > 1) // this MessageBox will only appear if the user has more than one display
             {
-                // Create MessageBox
+                // Create [Choose Display] MessageBox
                 IMessageBoxButtonModel[] buttons = new IMessageBoxButtonModel[WallpaperUtil.DisplayCount];
                 for (int i = 0; i < buttons.Length; i++)
                 {
@@ -111,10 +166,10 @@ namespace WallpaperFlux.Core.Models
                     Buttons = buttons
                 };
 
-                // Display MessageBox
+                // Display [Choose Display] MessageBox
                 MessageBox.Show(messageBox);
 
-                // Evaluate MessageBox
+                // Evaluate [Choose Display] MessageBox
                 for (int i = 0; i < buttons.Length; i++)
                 {
                     if ((string)messageBox.ButtonPressed.Id == (DISPLAY_DEFAULT_ID + i))
@@ -125,7 +180,7 @@ namespace WallpaperFlux.Core.Models
                 }
             }
 
-            WallpaperUtil.SetWallpaper(displayIndex, Path);
+            WallpaperUtil.SetWallpaper(Path, displayIndex);
         }
         #endregion
     }

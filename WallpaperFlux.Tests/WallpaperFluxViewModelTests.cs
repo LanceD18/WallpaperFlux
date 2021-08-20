@@ -21,6 +21,5 @@ namespace WallpaperFlux.Tests
         {
             Assert.Equal(x + y, x + y);
         }
-
     }
 }

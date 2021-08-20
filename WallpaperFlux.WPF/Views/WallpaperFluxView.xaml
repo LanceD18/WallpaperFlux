@@ -40,7 +40,6 @@
 
         <Button mvx:Bi.nd="Command NextWallpaperCommand" IsEnabled="{Binding CanNextWallpaper}" 
             Grid.Row="1" Grid.Column="1" Width="135" Height="25" Content="Next Wallpaper" Margin="5"/>
-
         <Button mvx:Bi.nd="Command PreviousWallpaperCommand" IsEnabled="{Binding CanPreviousWallpaper}"
                 Grid.Row="1" Grid.Column="2" Width="135" Height="25" Content="Previous Wallpaper" Margin="5"/>
 
@@ -350,7 +349,7 @@
                                                             <DataTrigger Binding="{Binding IsStaticOrGIF}" Value="False">
                                                                 <Setter TargetName="StaticOrGIF" Property="ContentTemplate" Value="{StaticResource VideoTemplate}"/>
                                                             </DataTrigger>
-                                                            -->
+                                                                    -->
                                                                 </DataTemplate.Triggers>
                                                             </DataTemplate>
                                                         </ContentControl.ContentTemplate>
@@ -363,9 +362,10 @@
                                                     <!-- Rank Handler Panel -->
                                                     <StackPanel Orientation="Horizontal" Margin="3" Focusable="False" HorizontalAlignment="Center" >
                                                         <!-- Decrease Rank Button -->
-                                                        <Button Width="25" Height="{Binding ImageSelectorSettingsHeight}" Margin="3" 
-                                                        adonisExtensions:CursorSpotlightExtension.BorderBrush="Red"
-                                                        adonisExtensions:RippleExtension.BorderBrush="Red">
+                                                        <Button mvx:Bi.nd = "Command DecreaseRankCommand" 
+                                                                Width="25" Height="{Binding ImageSelectorSettingsHeight}" Margin="3" 
+                                                                adonisExtensions:CursorSpotlightExtension.BorderBrush="Red"
+                                                                adonisExtensions:RippleExtension.BorderBrush="Red">
                                                             <TextBlock Text="-" FontSize="{Binding ImageSelectorSettingsHeight}"
                                                                Foreground="Red" FontWeight="Bold" Margin="0 -10 0  0"/>
                                                         </Button>
@@ -374,9 +374,10 @@
                                                          Width="50" Height="{Binding ImageSelectorSettingsHeight}" Margin="3"
                                                          HorizontalContentAlignment="Center" GotFocus="TextBox_GotFocus_FocusText"/>
                                                         <!-- Increase Rank Button -->
-                                                        <Button Width="25" Height="{Binding ImageSelectorSettingsHeight}" Margin="3" 
-                                                        adonisExtensions:CursorSpotlightExtension.BorderBrush="LimeGreen"
-                                                        adonisExtensions:RippleExtension.BorderBrush="LimeGreen">
+                                                        <Button mvx:Bi.nd = "Command IncreaseRankCommand"
+                                                                Width="25" Height="{Binding ImageSelectorSettingsHeight}" Margin="3" 
+                                                                adonisExtensions:CursorSpotlightExtension.BorderBrush="LimeGreen"
+                                                                adonisExtensions:RippleExtension.BorderBrush="LimeGreen">
                                                             <TextBlock Text="+" FontSize="{Binding ImageSelectorSettingsHeight}"
                                                                Foreground="LimeGreen" FontWeight="Bold" Margin="-5 -10 0  0"/>
                                                         </Button>
@@ -393,7 +394,40 @@
             </Grid>
         </GroupBox>
 
-        <!-- Options (Not a button to a new window, make a tab system) -->
+        <!-- Settings (Not a button to a new window, make a tab system) -->
+        <GroupBox Grid.Row="2" Grid.Column="5">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="{adonisUi:Space 1}"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Settings Title -->
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="Settings" FontSize="16" FontWeight="Bold" Margin="10"/>
+
+                <!-- Rank Modifier -->
+                <GroupBox  Grid.Row="2" Grid.Column="1" >
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Max Rank: " Margin="3" VerticalAlignment="Center"/>
+                        <TextBox DataContext="{Binding Settings}" Text="{Binding MaxRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="3"/>
+                        <Button Content="Update" Margin="3" mvx:Bi.nd="Command UpdateMaxRankCommand"/>
+                    </StackPanel>
+                </GroupBox>
+
+            </Grid>
+        </GroupBox>
 
         <!-- Tagging (Not a button to a new window, make a tab system) --> 
     </Grid>

@@ -13,27 +13,9 @@ namespace WallpaperFlux.Core.Util
 
     public static class WallpaperUtil
     {
-        /*
-        //! temp
-        public static List<ImageModel> Images = new List<ImageModel>();
-        //! temp
-        */
-
-        public static ThemeModel Theme;
-
         // WallpaperWindow Events
         public static Action<int, string> OnWallpaperChange;
         public static Action<int, WallpaperStyle> OnWallpaperStyleChange;
-
-        public static string GetWallpaperPath()
-        {
-            if (Images.Count <= 0) return string.Empty;
-
-            Random rand = new Random();
-            int imageIndex = rand.Next(Images.Count);
-
-            return Images[imageIndex].Path;
-        }
 
         public static int DisplayCount { get; private set; }
 
@@ -127,7 +109,7 @@ namespace WallpaperFlux.Core.Util
             return workerw;
         }
 
-        public static void SetWallpaper(int index, string path = null)
+        public static void SetWallpaper(string path, int index)
         {
             OnWallpaperChange?.Invoke(index, path);
         }

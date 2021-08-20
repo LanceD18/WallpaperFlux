@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -28,7 +29,9 @@ namespace WallpaperFlux.Core.ViewModels
 {
     public class WallpaperFluxViewModel : MvxViewModel
     {
-        private ThemeModel Theme;
+        // for use with the xaml, allows the data of settings to be accessed
+        public ThemeModel Theme { get; set; } = DataUtil.Theme;
+        public SettingsModel Settings { get; set; } = DataUtil.Theme.Settings;
 
         public WallpaperFluxViewModel()
         {
@@ -36,12 +39,13 @@ namespace WallpaperFlux.Core.ViewModels
 
             InitializeDisplaySettings();
 
-            // TODO Create a static class that holds the commands for this ViewModel
+            // TODO Use models to hold command information (Including needed data)
             NextWallpaperCommand = new MvxCommand(NextWallpaper);
             AddFolderCommand = new MvxCommand(PromptAddFolder);
             RemoveFolderCommand = new MvxCommand(RemoveFolder);
             SyncCommand = new MvxCommand(Sync);
             SelectImagesCommand = new MvxCommand(SelectImages);
+            UpdateMaxRankCommand = new MvxCommand(Settings.UpdateMaxRank);
         }
 
         async void InitializeDisplaySettings() // waits for the DisplayCount to be set before initializing the display settings
@@ -168,12 +172,14 @@ namespace WallpaperFlux.Core.ViewModels
 
         public IMvxCommand SelectImagesCommand { get; set; }
 
+        public IMvxCommand UpdateMaxRankCommand { get; set; }
+
         //  -----Command Methods-----
         #region Wallpaper Setters
         public void NextWallpaper()
         {
             // TODO Turn this into a general method, refer to WallpaperManager.Pathing
-            if (WallpaperUtil.Images.Count > 0)
+            if (DataUtil.Theme.Images.GetAllImages().Length > 0)
             {
                 for (int i = 0; i < WallpaperUtil.DisplayCount; i++)
                 {
@@ -196,10 +202,9 @@ namespace WallpaperFlux.Core.ViewModels
 
         public void NextWallpaper(int displayIndex, bool isCallerTimer)
         {
-            if (WallpaperUtil.Images.Count > 0)
+            if (DataUtil.Theme.Images.GetAllImages().Length > 0)
             {
-                Debug.WriteLine(displayIndex);
-                WallpaperUtil.SetWallpaper(displayIndex);
+                WallpaperUtil.SetWallpaper(DataUtil.Theme.GetRandomImagePath(), displayIndex);
             }
         }
         #endregion
@@ -351,11 +356,11 @@ namespace WallpaperFlux.Core.ViewModels
 
                 for (int j = 0; j < IMAGES_PER_PAGE; j++)
                 {
-                    Debug.WriteLine((j + imageIndex) + " | " + (selectedImages.Length));
+                    //xDebug.WriteLine((j + imageIndex) + " | " + (selectedImages.Length));
                     if (j + imageIndex < selectedImages.Length)
                     {
-                        Debug.WriteLine("Path: " + selectedImages[j + imageIndex]);
-                        tabModel.Images.Add(new ImageModel(Mvx.IoCProvider.Resolve<IExternalImageSource>()) {Path = selectedImages[j + imageIndex]});
+                        //xDebug.WriteLine("Path: " + selectedImages[j + imageIndex]);
+                        tabModel.Images.Add(Theme.Images.GetImage(selectedImages[j + imageIndex]));
                     }
                     else
                     {
