@@ -7,11 +7,11 @@ namespace WallpaperFlux.WPF.External
 {
     //! Be sure to call dispatcherTimer.Stop() when you close your form. The WinForms version of the timer does that automatically.
     //! (That's the advantage of making the timer a Control.) If you don't you'll have a memory leak and possibly other bugs
-    public class Timer : ITimer
+    public class ExternalTimer : IExternalTimer
     {
         private readonly DispatcherTimer internalTimer;
 
-        public Timer()
+        public ExternalTimer()
         {
             internalTimer = new DispatcherTimer(DispatcherPriority.Background, Application.Current.Dispatcher);
         }

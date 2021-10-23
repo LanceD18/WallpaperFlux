@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,6 +26,9 @@ namespace WallpaperFlux.WPF
     /// </summary>
     public partial class MainWindow : MvxWindow
     {
+        //! Static reference to the active MainWindow instance
+        public static MainWindow Instance;
+
         private const int SetDeskWallpaper = 20;
         private const int UpdateIniFile = 0x01;
         private const int SendWinIniChange = 0x02;
@@ -32,10 +36,13 @@ namespace WallpaperFlux.WPF
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         static extern int SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni);
 
-        private WallpaperWindow[] Wallpapers;
+        public WallpaperWindow[] Wallpapers;
 
         public MainWindow()
         {
+            Debug.WriteLine("Initializing static MainWindow Instance");
+            Instance = this;
+
             InitializeComponent();
 
             InitializeWallpapers();
@@ -62,7 +69,7 @@ namespace WallpaperFlux.WPF
             Wallpapers = new WallpaperWindow[displayCount];
             for (int i = 0; i < displayCount; i++)
             {
-                Wallpapers[i] = new WallpaperWindow(DisplayUtil.Displays.ElementAt(i), workerw, i);
+                Wallpapers[i] = new WallpaperWindow(DisplayUtil.Displays.ElementAt(i), workerw);
                 Wallpapers[i].Show();
             }
         }

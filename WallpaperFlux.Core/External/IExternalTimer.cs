@@ -3,7 +3,7 @@
 namespace WallpaperFlux.Core.External
 {
     // Registered with the Mvx IoCProvider
-    public interface ITimer
+    public interface IExternalTimer
     {
         TimeSpan Interval { get; set; }
 

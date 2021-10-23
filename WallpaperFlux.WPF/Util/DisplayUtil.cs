@@ -9,8 +9,7 @@ namespace WallpaperFlux.WPF.Util
 {
     public static class DisplayUtil
     {
-        //? Using Winform's screen property may cause issues since WPF's measurement units are not in pixels
-
+        //! IMPORTANT: Using Winform's screen property may cause issues since WPF's measurement units are not in pixels, which is why we are using WpfScreenHelper
         public static readonly IEnumerable<Screen> Displays = Screen.AllScreens;
 
         //? Screen.AllScreens seems to do this by default due to the way it functions, I wouldn't rely on that though as there's no documentation for it
@@ -27,9 +26,9 @@ namespace WallpaperFlux.WPF.Util
         public static int DisplayXAdjustment { get; }
         public static int MinDisplayY { get; } = int.MaxValue;
 
-        static DisplayUtil() // initialization
+        static DisplayUtil() // automatic static initialization
         {
-            WallpaperUtil.SetDisplayCount(Displays.Count());
+            //xWallpaperUtil.SetDisplayCount(Displays.Count());
 
             // Set up monitor bounds & adjustments
             foreach (Screen display in Displays)

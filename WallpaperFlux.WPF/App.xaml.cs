@@ -35,7 +35,7 @@ namespace WallpaperFlux.WPF
 
         private void InitializeFFmpeg()
         {
-            Library.FFmpegDirectory = @"F:\~ffmpeg\ffmpeg-4.4-full_build-shared\bin";
+            Library.FFmpegDirectory = @"F:\Program Libraries\ffmpeg\ffmpeg-4.4-full_build-shared\bin";
             Library.LoadFFmpeg();
             MediaElement.FFmpegMessageLogged += (s, ev) =>
             {

@@ -4,22 +4,21 @@ using System.IO;
 using System.Text;
 using LanceTools.WindowsUtil;
 using Microsoft.WindowsAPICodePack.Dialogs;
+using MvvmCross;
+using WallpaperFlux.Core.External;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Models.Theme;
 using WallpaperFlux.Core.ViewModels;
 
 namespace WallpaperFlux.Core.Util
 {
-
     public static class WallpaperUtil
     {
-        // WallpaperWindow Events
-        public static Action<int, string> OnWallpaperChange;
-        public static Action<int, WallpaperStyle> OnWallpaperStyleChange;
+        //xpublic static Action<int, string> OnWallpaperChange;
+        //xpublic static Action<int, WallpaperStyle> OnWallpaperStyleChange;
 
-        public static int DisplayCount { get; private set; }
-
-        public static void SetDisplayCount(int displayCount) => DisplayCount = displayCount;
+        public static IExternalWallpaperHandler WallpaperHandler = Mvx.IoCProvider.Resolve<IExternalWallpaperHandler>();
+        public static IExternalDisplayUtil DisplayUtil = Mvx.IoCProvider.Resolve<IExternalDisplayUtil>();
 
         //-----File Types-----
         private static readonly string IMAGE_FILES_DISPLAY_NAME = "Image Files (*.jpg, *.jpeg, *.jpe, *.jfif, *.png, *.gif, *.mp4, *.webm, *.avi";
@@ -109,9 +108,48 @@ namespace WallpaperFlux.Core.Util
             return workerw;
         }
 
-        public static void SetWallpaper(string path, int index)
+        public static void SetWallpaper(int index, bool ignoreRandomization)
         {
-            OnWallpaperChange?.Invoke(index, path);
+            SetWallpaper(index, String.Empty, ignoreRandomization);
+        }
+
+        // TODO With the presetWallpaperPath I don't think you need ignoreRandomization anymore
+        // TODO Both use cases, setting the PreviousWallpaper and directly setting an image as the Wallpaper can use presetWallpaperPath
+        public static void SetWallpaper(int index, string presetWallpaperPath, bool ignoreRandomization)
+        {
+            string wallpaperPath;
+
+            // Set Next Wallpaper
+            if (presetWallpaperPath == String.Empty)
+            {
+                // if ignoring randomization then we will just use the current ActiveWallpaper path (Likely means that a wallpaper on one monitor changed before/after the others)
+                if (!ignoreRandomization) DataUtil.Theme.WallpaperRandomizer.SetNextWallpaperOrder(index);
+
+                wallpaperPath = DataUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index];
+            }
+            else
+            {
+                wallpaperPath = presetWallpaperPath;
+            }
+
+            // Check for errors and update the notify icon
+            if (DataUtil.Theme.Images.ContainsImage(wallpaperPath))
+            {
+                /* TODO Update notify icon
+                string wallpaperName = new FileInfo(wallpaperPath).Name; // pathless string of file name
+                wallpaperMenuItems[index].Text = index + 1 + " | R: " + DataUtil.Theme.Images.GetImage(wallpaperPath).Rank + " | " + wallpaperName;
+                */
+            }
+            else
+            {
+                // TODO Ensure that the below is no longer an issue of the redesign, if a failure occurs we will just not load the next wallpaper instead
+                //? this can occur after swapping themes as next wallpaper still holds data from the previous theme
+
+                return;
+                //xDataUtil.Theme.WallpaperRandomizer.SetNextWallpaperOrder(index, ignoreRandomization);
+            }
+
+            WallpaperHandler.OnWallpaperChange(index, wallpaperPath);
         }
 
         /*x

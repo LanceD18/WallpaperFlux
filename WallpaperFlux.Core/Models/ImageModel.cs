@@ -149,10 +149,10 @@ namespace WallpaperFlux.Core.Models
         public void SetWallpaper()
         {
             int displayIndex = 0;
-            if (WallpaperUtil.DisplayCount > 1) // this MessageBox will only appear if the user has more than one display
+            if (WallpaperUtil.DisplayUtil.GetDisplayCount() > 1) // this MessageBox will only appear if the user has more than one display
             {
                 // Create [Choose Display] MessageBox
-                IMessageBoxButtonModel[] buttons = new IMessageBoxButtonModel[WallpaperUtil.DisplayCount];
+                IMessageBoxButtonModel[] buttons = new IMessageBoxButtonModel[WallpaperUtil.DisplayUtil.GetDisplayCount()];
                 for (int i = 0; i < buttons.Length; i++)
                 {
                     buttons[i] = MessageBoxButtons.Custom("Display " + (i + 1), DISPLAY_DEFAULT_ID + i);
@@ -180,7 +180,7 @@ namespace WallpaperFlux.Core.Models
                 }
             }
 
-            WallpaperUtil.SetWallpaper(Path, displayIndex);
+            WallpaperUtil.SetWallpaper(displayIndex, Path, true); // no randomization required here
         }
         #endregion
     }

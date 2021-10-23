@@ -80,11 +80,11 @@ namespace WallpaperFlux.Core.Models
             set
             {
                 SetProperty(ref _displayStyle, value);
-                WallpaperUtil.OnWallpaperStyleChange?.Invoke(_displayIndex, _displayStyle);
+                WallpaperUtil.WallpaperHandler.OnWallpaperStyleChange(_displayIndex, _displayStyle);
             }
         }
 
-        private readonly ITimer timer;
+        private readonly IExternalTimer timer;
 
         private Action<int, bool> OnTimerReset;
 
@@ -92,7 +92,7 @@ namespace WallpaperFlux.Core.Models
         private List<DisplayModel> childSyncedModels = new List<DisplayModel>();
 
         //?-----Constructor-----
-        public DisplayModel(ITimer timer, Action<int, bool> OnTimerReset)
+        public DisplayModel(IExternalTimer timer, Action<int, bool> OnTimerReset)
         {
             timer.Interval = TimeSpan.FromSeconds(1);
             timer.Tick += TimerOnTick;

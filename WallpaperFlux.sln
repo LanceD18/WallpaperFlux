@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WallpaperFlux.WPF", "Wallpa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WallpaperFlux.Tests", "WallpaperFlux.Tests\WallpaperFlux.Tests.csproj", "{2AF605AF-4A9F-478B-8209-DFEB63D5163E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WallpaperFlux.Data", "WallpaperFlux.Data\WallpaperFlux.Data.csproj", "{B9616ECE-D002-4DED-BB22-CD33FDAF8AD8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{2AF605AF-4A9F-478B-8209-DFEB63D5163E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2AF605AF-4A9F-478B-8209-DFEB63D5163E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2AF605AF-4A9F-478B-8209-DFEB63D5163E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9616ECE-D002-4DED-BB22-CD33FDAF8AD8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9616ECE-D002-4DED-BB22-CD33FDAF8AD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9616ECE-D002-4DED-BB22-CD33FDAF8AD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9616ECE-D002-4DED-BB22-CD33FDAF8AD8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

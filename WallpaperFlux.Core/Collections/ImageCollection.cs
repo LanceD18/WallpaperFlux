@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,7 @@ using WallpaperFlux.Core.Util;
 
 namespace WallpaperFlux.Core.Collections
 {
+    // TODO Might rename to ImageController since there's only one instance of this
     public class ImageCollection
     {
         private Dictionary<ImageType, Dictionary<string, ImageModel>> ImageContainer = new Dictionary<ImageType, Dictionary<string, ImageModel>>()
@@ -18,6 +20,13 @@ namespace WallpaperFlux.Core.Collections
             {ImageType.GIF, new Dictionary<string, ImageModel>()},
             {ImageType.Video, new Dictionary<string, ImageModel>()}
         };
+
+        public Action<ImageModel> OnRemove; //? If you need multiple OnRemove events, use/re-purpose the delegate format used by ReactiveList
+
+        //x public delegate void ImageCollectionChanged(object sender, ImageCollectionChangedEventArgs e);
+        //x public event ImageCollectionChanged OnListRemoveItem;
+
+        public ImageCollection() { }
 
         public ImageModel AddImage(string path)
         {
@@ -68,7 +77,7 @@ namespace WallpaperFlux.Core.Collections
         //? Keep in mind that all Remove methods trace back to this method, so sweeping changes that should apply to all of them should be placed here
         public bool RemoveImage(ImageModel image)
         {
-            DataUtil.Theme.RankController.RemoveRankedImage(image, this);
+            DataUtil.Theme.RankController.RemoveRankedImage(image);
 
             return ImageContainer[image.ImageType].Remove(image.Path);
         }

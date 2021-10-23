@@ -29,13 +29,10 @@ namespace WallpaperFlux.WPF
     /// </summary>
     public partial class WallpaperWindow : MvxWindow
     {
-        public int WallpaperIndex { get; }
-
-        public WallpaperWindow(Screen display, IntPtr workerw, int wallpaperIndex)
+        //? The index is currently gathered by the array utilized in ExternalWallpaperHandler and MainWindow
+        public WallpaperWindow(Screen display, IntPtr workerw)
         {
             InitializeComponent();
-
-            WallpaperIndex = wallpaperIndex;
 
             Loaded += (s, e) =>
             {
@@ -45,16 +42,13 @@ namespace WallpaperFlux.WPF
                 Left = display.Bounds.X + DisplayUtil.DisplayXAdjustment;
                 Top = display.Bounds.Y + DisplayUtil.MinDisplayY;
 
+                // TODO Remove me once you've implemented a control for setting the default volume & changing video volume
                 //! temp
                 WallpaperMediaElement.Volume = 0.1;
                 //! temp
 
                 //? Default, should match what's stated on the WPF
                 WallpaperImage.Stretch = WallpaperMediaElement.Stretch = Stretch.Fill;
-
-                WallpaperUtil.OnWallpaperChange += OnWallpaperChange;
-
-                WallpaperUtil.OnWallpaperStyleChange += OnWallpaperStyleChange;
 
                 // This line makes the form a child of the WorkerW window, thus putting it behind the desktop icons and out of reach 
                 // of any user input. The form will just be rendered, no keyboard or mouse input will reach it.
@@ -63,10 +57,9 @@ namespace WallpaperFlux.WPF
             };
         }
 
-        private void OnWallpaperChange(int index, string path)
+        //? The index is checked in ExternalWallpaperHandler now as it has access to the array, which allows wallpapers to be changed independently of one another
+        public void OnWallpaperChange(string path)
         {
-            if (index != WallpaperIndex) return; // allows wallpapers to be changed independently of one another
-
             FileInfo wallpaperInfo;
             string wallpaperPath = path;
 
@@ -105,10 +98,9 @@ namespace WallpaperFlux.WPF
             }
         }
 
-        private void OnWallpaperStyleChange(int index, WallpaperStyle style)
+        //? The index is checked in ExternalWallpaperHandler now as it has access to the array, which allows wallpapers to be changed independently of one another
+        public void OnWallpaperStyleChange(WallpaperStyle style)
         {
-            if (index != WallpaperIndex) return;
-
             Dispatcher.Invoke(() =>
             {
                 switch (style)

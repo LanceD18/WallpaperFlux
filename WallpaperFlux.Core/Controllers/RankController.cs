@@ -6,7 +6,10 @@ using AdonisUI.Controls;
 using LanceTools;
 using WallpaperFlux.Core.Collections;
 using WallpaperFlux.Core.Models;
+using WallpaperFlux.Core.Models.Theme;
 using WallpaperFlux.Core.Util;
+
+//!using WallpaperFlux.Core.Util; Avoid using the DataUtil value from this
 
 namespace WallpaperFlux.Core.Controllers
 {
@@ -26,16 +29,18 @@ namespace WallpaperFlux.Core.Controllers
             {ImageType.Video, 0}
         };
 
-        public RankController(int maxRank)
+        public PercentileController PercentileController;
+
+        public RankController()
         {
-            SetMaxRank(maxRank);
+            PercentileController = new PercentileController(CreateRankDataRef());
         }
 
         //! this method should only be called by the Setter of the ImageModel Rank property unless otherwise noted
         public void ModifyRank(ImageModel image, int oldRank, ref int newRank)
         {
             // if the rank is out-of-bounds, auto-adjust it to an accepted rank
-            Debug.WriteLine("ModifyRank: " + ContainsRank(newRank, image.ImageType) + " | " + RankData[image.ImageType].Count);
+            //xDebug.WriteLine("ModifyRank: " + ContainsRank(newRank, image.ImageType) + " | " + RankData[image.ImageType].Count);
             if (!ContainsRank(newRank, image.ImageType)) newRank = oldRank;
 
             RankData[image.ImageType][oldRank].Remove(image.Path);
@@ -45,7 +50,7 @@ namespace WallpaperFlux.Core.Controllers
         //! the only purpose for ImageCollection to be here is to serve as a reminder that this should only be accessed after calling an image removal from ImageCollection
         //! find a better solution to limit this procedure's access in the future
         //? in makes collection readonly, not really needed but considering its already vague purpose it felt appropriate to add
-        public void RemoveRankedImage(ImageModel image, in ImageCollection collection)
+        public void RemoveRankedImage(ImageModel image)
         {
             RankData[image.ImageType][image.Rank].Remove(image.Path);
         }
@@ -77,7 +82,7 @@ namespace WallpaperFlux.Core.Controllers
             List<string> imagePaths = new List<string>();
             foreach (ImageType imageType in RankData.Keys)
             {
-                for (int i = 1; i < RankData[imageType].Count; i++)  // i = 1 ensures that rank 0 images are not included since they are 'unranked'
+                for (int i = 1; i < RankData[imageType].Count; i++)  //? i = 1 ensures that rank 0 images are not included since they are 'unranked'
                 {
                     imagePaths.AddRange(GetImagesOfRank(i));
                 }
@@ -107,7 +112,7 @@ namespace WallpaperFlux.Core.Controllers
             if (maxRank > 0) // note that rank 0 is reserved for unranked images
             {
                 SetRankDataSize(maxRank);
-                DataUtil.Theme.PercentileController.SetRankPercentiles(maxRank);
+                PercentileController.SetRankPercentiles(maxRank);
             }
             else
             {
@@ -248,10 +253,10 @@ namespace WallpaperFlux.Core.Controllers
         {
             //xif (!IsLoadingData) // UpdateRankPercentiles will be called once the loading ends
             //x{
-            DataUtil.Theme.PercentileController.PotentialWeightedRankUpdate = true;
+            PercentileController.PotentialWeightedRankUpdate = true;
             if ((sender as ReactiveList<string>).Count == 1) // allows the now unempty rank to be selected
             {
-                DataUtil.Theme.PercentileController.PotentialRegularRankUpdate = true;
+                PercentileController.PotentialRegularRankUpdate = true;
             }
             //x}
         }
@@ -260,10 +265,10 @@ namespace WallpaperFlux.Core.Controllers
         {
             //xif (!IsLoadingData) // UpdateRankPercentiles will be called once the loading ends
             //x{
-            DataUtil.Theme.PercentileController.PotentialWeightedRankUpdate = true;
+            PercentileController.PotentialWeightedRankUpdate = true;
             if ((sender as ReactiveList<string>).Count == 0) // prevents the empty rank from being selected
             {
-                DataUtil.Theme.PercentileController.PotentialRegularRankUpdate = true;
+                PercentileController.PotentialRegularRankUpdate = true;
             }
             //x}
         }
@@ -286,6 +291,8 @@ namespace WallpaperFlux.Core.Controllers
 
             return count;
         }
+
+        public bool IsAllImagesOfTypeUnranked(ImageType imageType) => GetImagesOfTypeRankSum(imageType) == 0;
 
         public void UpdateImageTypeWeights()
         {

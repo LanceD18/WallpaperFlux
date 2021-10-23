@@ -1,13 +1,13 @@
 ﻿using System;
+using LanceTools;
 using WallpaperFlux.Core.Collections;
 using WallpaperFlux.Core.Controllers;
 
 namespace WallpaperFlux.Core.Models.Theme
 {
-    //? Making this a regular class instead of a static class will make resetting its data easier on you
     public class ThemeModel
     {
-        public SettingsModel Settings; // for options
+        public SettingsModel Settings { get; set; } //? getter and setter needed for the XAML file
 
         public ImageCollection Images;
 
@@ -15,21 +15,27 @@ namespace WallpaperFlux.Core.Models.Theme
 
         public FolderCollection Folders;
 
-        public WallpaperRandomizationController Randomizer;
-
-        public PercentileController PercentileController;
+        public WallpaperRandomizationController WallpaperRandomizer;
 
         public ThemeModel(int maxRank)
         {
             Settings = new SettingsModel(maxRank);
             Images = new ImageCollection();
-            RankController = new RankController(maxRank);
-            PercentileController = new PercentileController();
+            RankController = new RankController();
+            WallpaperRandomizer = new WallpaperRandomizationController();
+
+            RankController.SetMaxRank(maxRank); //! don't call this in the constructor of RankController to prevent potential initialization mishaps
         }
 
+        public string GetRandomImagePath(int displayIndex)
+        {
+            return WallpaperRandomizer.NextWallpapers[displayIndex];
+        }
+
+        /*x
         public string GetRandomImagePath()
         {
-            string[] imagePaths = this.Images.GetAllImagePaths();
+            string[] imagePaths = Images.GetAllImagePaths();
 
             if (imagePaths.Length <= 0) return string.Empty;
 
@@ -38,5 +44,6 @@ namespace WallpaperFlux.Core.Models.Theme
 
             return imagePaths[imageIndex];
         }
+        */
     }
 }

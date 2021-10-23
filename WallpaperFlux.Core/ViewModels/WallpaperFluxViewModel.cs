@@ -29,13 +29,16 @@ namespace WallpaperFlux.Core.ViewModels
 {
     public class WallpaperFluxViewModel : MvxViewModel
     {
+        // TODO When you need more view models, initialize them in the constructor here
+
         // for use with the xaml, allows the data of settings to be accessed
         public ThemeModel Theme { get; set; } = DataUtil.Theme;
+
         public SettingsModel Settings { get; set; } = DataUtil.Theme.Settings;
 
         public WallpaperFluxViewModel()
         {
-            FolderUtil.LinkThemeImageFolders(ImageFolders);
+            //xFolderUtil.LinkThemeImageFolders(ImageFolders);
 
             InitializeDisplaySettings();
 
@@ -45,23 +48,23 @@ namespace WallpaperFlux.Core.ViewModels
             RemoveFolderCommand = new MvxCommand(RemoveFolder);
             SyncCommand = new MvxCommand(Sync);
             SelectImagesCommand = new MvxCommand(SelectImages);
-            UpdateMaxRankCommand = new MvxCommand(Settings.UpdateMaxRank);
+            UpdateMaxRankCommand = new MvxCommand(Theme.Settings.UpdateMaxRank);
         }
 
         async void InitializeDisplaySettings() // waits for the DisplayCount to be set before initializing the display settings
         {
             await Task.Run(() =>
             {
-                while (WallpaperUtil.DisplayCount == 0)
+                while (WallpaperUtil.DisplayUtil.GetDisplayCount() == 0)
                 {
                     Thread.Sleep(10);
                 }
 
                 //! do not directly add to the DisplaySettings itself, this threaded behavior will mistakenly add an extra object unless it's slept for a certain period
                 MvxObservableCollection<DisplayModel> initSettings = new MvxObservableCollection<DisplayModel>();
-                for (int i = 0; i < WallpaperUtil.DisplayCount; i++)
+                for (int i = 0; i < WallpaperUtil.DisplayUtil.GetDisplayCount(); i++)
                 {
-                    initSettings.Add(new DisplayModel(Mvx.IoCProvider.Resolve<ITimer>(), NextWallpaper)
+                    initSettings.Add(new DisplayModel(Mvx.IoCProvider.Resolve<IExternalTimer>(), NextWallpaper)
                     {
                         DisplayInterval = 0,
                         DisplayIndex = i,
@@ -179,9 +182,9 @@ namespace WallpaperFlux.Core.ViewModels
         public void NextWallpaper()
         {
             // TODO Turn this into a general method, refer to WallpaperManager.Pathing
-            if (DataUtil.Theme.Images.GetAllImages().Length > 0)
+            if (Theme.Images.GetAllImages().Length > 0)
             {
-                for (int i = 0; i < WallpaperUtil.DisplayCount; i++)
+                for (int i = 0; i < WallpaperUtil.DisplayUtil.GetDisplayCount(); i++)
                 {
                     NextWallpaper(i, false);
                 }
@@ -200,13 +203,46 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
+        // TODO Check if the theme is finished loading before activating, check if any images are active
         public void NextWallpaper(int displayIndex, bool isCallerTimer)
         {
-            if (DataUtil.Theme.Images.GetAllImages().Length > 0)
+            if (Theme.Images.GetAllImages().Length > 0 && Theme.RankController.GetAllRankedImages().Length > 0)
             {
-                WallpaperUtil.SetWallpaper(DataUtil.Theme.GetRandomImagePath(), displayIndex);
+                // ignoreRandomization = false here since we need to randomize the new set
+                // Note that RandomizeWallpaper() will check if it even should randomize the wallpapers first (Varied timers and extended videos can undo this requirement)
+                WallpaperUtil.SetWallpaper(displayIndex, false);
             }
         }
+
+        /* TODO
+        public void PreviousWallpaper()
+        {
+            for (int i = 0; i < WallpaperPathSetter.PreviousWallpapers.Length; i++)
+            {
+                PreviousWallpaper(i);
+            }
+        }
+
+        // sets all wallpapers to their previous wallpaper, if one existed
+        public void PreviousWallpaper(int index)
+        {
+            if (WallpaperPathSetter.PreviousWallpapers[index].Count > 0)
+            {
+                WallpaperPathSetter.NextWallpapers[index] = WallpaperPathSetter.PreviousWallpapers[index].Pop();
+
+                if (File.Exists(WallpaperPathSetter.NextWallpapers[index]))
+                {
+                    ResetTimer(index);
+                    WallpaperUtil.SetWallpaper(index, true); // ignoreRandomization = true since there is no need to randomize wallpapers that have previously existed
+                }
+            }
+            // Not needed here, we can just disable the button
+            //xelse
+            //x{
+            //x    MessageBox.Show("There are no more previous wallpapers");
+            //x}
+        }
+        */
         #endregion
 
         #region Image Folders

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using LanceTools;
+using WallpaperFlux.Core.Models.Theme;
 using WallpaperFlux.Core.Util;
 
 namespace WallpaperFlux.Core.Controllers
@@ -14,14 +15,14 @@ namespace WallpaperFlux.Core.Controllers
         // int = rank, double = percentile
         private Dictionary<int, double> ModifiedRankPercentiles = new Dictionary<int, double>();
 
-        private VariableRef<Dictionary<ImageType, List<List<string>>>> RankData;
+        private VariableRef<Dictionary<ImageType, ReactiveList<ReactiveList<string>>>> RankData;
 
         public bool PotentialWeightedRankUpdate;
         public bool PotentialRegularRankUpdate;
 
-        public PercentileController()
+        public PercentileController(VariableRef<Dictionary<ImageType, ReactiveList<ReactiveList<string>>>> rankData)
         {
-            RankData = DataUtil.Theme.RankController.CreateRankDataRef();
+            RankData = rankData;
         }
 
         public void SetRankPercentiles(int newMaxRank)
@@ -141,9 +142,9 @@ namespace WallpaperFlux.Core.Controllers
             Debug.WriteLine("SETTINGS REMOVED: PercentileHandler.cs | UpdateRankPercentiles()");
             ModifiedRankPercentiles = GetModifiedRankPercentiles(imageType);
             
-            ModifiedRankPercentiles = DataUtil.Theme.Settings.WeightedRanks ? GetWeightedRankPercentiles(imageType) : GetModifiedRankPercentiles(imageType);
+            ModifiedRankPercentiles = DataUtil.Theme.Settings.ThemeSettings.WeightedRanks ? GetWeightedRankPercentiles(imageType) : GetModifiedRankPercentiles(imageType);
 
-            if (DataUtil.Theme.Settings.WeightedFrequency)
+            if (DataUtil.Theme.Settings.ThemeSettings.WeightedRanks)
             {
                 DataUtil.Theme.RankController.UpdateImageTypeWeights();
             }

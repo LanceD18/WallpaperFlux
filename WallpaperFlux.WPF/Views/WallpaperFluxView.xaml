@@ -421,7 +421,7 @@
                 <GroupBox  Grid.Row="2" Grid.Column="1" >
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="Max Rank: " Margin="3" VerticalAlignment="Center"/>
-                        <TextBox DataContext="{Binding Settings}" Text="{Binding MaxRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="3"/>
+                        <TextBox DataContext="{Binding Theme.Settings.ThemeSettings}" Text="{Binding MaxRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="3"/>
                         <Button Content="Update" Margin="3" mvx:Bi.nd="Command UpdateMaxRankCommand"/>
                     </StackPanel>
                 </GroupBox>
