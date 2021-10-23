@@ -27,6 +27,7 @@ namespace WallpaperFlux.Core.Models.Theme
         public bool ExcludeRenamingGif;
         public bool ExcludeRenamingVideo;
         public FrequencyCalculator FrequencyCalc = new FrequencyCalculator();
+        public FrequencyModel FrequencyModel { get; set; }
 
         // Video Settings
         public VideoSettings VideoSettings;
@@ -56,19 +57,20 @@ namespace WallpaperFlux.Core.Models.Theme
 
     public class SettingsModel : MvxNotifyPropertyChanged
     {
-        // Theme Options
+        // Theme Settings
         public ThemeSettings ThemeSettings { get; set; } = new ThemeSettings();
 
         // Monitor Options
         //! DO NOT USE YET ; This still needs to be set up, will re-purpose MOST of ThemeSettings so that Monitors can have their own options
         public DisplaySettings[] DisplaySettings { get; set; }
 
-        // Global Options
+        // Global Settings
         public string DefaultTheme { get; set; }
         public bool EnableDefaultThemeHotkey { get; set; }
 
         public SettingsModel(int maxRank)
         {
+            ThemeSettings.FrequencyModel = new FrequencyModel(ThemeSettings.FrequencyCalc);
             ThemeSettings.MaxRank = maxRank;
         }
 

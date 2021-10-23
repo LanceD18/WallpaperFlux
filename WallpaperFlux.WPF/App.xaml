@@ -15,10 +15,13 @@
             <converters:EnumToStringConverter x:Key="DefaultEnumToStringConverter"/>
 
                 <!-- Adonis -->
-            <system:Double x:Key="{x:Static adonisUi:Dimensions.CursorSpotlightRelativeSize}">0.75</system:Double>
+            <system:Double x:Key="{x:Static adonisUi:Dimensions.CursorSpotlightRelativeSize}"> 0.75 </system:Double>
 
                 <!-- Static Values -->
             <x:Static x:Key="MaxInt32" Member="system:Int32.MaxValue"/>
+                    <!-- Settings Styling -->
+            <system:Double x:Key="ImageFrequencyTextBoxWidth">50</system:Double>
+            <system:Double x:Key="ImageFrequencyTextBoxMargin">10</system:Double>
 
             <!-- Adonis -->
             <ResourceDictionary.MergedDictionaries>

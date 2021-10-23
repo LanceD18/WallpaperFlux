@@ -10,20 +10,25 @@ namespace WallpaperFlux.Core.Tools
 {
     public class FrequencyCalculator
     {
-        //TODO Don't ref ThemeModel here the second time around
-
-        private Dictionary<ImageType, double> RelativeFrequency = new Dictionary<ImageType, double>();
+        private Dictionary<ImageType, double> RelativeFrequency = new Dictionary<ImageType, double>()
+        {
+            {ImageType.Static, 0.9},
+            {ImageType.GIF, 1},
+            {ImageType.Video, 1},
+        };
 
         private Dictionary<ImageType, double> ExactFrequency = new Dictionary<ImageType, double>()
         {
-            //! TEMPORARY DEBUG FREQUENCIES
-            {ImageType.Static, 1},
-            {ImageType.GIF, 0},
-            {ImageType.Video, 0},
+            {ImageType.Static, 0.33},
+            {ImageType.GIF, 0.33},
+            {ImageType.Video, 0.33},
         };
+
+        public double GetRelativeFrequency(ImageType imageType) => RelativeFrequency[imageType];
 
         public double GetExactFrequency(ImageType imageType) => ExactFrequency[imageType];
 
+        //TODO Don't ref ThemeModel here the second time around
         public void UpdateFrequency(object sender, ImageType imageType, FrequencyType frequencyType)
         {
             /* TODO

@@ -21,6 +21,7 @@ using MvvmCross.Platforms.Wpf.Presenters.Attributes;
 using MvvmCross.Platforms.Wpf.Views;
 using MvvmCross.ViewModels;
 using WallpaperFlux.Core.Models;
+using WallpaperFlux.Core.Models.Theme;
 using WallpaperFlux.Core.ViewModels;
 using MediaElement = Unosquare.FFME.MediaElement;
 using Size = System.Windows.Size;
@@ -106,6 +107,22 @@ namespace WallpaperFlux.WPF.Views
         {
             MediaElement element = sender as MediaElement;
             element?.Close();
+        }
+
+        // TODO Change the name of this to match its final form eventually
+        private void TextBox_OnKeyEnterDown_LoseFocus(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                FrequencyModel viewModel = (sender as TextBox).DataContext as FrequencyModel;
+                Debug.WriteLine("w0");
+
+                if (viewModel.ConfirmFrequencyCommand.CanExecute(sender))
+                {
+                    viewModel.ConfirmFrequencyCommand.Execute(sender);
+                }
+                //MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
+            }
         }
     }
 }
