@@ -44,19 +44,27 @@ namespace WallpaperFlux.Core.Controllers
             return true;
         }
 
-        public void SetNextWallpaperOrder(int index)
+        public bool SetNextWallpaperOrder(int index)
         {
             // this indicates that it's time to search for a new set of upcoming wallpapers
             //? ActiveWallpapers[index] == NextWallpapers[index] checks if the next set of wallpapers have been updated. If not, randomization will occur
             //? ignoreRandomization allows the next set of wallpapers to be directly applied. This helps the previous wallpapers setting function as intended
             if (ActiveWallpapers[index] == NextWallpapers[index])
             {
-                RandomizeWallpapers(); // queues next set of upcoming wallpapers
+                // queues next set of upcoming wallpapers
+                if (!RandomizeWallpapers())
+                {
+                    Debug.WriteLine("Randomization Failed");
+                    return false;  //? allowing this to continue may cause UpcomingWallpapers to dequeue a null value and crash the program
+                }
+
                 NextWallpapers = UpcomingWallpapers.Dequeue();
                 Debug.WriteLine("Setting Next Set of Wallpapers");
             }
 
             ActiveWallpapers[index] = NextWallpapers[index];
+
+            return true;
         }
 
         private bool RandomizeWallpapers()
@@ -71,13 +79,21 @@ namespace WallpaperFlux.Core.Controllers
                 // Determine random image type
                 ImageType imageTypeToSearchFor = ImageType.None;
 
-                // TODO Replicate OptionsData within SettingsModel (Should this also be a subclass like in the original?)
                 double staticChance = DataUtil.Theme.Settings.ThemeSettings.FrequencyCalc.GetExactFrequency(ImageType.Static);
                 double gifChance = DataUtil.Theme.Settings.ThemeSettings.FrequencyCalc.GetExactFrequency(ImageType.GIF);
                 double videoChance = DataUtil.Theme.Settings.ThemeSettings.FrequencyCalc.GetExactFrequency(ImageType.Video);
 
+                if ((staticChance + gifChance + videoChance) == 0)
+                {
+                    MessageBoxUtil.ShowError("Unable to generate any wallpapers while all Exact Frequencies are set to 0");
+                    return false;
+                }
+
                 ImageType[] imageTypeIndexes = { ImageType.Static, ImageType.GIF, ImageType.Video };
                 double[] imageTypePercentages = { staticChance, gifChance, videoChance };
+
+                MessageBoxUtil.ShowError("Huh: " + rand.NextPercentageIndex(imageTypePercentages, imageTypePercentages.Sum()));
+                return false;
 
                 imageTypeToSearchFor = rand.NextInWeightedArray(imageTypeIndexes, imageTypePercentages);
 

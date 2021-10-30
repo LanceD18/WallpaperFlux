@@ -17,8 +17,13 @@
     xmlns:ffme="clr-namespace:Unosquare.FFME;assembly=ffme.win"
     xmlns:core="clr-namespace:WallpaperFlux.Core;assembly=WallpaperFlux.Core"
     xmlns:controls="clr-namespace:WallpaperFlux.Core.Models.Controls;assembly=WallpaperFlux.Core"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
     mc:Ignorable="d" FontSize="12" FontFamily="Segoe UI"
     d:DesignHeight="450" d:DesignWidth="800">
+
+    <views:MvxWpfView.Resources>
+
+    </views:MvxWpfView.Resources>
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -138,8 +143,12 @@
                                         <!-- Interval Value -->
                                         <TextBox MinWidth="35" Margin="0 0 2 0"
                                                  Text="{Binding DisplayInterval, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                 IsEnabled="{Binding CanSetInterval}" GotFocus="TextBox_GotFocus_FocusText"
-                                                 ToolTip="Interval Value"/>
+                                                 IsEnabled="{Binding CanSetInterval}" 
+                                                 ToolTip="Interval Value">
+                                            <TextBox.Style>
+                                                <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                                            </TextBox.Style>
+                                        </TextBox>
                                         <!-- Interval Type -->
                                         <ComboBox ItemsSource="{Binding Source={extensions:Enumeration {x:Type core:IntervalType}}}"
                                                   DisplayMemberPath="Description"
@@ -372,7 +381,11 @@
                                                         <!-- Rank TextBox -->
                                                         <TextBox Text="{Binding Rank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                          Width="50" Height="{Binding ImageSelectorSettingsHeight}" Margin="3"
-                                                         HorizontalContentAlignment="Center" GotFocus="TextBox_GotFocus_FocusText"/>
+                                                         HorizontalContentAlignment="Center">
+                                                            <TextBox.Style>
+                                                                <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                                                            </TextBox.Style>
+                                                        </TextBox>
                                                         <!-- Increase Rank Button -->
                                                         <Button mvx:Bi.nd = "Command IncreaseRankCommand"
                                                                 Width="25" Height="{Binding ImageSelectorSettingsHeight}" Margin="3" 
@@ -422,14 +435,24 @@
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="Max Rank: " Margin="3" VerticalAlignment="Center"/>
                         <TextBox DataContext="{Binding Theme.Settings.ThemeSettings}" Text="{Binding MaxRank, Mode=TwoWay, 
-                            UpdateSourceTrigger=PropertyChanged}" Margin="3" GotFocus="TextBox_GotFocus_FocusText"/>
+                            UpdateSourceTrigger=PropertyChanged}" Margin="3">
+                            <TextBox.Style>
+                                <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                            </TextBox.Style>
+                        </TextBox>
                         <Button Content="Update" Margin="3" mvx:Bi.nd="Command UpdateMaxRankCommand"/>
                     </StackPanel>
                 </GroupBox>
 
                 <!-- Image Frequency -->
                 <GroupBox Grid.Row="3" Grid.Column="1" Margin="3">
-                    <Grid>
+                    <Grid Focusable="True"  DataContext="{Binding Theme.Settings.ThemeSettings.FrequencyModel}" >
+
+                        <Grid.Resources>
+                            <system:Double x:Key="ImageFrequencyTextBoxWidth">50</system:Double>
+                            <Thickness x:Key="ImageFrequencyTextBoxMargin">10</Thickness>
+                        </Grid.Resources>
+
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="2"/>
                             <ColumnDefinition Width="auto"/>
@@ -457,25 +480,51 @@
 
                         <!-- Relative Row -->
                         <TextBlock Grid.Row="3" Grid.Column="1" Text="Relative" Margin="10" FontWeight="Bold"/>
-                        <TextBox Grid.Row="3" Grid.Column="2" Margin="10" Width="{ StaticResource ImageFrequencyTextBoxWidth}" TextAlignment="Center" 
-                                 DataContext="{Binding Theme.Settings.ThemeSettings.FrequencyModel}" 
-                                 Text="{Binding RelativeFrequencyStatic, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:0}%'}"
-                                 GotFocus="TextBox_GotFocus_FocusText"
-                                 KeyDown="TextBox_OnKeyEnterDown_LoseFocus">
-                            <!--
-                            <TextBox.InputBindings>
-                                <KeyBinding Command="{Binding ElementName=ConfirmFreqCommand, Path=Theme.Settings.ThemeSettings.FrequencyModel.ConfirmFreqCommand}" Key="Enter"/>
-                            </TextBox.InputBindings>
--->
+                            <!-- Static -->
+                        <TextBox Grid.Row="3" Grid.Column="2" Margin="{StaticResource ImageFrequencyTextBoxMargin}" Width="{StaticResource ImageFrequencyTextBoxWidth}"
+                                 Text="{Binding RelativeFrequencyStatic, Mode=TwoWay, UpdateSourceTrigger=LostFocus, StringFormat='{}{0:0}%'}">
+                            <TextBox.Style>
+                                <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                            </TextBox.Style>
                         </TextBox>
-                        <TextBox Grid.Row="3" Grid.Column="3" Margin="10" Width="{ StaticResource ImageFrequencyTextBoxWidth}" TextAlignment="Center" />
-                        <TextBox Grid.Row="3" Grid.Column="4" Margin="10" Width="{ StaticResource ImageFrequencyTextBoxWidth}" TextAlignment="Center" />
+                            <!-- GIF -->
+                        <TextBox Grid.Row="3" Grid.Column="3" Margin="{StaticResource ImageFrequencyTextBoxMargin}" Width="{StaticResource ImageFrequencyTextBoxWidth}"
+                                 Text="{Binding RelativeFrequencyGIF, Mode=TwoWay, UpdateSourceTrigger=LostFocus, StringFormat='{}{0:0}%'}">
+                            <TextBox.Style>
+                                <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                            </TextBox.Style>
+                        </TextBox>
+                            <!-- Video -->
+                        <TextBox Grid.Row="3" Grid.Column="4" Margin="{StaticResource ImageFrequencyTextBoxMargin}" Width="{StaticResource ImageFrequencyTextBoxWidth}"
+                                 Text="{Binding RelativeFrequencyVideo, Mode=TwoWay, UpdateSourceTrigger=LostFocus, StringFormat='{}{0:0}%'}">
+                            <TextBox.Style>
+                                <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                            </TextBox.Style>
+                        </TextBox>
 
                         <!-- Exact Row -->
                         <TextBlock Grid.Row="4" Grid.Column="1" Text="Exact" Margin="10" FontWeight="Bold"/>
-                        <TextBox Grid.Row="4" Grid.Column="2" Margin="10" Width="{ StaticResource ImageFrequencyTextBoxWidth}" TextAlignment="Center" />
-                        <TextBox Grid.Row="4" Grid.Column="3" Margin="10" Width="{ StaticResource ImageFrequencyTextBoxWidth}" TextAlignment="Center" />
-                        <TextBox Grid.Row="4" Grid.Column="4" Margin="10" Width="{ StaticResource ImageFrequencyTextBoxWidth}" TextAlignment="Center" />
+                            <!-- Static -->
+                        <TextBox Grid.Row="4" Grid.Column="2" Margin="{StaticResource ImageFrequencyTextBoxMargin}" Width="{StaticResource ImageFrequencyTextBoxWidth}"
+                                 Text="{Binding ExactFrequencyStatic, Mode=TwoWay, UpdateSourceTrigger=LostFocus, StringFormat='{}{0:0}%'}">
+                            <TextBox.Style>
+                                <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                            </TextBox.Style>
+                        </TextBox>
+                            <!-- GIF -->
+                        <TextBox Grid.Row="4" Grid.Column="3" Margin="{StaticResource ImageFrequencyTextBoxMargin}" Width="{StaticResource ImageFrequencyTextBoxWidth}"
+                                 Text="{Binding ExactFrequencyGIF, Mode=TwoWay, UpdateSourceTrigger=LostFocus, StringFormat='{}{0:0}%'}">
+                            <TextBox.Style>
+                                <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                            </TextBox.Style>
+                        </TextBox>
+                            <!-- Video -->
+                        <TextBox Grid.Row="4" Grid.Column="4" Margin="{StaticResource ImageFrequencyTextBoxMargin}" Width="{StaticResource ImageFrequencyTextBoxWidth}"
+                                 Text="{Binding ExactFrequencyVideo, Mode=TwoWay, UpdateSourceTrigger=LostFocus, StringFormat='{}{0:0}%'}">
+                            <TextBox.Style>
+                                <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                            </TextBox.Style>
+                        </TextBox>
 
                     </Grid>
                 </GroupBox>

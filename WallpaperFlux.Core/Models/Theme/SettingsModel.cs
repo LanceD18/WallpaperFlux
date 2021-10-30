@@ -26,7 +26,7 @@ namespace WallpaperFlux.Core.Models.Theme
         public bool ExcludeRenamingStatic;
         public bool ExcludeRenamingGif;
         public bool ExcludeRenamingVideo;
-        public FrequencyCalculator FrequencyCalc = new FrequencyCalculator();
+        public FrequencyCalculator FrequencyCalc;
         public FrequencyModel FrequencyModel { get; set; }
 
         // Video Settings
@@ -70,6 +70,7 @@ namespace WallpaperFlux.Core.Models.Theme
 
         public SettingsModel(int maxRank)
         {
+            ThemeSettings.FrequencyCalc = new FrequencyCalculator(); //? this must come before FrequencyModel
             ThemeSettings.FrequencyModel = new FrequencyModel(ThemeSettings.FrequencyCalc);
             ThemeSettings.MaxRank = maxRank;
         }

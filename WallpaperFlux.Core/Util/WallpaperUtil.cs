@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using LanceTools.WindowsUtil;
@@ -115,7 +116,7 @@ namespace WallpaperFlux.Core.Util
 
         // TODO With the presetWallpaperPath I don't think you need ignoreRandomization anymore
         // TODO Both use cases, setting the PreviousWallpaper and directly setting an image as the Wallpaper can use presetWallpaperPath
-        public static void SetWallpaper(int index, string presetWallpaperPath, bool ignoreRandomization)
+        public static bool SetWallpaper(int index, string presetWallpaperPath, bool ignoreRandomization)
         {
             string wallpaperPath;
 
@@ -123,9 +124,23 @@ namespace WallpaperFlux.Core.Util
             if (presetWallpaperPath == String.Empty)
             {
                 // if ignoring randomization then we will just use the current ActiveWallpaper path (Likely means that a wallpaper on one monitor changed before/after the others)
-                if (!ignoreRandomization) DataUtil.Theme.WallpaperRandomizer.SetNextWallpaperOrder(index);
+                if (!ignoreRandomization)
+                {
+                    if (DataUtil.Theme.WallpaperRandomizer.SetNextWallpaperOrder(index))
+                    {
+                        wallpaperPath = DataUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index];
+                    }
+                    else
+                    {
+                        Debug.WriteLine("Failed to set wallpaper, improper randomization");
+                        return false;
+                    }
+                }
+                else
+                {
+                    wallpaperPath = DataUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index];
+                }
 
-                wallpaperPath = DataUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index];
             }
             else
             {
@@ -145,11 +160,13 @@ namespace WallpaperFlux.Core.Util
                 // TODO Ensure that the below is no longer an issue of the redesign, if a failure occurs we will just not load the next wallpaper instead
                 //? this can occur after swapping themes as next wallpaper still holds data from the previous theme
 
-                return;
+                Debug.WriteLine("Failed to set wallpaper, no images exist");
+                return false;
                 //xDataUtil.Theme.WallpaperRandomizer.SetNextWallpaperOrder(index, ignoreRandomization);
             }
 
             WallpaperHandler.OnWallpaperChange(index, wallpaperPath);
+            return true;
         }
 
         /*x

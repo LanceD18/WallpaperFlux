@@ -79,6 +79,14 @@ namespace WallpaperFlux.Core.ViewModels
             }).ConfigureAwait(false);
         }
 
+        // updates some properties that may change during runtime but shouldn't be processed constantly
+        // TODO This should be attached to the eventual Update Theme/Quick Save Button
+        public void UpdateTheme()
+        {
+            Debug.WriteLine("Updating theme...");
+            Theme.Settings.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence();
+        }
+
         //-----View Variables-----
 
         public int MaxToolTipMilliseconds { get; set; } = int.MaxValue;
@@ -274,6 +282,8 @@ namespace WallpaperFlux.Core.ViewModels
 
             RaisePropertyChanged(() => CanNextWallpaper);
             RaisePropertyChanged(() => CanSelectImages);
+
+            UpdateTheme();
         }
 
         public void RemoveFolder()
@@ -281,6 +291,8 @@ namespace WallpaperFlux.Core.ViewModels
             Debug.WriteLine("Removing: " + SelectedImageFolder.Path);
             ImageFolders.Remove(SelectedImageFolder);
             ImageFolders.ValidateImageFolders();
+
+            UpdateTheme();
         }
         #endregion
 

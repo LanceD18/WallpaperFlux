@@ -15,6 +15,7 @@ namespace WallpaperFlux.Core.Controllers
 {
     public class RankController
     {
+        // Structure: [ImageType (Key)][Rank (Index)][Image Path (Value of Index)]
         private Dictionary<ImageType, ReactiveList<ReactiveList<string>>> RankData = new Dictionary<ImageType, ReactiveList<ReactiveList<string>>>()
         {
             {ImageType.Static, new ReactiveList<ReactiveList<string>>()},
@@ -34,6 +35,12 @@ namespace WallpaperFlux.Core.Controllers
         public RankController()
         {
             PercentileController = new PercentileController(CreateRankDataRef());
+
+            foreach (ImageType imageType in RankData.Keys)
+            {
+                RankData[imageType].OnListAddItem += RankData_OnParentListAddItem;
+                RankData[imageType].OnListRemoveItem += RankData_OnParentListRemoveItem;
+            }
         }
 
         //! this method should only be called by the Setter of the ImageModel Rank property unless otherwise noted
@@ -233,20 +240,12 @@ namespace WallpaperFlux.Core.Controllers
         {
             e.Item.OnListAddItem += RankData_OnListAddItem;
             e.Item.OnListRemoveItem += RankData_OnListRemoveItem;
-
-            RankData[ImageType.Static].Insert(e.Index, new ReactiveList<string>());
-            RankData[ImageType.GIF].Insert(e.Index, new ReactiveList<string>());
-            RankData[ImageType.Video].Insert(e.Index, new ReactiveList<string>());
         }
 
         private void RankData_OnParentListRemoveItem(object sender, ListChangedEventArgs<ReactiveList<string>> e)
         {
             e.Item.OnListAddItem -= RankData_OnListAddItem;
             e.Item.OnListRemoveItem -= RankData_OnListRemoveItem;
-
-            RankData[ImageType.Static].RemoveAt(e.Index);
-            RankData[ImageType.GIF].RemoveAt(e.Index);
-            RankData[ImageType.Video].RemoveAt(e.Index);
         }
 
         private void RankData_OnListAddItem(object sender, ListChangedEventArgs<string> e)
@@ -256,7 +255,10 @@ namespace WallpaperFlux.Core.Controllers
             PercentileController.PotentialWeightedRankUpdate = true;
             if ((sender as ReactiveList<string>).Count == 1) // allows the now unempty rank to be selected
             {
+                Debug.WriteLine("A recently adjusted rank now has one image");
                 PercentileController.PotentialRegularRankUpdate = true;
+
+                DataUtil.Theme.Settings.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence();
             }
             //x}
         }
@@ -268,11 +270,13 @@ namespace WallpaperFlux.Core.Controllers
             PercentileController.PotentialWeightedRankUpdate = true;
             if ((sender as ReactiveList<string>).Count == 0) // prevents the empty rank from being selected
             {
+                Debug.WriteLine("A recently adjusted rank is now empty");
                 PercentileController.PotentialRegularRankUpdate = true;
+
+                DataUtil.Theme.Settings.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence();
             }
             //x}
         }
-
         #endregion
 
         #region ImageTypeWeights
@@ -291,6 +295,8 @@ namespace WallpaperFlux.Core.Controllers
 
             return count;
         }
+
+        public bool IsAnyImagesOfTypeRanked(ImageType imageType) => GetImagesOfTypeRankSum(imageType) > 0;
 
         public bool IsAllImagesOfTypeUnranked(ImageType imageType) => GetImagesOfTypeRankSum(imageType) == 0;
 

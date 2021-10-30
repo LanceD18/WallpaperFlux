@@ -9,6 +9,12 @@ namespace WallpaperFlux.Core.Util
     // TODO Consider using event calls to handle accessing the data within models. Keep in mind that this could result in an excessive amount of events being written
     public static class DataUtil
     {
-        public static ThemeModel Theme = new ThemeModel(10);
+        public static ThemeModel Theme;
+
+        static DataUtil()
+        {
+            Theme = new ThemeModel(10);
+            Theme.Init(); //? Intended for code needed to come after the constructor initialization
+        }
     }
 }

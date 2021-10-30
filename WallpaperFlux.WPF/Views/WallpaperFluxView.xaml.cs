@@ -5,6 +5,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -40,51 +41,7 @@ namespace WallpaperFlux.WPF.Views
             InitializeComponent();
         }
 
-        private async void TextBox_GotFocus_FocusText(object sender, RoutedEventArgs e)
-        {
-            await Application.Current.Dispatcher.InvokeAsync(((TextBox) sender).SelectAll);
-        }
-
-        //TODO The below undoes MVVM, try to fix it in the future
-        //TODO Implement a Font Scaler
-        private async void ImageSelectorTabListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (e.AddedItems.Count > 0)
-            {
-                if (e.AddedItems.ElementAt(0) is ImageModel imageModel)
-                {
-                    string path = imageModel.Path;
-
-                    SelectedImagePathTextBox.Text = path;
-
-                    Size dimensions;
-                    if (!imageModel.IsVideo)
-                    {
-                        System.Drawing.Image image = System.Drawing.Image.FromFile(path);
-                        dimensions = new Size(image.Width, image.Height);
-                        image.Dispose();
-
-                        SelectedImageDimensionsTextBox.Text = dimensions.Width + "x" + dimensions.Height;
-                    }
-                    else
-                    {
-                        // TODO Figure out how to gather the video dimensions (With the below method the dimensions never load in time, or seemingly don't load at all)
-                        /*
-                        MediaElement element = new MediaElement();
-                        await element.Open(new Uri(path));
-                        Bitmap bitmap = await element.CaptureBitmapAsync();
-
-                        dimensions = new Size(bitmap.Width, bitmap.Height);
-                        await element.Close();
-                        */
-
-                        SelectedImageDimensionsTextBox.Text = "";
-                    }
-
-                }
-            }
-        }
-
+        #region MediaElement
         private void MediaElement_OnLoaded(object sender, RoutedEventArgs e)
         {
             MediaElement element = sender as MediaElement;
@@ -108,20 +65,46 @@ namespace WallpaperFlux.WPF.Views
             MediaElement element = sender as MediaElement;
             element?.Close();
         }
+        #endregion
 
-        // TODO Change the name of this to match its final form eventually
-        private void TextBox_OnKeyEnterDown_LoseFocus(object sender, KeyEventArgs e)
+        //TODO The below undoes MVVM, try to fix it in the future
+        //TODO Implement a Font Scaler
+        private async void ImageSelectorTabListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (e.Key == Key.Enter)
+            if (e.AddedItems.Count > 0)
             {
-                FrequencyModel viewModel = (sender as TextBox).DataContext as FrequencyModel;
-                Debug.WriteLine("w0");
-
-                if (viewModel.ConfirmFrequencyCommand.CanExecute(sender))
+                if (e.AddedItems.ElementAt(0) is ImageModel imageModel)
                 {
-                    viewModel.ConfirmFrequencyCommand.Execute(sender);
+                    string path = imageModel.Path;
+
+                    SelectedImagePathTextBox.Text = path;
+
+                    Size dimensions;
+                    if (!imageModel.IsVideo)
+                    {
+                        
+                        System.Drawing.Image image = System.Drawing.Image.FromFile(path); // TODO The ExternalDisplayUtil can handle this now
+                        dimensions = new Size(image.Width, image.Height);
+                        image.Dispose();
+
+                        SelectedImageDimensionsTextBox.Text = dimensions.Width + "x" + dimensions.Height;
+                    }
+                    else
+                    {
+                        // TODO Figure out how to gather the video dimensions (With the below method the dimensions never load in time, or seemingly don't load at all)
+                        /*
+                        MediaElement element = new MediaElement();
+                        await element.Open(new Uri(path));
+                        Bitmap bitmap = await element.CaptureBitmapAsync();
+
+                        dimensions = new Size(bitmap.Width, bitmap.Height);
+                        await element.Close();
+                        */
+
+                        SelectedImageDimensionsTextBox.Text = "";
+                    }
+
                 }
-                //MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
             }
         }
     }
