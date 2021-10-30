@@ -69,11 +69,20 @@ namespace WallpaperFlux.WPF
         #endregion
 
         #region TextBox
+        // Selects all text on gaining focus
         private async void TextBox_GotFocus_FocusText(object sender, RoutedEventArgs e)
         {
             await Application.Current.Dispatcher.InvokeAsync(((TextBox)sender).SelectAll);
         }
 
+        // Selects all text on mouse down
+        private async void TextBox_MouseEvent_FocusText(object sender, MouseButtonEventArgs e)
+        {
+            Debug.WriteLine("bruh");
+            await Application.Current.Dispatcher.InvokeAsync(((TextBox)sender).SelectAll);
+        }
+
+        // Constrains text preview to numbers only
         private void OnPreviewTextInput_NumbersOnly(object sender, TextCompositionEventArgs e)
         {
             Regex regex = new Regex("[^0-9]+");

@@ -446,7 +446,7 @@
 
                 <!-- Image Frequency -->
                 <GroupBox Grid.Row="3" Grid.Column="1" Margin="3">
-                    <Grid Focusable="True"  DataContext="{Binding Theme.Settings.ThemeSettings.FrequencyModel}" >
+                    <Grid Focusable="True"  DataContext="{Binding Theme.Settings.ThemeSettings.FrequencyModel}">
 
                         <Grid.Resources>
                             <system:Double x:Key="ImageFrequencyTextBoxWidth">50</system:Double>
