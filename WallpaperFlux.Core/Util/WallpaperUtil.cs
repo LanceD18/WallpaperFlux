@@ -34,6 +34,14 @@ namespace WallpaperFlux.Core.Util
             dialog.Filters.Add(new CommonFileDialogFilter(ALL_FILES_DISPLAY_NAME, ALL_FILES_EXTENSION_LIST));
         }
 
+        public static bool IsStatic(string filePath) => IsStatic(new FileInfo(filePath));
+
+        public static bool IsStatic(FileInfo fileInfo) => !(fileInfo.Extension == ".gif" || WallpaperUtil.IsSupportedVideoType(fileInfo));
+
+        public static bool IsGif(string filePath) => IsGif(new FileInfo(filePath));
+
+        public static bool IsGif(FileInfo fileInfo) => fileInfo.Extension == ".gif";
+
         public static bool IsSupportedVideoType(string filePath)
         {
             if (File.Exists(filePath))
@@ -165,6 +173,7 @@ namespace WallpaperFlux.Core.Util
                 //xDataUtil.Theme.WallpaperRandomizer.SetNextWallpaperOrder(index, ignoreRandomization);
             }
 
+            Debug.WriteLine("Settings Wallpaper to Display " + index + ": " + wallpaperPath);
             WallpaperHandler.OnWallpaperChange(index, wallpaperPath);
             return true;
         }

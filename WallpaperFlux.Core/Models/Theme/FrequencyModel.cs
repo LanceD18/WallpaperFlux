@@ -109,6 +109,7 @@ namespace WallpaperFlux.Core.Models.Theme
             if (_frequenciesUpdated)
             {
                 _parentCalculator.UpdateFrequency(imageType, frequencyType, value / 100); // the visual value is 100 times larger than the actual value which goes from 0-1
+                UpdateModelFrequency(); // updates the UI to the potentially adjusted frequency
 
                 //? The below is now handled by the FrequencyCalculator since every time the frequencies are verified this should be called
                 //xUpdateModelFrequency(); // readjust value to new frequency
@@ -128,10 +129,12 @@ namespace WallpaperFlux.Core.Models.Theme
                 ExactFrequencyStatic = _parentCalculator.GetExactFrequency(ImageType.Static) * 100;
                 ExactFrequencyGIF = _parentCalculator.GetExactFrequency(ImageType.GIF) * 100;
                 ExactFrequencyVideo = _parentCalculator.GetExactFrequency(ImageType.Video) * 100;
+                Debug.WriteLine(RelativeFrequencyGIF);
 
                 _frequenciesUpdated = true;
             }
 
+            Debug.WriteLine("Raising all properties changed"); //? Not sure how severe the impact of this is so keep the debug statement for now
             RaiseAllPropertiesChanged();
         }
     }

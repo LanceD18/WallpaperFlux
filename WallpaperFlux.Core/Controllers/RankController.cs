@@ -258,7 +258,8 @@ namespace WallpaperFlux.Core.Controllers
                 Debug.WriteLine("A recently adjusted rank now has one image");
                 PercentileController.PotentialRegularRankUpdate = true;
 
-                DataUtil.Theme.Settings.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence();
+                // e.Item represents the added image
+                DataUtil.Theme.Settings.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence(e.Item);
             }
             //x}
         }
@@ -273,7 +274,8 @@ namespace WallpaperFlux.Core.Controllers
                 Debug.WriteLine("A recently adjusted rank is now empty");
                 PercentileController.PotentialRegularRankUpdate = true;
 
-                DataUtil.Theme.Settings.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence();
+                // e.Item represents the removed image
+                DataUtil.Theme.Settings.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence(e.Item);
             }
             //x}
         }
@@ -288,7 +290,7 @@ namespace WallpaperFlux.Core.Controllers
         public int GetImagesOfTypeRankSum(ImageType imageType)
         {
             int count = 0;
-            for (var i = 1; i < RankData[imageType].Count; i++) //? i starts at 1 since rank 0 images are not included [Although they are likely inactive anyways]
+            for (var i = 1; i < RankData[imageType].Count; i++) //? i starts at 1 since rank 0 images are not included
             {
                 count += RankData[imageType][i].Count * i; // i = rank
             }
@@ -296,9 +298,20 @@ namespace WallpaperFlux.Core.Controllers
             return count;
         }
 
-        public bool IsAnyImagesOfTypeRanked(ImageType imageType) => GetImagesOfTypeRankSum(imageType) > 0;
+        public bool IsAnyImagesOfTypeRanked(ImageType imageType)
+        {
+            for (var i = 1; i < RankData[imageType].Count; i++) //? i starts at 1 since rank 0 images are not included
+            {
+                if (RankData[imageType][i].Count > 0)
+                {
+                    return true;
+                }
+            }
 
-        public bool IsAllImagesOfTypeUnranked(ImageType imageType) => GetImagesOfTypeRankSum(imageType) == 0;
+            return false;
+        }
+
+        public bool IsAllImagesOfTypeUnranked(ImageType imageType) => !IsAnyImagesOfTypeRanked(imageType);
 
         public void UpdateImageTypeWeights()
         {

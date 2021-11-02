@@ -139,7 +139,6 @@ namespace WallpaperFlux.Core.Controllers
             PotentialWeightedRankUpdate = false; //? Prevents this from being called often due to the potential performance costs
             PotentialRegularRankUpdate = false; //? Prevents this from being called often due to the potential performance costs
 
-            Debug.WriteLine("SETTINGS REMOVED: PercentileHandler.cs | UpdateRankPercentiles()");
             ModifiedRankPercentiles = GetModifiedRankPercentiles(imageType);
             
             ModifiedRankPercentiles = DataUtil.Theme.Settings.ThemeSettings.WeightedRanks ? GetWeightedRankPercentiles(imageType) : GetModifiedRankPercentiles(imageType);

@@ -44,6 +44,7 @@ namespace WallpaperFlux.WPF
 
                 // TODO Remove me once you've implemented a control for setting the default volume & changing video volume
                 //! temp
+                Debug.WriteLine("Forcing video volume to 0.1 for now");
                 WallpaperMediaElement.Volume = 0.1;
                 //! temp
 

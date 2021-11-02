@@ -58,8 +58,8 @@ namespace WallpaperFlux.Core.Controllers
                     return false;  //? allowing this to continue may cause UpcomingWallpapers to dequeue a null value and crash the program
                 }
 
+                Debug.WriteLine("Setting Next Set Wallpaper for Display " + index);
                 NextWallpapers = UpcomingWallpapers.Dequeue();
-                Debug.WriteLine("Setting Next Set of Wallpapers");
             }
 
             ActiveWallpapers[index] = NextWallpapers[index];
@@ -92,8 +92,7 @@ namespace WallpaperFlux.Core.Controllers
                 ImageType[] imageTypeIndexes = { ImageType.Static, ImageType.GIF, ImageType.Video };
                 double[] imageTypePercentages = { staticChance, gifChance, videoChance };
 
-                MessageBoxUtil.ShowError("Huh: " + rand.NextPercentageIndex(imageTypePercentages, imageTypePercentages.Sum()));
-                return false;
+                //xMessageBoxUtil.ShowError("Huh: " + rand.NextPercentageIndex(imageTypePercentages, imageTypePercentages.Sum()));
 
                 imageTypeToSearchFor = rand.NextInWeightedArray(imageTypeIndexes, imageTypePercentages);
 
