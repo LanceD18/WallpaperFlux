@@ -36,9 +36,9 @@ namespace WallpaperFlux.Core.JSON.Temp
                         }
                     }
                 }
+                */
 
                 name = value;
-                */
             }
         }
 
@@ -49,11 +49,11 @@ namespace WallpaperFlux.Core.JSON.Temp
 
             set
             {
-                /*x
                 if (_Enabled != value) // prevents unnecessary calls
                 {
                     _Enabled = value;
 
+                    /*
                     foreach (TagData tag in Tags)
                     {
                         if (!WallpaperData.IsLoadingData)
@@ -61,8 +61,8 @@ namespace WallpaperFlux.Core.JSON.Temp
                             WallpaperData.EvaluateImageActiveStates(tag.GetLinkedImages(), !value); // will forceDisable if the value is set to false
                         }
                     }
+                    */
                 }
-                */
             }
         }
 
@@ -73,11 +73,11 @@ namespace WallpaperFlux.Core.JSON.Temp
 
             set
             {
-                /*x
                 if (_UseForNaming != value) // prevents unnecessary calls | and yes this can happen
                 {
                     _UseForNaming = value;
 
+                    /*
                     HashSet<WallpaperData.ImageData> imagesToRename = new HashSet<WallpaperData.ImageData>();
                     foreach (TagData tag in Tags)
                     {
@@ -86,8 +86,8 @@ namespace WallpaperFlux.Core.JSON.Temp
                             imagesToRename.Add(WallpaperData.GetImageData(imagePath));
                         }
                     }
+                    */
                 }
-                */
             }
         }
 
@@ -98,9 +98,9 @@ namespace WallpaperFlux.Core.JSON.Temp
 
         public TempCategoryData(string name, HashSet<TempTagData> tags = null, bool enabled = true, bool useForNaming = true)
         {
-            /*x
-            Tags = tags ?? new HashSet<TagData>(); //! must be placed first to avoid getter setter errors (ex: enabled's setter)
+            Tags = tags ?? new HashSet<TempTagData>(); //! must be placed first to avoid getter setter errors (ex: enabled's setter)
 
+            /*x
             Name = name;
             Enabled = enabled;
             UseForNaming = useForNaming;

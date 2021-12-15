@@ -37,17 +37,13 @@ namespace WallpaperFlux.Core.Util
             return false;
         }
 
+        //? This serves a dual purpose, enabling/disabling images within a folder AND detecting new images upon validation (But for ALL folders)
         public static void ValidateImageFolders(this MvxObservableCollection<FolderModel> imageFolders)
         {
             foreach (FolderModel imageFolder in imageFolders)
             {
-                ValidateImageFolder(imageFolder);
+                imageFolder.ValidateImages();
             }
-        }
-
-        public static void ValidateImageFolder(this FolderModel imageFolder)
-        {
-            imageFolder.ValidateImages();
         }
     }
 }

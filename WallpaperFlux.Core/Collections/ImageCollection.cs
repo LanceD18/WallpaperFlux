@@ -26,8 +26,7 @@ namespace WallpaperFlux.Core.Collections
         //x public delegate void ImageCollectionChanged(object sender, ImageCollectionChangedEventArgs e);
         //x public event ImageCollectionChanged OnListRemoveItem;
 
-        public ImageCollection() { }
-
+        // TODO Optimize Me
         public ImageModel AddImage(string path)
         {
             if (ContainsImage(path)) return null;
@@ -42,9 +41,9 @@ namespace WallpaperFlux.Core.Collections
             List<ImageModel> images = new List<ImageModel>();
             foreach (string path in paths)
             {
-                if (ContainsImage(path)) continue;
+                ImageModel newImage = AddImage(path);
 
-                images.Add(AddImage(path));
+                if (newImage != null) images.Add(newImage);
             }
 
             return images.ToArray();
@@ -61,7 +60,6 @@ namespace WallpaperFlux.Core.Collections
         {
             foreach (ImageModel image in images)
             {
-                if (ContainsImage(image.Path)) continue;
                 AddImage(image);
             }
         }

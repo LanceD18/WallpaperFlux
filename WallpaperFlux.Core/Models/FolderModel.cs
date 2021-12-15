@@ -19,11 +19,11 @@ namespace WallpaperFlux.Core.Models
         public string Path
         {
             get => _path;
+
             private set
             {
                 _path = value;
-                _images.Clear();
-                _images.AddRange(new DirectoryInfo(Path).GetFiles().Select((s) => s.FullName));
+                _images = new DirectoryInfo(Path).GetFiles().Select((s) => s.FullName);
             }
         }
 
@@ -37,11 +37,11 @@ namespace WallpaperFlux.Core.Models
             {
                 _active = value;
                 RaisePropertyChanged(() => Active);
-                this.ValidateImageFolder();
+                ValidateImages();
             }
         }
 
-        private List<string> _images = new List<string>();
+        private IEnumerable<string> _images;
 
         public FolderModel(string path, bool active)
         {
@@ -63,6 +63,8 @@ namespace WallpaperFlux.Core.Models
 
         // updated the active state of each image based on the folder's active state
         // if the image does not exist, add it to the theme, regardless of whether or not the folder is active
+        //? This serves a dual purpose, enabling/disabling images within a folder AND detecting new images upon validation
+        // TODO Optimize Me
         public void ValidateImages()
         {
             foreach (string image in _images)
@@ -76,6 +78,15 @@ namespace WallpaperFlux.Core.Models
                     DataUtil.Theme.Images.AddImage(image);
                     DataUtil.Theme.Images.GetImage(image).Active = Active;
                 }
+            }
+        }
+
+        public void DeactivateFolder()
+        {
+            foreach (string image in _images)
+            {
+                DataUtil.Theme.Images.RemoveImage(image);
+                DataUtil.Theme.Images.RemoveImage("Dummy test");
             }
         }
     }

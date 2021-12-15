@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Runtime.Serialization;
 using System.Text;
 using Newtonsoft.Json;
+using WallpaperFlux.Core.Util;
 
 namespace WallpaperFlux.Core.JSON.Temp
 {
@@ -22,7 +25,7 @@ namespace WallpaperFlux.Core.JSON.Temp
     {
         [DataMember(Name = "Path")] public string Path { get; private set; } //? If you need to change this, FileData's field must be changed into List<ImageData>
 
-        [JsonIgnore] public string PathFolder { get; private set; }
+        [JsonIgnore] public string PathFolder { get; }
 
         [DataMember(Name = "Rank")] private int _Rank;
 
@@ -32,9 +35,9 @@ namespace WallpaperFlux.Core.JSON.Temp
 
             set
             {
-                /*x
-                if (value <= GetMaxRank() && value >= 0) // prevents stepping out of valid rank bounds
-                {
+                //xif (value <= GetMaxRank() && value >= 0) // prevents stepping out of valid rank bounds
+                //x{
+                    /*
                     if (Active) // Rank Data does not include inactive images
                     {
                         RankData[_Rank].Remove(Path);
@@ -43,10 +46,10 @@ namespace WallpaperFlux.Core.JSON.Temp
                         ImagesOfTypeRankData[imageType][_Rank].Remove(Path);
                         ImagesOfTypeRankData[imageType][value].Add(Path);
                     }
+                    */
 
                     _Rank = value; // place this after the above if statement to ensure that the right image file path is found
-                }
-                */
+                //x}
             }
         }
 
@@ -58,11 +61,11 @@ namespace WallpaperFlux.Core.JSON.Temp
 
             private set
             {
-                /*x
                 if (_Active != value) // Prevents element duplication whenever active is set to the same value
                 {
                     _Active = value;
 
+                    /*
                     if (value)
                     {
                         RankData[_Rank].Add(Path);
@@ -79,8 +82,8 @@ namespace WallpaperFlux.Core.JSON.Temp
                         ActiveImages.Remove(Path);
                         ActiveImagesOfType[imageType].Remove(Path);
                     }
+                    */
                 }
-                */
             }
         }
 
@@ -92,10 +95,8 @@ namespace WallpaperFlux.Core.JSON.Temp
 
             set
             {
-                /*x
                 _Enabled = value;
                 Active = value;
-                */
             }
         }
 
@@ -108,10 +109,51 @@ namespace WallpaperFlux.Core.JSON.Temp
 
         [DataMember(Name = "Video Settings")] public TempVideoSettings VideoSettings = new TempVideoSettings(100, 1); // only applicable to images with the corresponding image type
 
-
-        public TempImageData()
+        public TempImageData(string path, int rank, bool active, Dictionary<string, HashSet<string>> tags = null, HashSet<Tuple<string, string>> tagNamingExceptions = null)
         {
+            FileInfo file = new FileInfo(path);
 
+            //? ImageModel will convert this on its own
+            //x InitializeImageType(file); //? needs to be done before a rank is set
+
+            Path = path;
+            PathFolder = file.Directory.FullName;
+            Rank = rank;
+            Active = active;
+            Tags = tags ?? new Dictionary<string, HashSet<string>>();
+            TagNamingExceptions = tagNamingExceptions ?? new HashSet<Tuple<string, string>>();
+
+            /* TODO
+            if (!IsLoadingData || IsLoadingImageFolders) // image that are loaded-in already have the proper settings | IsLoadingImageFolders overrides this for actual new images
+            {
+                EvaluateActiveState(false);
+            }
+            */
+        }
+
+        private void InitializeImageType(FileInfo file)
+        {
+            if (imageType == ImageType.None)
+            {
+                if (!WallpaperUtil.IsSupportedVideoType(file))
+                {
+                    if (file.Extension != ".gif")
+                    {
+                        imageType = ImageType.Static;
+                    }
+                    else
+                    {
+                        imageType = ImageType.GIF;
+                    }
+                }
+                else
+                {
+                    imageType = ImageType.Video;
+                }
+            }
+
+            //x This (below??) has been moved to AddImage() alongside FileData, without doing this you'll end up accidentally adding the same object twice, causing a crash
+            //x ImagesOfType[imageType].Add(path, this);
         }
     }
 }

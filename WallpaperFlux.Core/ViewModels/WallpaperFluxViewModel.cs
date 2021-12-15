@@ -20,6 +20,7 @@ using MvvmCross.Commands;
 using MvvmCross.Core;
 using MvvmCross.ViewModels;
 using WallpaperFlux.Core.External;
+using WallpaperFlux.Core.JSON.Temp;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Models.Controls;
 using WallpaperFlux.Core.Models.Theme;
@@ -31,7 +32,8 @@ namespace WallpaperFlux.Core.ViewModels
     {
         // TODO When you need more view models, initialize them in the constructor here
 
-        // for use with the xaml, allows the data of settings to be accessed
+        //? this variable exists for use with the xaml despite the Static Reference
+        // allows the data of settings to be accessed by the xaml code
         public ThemeModel Theme { get; set; } = DataUtil.Theme;
 
         public SettingsModel Settings { get; set; } = DataUtil.Theme.Settings;
@@ -44,11 +46,13 @@ namespace WallpaperFlux.Core.ViewModels
 
             // TODO Use models to hold command information (Including needed data)
             NextWallpaperCommand = new MvxCommand(NextWallpaper);
+            PreviousWallpaperCommand = new MvxCommand(() => { throw new NotImplementedException(); });
+            LoadThemeCommand = new MvxCommand(LoadTheme);
             AddFolderCommand = new MvxCommand(PromptAddFolder);
             RemoveFolderCommand = new MvxCommand(RemoveFolder);
             SyncCommand = new MvxCommand(Sync);
             SelectImagesCommand = new MvxCommand(SelectImages);
-            UpdateMaxRankCommand = new MvxCommand(Theme.Settings.UpdateMaxRank);
+            UpdateMaxRankCommand = new MvxCommand(Theme.Settings.UpdateMaxRankCommand);
         }
 
         async void InitializeDisplaySettings() // waits for the DisplayCount to be set before initializing the display settings
@@ -87,8 +91,8 @@ namespace WallpaperFlux.Core.ViewModels
             Theme.Settings.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence();
         }
 
+        #region View Variables
         //-----View Variables-----
-
         public int MaxToolTipMilliseconds { get; set; } = int.MaxValue;
 
         /// Image Folders
@@ -157,7 +161,9 @@ namespace WallpaperFlux.Core.ViewModels
                 SetProperty(ref _selectedImageSelectorTab, value);
             }
         }
+        #endregion
 
+        #region Enablers
         //-----Enablers-----
         public bool CanNextWallpaper => ImageFolders.Count > 0;
 
@@ -168,12 +174,19 @@ namespace WallpaperFlux.Core.ViewModels
         public bool CanSync => SelectedDisplaySetting != null;
 
         public bool CanSelectImages => ImageFolders.Count > 0;
+        #endregion
 
         #region Commands
         //-----Commands-----
 
+        #region Command Properties
+
         //  -----Command Properties-----
         public IMvxCommand NextWallpaperCommand { get; set; }
+
+        public IMvxCommand PreviousWallpaperCommand { get; set; }
+
+        public IMvxCommand LoadThemeCommand { get; set; }
 
         public IMvxCommand AddFolderCommand { get; set; }
 
@@ -185,6 +198,10 @@ namespace WallpaperFlux.Core.ViewModels
 
         public IMvxCommand UpdateMaxRankCommand { get; set; }
 
+        #endregion
+
+        #region Command Methods
+        // TODO Create subclasses for the commands with excess methods (Like Theme Data)
         //  -----Command Methods-----
         #region Wallpaper Setters
         public void NextWallpaper()
@@ -253,6 +270,58 @@ namespace WallpaperFlux.Core.ViewModels
         */
         #endregion
 
+        #region Theme Data
+        public void LoadTheme()
+        {
+            using (CommonOpenFileDialog dialog = new CommonOpenFileDialog())
+            {
+                //dialog.InitialDirectory = lastSelectedPath;
+                dialog.Multiselect = false;
+                dialog.Title = "Select a theme";
+                dialog.Filters.Add(new CommonFileDialogFilter(JsonUtil.JSON_FILE_DISPLAY_NAME, JsonUtil.JSON_FILE_EXTENSION));
+
+                if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
+                {
+                    ProcessTheme(JsonUtil.LoadData(dialog.FileName));
+                }
+            }
+        }
+
+        private void ProcessTheme(TemporaryJsonWallpaperData wallpaperData)
+        {
+            Theme.RankController.SetMaxRank(wallpaperData.miscData.maxRank); //! This needs to be done before any images are added
+
+            // TODO wallpaperData.themeOptions;
+
+            // TODO wallpaperData.miscData;
+
+            ProcessImagesAndFolders(wallpaperData);
+        }
+
+        private void ProcessThemeOptions(TemporaryJsonWallpaperData wallpaperData)
+        {
+
+        }
+
+        private void ProcessMiscData(TemporaryJsonWallpaperData wallpaperData)
+        {
+
+        }
+
+        private void ProcessImagesAndFolders(TemporaryJsonWallpaperData wallpaperData)
+        {
+            //! Placing this after AddFolderRange() will *significantly* increase load times as the images are attempted to be added multiple times
+            // TODO Even with the above statement, this still takes a considerable amount of time to load
+            // TODO Some of the lag may have to do with the conversions, it'll likely be a bit better once TempImageData is no longer needed
+            foreach (TempImageData imageData in wallpaperData.imageData)
+            {
+                DataUtil.Theme.Images.AddImage(new ImageModel(imageData.Path, imageData.Rank));
+            }
+
+            AddFolderRange(wallpaperData.imageFolders.Keys.ToArray());
+        }
+        #endregion
+
         #region Image Folders
         public void PromptAddFolder()
         {
@@ -276,9 +345,14 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
-        public void AddFolder(string path)
+        public void AddFolder(string path) => AddFolderRange(new string[] { path });
+
+        public void AddFolderRange(string[] paths)
         {
-            ImageFolders.Add(new FolderModel(path, true));
+            foreach (string path in paths)
+            {
+                ImageFolders.Add(new FolderModel(path, true));
+            }
 
             RaisePropertyChanged(() => CanNextWallpaper);
             RaisePropertyChanged(() => CanSelectImages);
@@ -286,11 +360,13 @@ namespace WallpaperFlux.Core.ViewModels
             UpdateTheme();
         }
 
+        // TODO Figure out how to remove multiple folders at once
         public void RemoveFolder()
         {
             Debug.WriteLine("Removing: " + SelectedImageFolder.Path);
             ImageFolders.Remove(SelectedImageFolder);
-            ImageFolders.ValidateImageFolders();
+            SelectedImageFolder.DeactivateFolder();
+            //xImageFolders.ValidateImageFolders();
 
             UpdateTheme();
         }
@@ -427,6 +503,8 @@ namespace WallpaperFlux.Core.ViewModels
             SelectedImageSelectorTab = ImageSelectorTabs[0];
         }
         #endregion
+        #endregion
+
         #endregion
     }
 }

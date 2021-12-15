@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using AdonisUI.Controls;
 using LanceTools.DiagnosticsUtil;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using MvvmCross.Commands;
 using MvvmCross.ViewModels;
+using Newtonsoft.Json;
 using WallpaperFlux.Core.External;
 using WallpaperFlux.Core.Util;
 
@@ -18,8 +20,14 @@ namespace WallpaperFlux.Core.Models
     public class ImageModel : MvxNotifyPropertyChanged
     {
         // Properties
+        [DataMember(Name = "Path")]
         public string Path { get; set; }
 
+        [JsonIgnore]
+        public string PathFolder => new FileInfo(Path).DirectoryName;
+
+        [DataMember(Name = "Rank")]
+        private int _rank;
         public int Rank
         {
             get => _rank;
@@ -46,12 +54,15 @@ namespace WallpaperFlux.Core.Models
         }
 
         public Action<int, int> OnRankChange;
-        private int _rank;
 
         // Note: A rank 0 image is still active if able, it just has a 0% chance of being selected
+        [DataMember(Name = "Active")]
         public bool Active { get; set; }
+        // TODO The original ImageData also had an independent enabled boolean for the image itself, I think it would be better to have these overriding enables merged into 1 boolean
+        // TODO Folders can be checked as active elsewhere, same with tags, this could potentially just be the original "Enabled" from imageData
+        // TODO Remember that this had to remove the image from RankData on disabling for calculation purposes, may need to do this again (As opposed to looping the RankData each time)
 
-        public ImageType ImageType { get; set; }
+        [DataMember(Name = "Image Type")] public ImageType ImageType { get; set; }
 
         // Video Properties
         public double Volume { get; set; } = 0.5;
@@ -94,14 +105,17 @@ namespace WallpaperFlux.Core.Models
 
         //xpublic IExternalImageSource ImageSource { get; set; }
 
-        // TODO Find a way to place the following values in WallpaperFluxViewModel or some alternative
         // ----- XAML Values -----
+        // TODO Now that you know more about ResourceDictionaries, replace this section with XAML ResourceDictionaries at some point
+        #region XAML Values
         public int ImageSelectorSettingsHeight => 25;
 
         public int ImageSelectorThumbnailHeight => 150;
+
         public int ImageSelectorThumbnailWidth => 150;
 
         public int ImageSelectorThumbnailWidthVideo => ImageSelectorThumbnailWidth - 20; // until the GroupBox is no longer needed this will account for it
+        #endregion
 
         public ImageModel(string path, int rank = 0)
         {
@@ -115,6 +129,7 @@ namespace WallpaperFlux.Core.Models
             InitCommands();
         }
 
+        //! Why was this added? Remove at some point
         public void Dispose()
         {
 

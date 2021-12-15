@@ -27,7 +27,8 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="8"/>
+            <!--<ColumnDefinition Width="{adonisUi:Space 1}"/>-->
+            <ColumnDefinition Width="0"/>
             <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="auto"/>
@@ -35,7 +36,7 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="{adonisUi:Space 1}"/>
+            <RowDefinition Height="0"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
@@ -43,13 +44,66 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <Button mvx:Bi.nd="Command NextWallpaperCommand" IsEnabled="{Binding CanNextWallpaper}" 
-            Grid.Row="1" Grid.Column="1" Width="135" Height="25" Content="Next Wallpaper" Margin="5"/>
-        <Button mvx:Bi.nd="Command PreviousWallpaperCommand" IsEnabled="{Binding CanPreviousWallpaper}"
-                Grid.Row="1" Grid.Column="2" Width="135" Height="25" Content="Previous Wallpaper" Margin="5"/>
+        <Menu Grid.Row="1" Grid.Column="1" Padding="2">
+            <MenuItem Header="File">
+                <MenuItem Header="Load Theme"/>
+                <MenuItem Header="Save Theme"/>
+            </MenuItem>
+
+            <MenuItem Header="Edit">
+                <MenuItem Header="Load Theme"/>
+                <MenuItem Header="Save Theme"/>
+            </MenuItem>
+
+            <MenuItem Header="Settings">
+                <MenuItem Header="Load Theme"/>
+                <MenuItem Header="Save Theme"/>
+            </MenuItem>
+
+            <MenuItem Header="View">
+                <MenuItem Header="Load Theme"/>
+                <MenuItem Header="Save Theme"/>
+            </MenuItem>
+
+            <MenuItem Header="Go">
+                <MenuItem Header="Load Theme"/>
+                <MenuItem Header="Save Theme"/>
+            </MenuItem>
+
+            <MenuItem Header="Tools">
+                <MenuItem Header="Load Theme"/>
+                <MenuItem Header="Save Theme"/>
+            </MenuItem>
+
+            <MenuItem Header="Help">
+                <MenuItem Header="Load Theme"/>
+                <MenuItem Header="Save Theme"/>
+            </MenuItem>
+
+            <!-- You should keep both set of buttons for quick access, just put the Next & Previous Wallpaper buttons behind their own tab -->
+            <!-- Would also be neat for you to find a way to add bigger separators between these, probably through a second menu on the same row -->
+            <MenuItem Header="Wallpaper">
+                <MenuItem Header="Next Wallpaper"/>
+                <MenuItem Header="Previous Wallpaper"/>
+                <MenuItem Header="Cycle Wallpapers"/>
+            </MenuItem>
+        </Menu>
+
+        <Separator Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="10"/>
+
+        <!-- Core Button Controls -->
+        <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal">
+            <Button mvx:Bi.nd="Command NextWallpaperCommand" IsEnabled="{Binding CanNextWallpaper}" 
+                    Width="135" Height="25" Content="Next Wallpaper" Margin="5"/>
+            <Button mvx:Bi.nd="Command PreviousWallpaperCommand" IsEnabled="{Binding CanPreviousWallpaper}"
+                    Width="135" Height="25" Content="Previous Wallpaper" Margin="5"/>
+            <Button mvx:Bi.nd="Command LoadThemeCommand" 
+                    Width="135" Height="25" Content="Load Theme" Margin="5"/>
+        </StackPanel>
+
 
         <!-- Image Folders -->
-        <GroupBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="5">
+        <GroupBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="5">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="0"/> <!-- Remove this at some point, will need to adjust columns -->
@@ -66,6 +120,7 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
+                <!-- Folder Buttons -->
                 <Button mvx:Bi.nd="Command AddFolderCommand" Grid.Row="1" Grid.Column="1" Width="135" Height="25" Content="Add Folder" Margin="10"
                     adonisExtensions:CursorSpotlightExtension.BorderBrush="LimeGreen"
                     adonisExtensions:RippleExtension.BackgroundBrush="LimeGreen" HorizontalAlignment="Stretch"/>
@@ -75,6 +130,7 @@
                         adonisExtensions:CursorSpotlightExtension.BorderBrush="Red"
                         adonisExtensions:RippleExtension.BackgroundBrush="Red"/>
 
+                <!-- Folder List -->
                 <GroupBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3"  adonisExtensions:LayerExtension.IncreaseLayer="True">
                     <ListBox Width="400" Height="300"
                              ItemsSource="{Binding ImageFolders}" SelectedItem="{Binding SelectedImageFolder}" SelectionMode="Extended"
@@ -101,7 +157,7 @@
         </GroupBox>
 
         <!-- Display Settings -->
-        <GroupBox Grid.Row="3" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="10">
+        <GroupBox Grid.Row="5" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="10">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="0"/> <!-- Remove this at some point, will need to adjust columns -->
@@ -183,7 +239,7 @@
         </GroupBox>
 
         <!-- Image Selector / Image Inspector -->
-        <GroupBox  Grid.Row="2" Grid.Column="4" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="10">
+        <GroupBox  Grid.Row="4" Grid.Column="3" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="10">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="0"/>
@@ -245,15 +301,16 @@
                                         </ItemsPanelTemplate>
                                     </ListBox.ItemsPanel>
 
-                                    <!-- //// Image Info Item Template //// -->
+                                    <!-- // Image Info Item Template // -->
                                     <ListBox.ItemTemplate>
                                         <DataTemplate DataType="models:ImageModel">
                                             <GroupBox HorizontalAlignment="Center">
                                                 <StackPanel Focusable="False">
 
                                                     <!-- /// Thumbnail /// -->
+
+                                                    <!-- //// Binding to ImageModel //// -->
                                                     <ContentControl Content="{Binding}" HorizontalAlignment="Center">
-                                                        <!-- Binding to ImageModel -->
                                                         <!-- Resources -->
                                                         <ContentControl.Resources>
                                                             <!-- Remember that the Binding context here refers to what's given in the Content of the ContentTemplate, not what ReSharper says -->
@@ -354,11 +411,6 @@
                                                                     <DataTrigger Binding="{Binding IsVideo}" Value="True">
                                                                         <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource VideoTemplate}"/>
                                                                     </DataTrigger>
-                                                                    <!--
-                                                            <DataTrigger Binding="{Binding IsStaticOrGIF}" Value="False">
-                                                                <Setter TargetName="StaticOrGIF" Property="ContentTemplate" Value="{StaticResource VideoTemplate}"/>
-                                                            </DataTrigger>
-                                                                    -->
                                                                 </DataTemplate.Triggers>
                                                             </DataTemplate>
                                                         </ContentControl.ContentTemplate>
@@ -408,7 +460,7 @@
         </GroupBox>
 
         <!-- Settings (Not a button to a new window, make a tab system) -->
-        <GroupBox Grid.Row="2" Grid.Column="5" adonisExtensions:LayerExtension.IncreaseLayer="True">
+        <GroupBox Grid.Row="4" Grid.Column="5" adonisExtensions:LayerExtension.IncreaseLayer="True">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="8"/>

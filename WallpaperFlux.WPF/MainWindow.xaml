@@ -12,6 +12,8 @@
     <Grid>
 
     </Grid>
+
+    <!-- Applies Adonis Styling to the Window -->
     <views:MvxWindow.Style>
         <Style TargetType="Window" BasedOn="{StaticResource {x:Type Window}}"/>
     </views:MvxWindow.Style>

@@ -57,7 +57,7 @@ namespace WallpaperFlux.Core.Controllers
         //! the only purpose for ImageCollection to be here is to serve as a reminder that this should only be accessed after calling an image removal from ImageCollection
         //! find a better solution to limit this procedure's access in the future
         //? in makes collection readonly, not really needed but considering its already vague purpose it felt appropriate to add
-        public void RemoveRankedImage(ImageModel image)
+        public void RemoveRankedImage(ImageModel image, params object[] args)
         {
             RankData[image.ImageType][image.Rank].Remove(image.Path);
         }

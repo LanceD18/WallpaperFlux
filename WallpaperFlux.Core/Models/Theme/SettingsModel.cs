@@ -76,7 +76,11 @@ namespace WallpaperFlux.Core.Models.Theme
         }
 
         #region Commands
-        public void UpdateMaxRank()
+        //? Included Command at the end of this method name to avoid accidentally using this over SetMaxRank
+        /// <summary>
+        /// Sends the current max rank input to the SetMaxRank method of the RankController
+        /// </summary>
+        public void UpdateMaxRankCommand()
         {
             DataUtil.Theme.RankController.SetMaxRank(ThemeSettings.MaxRank);
         }
