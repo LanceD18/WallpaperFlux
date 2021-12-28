@@ -7,7 +7,7 @@ using WallpaperFlux.Core.Util;
 namespace WallpaperFlux.Core.Models.Theme
 {
     // Theme-Wide Settings
-    public class ThemeSettings
+    public class ThemeSettings : MvxNotifyPropertyChanged
     {
         // Randomization Modifications
         public bool LargerImagesOnLargerDisplays;
@@ -17,7 +17,13 @@ namespace WallpaperFlux.Core.Models.Theme
         public bool EnableDetectionOfInactiveImages;
 
         // Ranking Settings
-        public int MaxRank { get; set; }
+        private int _maxRank;
+        public int MaxRank
+        {
+            get => _maxRank;
+            set => SetProperty(ref _maxRank, value);
+        }
+
         public bool WeightedRanks;
         public bool WeightedFrequency;
         public bool AllowTagBasedRenamingForMovedImages;
@@ -82,7 +88,10 @@ namespace WallpaperFlux.Core.Models.Theme
         /// </summary>
         public void UpdateMaxRankCommand()
         {
-            DataUtil.Theme.RankController.SetMaxRank(ThemeSettings.MaxRank);
+            if (MessageBoxUtil.GetPositiveInteger("Set Max Rank", "Enter a new max rank", out int maxRank, "Max Rank..."))
+            {
+                DataUtil.Theme.RankController.SetMaxRank(maxRank);
+            }
         }
         #endregion
     }

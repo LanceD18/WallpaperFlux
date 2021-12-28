@@ -59,11 +59,15 @@ namespace WallpaperFlux.WPF
         }
 
         //? You will have to make sure that the parent is tagged with Focusable="True" (Able to apply this within the xaml)
-        private void OnKeyEnterDown_FocusParent(object sender, KeyEventArgs e)
+        private void OnKeyEnterDown_LoseFocus(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
             {
-                ((sender as Control).Parent as Panel).Focus();
+                // Kill logical focus
+                FocusManager.SetFocusedElement(FocusManager.GetFocusScope(sender as TextBox), null);
+
+                // Kill keyboard focus
+                Keyboard.ClearFocus();
             }
         }
         #endregion
@@ -78,16 +82,37 @@ namespace WallpaperFlux.WPF
         // Selects all text on mouse down
         private async void TextBox_MouseEvent_FocusText(object sender, MouseButtonEventArgs e)
         {
-            Debug.WriteLine("bruh");
             await Application.Current.Dispatcher.InvokeAsync(((TextBox)sender).SelectAll);
         }
 
         // Constrains text preview to numbers only
-        private void OnPreviewTextInput_NumbersOnly(object sender, TextCompositionEventArgs e)
+        private void OnPreviewTextInput_PositiveNumbersOnly(object sender, TextCompositionEventArgs e)
         {
             Regex regex = new Regex("[^0-9]+");
             e.Handled = regex.IsMatch(e.Text);
         }
+
+        // Constrains text preview to numbers and decimal places only
+        private void OnPreviewTextInput_PositiveNumbersAndDecimalsOnly(object sender, TextCompositionEventArgs e)
+        {
+            Regex regex = new Regex("[^0-9\\.]+");
+            e.Handled = regex.IsMatch(e.Text);
+        }
+
+        // Constrains text preview to numbers only, allows negative input
+        private void OnPreviewTextInput_NumbersOnly(object sender, TextCompositionEventArgs e)
+        {
+            Regex regex = new Regex("[^0-9-]");
+            e.Handled = regex.IsMatch(e.Text);
+        }
+
+        // Constrains text preview to numbers and decimal places only, allows negative input
+        private void OnPreviewTextInput_NumbersAndDecimalsOnly(object sender, TextCompositionEventArgs e)
+        {
+            Regex regex = new Regex("[^0-9-\\.]+");
+            e.Handled = regex.IsMatch(e.Text);
+        }
+
         #endregion
     }
 }

@@ -485,14 +485,11 @@
                 <!-- Rank Modifier -->
                 <GroupBox  Grid.Row="2" Grid.Column="1" Margin="3">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Max Rank: " Margin="3" VerticalAlignment="Center"/>
-                        <TextBox DataContext="{Binding Theme.Settings.ThemeSettings}" Text="{Binding MaxRank, Mode=TwoWay, 
-                            UpdateSourceTrigger=PropertyChanged}" Margin="3">
-                            <TextBox.Style>
-                                <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
-                            </TextBox.Style>
-                        </TextBox>
-                        <Button Content="Update" Margin="3" mvx:Bi.nd="Command UpdateMaxRankCommand"/>
+                        <TextBlock Margin="5" VerticalAlignment="Center" DataContext="{Binding Theme.Settings.ThemeSettings}">
+                            <Run Text="Max Rank: "/>
+                            <Run Text="{Binding MaxRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        </TextBlock>
+                        <Button Content="Set Max Rank" Margin="3" mvx:Bi.nd="Command UpdateMaxRankCommand"/>
                     </StackPanel>
                 </GroupBox>
 

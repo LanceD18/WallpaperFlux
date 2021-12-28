@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -18,6 +19,7 @@ using System.Windows.Shapes;
 using MvvmCross.Platforms.Wpf.Views;
 using WallpaperFlux.Core.Util;
 using WallpaperFlux.WPF.Util;
+using WallpaperFlux.WPF.Views;
 
 namespace WallpaperFlux.WPF
 {
@@ -47,18 +49,9 @@ namespace WallpaperFlux.WPF
 
             InitializeWallpapers();
 
-            Closing += (s, e) =>
-            {
-                SystemParametersInfo(SetDeskWallpaper, 0, null, UpdateIniFile | SendWinIniChange);
+            Closing += OnCloseApplication;
 
-                foreach (WallpaperWindow wallpaper in Wallpapers)
-                {
-                    wallpaper.Close();
-                }
-
-                //? MediaElements may continue to overwrite the default wallpaper on closing
-                SystemParametersInfo(SetDeskWallpaper, 0, null, UpdateIniFile | SendWinIniChange);
-            };
+            MessageBoxUtil.InputBoxFunc = OnCallInputBox;
         }
 
         private void InitializeWallpapers()
@@ -73,5 +66,26 @@ namespace WallpaperFlux.WPF
                 Wallpapers[i].Show();
             }
         }
+
+        private void OnCloseApplication(object s, CancelEventArgs e)
+        {
+            SystemParametersInfo(SetDeskWallpaper, 0, null, UpdateIniFile | SendWinIniChange);
+
+            foreach (WallpaperWindow wallpaper in Wallpapers)
+            {
+                wallpaper.Close();
+            }
+
+            //? MediaElements may continue to overwrite the default wallpaper on closing
+            SystemParametersInfo(SetDeskWallpaper, 0, null, UpdateIniFile | SendWinIniChange);
+        }
+
+        private string OnCallInputBox(string title, string caption, string watermark, InputBoxType inputBoxType)
+        {
+            InputBoxView inputBox = new InputBoxView(title, caption, watermark, inputBoxType);
+            inputBox.ShowDialog();
+            return inputBox.Input;
+        }
+
     }
 }

@@ -119,7 +119,6 @@ namespace WallpaperFlux.Core.Controllers
             if (maxRank > 0) // note that rank 0 is reserved for unranked images
             {
                 SetRankDataSize(maxRank);
-                PercentileController.SetRankPercentiles(maxRank);
             }
             else
             {
@@ -145,9 +144,11 @@ namespace WallpaperFlux.Core.Controllers
                 }
             }
 
+            bool rankWasUpdated = false;
             if (isRankDataEmpty) // there is nothing in the RankData, this is likely the initialization, we can easily setup the data
             {
                 InitializeMaxRank(maxRank);
+                rankWasUpdated = true;
             }
             else // Update RankData, giving it a new size and adjusting the existing images accordingly
             {
@@ -162,7 +163,18 @@ namespace WallpaperFlux.Core.Controllers
                 if (MessageBox.Show(messageBox) == MessageBoxResult.Yes)
                 {
                     UpdateMaxRank(maxRank);
+                    rankWasUpdated = true;
                 }
+            }
+
+            if (rankWasUpdated) //! Must come after the Max Rank is Updated/Initialized in the RankController
+            {
+                PercentileController.SetRankPercentiles(maxRank);
+                if (DataUtil.Theme != null)
+                {
+                    DataUtil.Theme.Settings.ThemeSettings.MaxRank = maxRank;
+                }
+
             }
         }
 
