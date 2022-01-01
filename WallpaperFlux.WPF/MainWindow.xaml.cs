@@ -28,8 +28,7 @@ namespace WallpaperFlux.WPF
     /// </summary>
     public partial class MainWindow : MvxWindow
     {
-        //! Static reference to the active MainWindow instance
-        public static MainWindow Instance;
+        public static MainWindow Instance; //! Static reference to the active MainWindow instance, always reset in the constructor
 
         private const int SetDeskWallpaper = 20;
         private const int UpdateIniFile = 0x01;
@@ -42,15 +41,14 @@ namespace WallpaperFlux.WPF
 
         public MainWindow()
         {
-            Debug.WriteLine("Initializing static MainWindow Instance");
+            Debug.WriteLine("------------------------------------" +
+                            "\nInitializing static MainWindow Instance");
             Instance = this;
 
             InitializeComponent();
-
             InitializeWallpapers();
 
             Closing += OnCloseApplication;
-
             MessageBoxUtil.InputBoxFunc = OnCallInputBox;
         }
 
@@ -78,6 +76,9 @@ namespace WallpaperFlux.WPF
 
             //? MediaElements may continue to overwrite the default wallpaper on closing
             SystemParametersInfo(SetDeskWallpaper, 0, null, UpdateIniFile | SendWinIniChange);
+
+            //? Without this the creation of extra views will stop the program from completely closing normally
+            Application.Current.Shutdown();
         }
 
         private string OnCallInputBox(string title, string caption, string watermark, InputBoxType inputBoxType)

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using MvvmCross.Commands;
 using MvvmCross.ViewModels;
 using WallpaperFlux.Core.Tools;
 using WallpaperFlux.Core.Util;
@@ -74,11 +75,17 @@ namespace WallpaperFlux.Core.Models.Theme
         public string DefaultTheme { get; set; }
         public bool EnableDefaultThemeHotkey { get; set; }
 
+        // ----- WPF -----
+        // Commands
+        public IMvxCommand UpdateMaxRankCommand { get; set; }
+
         public SettingsModel(int maxRank)
         {
             ThemeSettings.FrequencyCalc = new FrequencyCalculator(); //? this must come before FrequencyModel
             ThemeSettings.FrequencyModel = new FrequencyModel(ThemeSettings.FrequencyCalc);
             ThemeSettings.MaxRank = maxRank;
+
+            UpdateMaxRankCommand = new MvxCommand(UpdateMaxRank);
         }
 
         #region Commands
@@ -86,7 +93,7 @@ namespace WallpaperFlux.Core.Models.Theme
         /// <summary>
         /// Sends the current max rank input to the SetMaxRank method of the RankController
         /// </summary>
-        public void UpdateMaxRankCommand()
+        public void UpdateMaxRank()
         {
             if (MessageBoxUtil.GetPositiveInteger("Set Max Rank", "Enter a new max rank", out int maxRank, "Max Rank..."))
             {

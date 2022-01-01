@@ -84,6 +84,11 @@ namespace WallpaperFlux.Core.Util
             return InputBoxFunc.Invoke(title, caption, watermark, inputBoxType);
         }
 
+        public static string GetString(string title, string caption, string watermark = "", InputBoxType inputBoxType = InputBoxType.Default)
+        {
+            return InputBoxFunc.Invoke(title, caption, watermark, InputBoxType.Default);
+        }
+
         // Generic Number Prompt
         private static bool PromptNumber(string title, string caption, out float response, string watermark, InputBoxType inputBoxType)
         {

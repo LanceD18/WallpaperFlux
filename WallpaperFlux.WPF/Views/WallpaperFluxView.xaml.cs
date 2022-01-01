@@ -24,6 +24,7 @@ using MvvmCross.ViewModels;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Models.Theme;
 using WallpaperFlux.Core.ViewModels;
+using WallpaperFlux.WPF.Windows;
 using MediaElement = Unosquare.FFME.MediaElement;
 using Size = System.Windows.Size;
 
@@ -36,6 +37,8 @@ namespace WallpaperFlux.WPF.Views
     [MvxViewFor(typeof(WallpaperFluxViewModel))]
     public partial class WallpaperFluxView : MvxWpfView
     {
+        public TagWindow TagWindow;
+
         public WallpaperFluxView()
         {
             InitializeComponent();
@@ -45,17 +48,21 @@ namespace WallpaperFlux.WPF.Views
         private void MediaElement_OnLoaded(object sender, RoutedEventArgs e)
         {
             MediaElement element = sender as MediaElement;
-            element?.Open(new Uri((element.DataContext as ImageModel)?.Path ?? string.Empty));
+
+            if (element?.DataContext is ImageModel elementImage)
+            {
+                element.Open(new Uri(elementImage.Path));
+            }
         }
 
         private void MediaElement_OnLoaded_SimulateThumbnail(object sender, RoutedEventArgs e)
         {
             MediaElement element = sender as MediaElement;
 
-            if (sender is MediaElement)
+            if (element?.DataContext is ImageModel elementImage)
             {
                 //TODO Consider using this option: Bitmap bitmap = await element.CaptureBitmapAsync();
-                element.Open(new Uri((element.DataContext as ImageModel)?.Path ?? string.Empty));
+                element.Open(new Uri(elementImage.Path));
                 element.Pause();
             }
         }
@@ -106,6 +113,20 @@ namespace WallpaperFlux.WPF.Views
 
                 }
             }
+        }
+
+        private void MenuItem_OpenTagWindow_Click(object sender, RoutedEventArgs e)
+        {
+            if (TagWindow == null || TagWindow.Presenter.ViewWindow == null)
+            {
+                TagWindow = new TagWindow();
+            }
+            else
+            {
+                TagWindow.Presenter.ViewWindow.Focus();
+            }
+            //TagView view = new TagView();
+            //new TagWindow().Show();
         }
     }
 }

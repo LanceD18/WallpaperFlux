@@ -11,7 +11,6 @@
     xmlns:adonisExtensions="clr-namespace:AdonisUI.Extensions;assembly=AdonisUI"
     xmlns:adonisUi="clr-namespace:AdonisUI;assembly=AdonisUI"
     xmlns:mvvmCross="clr-namespace:MvvmCross;assembly=MvvmCross"
-
     xmlns:models="clr-namespace:WallpaperFlux.Core.Models;assembly=WallpaperFlux.Core"
     xmlns:extensions="clr-namespace:LanceTools.WPF.Extensions;assembly=LanceTools.WPF"
     xmlns:ffme="clr-namespace:Unosquare.FFME;assembly=ffme.win"
@@ -44,48 +43,71 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
+        <!-- Toolbar -->
         <Menu Grid.Row="1" Grid.Column="1" Padding="2">
+            <!-- File -->
             <MenuItem Header="File">
-                <MenuItem Header="Load Theme"/>
-                <MenuItem Header="Save Theme"/>
+                <MenuItem Header="Load Theme" mvx:Bi.nd="Command LoadThemeCommand"/>
+                <MenuItem Header="Save Theme [Not implemented]"/>
             </MenuItem>
 
+            <!-- Edit -->
             <MenuItem Header="Edit">
-                <MenuItem Header="Load Theme"/>
-                <MenuItem Header="Save Theme"/>
+                <MenuItem Header="Dummy Item"/>
             </MenuItem>
 
+            <!-- Settings -->
             <MenuItem Header="Settings">
-                <MenuItem Header="Load Theme"/>
-                <MenuItem Header="Save Theme"/>
+                <!-- Set Max Rank -->
+                <MenuItem Header="Set Max Rank" mvx:Bi.nd="Command Theme.Settings.UpdateMaxRankCommand">
+                    <MenuItem.ToolTip>
+                        <ToolTip>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Current Max Rank: "/>
+                                <TextBlock Text="{Binding Theme.Settings.ThemeSettings.MaxRank}"/>
+                            </StackPanel>
+                        </ToolTip>
+                    </MenuItem.ToolTip>
+                </MenuItem>
+                <MenuItem Header="Toggle Light/Dark Theme [Not implemented]"/>
+                <MenuItem Header="Options [Not implemented]"/>
             </MenuItem>
 
+            <!-- View -->
             <MenuItem Header="View">
-                <MenuItem Header="Load Theme"/>
-                <MenuItem Header="Save Theme"/>
+                <MenuItem Header="Dummy Item"/>
             </MenuItem>
 
+            <!-- Go -->
+            <!-- Opens folders / goes to files -->
             <MenuItem Header="Go">
-                <MenuItem Header="Load Theme"/>
-                <MenuItem Header="Save Theme"/>
+                <MenuItem Header="Go To Theme File [Not implemented]"/>
             </MenuItem>
 
+            <!-- Tools -->
             <MenuItem Header="Tools">
-                <MenuItem Header="Load Theme"/>
-                <MenuItem Header="Save Theme"/>
+                <MenuItem Header="Inspect Rank Distribution [Not Implemented]"/>
             </MenuItem>
 
+            <!-- Help -->
             <MenuItem Header="Help">
-                <MenuItem Header="Load Theme"/>
-                <MenuItem Header="Save Theme"/>
+                <!--<MenuItem Header="Check for Updates"/>-->
+                <!--<MenuItem Header="Donate"/>-->
+                <MenuItem Header="About [Not implemented] [Open a page of links to relevant info]"/>
+                <MenuItem Header="Open Repository Page [Not implemented]"/>
             </MenuItem>
 
+            <!-- Wallpaper -->
             <!-- You should keep both set of buttons for quick access, just put the Next & Previous Wallpaper buttons behind their own tab -->
-            <!-- Would also be neat for you to find a way to add bigger separators between these, probably through a second menu on the same row -->
             <MenuItem Header="Wallpaper">
-                <MenuItem Header="Next Wallpaper"/>
-                <MenuItem Header="Previous Wallpaper"/>
-                <MenuItem Header="Cycle Wallpapers"/>
+                <MenuItem Header="Next Wallpaper" mvx:Bi.nd="Command NextWallpaperCommand" IsEnabled="{Binding CanNextWallpaper}" />
+                <MenuItem Header="Previous Wallpaper" mvx:Bi.nd="Command PreviousWallpaperCommand" IsEnabled="{Binding CanPreviousWallpaper}"/>
+                <MenuItem Header="Cycle Wallpapers [Not implemented]"/>
+            </MenuItem>
+
+            <!-- Tagging -->
+            <MenuItem Header="Tagging">
+                <MenuItem Header="Open Tag View" Click="MenuItem_OpenTagWindow_Click"/>
             </MenuItem>
         </Menu>
 
@@ -95,12 +117,11 @@
         <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal">
             <Button mvx:Bi.nd="Command NextWallpaperCommand" IsEnabled="{Binding CanNextWallpaper}" 
                     Width="135" Height="25" Content="Next Wallpaper" Margin="5"/>
-            <Button mvx:Bi.nd="Command PreviousWallpaperCommand" IsEnabled="{Binding CanPreviousWallpaper}"
+            <Button mvx:Bi.nd="Command PreviousWallpaperCommand" IsEnabled="{Binding CanPreviousWallpaper}" 
                     Width="135" Height="25" Content="Previous Wallpaper" Margin="5"/>
             <Button mvx:Bi.nd="Command LoadThemeCommand" 
                     Width="135" Height="25" Content="Load Theme" Margin="5"/>
         </StackPanel>
-
 
         <!-- Image Folders -->
         <GroupBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="5">
@@ -110,15 +131,24 @@
                     <ColumnDefinition Width="auto"/>
                     <ColumnDefinition Width="auto"/>
                     <ColumnDefinition Width="auto"/>
-                    <ColumnDefinition Width="auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="{adonisUi:Space 1}"/>
                     <RowDefinition Height="auto"/>
                     <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <!--
+                <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Text="Folders" HorizontalAlignment="Center">
+                    <TextBlock.Style>
+                        <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
+                    </TextBlock.Style>
+                </TextBlock>
+                -->
 
                 <!-- Folder Buttons -->
                 <Button mvx:Bi.nd="Command AddFolderCommand" Grid.Row="1" Grid.Column="1" Width="135" Height="25" Content="Add Folder" Margin="10"
@@ -196,6 +226,7 @@
 
                                     <!-- Interval Settings -->
                                     <StackPanel Margin="8,2,8,2" Orientation="Horizontal">
+
                                         <!-- Interval Value -->
                                         <TextBox MinWidth="35" Margin="0 0 2 0"
                                                  Text="{Binding DisplayInterval, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -205,6 +236,7 @@
                                                 <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
                                             </TextBox.Style>
                                         </TextBox>
+
                                         <!-- Interval Type -->
                                         <ComboBox ItemsSource="{Binding Source={extensions:Enumeration {x:Type core:IntervalType}}}"
                                                   DisplayMemberPath="Description"
@@ -239,7 +271,7 @@
         </GroupBox>
 
         <!-- Image Selector / Image Inspector -->
-        <GroupBox  Grid.Row="4" Grid.Column="3" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="10">
+        <GroupBox  Grid.Row="4" Grid.Column="3" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="10 0 10 0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="0"/>
@@ -382,7 +414,8 @@
                                                                     <!-- The media element will fail to process the Tooltip & Context Menu, so we used a GroupBox -->
                                                                     <!-- Media Element Tooltip-->
                                                                     <GroupBox.ToolTip>
-                                                                        <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play" Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded"/>
+                                                                        <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play" 
+                                                                            Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded"/>
                                                                     </GroupBox.ToolTip>
                                                                     <!-- Media Element Context Menu-->
                                                                     <GroupBox.ContextMenu>
@@ -489,7 +522,7 @@
                             <Run Text="Max Rank: "/>
                             <Run Text="{Binding MaxRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
                         </TextBlock>
-                        <Button Content="Set Max Rank" Margin="3" mvx:Bi.nd="Command UpdateMaxRankCommand"/>
+                        <Button Content="Set Max Rank" Margin="3" mvx:Bi.nd="Command Theme.Settings.UpdateMaxRankCommand"/>
                     </StackPanel>
                 </GroupBox>
 

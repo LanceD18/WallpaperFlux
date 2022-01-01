@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
@@ -18,6 +19,7 @@ using MvvmCross;
 using MvvmCross.Binding.BindingContext;
 using MvvmCross.Commands;
 using MvvmCross.Core;
+using MvvmCross.Navigation;
 using MvvmCross.ViewModels;
 using WallpaperFlux.Core.External;
 using WallpaperFlux.Core.JSON.Temp;
@@ -38,8 +40,12 @@ namespace WallpaperFlux.Core.ViewModels
 
         public SettingsModel Settings { get; set; } = DataUtil.Theme.Settings;
 
-        public WallpaperFluxViewModel()
+        //xprivate readonly IMvxNavigationService _navigationService;
+
+        public WallpaperFluxViewModel(/*xIMvxNavigationService navigationService*/)
         {
+            //x_navigationService = navigationService;
+
             //xFolderUtil.LinkThemeImageFolders(ImageFolders);
 
             InitializeDisplaySettings();
@@ -52,8 +58,16 @@ namespace WallpaperFlux.Core.ViewModels
             RemoveFolderCommand = new MvxCommand(RemoveFolder);
             SyncCommand = new MvxCommand(Sync);
             SelectImagesCommand = new MvxCommand(SelectImages);
-            UpdateMaxRankCommand = new MvxCommand(Theme.Settings.UpdateMaxRankCommand);
+            //xOpenTagViewCommand = new MvxCommand(async () => await TagViewModelNavigator());
         }
+
+        /*x
+        // Docs: https://www.mvvmcross.com/documentation/fundamentals/navigation
+        public async Task TagViewModelNavigator()
+        {
+            await _navigationService.Navigate<TagViewModel>();
+        }
+        */
 
         async void InitializeDisplaySettings() // waits for the DisplayCount to be set before initializing the display settings
         {
@@ -109,7 +123,7 @@ namespace WallpaperFlux.Core.ViewModels
 
         public FolderModel SelectedImageFolder
         {
-            get { return _selectedImageFolder; }
+            get => _selectedImageFolder;
             set
             {
                 SetProperty(ref _selectedImageFolder, value);
@@ -156,10 +170,7 @@ namespace WallpaperFlux.Core.ViewModels
         public object SelectedImageSelectorTab
         {
             get => _selectedImageSelectorTab;
-            set
-            {
-                SetProperty(ref _selectedImageSelectorTab, value);
-            }
+            set => SetProperty(ref _selectedImageSelectorTab, value);
         }
         #endregion
 
@@ -195,8 +206,6 @@ namespace WallpaperFlux.Core.ViewModels
         public IMvxCommand SyncCommand { get; set; }
 
         public IMvxCommand SelectImagesCommand { get; set; }
-
-        public IMvxCommand UpdateMaxRankCommand { get; set; }
 
         #endregion
 
@@ -471,6 +480,8 @@ namespace WallpaperFlux.Core.ViewModels
 
             int imageIndex = 0;
 
+            // TODO Might experiment with this HashSet later and see if it makes the removal of invalid images faster, and see if it potentially speeds up the process of adding images too
+            //xHashSet<ImageModel> imagesToAdd;
             for (int i = 0; i < tabCount; i++)
             {
                 ImageSelectorTabModel tabModel = new ImageSelectorTabModel

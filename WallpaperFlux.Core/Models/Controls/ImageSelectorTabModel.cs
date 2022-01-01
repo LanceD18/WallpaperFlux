@@ -1,4 +1,6 @@
-﻿using MvvmCross.ViewModels;
+﻿using System.Collections.Specialized;
+using System.Diagnostics;
+using MvvmCross.ViewModels;
 
 namespace WallpaperFlux.Core.Models.Controls
 {
@@ -28,6 +30,23 @@ namespace WallpaperFlux.Core.Models.Controls
 
         public string SelectedImageSelectorImagePath => SelectedImageSelectorImage?.Path;
 
+        public ImageSelectorTabModel()
+        {
+            Images.CollectionChanged += (sender, args) =>
+            {
+                if (args.Action == NotifyCollectionChangedAction.Add)
+                {
+                    foreach (ImageModel item in args.NewItems)
+                    {
+                        if (item == null)
+                        {
+                            Debug.WriteLine("Invalid item found, removing");
+                            Images.Remove(item);
+                        }
+                    }
+                }
+            };
+        }
 
         public void RaisePropertyChangedImages()
         {
