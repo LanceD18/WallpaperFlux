@@ -20,6 +20,7 @@ using MvvmCross.Platforms.Wpf.Views;
 using WallpaperFlux.Core.Util;
 using WallpaperFlux.WPF.Util;
 using WallpaperFlux.WPF.Views;
+using WallpaperFlux.WPF.Windows;
 
 namespace WallpaperFlux.WPF
 {
@@ -83,7 +84,7 @@ namespace WallpaperFlux.WPF
 
         private string OnCallInputBox(string title, string caption, string watermark, InputBoxType inputBoxType)
         {
-            InputBoxView inputBox = new InputBoxView(title, caption, watermark, inputBoxType);
+            InputBoxWindow inputBox = new InputBoxWindow(title, caption, watermark, inputBoxType);
             inputBox.ShowDialog();
             return inputBox.Input;
         }

@@ -14,6 +14,8 @@ namespace WallpaperFlux.Core.ViewModels
 {
     public class TagViewModel : MvxViewModel
     {
+        public static TagViewModel Instance; // allows the data to remain persistent without having to reload everything
+
         #region View Variables
 
         // Categories
@@ -42,6 +44,8 @@ namespace WallpaperFlux.Core.ViewModels
 
         public bool CategoryIsSelected => SelectedCategory != null;
 
+        public bool CategoriesExist => Categories.Count > 0;
+
         #endregion
 
         #region Commands
@@ -67,6 +71,7 @@ namespace WallpaperFlux.Core.ViewModels
             if (!string.IsNullOrEmpty(categoryName))
             {
                 Categories.Add(new CategoryModel(categoryName));
+                RaisePropertyChanged(() => CategoriesExist);
             }
         }
 
@@ -80,6 +85,10 @@ namespace WallpaperFlux.Core.ViewModels
                 {
                     category.Tags.Add(new TagModel(tagName));
                 }
+            }
+            else
+            {
+                MessageBoxUtil.ShowError("Selected category does not exist");
             }
         }
         #endregion

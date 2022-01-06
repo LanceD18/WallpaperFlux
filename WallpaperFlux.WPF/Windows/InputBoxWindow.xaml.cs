@@ -12,17 +12,17 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using WallpaperFlux.Core.Util;
 
-namespace WallpaperFlux.WPF.Views
+namespace WallpaperFlux.WPF.Windows
 {
     /// <summary>
     /// Interaction logic for InputBoxView.xaml
     /// </summary>
-    public partial class InputBoxView
+    public partial class InputBoxWindow
     {
         public string Input;
 
         // TODO Add a way to cancel input, either via a button, submitting empty input (Which would also occur is the 'X' button was pressed), or some other method
-        public InputBoxView(string title, string caption, string watermark, InputBoxType inputBoxType)
+        public InputBoxWindow(string title, string caption, string watermark, InputBoxType inputBoxType)
         {
             InitializeComponent();
 

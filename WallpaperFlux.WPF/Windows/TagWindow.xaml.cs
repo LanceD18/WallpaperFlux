@@ -15,11 +15,10 @@ using MvvmCross.Platforms.Wpf.Views;
 using MvvmCross.ViewModels;
 using WallpaperFlux.Core.ViewModels;
 using WallpaperFlux.WPF.Views;
-using WallpaperFlux.Core.Util;
+using WallpaperFlux.WPF.Util;
 
-namespace WallpaperFlux.WPF.Windows // TODO Consider moving all other windows to this namespace as well (MainWindow, InputBoxView [Yes, this is also a window oops], WallpaperWindow)
+namespace WallpaperFlux.WPF.Windows
 {
-    //! FYI, the window doesn't actually do much of anything but send over the attribute, which in itself can be done elsewhere
     /// <summary>
     /// Interaction logic for TagWindow.xaml
     /// </summary>
@@ -32,6 +31,7 @@ namespace WallpaperFlux.WPF.Windows // TODO Consider moving all other windows to
         {
             InitializeComponent();
 
+            /*x
             MvxWindowPresentationAttribute attribute = new MvxWindowPresentationAttribute
             {
                 Identifier = nameof(TagWindow),
@@ -39,7 +39,8 @@ namespace WallpaperFlux.WPF.Windows // TODO Consider moving all other windows to
             };
 
             Presenter = new ViewPresenter();
-            Presenter.Show(attribute, typeof(TagView), typeof(TagViewModel), TaggingUtil.TAGGING_WINDOW_WIDTH, TaggingUtil.TAGGING_WINDOW_HEIGHT, "Tag View");
+            Presenter.Show(attribute, typeof(TagView), typeof(TagViewModel), WindowUtil.TAGGING_WINDOW_WIDTH, WindowUtil.TAGGING_WINDOW_HEIGHT, "Tag View");
+            */
 
             //xMvxWpfViewPresenter mvxPresenter = new MvxWpfViewPresenter(this);
             //xmvxPresenter.Show(new MvxViewModelInstanceRequest(typeof(TagViewModel)));

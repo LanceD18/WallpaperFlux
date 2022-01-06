@@ -24,6 +24,7 @@ using MvvmCross.ViewModels;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Models.Theme;
 using WallpaperFlux.Core.ViewModels;
+using WallpaperFlux.WPF.Util;
 using WallpaperFlux.WPF.Windows;
 using MediaElement = Unosquare.FFME.MediaElement;
 using Size = System.Windows.Size;
@@ -37,7 +38,9 @@ namespace WallpaperFlux.WPF.Views
     [MvxViewFor(typeof(WallpaperFluxViewModel))]
     public partial class WallpaperFluxView : MvxWpfView
     {
-        public TagWindow TagWindow;
+        //x FYI, the window doesn't actually do much of anything but send over the attribute, which in itself can be done elsewhere
+        public ViewPresenter TagPresenter;
+        public ViewPresenter SettingsPresenter;
 
         public WallpaperFluxView()
         {
@@ -115,18 +118,30 @@ namespace WallpaperFlux.WPF.Views
             }
         }
 
-        private void MenuItem_OpenTagWindow_Click(object sender, RoutedEventArgs e)
+        #region Menu Items
+
+        #region Window Control
+        private void MenuItem_OpenTagWindow_Click(object sender, RoutedEventArgs e) => 
+            PresentWindow(ref TagPresenter, typeof(TagView), typeof(TagViewModel),
+                WindowUtil.TAGGING_WINDOW_WIDTH, WindowUtil.TAGGING_WINDOW_HEIGHT, "Tag View", false);
+
+        private void MenuItem_MoreSettings_Click(object sender, RoutedEventArgs e) => 
+            PresentWindow(ref SettingsPresenter, typeof(SettingsView), typeof(SettingsViewModel),
+                WindowUtil.SETTINGS_WINDOW_WIDTH, WindowUtil.SETTINGS_WINDOW_HEIGHT, "Settings", false);
+
+        private void PresentWindow(ref ViewPresenter presenter, Type viewType, Type viewModelType, float width, float height, string title, bool modal)
         {
-            if (TagWindow == null || TagWindow.Presenter.ViewWindow == null)
+            if (presenter == null || presenter.ViewWindow == null) // for the case where either the presenter or the view itself do not exist
             {
-                TagWindow = new TagWindow();
+                presenter = new ViewPresenter(viewType, viewModelType, width, height, title, modal);
             }
-            else
+            else // if the window is already open, just focus it
             {
-                TagWindow.Presenter.ViewWindow.Focus();
+                presenter.ViewWindow.Focus();
             }
-            //TagView view = new TagView();
-            //new TagWindow().Show();
         }
+        #endregion
+
+        #endregion
     }
 }

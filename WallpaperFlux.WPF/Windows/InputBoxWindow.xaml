@@ -1,4 +1,4 @@
-﻿<controls:AdonisWindow x:Name="WindowInputBox" x:Class="WallpaperFlux.WPF.Views.InputBoxView"
+﻿<controls:AdonisWindow x:Name="WindowInputBox" x:Class="WallpaperFlux.WPF.Windows.InputBoxWindow"
                        xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
                        xmlns:adonisExtensions="clr-namespace:AdonisUI.Extensions;assembly=AdonisUI"
                        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"

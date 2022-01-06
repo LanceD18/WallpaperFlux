@@ -21,12 +21,22 @@ namespace WallpaperFlux.WPF
 
         private WindowStartupLocation _windowStartupLocation;
 
+        public ViewPresenter(Type viewType, Type viewModelType, float width, float height, string title, bool modal)
+        {
+            MvxWindowPresentationAttribute attribute = new MvxWindowPresentationAttribute
+            {
+                Modal = modal
+            };
+            
+            Show(attribute, viewType, viewModelType, width, height, title);
+        }
+
         // For reference: https://github.com/MvvmCross/MvvmCross/blob/master/MvvmCross/Platforms/Wpf/Presenters/MvxWpfViewPresenter.cs
         public void Show(MvxWindowPresentationAttribute attribute, Type viewType, Type viewModelType, float width, float height, string title = "",
         WindowStartupLocation startupLocation = WindowStartupLocation.CenterScreen)
         {
             MvxViewModelRequest request = new MvxViewModelInstanceRequest(viewModelType);
-            FrameworkElement viewElement = WpfViewLoader.CreateView(typeof(TagView));
+            FrameworkElement viewElement = WpfViewLoader.CreateView(viewType);
 
             _windowStartupLocation = startupLocation; //? Needs to be set before showing the window
             ShowWindow(viewElement, attribute, request);
@@ -36,8 +46,8 @@ namespace WallpaperFlux.WPF
             ViewWindow.Title = title;
         }
 
-        protected override Task<bool> ShowWindow(FrameworkElement element, MvxWindowPresentationAttribute attribute, MvxViewModelRequest request
-            )
+        //? this is a replica of the default ShowWindow code with some slight modifications to allow for compatibility with MvvvmCross
+        protected override Task<bool> ShowWindow(FrameworkElement element, MvxWindowPresentationAttribute attribute, MvxViewModelRequest request)
         {
             Window window;
             if (element is IMvxWindow mvxWindow)

@@ -3,9 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:WallpaperFlux.WPF.Views"
              xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
-             xmlns:viewModels="clr-namespace:WallpaperFlux.Core.ViewModels;assembly=WallpaperFlux.Core"
              xmlns:mvx="clr-namespace:MvvmCross.Platforms.Wpf.Binding;assembly=MvvmCross.Platforms.Wpf"
              xmlns:adonisExtensions="clr-namespace:AdonisUI.Extensions;assembly=AdonisUI"
              xmlns:tagging="clr-namespace:WallpaperFlux.Core.Models.Tagging;assembly=WallpaperFlux.Core"
@@ -40,7 +38,7 @@
             <MenuItem Header="Tags">
                 <!-- TODO If accessed through here the application will ask which category you want to add to / remove from -->
                 <!-- TODO A button within the category Tab itself should be used for directly adding/removing tags -->
-                <MenuItem Header="Add"/>
+                <MenuItem Header="Add" IsEnabled="{Binding CategoriesExist}"/>
                 <MenuItem Header="Add to Selected Category" mvx:Bi.nd="Command AddTagToSelectCategoryCommand" IsEnabled="{Binding CategoryIsSelected}"/>
                 <MenuItem Header="Remove"/>
             </MenuItem>
@@ -86,6 +84,7 @@
                 </TextBlock>
             </GroupBox.Header>
 
+            <!-- Category TabControl -->
             <TabControl ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                         adonisExtensions:LayerExtension.IncreaseLayer="True">
 
@@ -146,6 +145,7 @@
                                 </Grid>
                             </GroupBox>
 
+                            <!-- Tag ListBox -->
                             <ListBox x:Name="ImageSelectorTabListBox" ItemsSource="{Binding Tags}" SelectionMode="Extended">
 
                                 <!-- Wrap Setup -->
@@ -160,6 +160,7 @@
                                     <DataTemplate DataType="tagging:TagModel">
                                         <!-- The groupbox adds a fitting adonis background to every tag -->
                                         <GroupBox  adonisExtensions:LayerExtension.IncreaseLayer="True">
+                                            <!-- Tag Control -->
                                             <TextBlock>
                                                 <Run Text="{Binding Name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                 <Run Text="(0)"/>
@@ -185,10 +186,11 @@
                                                             <MenuItem Header="Show Parent Tags"/>
                                                             <MenuItem Header="Show Child Tags"/>
                                                         </MenuItem>
-                                                        <Separator/>
-                                                        <MenuItem Header="Select Images with Tag"/>
-                                                        <MenuItem Header="Add to Selected Image(s)"/>
-                                                        <MenuItem Header="Remove from Selected Image(s)"/>
+                                                        <MenuItem Header="Image Control">
+                                                            <MenuItem Header="Select Images with Tag"/>
+                                                            <MenuItem Header="Add to Selected Image(s)"/>
+                                                            <MenuItem Header="Remove from Selected Image(s)"/>
+                                                        </MenuItem>
                                                     </ContextMenu>
                                                 </TextBlock.ContextMenu>
                                             </TextBlock>

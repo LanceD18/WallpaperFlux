@@ -106,7 +106,7 @@ namespace WallpaperFlux.Core.Models
         //xpublic IExternalImageSource ImageSource { get; set; }
 
         // ----- XAML Values -----
-        // TODO Now that you know more about ResourceDictionaries, replace this section with XAML ResourceDictionaries at some point
+        // TODO Replace this section with ResourceDictionaries at some point
         #region XAML Values
         public int ImageSelectorSettingsHeight => 25;
 

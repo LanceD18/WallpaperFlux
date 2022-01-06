@@ -24,14 +24,22 @@ namespace WallpaperFlux.WPF.Views
     /// <summary>
     /// Interaction logic for TagView.xaml
     /// </summary>
-    [MvxContentPresentation (WindowIdentifier = nameof(TagWindow))]
+    //x[MvxContentPresentation (WindowIdentifier = nameof(TagWindow))]
     [MvxViewFor(typeof(TagViewModel))]
     public partial class TagView : MvxWpfView
     {
         public TagView()
         {
             InitializeComponent();
-            ViewModel = new TagViewModel();
+
+            if (TagViewModel.Instance == null)
+            {
+                ViewModel = TagViewModel.Instance = new TagViewModel();
+            }
+            else
+            {
+                ViewModel = TagViewModel.Instance;
+            }
 
             //xMvxWpfViewPresenter presenter = new MvxWpfViewPresenter(this);
 
