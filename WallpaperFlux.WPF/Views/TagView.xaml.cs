@@ -17,6 +17,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using MvvmCross.Presenters;
 using WallpaperFlux.Core.ViewModels;
+using WallpaperFlux.WPF.Util;
 using WallpaperFlux.WPF.Windows;
 
 namespace WallpaperFlux.WPF.Views
@@ -32,6 +33,9 @@ namespace WallpaperFlux.WPF.Views
         {
             InitializeComponent();
 
+            ViewModel = TagViewModel.Instance = WindowUtil.InitializeViewModel(TagViewModel.Instance);
+
+            /*x
             if (TagViewModel.Instance == null)
             {
                 ViewModel = TagViewModel.Instance = new TagViewModel();
@@ -40,13 +44,6 @@ namespace WallpaperFlux.WPF.Views
             {
                 ViewModel = TagViewModel.Instance;
             }
-
-            //xMvxWpfViewPresenter presenter = new MvxWpfViewPresenter(this);
-
-            /*x
-            MvxContentPresentationAttribute attribute = new MvxContentPresentationAttribute();
-            attribute.WindowIdentifier = nameof(TagWindow);
-            ViewPresenter presenter = new ViewPresenter(new TagWindow(), attribute, typeof(TagViewModel));
             */
         }
     }

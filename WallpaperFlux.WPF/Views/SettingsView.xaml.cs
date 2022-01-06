@@ -12,6 +12,7 @@ using System.Windows.Shapes;
 using MvvmCross.Platforms.Wpf.Views;
 using MvvmCross.ViewModels;
 using WallpaperFlux.Core.ViewModels;
+using WallpaperFlux.WPF.Util;
 
 namespace WallpaperFlux.WPF.Views
 {
@@ -24,6 +25,9 @@ namespace WallpaperFlux.WPF.Views
         public SettingsView()
         {
             InitializeComponent();
+
+            ViewModel = SettingsViewModel.Instance = WindowUtil.InitializeViewModel(SettingsViewModel.Instance);
+
         }
     }
 }

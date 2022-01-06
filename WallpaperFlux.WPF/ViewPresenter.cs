@@ -23,11 +23,7 @@ namespace WallpaperFlux.WPF
 
         public ViewPresenter(Type viewType, Type viewModelType, float width, float height, string title, bool modal)
         {
-            MvxWindowPresentationAttribute attribute = new MvxWindowPresentationAttribute
-            {
-                Modal = modal
-            };
-            
+            MvxWindowPresentationAttribute attribute = new MvxWindowPresentationAttribute { Modal = modal };
             Show(attribute, viewType, viewModelType, width, height, title);
         }
 

@@ -38,8 +38,6 @@ namespace WallpaperFlux.Core.ViewModels
         // allows the data of settings to be accessed by the xaml code
         public ThemeModel Theme { get; set; } = DataUtil.Theme;
 
-        public SettingsModel Settings { get; set; } = DataUtil.Theme.Settings;
-
         //xprivate readonly IMvxNavigationService _navigationService;
 
         public WallpaperFluxViewModel(/*xIMvxNavigationService navigationService*/)
@@ -52,7 +50,7 @@ namespace WallpaperFlux.Core.ViewModels
 
             // TODO Use models to hold command information (Including needed data)
             NextWallpaperCommand = new MvxCommand(NextWallpaper);
-            PreviousWallpaperCommand = new MvxCommand(() => { throw new NotImplementedException(); });
+            PreviousWallpaperCommand = new MvxCommand(() => { MessageBox.Show("Not implemented"); });
             LoadThemeCommand = new MvxCommand(LoadTheme);
             AddFolderCommand = new MvxCommand(PromptAddFolder);
             RemoveFolderCommand = new MvxCommand(RemoveFolder);
