@@ -15,8 +15,10 @@
     xmlns:extensions="clr-namespace:LanceTools.WPF.Extensions;assembly=LanceTools.WPF"
     xmlns:ffme="clr-namespace:Unosquare.FFME;assembly=ffme.win"
     xmlns:core="clr-namespace:WallpaperFlux.Core;assembly=WallpaperFlux.Core"
-    xmlns:controls="clr-namespace:WallpaperFlux.Core.Models.Controls;assembly=WallpaperFlux.Core"
+    xmlns:controlModels="clr-namespace:WallpaperFlux.Core.Models.Controls;assembly=WallpaperFlux.Core"
+    xmlns:controls="clr-namespace:WallpaperFlux.WPF.Controls"
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
     mc:Ignorable="d" FontSize="12" FontFamily="Segoe UI"
     d:DesignHeight="450" d:DesignWidth="800">
 
@@ -28,8 +30,6 @@
         <Grid.ColumnDefinitions>
             <!--<ColumnDefinition Width="{adonisUi:Space 1}"/>-->
             <ColumnDefinition Width="0"/>
-            <ColumnDefinition Width="auto"/>
-            <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="*"/>
@@ -274,12 +274,11 @@
         <GridSplitter Grid.Row="4" Grid.Column="2" Width="5" ResizeDirection="Columns"/>
 
         <!-- Image Selector / Image Inspector -->
-        <GroupBox  Grid.Row="4" Grid.Column="3" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin=" 0 0 5 0">
+        <GroupBox Grid.Row="4" Grid.RowSpan="2" Grid.Column="3" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin=" 0 0 5 0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="0"/>
-                    <ColumnDefinition Width="auto"/>
-                    <ColumnDefinition Width="auto"/>
+                    <!--<ColumnDefinition Width="4*"/> Reminder that you can use this for proportions -->
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
@@ -290,18 +289,23 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
+                <!-- Header Controls -->
                 <Button mvx:Bi.nd="Command SelectImagesCommand" IsEnabled="{Binding CanSelectImages}" 
                         Grid.Row="1" Grid.Column="1" Width="135" Height="25" Content="Select Image(s)" Margin="5"/>
-                <TextBlock x:Name="SelectedImagePathTextBox" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" Width="650" HorizontalAlignment="Center"/>
+                <TextBlock x:Name="SelectedImagePathTextBox" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" HorizontalAlignment="Center"/>
                 <TextBlock x:Name="SelectedImageDimensionsTextBox" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Center" />
 
                 <!-- Image Selector Tab Control -->
-                <GroupBox Grid.Row="4" Grid.Column="1" Width="650" Height="525" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="3">
-                    <TabControl ItemsSource="{Binding ImageSelectorTabs}" SelectedItem="{Binding SelectedImageSelectorTab, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" >
+                <!-- !<GroupBox Grid.Row="4" Grid.Column="1" Width="650" Height="525" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="3">-->
+                <GroupBox Grid.Row="4" Grid.Column="1" 
+                          adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="3">
+                    <TabControl x:Name="ImageSelectorTabControl" ItemsSource="{Binding ImageSelectorTabs}" 
+                                SizeChanged="ImageSelectorTabControl_OnSizeChanged" SelectionChanged="ImageSelectorTabControl_OnSelectionChanged"
+                                SelectedItem="{Binding SelectedImageSelectorTab, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" >
 
                         <!-- Item Template [Header] -->
                         <TabControl.ItemTemplate>
-                            <DataTemplate DataType="controls:ImageSelectorTabModel">
+                            <DataTemplate DataType="controlModels:ImageSelectorTabModel">
                                 <TextBlock Text="{Binding TabIndex}"/>
                             </DataTemplate>
                         </TabControl.ItemTemplate>
@@ -324,15 +328,16 @@
 
                         <!-- Content Template [Core Content/ListBox] -->
                         <TabControl.ContentTemplate>
-                            <DataTemplate DataType="controls:ImageSelectorTabModel">
-                                <ListBox x:Name="ImageSelectorTabListBox" ItemsSource="{Binding Images}" 
+                            <DataTemplate DataType="controlModels:ImageSelectorTabModel">
+                                <ListBox ItemsSource="{Binding Images}" 
                                          SelectedItem="{Binding SelectedImageSelectorImage}"
                                          SelectionMode="Extended" SelectionChanged="ImageSelectorTabListBox_SelectionChanged">
 
                                     <!-- Wrap Setup -->
                                     <ListBox.ItemsPanel>
                                         <ItemsPanelTemplate>
-                                            <WrapPanel Width="650" ItemWidth="150" ItemHeight="250" IsItemsHost="True" />
+                                            <WrapPanel Width="{Binding ImageSelectorTabWrapWidth, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                       ItemWidth="150" ItemHeight="250" IsItemsHost="True"/>
                                         </ItemsPanelTemplate>
                                     </ListBox.ItemsPanel>
 
@@ -341,8 +346,6 @@
                                         <DataTemplate DataType="models:ImageModel">
                                             <GroupBox HorizontalAlignment="Center">
                                                 <StackPanel Focusable="False">
-
-                                                    <!-- /// Thumbnail /// -->
 
                                                     <!-- //// Binding to ImageModel //// -->
                                                     <ContentControl Content="{Binding}" HorizontalAlignment="Center">
@@ -492,6 +495,28 @@
                         </TabControl.ContentTemplate>
                     </TabControl>
                 </GroupBox>
+
+                <!-- Image Inspector -->
+                <!--
+                <Expander Grid.Row="4" Grid.Column="2"  Header="Inspect" ExpandDirection="Right">
+                    <!- TODO Retire this StackPanel later, just here for reminders ->
+                    <StackPanel>
+                        <TextBlock Text="Some buttons and perhaps the image itself, include stuff that allows for image-independent control"/>
+                        <TextBlock Text="Tags, allow for tags to ignore naming restrictions here"/>
+                    </StackPanel>
+ 
+                </Expander>
+                -->
+                <hc:Drawer Dock="Right" ShowMode="Push" IsOpen="False">
+                    <GroupBox>
+                        <!-- TODO Retire this StackPanel later, just here for reminders -->
+                        <StackPanel>
+                            <TextBlock Text="Some buttons and perhaps the image itself, include stuff that allows for image-independent control"/>
+                            <TextBlock Text="Tags, allow for tags to ignore naming restrictions here"/>
+                        </StackPanel>
+                    </GroupBox>
+                </hc:Drawer>
+
             </Grid>
         </GroupBox>
     </Grid>

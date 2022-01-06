@@ -13,6 +13,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
@@ -77,8 +78,7 @@ namespace WallpaperFlux.WPF.Views
         }
         #endregion
 
-        //TODO The below undoes MVVM, try to fix it in the future
-        //TODO Implement a Font Scaler
+        //? Now that the window scales dynamically you probably won't need font scaling but keep that consideration in mind
         private async void ImageSelectorTabListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (e.AddedItems.Count > 0)
@@ -142,6 +142,24 @@ namespace WallpaperFlux.WPF.Views
         }
         #endregion
 
+        #endregion
+
+        #region Image Selector Tab Control
+        //? it's a bit clunky to introduce a variable for the width of each individual window  but it works
+        //? alternative options were hard to find due to the structure of this segment
+        private void ImageSelectorTabControl_OnSizeChanged(object sender, SizeChangedEventArgs e) => UpdateImageSelectorTabWrapperWidth();
+
+        private void ImageSelectorTabControl_OnSelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateImageSelectorTabWrapperWidth();
+
+        private void UpdateImageSelectorTabWrapperWidth()
+        {
+            WallpaperFluxViewModel viewModel = (WallpaperFluxViewModel)this.DataContext;
+            if (viewModel.SelectedImageSelectorTab != null)
+            {
+                viewModel.SelectedImageSelectorTab.ImageSelectorTabWrapWidth = ImageSelectorTabControl.ActualWidth;
+                viewModel.SelectedImageSelectorTab.RaisePropertyChanged(() => viewModel.SelectedImageSelectorTab.ImageSelectorTabWrapWidth);
+            }
+        }
         #endregion
     }
 }

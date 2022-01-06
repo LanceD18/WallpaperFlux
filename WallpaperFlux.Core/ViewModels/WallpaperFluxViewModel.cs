@@ -163,9 +163,9 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
-        private object _selectedImageSelectorTab;
+        private ImageSelectorTabModel _selectedImageSelectorTab;
 
-        public object SelectedImageSelectorTab
+        public ImageSelectorTabModel SelectedImageSelectorTab
         {
             get => _selectedImageSelectorTab;
             set => SetProperty(ref _selectedImageSelectorTab, value);
