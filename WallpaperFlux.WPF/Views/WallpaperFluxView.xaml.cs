@@ -39,7 +39,6 @@ namespace WallpaperFlux.WPF.Views
     [MvxViewFor(typeof(WallpaperFluxViewModel))]
     public partial class WallpaperFluxView : MvxWpfView
     {
-        //x FYI, the window doesn't actually do much of anything but send over the attribute, which in itself can be done elsewhere
         public ViewPresenter TagPresenter;
         public ViewPresenter SettingsPresenter;
 
@@ -78,46 +77,6 @@ namespace WallpaperFlux.WPF.Views
         }
         #endregion
 
-        //? Now that the window scales dynamically you probably won't need font scaling but keep that consideration in mind
-        private async void ImageSelectorTabListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (e.AddedItems.Count > 0)
-            {
-                if (e.AddedItems.ElementAt(0) is ImageModel imageModel)
-                {
-                    string path = imageModel.Path;
-
-                    SelectedImagePathTextBox.Text = path;
-
-                    Size dimensions;
-                    if (!imageModel.IsVideo)
-                    {
-                        
-                        System.Drawing.Image image = System.Drawing.Image.FromFile(path); // TODO The ExternalDisplayUtil can handle this now
-                        dimensions = new Size(image.Width, image.Height);
-                        image.Dispose();
-
-                        SelectedImageDimensionsTextBox.Text = dimensions.Width + "x" + dimensions.Height;
-                    }
-                    else
-                    {
-                        // TODO Figure out how to gather the video dimensions (With the below method the dimensions never load in time, or seemingly don't load at all)
-                        /*
-                        MediaElement element = new MediaElement();
-                        await element.Open(new Uri(path));
-                        Bitmap bitmap = await element.CaptureBitmapAsync();
-
-                        dimensions = new Size(bitmap.Width, bitmap.Height);
-                        await element.Close();
-                        */
-
-                        SelectedImageDimensionsTextBox.Text = "";
-                    }
-
-                }
-            }
-        }
-
         #region Menu Items
 
         #region Window Control
@@ -144,7 +103,47 @@ namespace WallpaperFlux.WPF.Views
 
         #endregion
 
-        #region Image Selector Tab Control
+        #region Image Selector Tab
+        //? Now that the window scales dynamically you probably won't need font scaling but keep that consideration in mind
+        private async void ImageSelectorTabListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.AddedItems.Count > 0)
+            {
+                if (e.AddedItems.ElementAt(0) is ImageModel imageModel)
+                {
+                    string path = imageModel.Path;
+
+                    SelectedImagePathTextBox.Text = path;
+
+                    Size dimensions;
+                    if (!imageModel.IsVideo)
+                    {
+
+                        System.Drawing.Image image = System.Drawing.Image.FromFile(path); // TODO The ExternalDisplayUtil can handle this now
+                        dimensions = new Size(image.Width, image.Height);
+                        image.Dispose();
+
+                        SelectedImageDimensionsTextBox.Text = dimensions.Width + "x" + dimensions.Height;
+                    }
+                    else
+                    {
+                        // TODO Figure out how to gather the video dimensions (With the below method the dimensions never load in time, or seemingly don't load at all)
+                        /*
+                        MediaElement element = new MediaElement();
+                        await element.Open(new Uri(path));
+                        Bitmap bitmap = await element.CaptureBitmapAsync();
+
+                        dimensions = new Size(bitmap.Width, bitmap.Height);
+                        await element.Close();
+                        */
+
+                        SelectedImageDimensionsTextBox.Text = "";
+                    }
+
+                }
+            }
+        }
+
         //? it's a bit clunky to introduce a variable for the width of each individual window  but it works
         //? alternative options were hard to find due to the structure of this segment
         private void ImageSelectorTabControl_OnSizeChanged(object sender, SizeChangedEventArgs e) => UpdateImageSelectorTabWrapperWidth();

@@ -16,7 +16,6 @@
     xmlns:ffme="clr-namespace:Unosquare.FFME;assembly=ffme.win"
     xmlns:core="clr-namespace:WallpaperFlux.Core;assembly=WallpaperFlux.Core"
     xmlns:controlModels="clr-namespace:WallpaperFlux.Core.Models.Controls;assembly=WallpaperFlux.Core"
-    xmlns:controls="clr-namespace:WallpaperFlux.WPF.Controls"
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:hc="https://handyorg.github.io/handycontrol"
     mc:Ignorable="d" FontSize="12" FontFamily="Segoe UI"
@@ -274,7 +273,7 @@
         <GridSplitter Grid.Row="4" Grid.Column="2" Width="5" ResizeDirection="Columns"/>
 
         <!-- Image Selector / Image Inspector -->
-        <GroupBox Grid.Row="4" Grid.RowSpan="2" Grid.Column="3" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin=" 0 0 5 0">
+        <GroupBox Grid.Row="4" Grid.RowSpan="2" Grid.Column="3" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin=" 0 5 5 5">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="0"/>
@@ -290,8 +289,19 @@
                 </Grid.RowDefinitions>
 
                 <!-- Header Controls -->
-                <Button mvx:Bi.nd="Command SelectImagesCommand" IsEnabled="{Binding CanSelectImages}" 
-                        Grid.Row="1" Grid.Column="1" Width="135" Height="25" Content="Select Image(s)" Margin="5"/>
+                <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+                    <!-- TODO Standardize the Height, Margin, and maybe the Width here (Give them variables) -->
+                    <Button Width="115" Height="25" Content="Select Image(s)" mvx:Bi.nd="Command SelectImagesCommand" IsEnabled="{Binding CanSelectImages}" Margin="5"/>
+                    <Button Height="25" Content="Inspect" mvx:Bi.nd="Command OpenImageEditorCommand" Margin="5"/>
+                    <Button Width="75" Height="25" Content="Clear" Margin="5"/>
+                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
+                    <Button Width="75" Height="25" Content="Rename" Margin="5"/>
+                    <Button Width="75" Height="25" Content="Move" Margin="5"/>
+                    <Button Width="75" Height="25" Content="Delete" Margin="5"/>
+                    <Button Width="75" Height="25" Content="Rank" Margin="5"/>
+                    <CheckBox Content="Apply to entire selection" Margin="5"/>
+                </StackPanel>
+
                 <TextBlock x:Name="SelectedImagePathTextBox" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" HorizontalAlignment="Center"/>
                 <TextBlock x:Name="SelectedImageDimensionsTextBox" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Center" />
 
@@ -404,6 +414,11 @@
                                                                             <MenuItem Header="Open File Location" mvx:Bi.nd="Command ViewFileCommand"/>
                                                                             <MenuItem Header="Open File" mvx:Bi.nd="Command OpenFileCommand"/>
                                                                             <MenuItem Header="Set As Wallpaper" mvx:Bi.nd="Command SetWallpaperCommand"/>
+                                                                            <Separator/>
+                                                                            <MenuItem Header="Rename"/>
+                                                                            <MenuItem Header="Move"/>
+                                                                            <MenuItem Header="Delete"/>
+                                                                            <MenuItem Header="Rank"/>
                                                                         </ContextMenu>
                                                                     </Image.ContextMenu>
                                                                 </Image>
@@ -429,8 +444,14 @@
                                                                             <MenuItem Header="Open File Location" mvx:Bi.nd="Command ViewFileCommand"/>
                                                                             <MenuItem Header="Open File" mvx:Bi.nd="Command OpenFileCommand"/>
                                                                             <MenuItem Header="Set As Wallpaper" mvx:Bi.nd="Command SetWallpaperCommand"/>
+                                                                            <Separator/>
                                                                             <MenuItem Header="Volume" mvx:Bi.nd="Command SetVolumeCommand"/>
                                                                             <MenuItem Header="Speed" mvx:Bi.nd="Command SetSpeedCommand"/>
+                                                                            <Separator/>
+                                                                            <MenuItem Header="Rename"/>
+                                                                            <MenuItem Header="Move"/>
+                                                                            <MenuItem Header="Delete"/>
+                                                                            <MenuItem Header="Rank"/>
                                                                         </ContextMenu>
                                                                     </GroupBox.ContextMenu>
                                                                     <!-- Displays the first frame/thumbnail of videos due to the Loaded event -->
@@ -507,13 +528,31 @@
  
                 </Expander>
                 -->
-                <hc:Drawer Dock="Right" ShowMode="Push" IsOpen="False">
-                    <GroupBox>
-                        <!-- TODO Retire this StackPanel later, just here for reminders -->
-                        <StackPanel>
-                            <TextBlock Text="Some buttons and perhaps the image itself, include stuff that allows for image-independent control"/>
-                            <TextBlock Text="Tags, allow for tags to ignore naming restrictions here"/>
-                        </StackPanel>
+
+                <!-- Image Inspector -->
+                <hc:Drawer Dock="Left" ShowMode="Cover" IsOpen="{Binding IsImageEditorDrawerOpen}">
+                    <GroupBox DataContext="WallpaperFluxViewModel">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <!--<ColumnDefinition Width="{adonisUi:Space 1}"/>-->
+                                <ColumnDefinition Width="0"/>
+                                <ColumnDefinition Width="auto"/>
+                                <ColumnDefinition Width="auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="0"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <Button Grid.Row="1" Grid.Column="3" Content="X" mvx:Bi.nd="CloseImageEditorCommand"/>
+                        </Grid>
+
+
                     </GroupBox>
                 </hc:Drawer>
 

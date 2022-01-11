@@ -46,5 +46,22 @@ namespace WallpaperFlux.WPF.Views
             }
             */
         }
+
+        private void TagTabControl_OnSizeChanged(object sender, SizeChangedEventArgs e) => UpdateTagSelectorWrapperSize();
+
+        private void TagTabControl_OnSelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateTagSelectorWrapperSize();
+
+        private void UpdateTagSelectorWrapperSize()
+        {
+            TagViewModel viewModel = (TagViewModel)this.DataContext;
+
+            if (viewModel.SelectedCategory != null)
+            {
+                viewModel.SelectedCategory.TagWrapWidth = TagTabControl.ActualWidth;
+                viewModel.SelectedCategory.TagWrapHeight = TagTabControl.ActualHeight - 100; // the bottom tends to be cut off
+                viewModel.SelectedCategory.RaisePropertyChanged(() => viewModel.SelectedCategory.TagWrapWidth);
+                viewModel.SelectedCategory.RaisePropertyChanged(() => viewModel.SelectedCategory.TagWrapHeight);
+            }
+        }
     }
 }

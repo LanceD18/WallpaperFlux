@@ -84,6 +84,27 @@ namespace WallpaperFlux.Core.ViewModels
                 if (!string.IsNullOrEmpty(tagName))
                 {
                     category.Tags.Add(new TagModel(tagName));
+
+                    //! temp debug code for generating a bunch of random tags
+                    string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+                    Random charRand = new Random();
+                    Random intRand = new Random();
+
+                    int nextCount = intRand.Next(20, 31);
+                    for (int i = 0; i < nextCount; i++)
+                    {
+                        int nextSize = intRand.Next(3, 11);
+                        char[] stringChars = new char[nextSize];
+
+                        for (int j = 0; j < stringChars.Length; j++)
+                        {
+                            stringChars[j] = chars[charRand.Next(chars.Length)];
+                        }
+
+                        string finalString = new string(stringChars);
+                        category.Tags.Add(new TagModel(finalString));
+                    }
+                    //! temp debug code
                 }
             }
             else

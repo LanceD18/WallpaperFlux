@@ -38,70 +38,6 @@ namespace WallpaperFlux.Core.ViewModels
         // allows the data of settings to be accessed by the xaml code
         public ThemeModel Theme { get; set; } = DataUtil.Theme;
 
-        //xprivate readonly IMvxNavigationService _navigationService;
-
-        public WallpaperFluxViewModel(/*xIMvxNavigationService navigationService*/)
-        {
-            //x_navigationService = navigationService;
-
-            //xFolderUtil.LinkThemeImageFolders(ImageFolders);
-
-            InitializeDisplaySettings();
-
-            // TODO Use models to hold command information (Including needed data)
-            NextWallpaperCommand = new MvxCommand(NextWallpaper);
-            PreviousWallpaperCommand = new MvxCommand(() => { MessageBox.Show("Not implemented"); });
-            LoadThemeCommand = new MvxCommand(LoadTheme);
-            AddFolderCommand = new MvxCommand(PromptAddFolder);
-            RemoveFolderCommand = new MvxCommand(RemoveFolder);
-            SyncCommand = new MvxCommand(Sync);
-            SelectImagesCommand = new MvxCommand(SelectImages);
-            //xOpenTagViewCommand = new MvxCommand(async () => await TagViewModelNavigator());
-        }
-
-        /*x
-        // Docs: https://www.mvvmcross.com/documentation/fundamentals/navigation
-        public async Task TagViewModelNavigator()
-        {
-            await _navigationService.Navigate<TagViewModel>();
-        }
-        */
-
-        async void InitializeDisplaySettings() // waits for the DisplayCount to be set before initializing the display settings
-        {
-            await Task.Run(() =>
-            {
-                while (WallpaperUtil.DisplayUtil.GetDisplayCount() == 0)
-                {
-                    Thread.Sleep(10);
-                }
-
-                //! do not directly add to the DisplaySettings itself, this threaded behavior will mistakenly add an extra object unless it's slept for a certain period
-                MvxObservableCollection<DisplayModel> initSettings = new MvxObservableCollection<DisplayModel>();
-                for (int i = 0; i < WallpaperUtil.DisplayUtil.GetDisplayCount(); i++)
-                {
-                    initSettings.Add(new DisplayModel(Mvx.IoCProvider.Resolve<IExternalTimer>(), NextWallpaper)
-                    {
-                        DisplayInterval = 0,
-                        DisplayIndex = i,
-                        DisplayIntervalType = IntervalType.Seconds,
-                        DisplayStyle = WallpaperStyle.Stretch
-                    });
-                }
-
-                //! do not directly add to the DisplaySettings itself, this threaded behavior will mistakenly add an extra object unless it's slept for a certain period
-                DisplaySettings = initSettings;
-
-            }).ConfigureAwait(false);
-        }
-
-        // updates some properties that may change during runtime but shouldn't be processed constantly
-        // TODO This should be attached to the eventual Update Theme/Quick Save Button
-        public void UpdateTheme()
-        {
-            Debug.WriteLine("Updating theme...");
-            Theme.Settings.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence();
-        }
 
         #region View Variables
         //-----View Variables-----
@@ -183,10 +119,71 @@ namespace WallpaperFlux.Core.ViewModels
         public bool CanSync => SelectedDisplaySetting != null;
 
         public bool CanSelectImages => ImageFolders.Count > 0;
+
+        public bool IsImageEditorDrawerOpen { get; set; } = false;
+
         #endregion
+
+        //xprivate readonly IMvxNavigationService _navigationService;
+
+        public WallpaperFluxViewModel(/*xIMvxNavigationService navigationService*/)
+        {
+            //x_navigationService = navigationService;
+
+            //xFolderUtil.LinkThemeImageFolders(ImageFolders);
+
+            InitializeDisplaySettings();
+
+            InitializeCommands();
+        }
+
+        /*x
+        // Docs: https://www.mvvmcross.com/documentation/fundamentals/navigation
+        public async Task TagViewModelNavigator()
+        {
+            await _navigationService.Navigate<TagViewModel>();
+        }
+        */
+
+        async void InitializeDisplaySettings() // waits for the DisplayCount to be set before initializing the display settings
+        {
+            await Task.Run(() =>
+            {
+                while (WallpaperUtil.DisplayUtil.GetDisplayCount() == 0)
+                {
+                    Thread.Sleep(10);
+                }
+
+                //! do not directly add to the DisplaySettings itself, this threaded behavior will mistakenly add an extra object unless it's slept for a certain period
+                MvxObservableCollection<DisplayModel> initSettings = new MvxObservableCollection<DisplayModel>();
+                for (int i = 0; i < WallpaperUtil.DisplayUtil.GetDisplayCount(); i++)
+                {
+                    initSettings.Add(new DisplayModel(Mvx.IoCProvider.Resolve<IExternalTimer>(), NextWallpaper)
+                    {
+                        DisplayInterval = 0,
+                        DisplayIndex = i,
+                        DisplayIntervalType = IntervalType.Seconds,
+                        DisplayStyle = WallpaperStyle.Stretch
+                    });
+                }
+
+                //! do not directly add to the DisplaySettings itself, this threaded behavior will mistakenly add an extra object unless it's slept for a certain period
+                DisplaySettings = initSettings;
+
+            }).ConfigureAwait(false);
+        }
+
+        // updates some properties that may change during runtime but shouldn't be processed constantly
+        // TODO This should be attached to the eventual Update Theme/Quick Save Button
+        public void UpdateTheme()
+        {
+            Debug.WriteLine("Updating theme...");
+            Theme.Settings.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence();
+        }
 
         #region Commands
         //-----Commands-----
+
 
         #region Command Properties
 
@@ -205,7 +202,26 @@ namespace WallpaperFlux.Core.ViewModels
 
         public IMvxCommand SelectImagesCommand { get; set; }
 
+        public IMvxCommand OpenImageEditorCommand { get; set; }
+
+        public IMvxCommand CloseImageEditorCommand { get; set; }
+
         #endregion
+
+
+        public void InitializeCommands()
+        {
+            // TODO Consider using models to hold command information (Including needed data)
+            NextWallpaperCommand = new MvxCommand(NextWallpaper);
+            PreviousWallpaperCommand = new MvxCommand(() => { MessageBox.Show("Not implemented"); });
+            LoadThemeCommand = new MvxCommand(LoadTheme);
+            AddFolderCommand = new MvxCommand(PromptAddFolder);
+            RemoveFolderCommand = new MvxCommand(RemoveFolder);
+            SyncCommand = new MvxCommand(Sync);
+            SelectImagesCommand = new MvxCommand(SelectImages);
+            OpenImageEditorCommand = new MvxCommand(ToggleImageEditor);
+            CloseImageEditorCommand = new MvxCommand(CloseImageEditor);
+        }
 
         #region Command Methods
         // TODO Create subclasses for the commands with excess methods (Like Theme Data)
@@ -510,6 +526,24 @@ namespace WallpaperFlux.Core.ViewModels
 
             RaisePropertyChanged(() => ImageSelectorTabs);
             SelectedImageSelectorTab = ImageSelectorTabs[0];
+        }
+
+        private void ToggleImageEditor()
+        {
+            IsImageEditorDrawerOpen = !IsImageEditorDrawerOpen;
+            RaisePropertyChanged(() => IsImageEditorDrawerOpen);
+        }
+
+        private void OpenImageEditor()
+        {
+            IsImageEditorDrawerOpen = true;
+            RaisePropertyChanged(() => IsImageEditorDrawerOpen);
+        }
+
+        private void CloseImageEditor()
+        {
+            IsImageEditorDrawerOpen = false;
+            RaisePropertyChanged(() => IsImageEditorDrawerOpen);
         }
         #endregion
         #endregion

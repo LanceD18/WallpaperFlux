@@ -105,8 +105,8 @@ namespace WallpaperFlux.Core.Models.Tagging
         public float Frequency { get; set; }
 
         // UI Bounds
-        public float TagWrapWidth { get; set; } = TaggingUtil.TAGGING_WINDOW_WIDTH - 100;
-        public float TagWrapHeight { get; set; } = TaggingUtil.TAGGING_WINDOW_HEIGHT - 50;
+        public double TagWrapWidth { get; set; }//x = TaggingUtil.TAGGING_WINDOW_WIDTH - 150;
+        public double TagWrapHeight { get; set; }//x = TaggingUtil.TAGGING_WINDOW_HEIGHT - 50;
 
         public CategoryModel(string name)
         {
