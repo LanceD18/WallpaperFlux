@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
+using Newtonsoft.Json;
+using WallpaperFlux.Core.Collections;
 
 namespace WallpaperFlux.Core.Models.Tagging
 {
@@ -82,9 +85,27 @@ namespace WallpaperFlux.Core.Models.Tagging
             }
         }
 
+        [JsonIgnore] public HashSet<ImageModel> LinkedImages; //? should get implemented on loading in the images through their TagCollection
+
         public TagModel(string name)
         {
             Name = name;
+        }
+
+        public void LinkImage(TagCollection tagLinker)
+        {
+            LinkedImages.Add(tagLinker.ParentImage);
+        }
+
+        public void UnlinkImage(TagCollection tagLinker)
+        {
+            LinkedImages.Remove(tagLinker.ParentImage);
+        }
+
+        public int GetLinkedImageCount()
+        {
+            Debug.WriteLine("Find an efficient way to get the number of images linked to a tag without having multiple references like in the previous TagData vs ImageData");
+            return 0;
         }
     }
 }

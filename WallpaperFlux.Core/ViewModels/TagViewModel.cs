@@ -14,7 +14,7 @@ namespace WallpaperFlux.Core.ViewModels
 {
     public class TagViewModel : MvxViewModel
     {
-        public static TagViewModel Instance; // allows the data to remain persistent without having to reload everything
+        public static TagViewModel Instance; // allows the data to remain persistent without having to reload everything once the view is closed
 
         #region View Variables
 
@@ -52,7 +52,15 @@ namespace WallpaperFlux.Core.ViewModels
 
         public IMvxCommand AddCategoryCommand { get; set; }
 
-        public IMvxCommand AddTagToSelectCategoryCommand { get; set; }
+        public IMvxCommand AddTagToSelectedCategoryCommand { get; set; }
+
+        public IMvxCommand AddTagToSelectedImagesCommand { get; set; }
+
+        public IMvxCommand AddTagToEntireImageGroupCommand { get; set; }
+
+        public IMvxCommand RemoveTagFromSelectedImagesCommand { get; set; }
+
+        public IMvxCommand RemoveTagFromEntireImageGroupCommand { get; set; }
 
         #endregion
 
@@ -60,7 +68,7 @@ namespace WallpaperFlux.Core.ViewModels
         public TagViewModel()
         {
             AddCategoryCommand = new MvxCommand(PromptAddCategory);
-            AddTagToSelectCategoryCommand = new MvxCommand(() => PromptAddTag(SelectedCategory));
+            AddTagToSelectedCategoryCommand = new MvxCommand(() => PromptAddTagToCategory(SelectedCategory));
         }
 
         #region Command Methods
@@ -70,12 +78,15 @@ namespace WallpaperFlux.Core.ViewModels
 
             if (!string.IsNullOrEmpty(categoryName))
             {
-                Categories.Add(new CategoryModel(categoryName));
+                CategoryModel category = new CategoryModel(categoryName);
+                Categories.Add(category);
+                SelectedCategory = category;
                 RaisePropertyChanged(() => CategoriesExist);
+                RaisePropertyChanged(() => SelectedCategory);
             }
         }
 
-        public void PromptAddTag(CategoryModel category)
+        public void PromptAddTagToCategory(CategoryModel category)
         {
             if (category != null)
             {
@@ -83,34 +94,55 @@ namespace WallpaperFlux.Core.ViewModels
 
                 if (!string.IsNullOrEmpty(tagName))
                 {
-                    category.Tags.Add(new TagModel(tagName));
-
-                    //! temp debug code for generating a bunch of random tags
-                    string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-                    Random charRand = new Random();
-                    Random intRand = new Random();
-
-                    int nextCount = intRand.Next(20, 31);
-                    for (int i = 0; i < nextCount; i++)
-                    {
-                        int nextSize = intRand.Next(3, 11);
-                        char[] stringChars = new char[nextSize];
-
-                        for (int j = 0; j < stringChars.Length; j++)
-                        {
-                            stringChars[j] = chars[charRand.Next(chars.Length)];
-                        }
-
-                        string finalString = new string(stringChars);
-                        category.Tags.Add(new TagModel(finalString));
-                    }
-                    //! temp debug code
+                    category.AddTag(new TagModel(tagName));
+                    AddDebugTags(category);
                 }
             }
             else
             {
                 MessageBoxUtil.ShowError("Selected category does not exist");
             }
+        }
+
+        //? for testing the tagging system
+        private void AddDebugTags(CategoryModel category)
+        {
+            Debug.WriteLine("Adding Debug Tags...");
+            //! temp debug code for generating a bunch of random tags
+            string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+            Random charRand = new Random();
+            Random intRand = new Random();
+
+            int nextCount = intRand.Next(50, 100);
+
+            TagModel[] tagsToAdd = new TagModel[nextCount];
+
+            for (int i = 0; i < nextCount; i++)
+            {
+                int nextSize = intRand.Next(10, 15);
+                char[] stringChars = new char[nextSize];
+
+                for (int j = 0; j < stringChars.Length; j++)
+                {
+                    stringChars[j] = chars[charRand.Next(chars.Length)];
+                }
+
+                string finalString = new string(stringChars);
+                tagsToAdd[i] = new TagModel(finalString);
+            }
+
+            category.AddTagRange(tagsToAdd);
+            //! temp debug code
+        }
+
+        public void AddTagToSelectedImages()
+        {
+
+        }
+
+        public void RemoveTagFromSelectedImages()
+        {
+
         }
         #endregion
     }

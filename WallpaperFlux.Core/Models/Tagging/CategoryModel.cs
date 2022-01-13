@@ -1,20 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Text;
+using HandyControl.Controls;
+using MvvmCross.Commands;
 using MvvmCross.ViewModels;
+using Newtonsoft.Json;
+using WallpaperFlux.Core.Models.Controls;
 using WallpaperFlux.Core.Util;
 
 namespace WallpaperFlux.Core.Models.Tagging
 {
     public class CategoryModel : MvxNotifyPropertyChanged
     {
-        private MvxObservableCollection<TagModel> _tags = new MvxObservableCollection<TagModel>();
-
-        public MvxObservableCollection<TagModel> Tags
-        {
-            get => _tags;
-            set => SetProperty(ref _tags, value);
-        }
+        private HashSet<TagModel> Tags = new HashSet<TagModel>();
 
         private string _name;
         public string Name
@@ -77,6 +77,7 @@ namespace WallpaperFlux.Core.Models.Tagging
         }
 
         private bool _useForNaming;
+
         public bool UseForNaming
         {
             get => _useForNaming;
@@ -104,15 +105,221 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         public float Frequency { get; set; }
 
-        // UI Bounds
-        public double TagWrapWidth { get; set; }//x = TaggingUtil.TAGGING_WINDOW_WIDTH - 150;
-        public double TagWrapHeight { get; set; }//x = TaggingUtil.TAGGING_WINDOW_HEIGHT - 50;
+        #region Search & Sorting
+
+        // Search Filter
+        private string _searchFilter;
+
+        [JsonIgnore]
+        public string SearchFilter
+        {
+            get => _searchFilter;
+            set
+            {
+                SetProperty(ref _searchFilter, value);
+
+                VerifyTagTabs();
+            }
+        }
+
+        // Sorting
+        public TagSortType ActiveSortType = TagSortType.Name;
+
+        public bool SortByNameDirection { get; set; } = true; // default ascending option
+
+        public bool SortByCountDirection { get; set; }
+
+        private MvxObservableCollection<TagTabModel> _tagTabs = new MvxObservableCollection<TagTabModel>();
+
+        public MvxObservableCollection<TagTabModel> TagTabs
+        {
+            get => _tagTabs;
+            set => SetProperty(ref _tagTabs, value);
+        }
+
+        private TagTabModel _selectedTagTab;
+        public TagTabModel SelectedTagTab
+        {
+            get => _selectedTagTab;
+            set
+            {
+                SetProperty(ref _selectedTagTab, value);
+                VerifyVisibleTags();
+            }
+        }
+
+        private TagModel[] _sortedTags;
+        private TagModel[] _filteredTags;
+
+        #endregion
+
+        #region Commands
+
+        [JsonIgnore] public IMvxCommand ToggleSortByNameCommand { get; set; }
+
+        [JsonIgnore] public IMvxCommand ToggleSortByCountCommand { get; set; }
+
+        #endregion
 
         public CategoryModel(string name)
         {
             Name = name;
+
+            ToggleSortByNameCommand = new MvxCommand(() => ToggleSortOption(TagSortType.Name));
+            ToggleSortByCountCommand = new MvxCommand(() => ToggleSortOption(TagSortType.Count));
         }
 
+        public void AddTag(string newTag) => AddTagRange(new string[] {newTag});
+
+        public void AddTagRange(string[] newTags)
+        {
+            List<TagModel> tags = new List<TagModel>();
+            foreach (string tag in newTags)
+            {
+                tags.Add(new TagModel(tag));
+            }
+
+            AddTagRange(tags.ToArray());
+        }
+
+        public void AddTag(TagModel newTag) => AddTagRange(new TagModel[] { newTag });
+
+        public void AddTagRange(TagModel[] newTags)
+        {
+            foreach (TagModel tag in newTags)
+            {
+                Tags.Add(tag);
+            }
+            
+            VerifyTagTabs();
+        }
+
+        public void VerifyTagTabs()
+        {
+            SortTags();
+
+            if (string.IsNullOrEmpty(SearchFilter))
+            {
+                _filteredTags = _sortedTags.ToArray();
+            }
+            else
+            {
+                string lowerCaseSearchFilter = SearchFilter.ToLower();
+                _filteredTags = _sortedTags.Where(f => f.Name.ToLower().Contains(lowerCaseSearchFilter)).ToArray(); //? applies search filter
+            }
+
+            int totalTagTabCount = (_filteredTags.Length / TaggingUtil.TagsPerPage) + 1; //? remember that this 'rounds' off the last page since it's an int
+
+            if (TagTabs.Count != totalTagTabCount)
+            {
+                while (TagTabs.Count < totalTagTabCount)
+                {
+                    TagTabs.Add(new TagTabModel(TagTabs.Count + 1)); // + 1 since it doesn't exist yet so the count is still - 1
+                }
+
+                while (TagTabs.Count > totalTagTabCount)
+                {
+                    TagTabs.RemoveAt(TagTabs.Count - 1);
+                }
+            }
+
+            // auto-selects the first available tab when none are selected
+            if (SelectedTagTab == null && TagTabs.Count > 0)
+            {
+                SelectedTagTab = TagTabs[0];
+                RaisePropertyChanged(() => SelectedTagTab);
+            }
+
+            VerifyVisibleTags();
+        }
+
+        public void VerifyVisibleTags()
+        {
+            if (SelectedTagTab == null)
+            {
+                Debug.WriteLine("Null Selected Tab");
+                return;
+            }
+
+            if (_sortedTags == null)
+            {
+                Debug.WriteLine("Null Sorted Tags");
+                SortTags();
+            }
+
+            if (string.IsNullOrEmpty(SearchFilter)) _filteredTags = _sortedTags.ToArray();
+
+            int pageNumber = int.Parse(SelectedTagTab.TabIndex);
+            int minIndex = TaggingUtil.TagsPerPage * (pageNumber - 1);
+            int maxIndex = TaggingUtil.TagsPerPage * pageNumber;
+
+            Debug.WriteLine("minIndex: " + minIndex + " | maxIndex: " + maxIndex);
+
+            List<TagModel> pageTags = new List<TagModel>();
+            for (int i = minIndex; i < maxIndex; i++)
+            {
+                Debug.WriteLine("i: " + i + " | filterLength: " + _filteredTags.Length);
+                if (i > _filteredTags.Length - 1) break; // we're on the last page and we've run out of tags
+                pageTags.Add(_filteredTags[i]);
+            }
+
+            SelectedTagTab.VisibleTags.SwitchTo(pageTags);
+        }
+
+        #region Command Methods
+
+        public void ToggleSortOption(TagSortType sortType)
+        {
+            // Toggle
+            switch (sortType)
+            {
+                case TagSortType.Name:
+                    SortByNameDirection = !SortByNameDirection;
+
+                    // the next time the following option is selected it'll default to one direction
+                    SortByCountDirection = false;
+                    break;
+
+                case TagSortType.Count:
+                    SortByCountDirection = !SortByCountDirection;
+
+                    // the next time the following option is selected it'll default to one direction
+                    SortByNameDirection = false;
+                    break;
+            }
+
+            // Re-Verify
+            VerifyTagTabs();
+        }
+
+        public void SortTags()
+        {
+            // Sort
+            IEnumerable<TagModel> sortedItems = string.IsNullOrEmpty(SearchFilter)
+                ? Tags.ToArray()
+                : _filteredTags.ToArray();
+
+            switch (ActiveSortType)
+            {
+                case TagSortType.Name:
+                    sortedItems = SortByNameDirection
+                        ? (from f in Tags orderby f.Name select f) // ascending
+                        : (from f in Tags orderby f.Name descending select f);
+                    break;
+
+                case TagSortType.Count:
+                    sortedItems = SortByCountDirection
+                        ? (from f in Tags orderby f.GetLinkedImageCount() select f) // ascending
+                        : (from f in Tags orderby f.GetLinkedImageCount() descending select f);
+                    break;
+            }
+
+            _sortedTags = sortedItems.ToArray();
+        }
+
+        #endregion
+        
+        // Operators
         public static bool operator ==(CategoryModel category1, CategoryModel category2)
         {
             return category1?.Name == category2?.Name;

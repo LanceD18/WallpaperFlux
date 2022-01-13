@@ -32,12 +32,13 @@ namespace WallpaperFlux.Core.ViewModels
 {
     public class WallpaperFluxViewModel : MvxViewModel
     {
+        public static WallpaperFluxViewModel Instance;
+
         // TODO When you need more view models, initialize them in the constructor here
 
         //? this variable exists for use with the xaml despite the Static Reference
         // allows the data of settings to be accessed by the xaml code
         public ThemeModel Theme { get; set; } = DataUtil.Theme;
-
 
         #region View Variables
         //-----View Variables-----
@@ -128,6 +129,8 @@ namespace WallpaperFlux.Core.ViewModels
 
         public WallpaperFluxViewModel(/*xIMvxNavigationService navigationService*/)
         {
+            Instance = this;
+
             //x_navigationService = navigationService;
 
             //xFolderUtil.LinkThemeImageFolders(ImageFolders);

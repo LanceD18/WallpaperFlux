@@ -4,7 +4,7 @@ using MvvmCross.ViewModels;
 
 namespace WallpaperFlux.Core.Models.Controls
 {
-    // Represents a tab within the Image Selector
+    //? Represents a tab within the Image Selector
     public class ImageSelectorTabModel : MvxNotifyPropertyChanged
     {
         public string TabIndex { get; set; }

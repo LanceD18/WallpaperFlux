@@ -7,6 +7,7 @@
              xmlns:mvx="clr-namespace:MvvmCross.Platforms.Wpf.Binding;assembly=MvvmCross.Platforms.Wpf"
              xmlns:adonisExtensions="clr-namespace:AdonisUI.Extensions;assembly=AdonisUI"
              xmlns:tagging="clr-namespace:WallpaperFlux.Core.Models.Tagging;assembly=WallpaperFlux.Core"
+             xmlns:controls="clr-namespace:WallpaperFlux.Core.Models.Controls;assembly=WallpaperFlux.Core"
              mc:Ignorable="d" FontSize="12" FontFamily="Segoe UI"
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
@@ -39,7 +40,7 @@
                 <!-- TODO If accessed through here the application will ask which category you want to add to / remove from -->
                 <!-- TODO A button within the category Tab itself should be used for directly adding/removing tags -->
                 <MenuItem Header="Add" IsEnabled="{Binding CategoriesExist}"/>
-                <MenuItem Header="Add to Selected Category" mvx:Bi.nd="Command AddTagToSelectCategoryCommand" IsEnabled="{Binding CategoryIsSelected}"/>
+                <MenuItem Header="Add to Selected Category" mvx:Bi.nd="Command AddTagToSelectedCategoryCommand" IsEnabled="{Binding CategoryIsSelected}"/>
                 <MenuItem Header="Remove"/>
             </MenuItem>
 
@@ -96,9 +97,14 @@
                                 <ContextMenu>
                                     <MenuItem Header="{Binding Name}" IsEnabled="False"/>
                                     <Separator/>
+                                    <MenuItem Header="Total Number of Tags: 0" IsEnabled="False"></MenuItem>
                                     <MenuItem Header="Rename"/>
                                     <MenuItem Header="Delete"/>
                                     <MenuItem Header="Reposition [Use if making drag-and-drop is too difficult]"/>
+                                    <MenuItem Header="Enabled" IsCheckable="True"  StaysOpenOnClick="True" 
+                                              IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <MenuItem Header="Use For Naming" IsCheckable="True"  StaysOpenOnClick="True" 
+                                              IsChecked="{Binding UseForNaming, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                 </ContextMenu>
                             </TextBlock.ContextMenu>
                         </TextBlock>
@@ -131,84 +137,127 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="4"/>
                                         <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="auto"/>
                                         <ColumnDefinition Width="4"/>
                                     </Grid.ColumnDefinitions>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="4"/>
-                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="auto"/>
+                                        <RowDefinition Height="auto"/>
                                         <RowDefinition Height="4"/>
                                     </Grid.RowDefinitions>
 
-                                    <TextBox Grid.Row="1" Grid.Column="1" adonisExtensions:WatermarkExtension.Watermark="Search Tag..." Margin="5 0 5 0"/>
-                                    <Button Grid.Row="1" Grid.Column="2" Content="Sort" Margin="5 0 5 0"/>
+                                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SearchFilter, Mode=TwoWay, UpdateSourceTrigger=Explicit}" 
+                                             adonisExtensions:WatermarkExtension.Watermark="Search Tag... (Press Enter to Confirm)" Margin="5 0 5 5"
+                                             ToolTip="Press Enter to Confirm" KeyDown="SearchBar_OnKeyDown"/>
+                                    <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="5 5 5 0">
+                                        <TextBlock Text="Sort By: " VerticalAlignment="Center"/>
+                                        <Button  Content="Name" Margin="5 0 5 0" mvx:Bi.nd="Command ToggleSortByNameCommand"/>
+                                        <Button  Content="Count" Margin="5 0 5 0" mvx:Bi.nd="Command ToggleSortByCountCommand"/>
+                                    </StackPanel>
                                 </Grid>
                             </GroupBox>
 
                             <!-- Tag ListBox -->
-                            <ListBox ItemsSource="{Binding Tags}" SelectionMode="Extended"
-                                     Height="{Binding TagWrapHeight, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
-                                     adonisExtensions:ScrollViewerExtension.HideScrollBarsUntilMouseOver="True"
-                                     adonisExtensions:ScrollViewerExtension.VerticalScrollBarPlacement="Overlay"
-                                     adonisExtensions:ScrollViewerExtension.VerticalScrollBarExpansionMode="ExpandOnHover"
-                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <!--x<GroupBox>-->
+                            <TabControl ItemsSource="{Binding TagTabs, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
+                                SelectedItem="{Binding SelectedTagTab, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" >
 
-                                <!-- Wrap Setup -->
-                                <ListBox.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel IsItemsHost="True" Width="{Binding TagWrapWidth, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
-                                    </ItemsPanelTemplate>
-                                </ListBox.ItemsPanel>
-
-                                <!-- Tags Item Template -->
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate DataType="tagging:TagModel">
-                                        <!-- The groupbox adds a fitting adonis background to every tag -->
-                                        <GroupBox  adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:CornerRadiusExtension.CornerRadius="15">
-                                            <!-- Tag Control -->
-                                            <TextBlock>
-                                                <Run Text="{Binding Name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <Run Text="(0)"/>
-                                                <TextBlock.ContextMenu>
-                                                    <ContextMenu>
-                                                        <!-- TODO See what happens when you StackPanel some of these MenuItems into being Horizontal -->
-                                                        <!-- TODO  (you can do this in the content of a MenuItem) -->
-                                                        <MenuItem Header="{Binding Name}" IsEnabled="False"/>
-                                                        <MenuItem Header="Found in x images" IsEnabled="False"/>
-                                                        <Separator/>
-                                                        <MenuItem Header="Rename"/>
-                                                        <MenuItem Header="Delete"/>
-                                                        <MenuItem Header="Frequencies">
-                                                            <MenuItem Header="Relative Frequency: 100%"/>
-                                                            <MenuItem Header="Exact Frequency: 100%"/>
-                                                        </MenuItem>
-                                                        <Separator/>
-                                                        <MenuItem Header="Enabled" IsCheckable="True" IsChecked="True" StaysOpenOnClick="True"/>
-                                                        <MenuItem Header="Use For Naming" IsCheckable="True" IsChecked="True" StaysOpenOnClick="True"/>
-                                                        <Separator/>
-                                                        <MenuItem Header="Tag Linking">
-                                                            <MenuItem Header="Link to Tag"/>
-                                                            <MenuItem Header="Show Parent Tags"/>
-                                                            <MenuItem Header="Show Child Tags"/>
-                                                        </MenuItem>
-                                                        <MenuItem Header="Image Control">
-                                                            <MenuItem Header="Select Images with Tag"/>
-                                                            <MenuItem Header="Add To">
-                                                                <MenuItem Header="Selected Image(s)"/>
-                                                                <MenuItem Header="Entire Image Group"/>
-                                                            </MenuItem>
-                                                            <MenuItem Header="Remove From">
-                                                                <MenuItem Header="Selected Image(s)"/>
-                                                                <MenuItem Header="Entire Image Group"/>
-                                                            </MenuItem>
-                                                        </MenuItem>
-                                                    </ContextMenu>
-                                                </TextBlock.ContextMenu>
-                                            </TextBlock>
-                                        </GroupBox>
+                                <!-- Item Template [Header] -->
+                                <TabControl.ItemTemplate>
+                                    <DataTemplate DataType="controls:TagTabModel">
+                                        <TextBlock Text="{Binding TabIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                     </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
+                                </TabControl.ItemTemplate>
+
+                                <!-- Control Template [Enables Scrolling for the Tabs] -->
+                                <TabControl.Template>
+                                    <ControlTemplate TargetType="{x:Type TabControl}">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition/>
+                                            </Grid.RowDefinitions>
+                                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                                                <TabPanel x:Name="HeaderPanel" IsItemsHost="True" Margin="0,4,0,0"/>
+                                            </ScrollViewer>
+                                            <ContentPresenter x:Name="PART_SelectedContentHost" Margin="4" ContentSource="SelectedContent" Grid.Row="1"/>
+                                        </Grid>
+                                    </ControlTemplate>
+                                </TabControl.Template>
+
+                                <!-- Content Template [Core Content/ListBox] -->
+                                <TabControl.ContentTemplate>
+                                    <DataTemplate DataType="controls:TagTabModel">
+                                        <!--? Keep the option to scroll since we're still allowing the window to be resized -->
+                                        <ListBox ItemsSource="{Binding VisibleTags}" SelectionMode="Extended"
+                                                 Height="{Binding TagWrapHeight, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                 adonisExtensions:ScrollViewerExtension.HideScrollBarsUntilMouseOver="True"
+                                                 adonisExtensions:ScrollViewerExtension.VerticalScrollBarPlacement="Overlay"
+                                                 adonisExtensions:ScrollViewerExtension.VerticalScrollBarExpansionMode="ExpandOnHover"
+                                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+
+                                            <!-- Wrap Setup -->
+                                            <ListBox.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel IsItemsHost="True" Width="{Binding TagWrapWidth, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                </ItemsPanelTemplate>
+                                            </ListBox.ItemsPanel>
+
+                                            <!-- Tags Item Template -->
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate DataType="tagging:TagModel">
+                                                    <!-- The GroupBox adds a fitting adonis background to every tag -->
+                                                    <GroupBox  adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:CornerRadiusExtension.CornerRadius="15">
+                                                        <!-- Tag Control -->
+                                                        <TextBlock>
+                                                            <Run Text="{Binding Name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                            <Run Text="(0)"/>
+                                                            <TextBlock.ContextMenu>
+                                                                <ContextMenu>
+                                                                    <!-- TODO See what happens when you StackPanel some of these MenuItems into being Horizontal -->
+                                                                    <!-- TODO  (you can do this in the content of a MenuItem) -->
+                                                                    <MenuItem Header="{Binding Name}" IsEnabled="False"/>
+                                                                    <MenuItem Header="Found in x images" IsEnabled="False"/>
+                                                                    <Separator/>
+                                                                    <MenuItem Header="Rename"/>
+                                                                    <MenuItem Header="Delete"/>
+                                                                    <MenuItem Header="Frequencies">
+                                                                        <MenuItem Header="Relative Frequency: 100%"/>
+                                                                        <MenuItem Header="Exact Frequency: 100%"/>
+                                                                    </MenuItem>
+                                                                    <Separator/>
+                                                                    <MenuItem Header="Enabled" IsCheckable="True" StaysOpenOnClick="True" 
+                                                                              IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                                    <MenuItem Header="Use For Naming" IsCheckable="True" StaysOpenOnClick="True" 
+                                                                              IsChecked="{Binding UseForNaming, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                                    <Separator/>
+                                                                    <MenuItem Header="Tag Linking">
+                                                                        <MenuItem Header="Link to Tag"/>
+                                                                        <MenuItem Header="Show Parent Tags"/>
+                                                                        <MenuItem Header="Show Child Tags"/>
+                                                                    </MenuItem>
+                                                                    <MenuItem Header="Image Control">
+                                                                        <MenuItem Header="Select Images with Tag"/>
+                                                                        <MenuItem Header="Add To">
+                                                                            <MenuItem Header="Selected Image(s)" mvx:Bi.nd="Command AddTagToSelectedImagesCommand"/>
+                                                                            <MenuItem Header="Entire Image Group" mvx:Bi.nd="Command AddTagToEntireImageGroupCommand"/>
+                                                                        </MenuItem>
+                                                                        <MenuItem Header="Remove From">
+                                                                            <MenuItem Header="Selected Image(s)" mvx:Bi.nd="Command RemoveTagFromSelectedImagesCommand"/>
+                                                                            <MenuItem Header="Entire Image Group" mvx:Bi.nd="Command RemoveTagFromEntireImageGroupCommand"/>
+                                                                        </MenuItem>
+                                                                    </MenuItem>
+                                                                </ContextMenu>
+                                                            </TextBlock.ContextMenu>
+                                                        </TextBlock>
+                                                    </GroupBox>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                    </DataTemplate>
+                                </TabControl.ContentTemplate>
+                            </TabControl>
+                            <!--x</GroupBox>-->
                         </StackPanel>
                     </DataTemplate>
                 </TabControl.ContentTemplate>

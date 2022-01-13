@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
 using AdonisUI.Controls;
@@ -11,7 +12,9 @@ using Microsoft.WindowsAPICodePack.Dialogs;
 using MvvmCross.Commands;
 using MvvmCross.ViewModels;
 using Newtonsoft.Json;
+using WallpaperFlux.Core.Collections;
 using WallpaperFlux.Core.External;
+using WallpaperFlux.Core.Models.Tagging;
 using WallpaperFlux.Core.Util;
 
 namespace WallpaperFlux.Core.Models
@@ -58,9 +61,27 @@ namespace WallpaperFlux.Core.Models
         // Note: A rank 0 image is still active if able, it just has a 0% chance of being selected
         [DataMember(Name = "Active")]
         public bool Active { get; set; }
+
         // TODO The original ImageData also had an independent enabled boolean for the image itself, I think it would be better to have these overriding enables merged into 1 boolean
         // TODO Folders can be checked as active elsewhere, same with tags, this could potentially just be the original "Enabled" from imageData
         // TODO Remember that this had to remove the image from RankData on disabling for calculation purposes, may need to do this again (As opposed to looping the RankData each time)
+        /*x
+        [DataMember(Name = "Enabled")]
+        private bool _Enabled = true;
+        public bool Enabled // this is the image's individual enabled state, if this is false then nothing else can make the image active
+        {
+            get => _Enabled;
+
+            set
+            {
+                _Enabled = value;
+                Active = value;
+            }
+        }
+        */
+
+        [DataMember(Name = "Tags")] public TagCollection Tags;
+
 
         [DataMember(Name = "Image Type")] public ImageType ImageType { get; set; }
 
@@ -117,14 +138,19 @@ namespace WallpaperFlux.Core.Models
         public int ImageSelectorThumbnailWidthVideo => ImageSelectorThumbnailWidth - 20; // until the GroupBox is no longer needed this will account for it
         #endregion
 
-        public ImageModel(string path, int rank = 0)
+        public ImageModel(string path, int rank = 0, TagCollection tags = null)
         {
             Path = path;
 
-            ImageType = IsStatic ? ImageType.Static :
-                IsGIF ? ImageType.GIF : ImageType.Video;
+            ImageType = IsStatic 
+                ? ImageType.Static 
+                : IsGIF 
+                    ? ImageType.GIF 
+                    : ImageType.Video;
 
             Rank = rank;
+
+            Tags = tags ?? new TagCollection(this); // create a new tag collection if the given one is null
 
             InitCommands();
         }
@@ -145,7 +171,11 @@ namespace WallpaperFlux.Core.Models
             IncreaseRankCommand = new MvxCommand(() => Rank++);
         }
 
-        #region Commands
+        public void AddTag(TagModel tag) => Tags.Add(tag);
+
+        public void RemoveTag(TagModel tag) => Tags.Remove(tag);
+
+        #region Command Methods
         // opens the file's folder in the explorer and selects it to navigate the scrollbar to the file
         public void ViewFile()
         {

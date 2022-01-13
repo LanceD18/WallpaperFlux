@@ -55,12 +55,22 @@ namespace WallpaperFlux.WPF.Views
         {
             TagViewModel viewModel = (TagViewModel)this.DataContext;
 
-            if (viewModel.SelectedCategory != null)
+            if (viewModel.SelectedCategory?.SelectedTagTab != null)
             {
-                viewModel.SelectedCategory.TagWrapWidth = TagTabControl.ActualWidth;
-                viewModel.SelectedCategory.TagWrapHeight = TagTabControl.ActualHeight - 100; // the bottom tends to be cut off
-                viewModel.SelectedCategory.RaisePropertyChanged(() => viewModel.SelectedCategory.TagWrapWidth);
-                viewModel.SelectedCategory.RaisePropertyChanged(() => viewModel.SelectedCategory.TagWrapHeight);
+                double widthOffset = 25; // pushes the wrap cutoff closer as the right-side can also be cut off
+                double heightOffset = 170; // the bottom tends to be cut off so we need an offset
+
+                viewModel.SelectedCategory.SelectedTagTab.SetTagWrapSize(TagTabControl.ActualWidth - widthOffset, TagTabControl.ActualHeight - heightOffset);
+            }
+        }
+
+        private void SearchBar_OnKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                // The update trigger for the Search Bar is explicit, so we need to use UpdateSource()
+                // this allows us to control when we update the tags (Minimizing lag)
+                (sender as TextBox).GetBindingExpression(TextBox.TextProperty).UpdateSource();
             }
         }
     }
