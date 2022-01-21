@@ -1,6 +1,8 @@
 ﻿using System.Collections.Specialized;
 using System.Diagnostics;
+using System.Linq;
 using MvvmCross.ViewModels;
+using WallpaperFlux.Core.ViewModels;
 
 namespace WallpaperFlux.Core.Models.Controls
 {
@@ -17,44 +19,45 @@ namespace WallpaperFlux.Core.Models.Controls
             set => SetProperty(ref _images, value);
         }
 
-        private ImageModel _selectedImageSelectorImage;
+        private ImageModel _selectedImage;
 
-        public ImageModel SelectedImageSelectorImage
+        public ImageModel SelectedImage
         {
-            get => _selectedImageSelectorImage;
+            get => _selectedImage;
             set
             {
-                SetProperty(ref _selectedImageSelectorImage, value);
-                RaisePropertyChanged(() => SelectedImageSelectorImagePath);
+                SetProperty(ref _selectedImage, value);
+                TagViewModel.Instance.HighlightTags(value.Tags);
             }
         }
 
-        public string SelectedImageSelectorImagePath => SelectedImageSelectorImage?.Path;
-
-        //? Set through the View
+        //? Set through the View.xaml.cs
         public double ImageSelectorTabWrapWidth { get; set; }
 
         public ImageSelectorTabModel()
         {
-            Images.CollectionChanged += (sender, args) =>
-            {
-                if (args.Action == NotifyCollectionChangedAction.Add)
-                {
-                    foreach (ImageModel item in args.NewItems)
-                    {
-                        if (item == null)
-                        {
-                            Debug.WriteLine("Invalid item found, removing");
-                            Images.Remove(item);
-                        }
-                    }
-                }
-            };
+            Images.CollectionChanged += OnImagesOnCollectionChanged_RemoveInvalidItems;
         }
 
-        public void RaisePropertyChangedImages()
+        public void RaisePropertyChangedImages() => RaisePropertyChanged(() => Images);
+
+        private void OnImagesOnCollectionChanged_RemoveInvalidItems(object sender, NotifyCollectionChangedEventArgs args)
         {
-            RaisePropertyChanged(() => Images);
+            if (args.Action == NotifyCollectionChangedAction.Add)
+            {
+                foreach (ImageModel item in args.NewItems)
+                {
+                    if (item == null)
+                    {
+                        Debug.WriteLine("Invalid item found, removing");
+                        Images.Remove(item);
+                    }
+                }
+            }
         }
+
+        public ImageModel[] GetSelectedImages() => Images.Where(f => f.IsSelected).ToArray();
+
+        public ImageModel[] GetAllImages() => Images.ToArray();
     }
 }

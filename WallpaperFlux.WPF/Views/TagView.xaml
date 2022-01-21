@@ -157,6 +157,13 @@
                                 </Grid>
                             </GroupBox>
 
+                            <!-- TODO Consider adding this and the complementary Category header at some point to clear up the info -->
+                            <!-- <TextBlock Text="Tags" Margin="5">
+                                <TextBlock.Style>
+                                    <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
+                                </TextBlock.Style>
+                            </TextBlock> -->
+
                             <!-- Tag ListBox -->
                             <!--x<GroupBox>-->
                             <TabControl ItemsSource="{Binding TagTabs, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
@@ -203,53 +210,78 @@
                                                 </ItemsPanelTemplate>
                                             </ListBox.ItemsPanel>
 
+                                            <!-- Item Container Style [Handles Selection of multiple items by binding IsSelected] -->
+                                            <ListBox.ItemContainerStyle>
+                                                <Style TargetType="{x:Type ListBoxItem}">
+                                                    <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                </Style>
+                                            </ListBox.ItemContainerStyle>
+
                                             <!-- Tags Item Template -->
                                             <ListBox.ItemTemplate>
                                                 <DataTemplate DataType="tagging:TagModel">
                                                     <!-- The GroupBox adds a fitting adonis background to every tag -->
                                                     <GroupBox  adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:CornerRadiusExtension.CornerRadius="15">
-                                                        <!-- Tag Control -->
+
+                                                        <!-- Tag Text Block -->
                                                         <TextBlock>
                                                             <Run Text="{Binding Name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                             <Run Text="(0)"/>
-                                                            <TextBlock.ContextMenu>
-                                                                <ContextMenu>
-                                                                    <!-- TODO See what happens when you StackPanel some of these MenuItems into being Horizontal -->
-                                                                    <!-- TODO  (you can do this in the content of a MenuItem) -->
-                                                                    <MenuItem Header="{Binding Name}" IsEnabled="False"/>
-                                                                    <MenuItem Header="Found in x images" IsEnabled="False"/>
-                                                                    <Separator/>
-                                                                    <MenuItem Header="Rename"/>
-                                                                    <MenuItem Header="Delete"/>
-                                                                    <MenuItem Header="Frequencies">
-                                                                        <MenuItem Header="Relative Frequency: 100%"/>
-                                                                        <MenuItem Header="Exact Frequency: 100%"/>
-                                                                    </MenuItem>
-                                                                    <Separator/>
-                                                                    <MenuItem Header="Enabled" IsCheckable="True" StaysOpenOnClick="True" 
-                                                                              IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                                    <MenuItem Header="Use For Naming" IsCheckable="True" StaysOpenOnClick="True" 
-                                                                              IsChecked="{Binding UseForNaming, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                                    <Separator/>
-                                                                    <MenuItem Header="Tag Linking">
-                                                                        <MenuItem Header="Link to Tag"/>
-                                                                        <MenuItem Header="Show Parent Tags"/>
-                                                                        <MenuItem Header="Show Child Tags"/>
-                                                                    </MenuItem>
-                                                                    <MenuItem Header="Image Control">
-                                                                        <MenuItem Header="Select Images with Tag"/>
-                                                                        <MenuItem Header="Add To">
-                                                                            <MenuItem Header="Selected Image(s)" mvx:Bi.nd="Command AddTagToSelectedImagesCommand"/>
-                                                                            <MenuItem Header="Entire Image Group" mvx:Bi.nd="Command AddTagToEntireImageGroupCommand"/>
-                                                                        </MenuItem>
-                                                                        <MenuItem Header="Remove From">
-                                                                            <MenuItem Header="Selected Image(s)" mvx:Bi.nd="Command RemoveTagFromSelectedImagesCommand"/>
-                                                                            <MenuItem Header="Entire Image Group" mvx:Bi.nd="Command RemoveTagFromEntireImageGroupCommand"/>
-                                                                        </MenuItem>
-                                                                    </MenuItem>
-                                                                </ContextMenu>
-                                                            </TextBlock.ContextMenu>
+
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsHighlighted, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Value="True">
+                                                                            <Setter Property="Foreground" Value="GreenYellow"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
                                                         </TextBlock>
+
+                                                        <!-- Tag Context Menu -->
+                                                        <GroupBox.ContextMenu>
+                                                            <ContextMenu>
+                                                                <!-- Core -->
+                                                                <MenuItem Header="{Binding Name}" IsEnabled="False"/>
+                                                                <MenuItem Header="Found in x images" IsEnabled="False"/>
+                                                                <Separator/>
+                                                                <MenuItem Header="Rename"/>
+                                                                <MenuItem Header="Delete"/>
+                                                                <MenuItem Header="Frequencies">
+                                                                    <MenuItem Header="Relative Frequency: 100%"/>
+                                                                    <MenuItem Header="Exact Frequency: 100%"/>
+                                                                </MenuItem>
+
+                                                                <Separator/>
+
+                                                                <!-- Image Control & Linking-->
+                                                                <MenuItem Header="Image Control">
+                                                                    <MenuItem Header="Select Images with Tag"/>
+                                                                    <MenuItem Header="Add To">
+                                                                        <MenuItem Header="Selected Image(s)" mvx:Bi.nd="Command AddTagToSelectedImagesCommand"/>
+                                                                        <MenuItem Header="Entire Image Group" mvx:Bi.nd="Command AddTagToEntireImageGroupCommand"/>
+                                                                    </MenuItem>
+                                                                    <MenuItem Header="Remove From">
+                                                                        <MenuItem Header="Selected Image(s)" mvx:Bi.nd="Command RemoveTagFromSelectedImagesCommand"/>
+                                                                        <MenuItem Header="Entire Image Group" mvx:Bi.nd="Command RemoveTagFromEntireImageGroupCommand"/>
+                                                                    </MenuItem>
+                                                                </MenuItem>
+                                                                <MenuItem Header="Tag Linking">
+                                                                    <MenuItem Header="Link to Tag"/>
+                                                                    <MenuItem Header="Show Parent Tags"/>
+                                                                    <MenuItem Header="Show Child Tags"/>
+                                                                </MenuItem>
+
+                                                                <Separator/>
+
+                                                                <!-- Checkboxes -->
+                                                                <MenuItem Header="Enabled" IsCheckable="True" StaysOpenOnClick="True" 
+                                                                              IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                                <MenuItem Header="Use For Naming" IsCheckable="True" StaysOpenOnClick="True" 
+                                                                              IsChecked="{Binding UseForNaming, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                            </ContextMenu>
+                                                        </GroupBox.ContextMenu>
                                                     </GroupBox>
                                                 </DataTemplate>
                                             </ListBox.ItemTemplate>

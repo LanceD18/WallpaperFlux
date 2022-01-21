@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
+using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using MvvmCross.Commands;
 using MvvmCross.ViewModels;
+using WallpaperFlux.Core.Collections;
+using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Models.Tagging;
 using WallpaperFlux.Core.Util;
 
@@ -20,13 +23,13 @@ namespace WallpaperFlux.Core.ViewModels
 
         // Categories
         private MvxObservableCollection<CategoryModel> _categories = new MvxObservableCollection<CategoryModel>();
-
         public MvxObservableCollection<CategoryModel> Categories
         {
             get => _categories;
             set => SetProperty(ref _categories, value);
         }
 
+        // Selected Category
         private CategoryModel _selectedCategory;
         public CategoryModel SelectedCategory
         {
@@ -54,14 +57,6 @@ namespace WallpaperFlux.Core.ViewModels
 
         public IMvxCommand AddTagToSelectedCategoryCommand { get; set; }
 
-        public IMvxCommand AddTagToSelectedImagesCommand { get; set; }
-
-        public IMvxCommand AddTagToEntireImageGroupCommand { get; set; }
-
-        public IMvxCommand RemoveTagFromSelectedImagesCommand { get; set; }
-
-        public IMvxCommand RemoveTagFromEntireImageGroupCommand { get; set; }
-
         #endregion
 
         // TODO Add a ToolTip explaining how Category Order determines the order of image-naming
@@ -69,6 +64,23 @@ namespace WallpaperFlux.Core.ViewModels
         {
             AddCategoryCommand = new MvxCommand(PromptAddCategory);
             AddTagToSelectedCategoryCommand = new MvxCommand(() => PromptAddTagToCategory(SelectedCategory));
+        }
+
+        public void HighlightTags(TagCollection tags)
+        {
+            TagModel[] visibleTags = SelectedCategory.SelectedTagTab.GetAllVisibleTags();
+            foreach (TagModel tag in visibleTags)
+            {
+                if (tags.Contains(tag))
+                {
+                    tag.IsHighlighted = true;
+                    Debug.WriteLine("Highlighting: " + tag.Name);
+                }
+                else
+                {
+                    tag.IsHighlighted = false;
+                }
+            }
         }
 
         #region Command Methods
@@ -133,16 +145,6 @@ namespace WallpaperFlux.Core.ViewModels
 
             category.AddTagRange(tagsToAdd);
             //! temp debug code
-        }
-
-        public void AddTagToSelectedImages()
-        {
-
-        }
-
-        public void RemoveTagFromSelectedImages()
-        {
-
         }
         #endregion
     }

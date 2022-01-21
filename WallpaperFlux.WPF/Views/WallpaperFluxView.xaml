@@ -292,8 +292,8 @@
                 <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
                     <!-- TODO Standardize the Height, Margin, and maybe the Width here (Give them variables) -->
                     <Button Width="115" Height="25" Content="Select Image(s)" mvx:Bi.nd="Command SelectImagesCommand" IsEnabled="{Binding CanSelectImages}" Margin="5"/>
-                    <Button Height="25" Content="Inspect" mvx:Bi.nd="Command OpenImageEditorCommand" Margin="5"/>
-                    <Button Width="75" Height="25" Content="Clear" Margin="5"/>
+                    <Button Width="60" Height="25" Content="Inspect" mvx:Bi.nd="Command ToggleInspectorCommand" Margin="5"/>
+                    <Button Width="60" Height="25" Content="Clear" Margin="5"/>
                     <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
                     <Button Width="75" Height="25" Content="Rename" Margin="5"/>
                     <Button Width="75" Height="25" Content="Move" Margin="5"/>
@@ -339,8 +339,9 @@
                         <!-- Content Template [Core Content/ListBox] -->
                         <TabControl.ContentTemplate>
                             <DataTemplate DataType="controlModels:ImageSelectorTabModel">
+                                <!-- Image List Box -->
                                 <ListBox ItemsSource="{Binding Images}" 
-                                         SelectedItem="{Binding SelectedImageSelectorImage}"
+                                         SelectedItem="{Binding SelectedImage}"
                                          SelectionMode="Extended" SelectionChanged="ImageSelectorTabListBox_SelectionChanged">
 
                                     <!-- Wrap Setup -->
@@ -350,6 +351,13 @@
                                                        ItemWidth="150" ItemHeight="250" IsItemsHost="True"/>
                                         </ItemsPanelTemplate>
                                     </ListBox.ItemsPanel>
+
+                                    <!-- Item Container Style [Handles Selection of multiple items by binding IsSelected] -->
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="{x:Type ListBoxItem}">
+                                            <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
 
                                     <!-- // Image Info Item Template // -->
                                     <ListBox.ItemTemplate>
@@ -468,6 +476,7 @@
                                                                 <ContentControl Name="cc" Content="{Binding }" ContentTemplate="{StaticResource StaticOrGIFTemplate}"/>
                                                                 <!-- Triggers -->
                                                                 <DataTemplate.Triggers>
+                                                                    <!-- If IsVideo, use the VideoTemplate instead -->
                                                                     <DataTrigger Binding="{Binding IsVideo}" Value="True">
                                                                         <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource VideoTemplate}"/>
                                                                     </DataTrigger>
@@ -549,7 +558,7 @@
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
 
-                            <Button Grid.Row="1" Grid.Column="3" Content="X" mvx:Bi.nd="CloseImageEditorCommand"/>
+                            <Button Grid.Row="1" Grid.Column="3" Content="X" mvx:Bi.nd="CloseInspectorCommand"/>
                         </Grid>
 
 

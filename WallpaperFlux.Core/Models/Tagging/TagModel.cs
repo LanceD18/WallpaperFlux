@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using MvvmCross.Commands;
 using Newtonsoft.Json;
 using WallpaperFlux.Core.Collections;
+using WallpaperFlux.Core.ViewModels;
 
 namespace WallpaperFlux.Core.Models.Tagging
 {
@@ -63,8 +65,8 @@ namespace WallpaperFlux.Core.Models.Tagging
             }
         }
 
-        public HashSet<Tuple<string, string>> ParentTags;
-        public HashSet<Tuple<string, string>> ChildTags;
+        public HashSet<Tuple<string, string>> ParentTags = new HashSet<Tuple<string, string>>();
+        public HashSet<Tuple<string, string>> ChildTags = new HashSet<Tuple<string, string>>();
 
         private string parentCategoryName;
         
@@ -85,11 +87,38 @@ namespace WallpaperFlux.Core.Models.Tagging
             }
         }
 
-        [JsonIgnore] public HashSet<ImageModel> LinkedImages; //? should get implemented on loading in the images through their TagCollection
+        //? We are ignoring this since these should get implemented on loading in the images through their TagCollection
+        [JsonIgnore] public HashSet<ImageModel> LinkedImages = new HashSet<ImageModel>();
+
+        #region UI Control
+
+        [JsonIgnore] public bool IsSelected { get; set; }
+
+        [JsonIgnore] public bool IsHighlighted { get; set; }
+
+        #endregion
+
+        #region Commands
+
+        [JsonIgnore] public IMvxCommand AddTagToSelectedImagesCommand { get; set; }
+
+        [JsonIgnore] public IMvxCommand AddTagToEntireImageGroupCommand { get; set; }
+
+        [JsonIgnore] public IMvxCommand RemoveTagFromSelectedImagesCommand { get; set; }
+
+        [JsonIgnore] public IMvxCommand RemoveTagFromEntireImageGroupCommand { get; set; }
+
+        #endregion
+
 
         public TagModel(string name)
         {
             Name = name;
+
+            AddTagToSelectedImagesCommand = new MvxCommand(() => AddTagToSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedImages()));
+            AddTagToEntireImageGroupCommand = new MvxCommand(() => AddTagToSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllImages()));
+            RemoveTagFromSelectedImagesCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedImages()));
+            RemoveTagFromEntireImageGroupCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllImages()));
         }
 
         public void LinkImage(TagCollection tagLinker)
@@ -107,5 +136,19 @@ namespace WallpaperFlux.Core.Models.Tagging
             Debug.WriteLine("Find an efficient way to get the number of images linked to a tag without having multiple references like in the previous TagData vs ImageData");
             return 0;
         }
+
+        #region Command Methods
+
+        public void AddTagToSelectedImages(ImageModel[] images)
+        {
+            foreach (ImageModel image in images) image.AddTag(this);
+        }
+
+        public void RemoveTagFromSelectedImages(ImageModel[] images)
+        {
+            foreach (ImageModel image in images) image.RemoveTag(this);
+        }
+
+        #endregion
     }
 }

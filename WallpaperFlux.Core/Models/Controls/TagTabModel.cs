@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using MvvmCross.ViewModels;
 using WallpaperFlux.Core.Models.Tagging;
@@ -22,7 +23,7 @@ namespace WallpaperFlux.Core.Models.Controls
             get => _visibleTags;
             set => SetProperty(ref _visibleTags, value);
         }
-
+        
         public TagTabModel(int index)
         {
             TabIndex = index.ToString();
@@ -35,5 +36,9 @@ namespace WallpaperFlux.Core.Models.Controls
             RaisePropertyChanged(() => TagWrapWidth);
             RaisePropertyChanged(() => TagWrapHeight);
         }
+
+        public TagModel[] GetSelectedVisibleTags() => VisibleTags.Where(f => f.IsSelected).ToArray();
+
+        public TagModel[] GetAllVisibleTags() => VisibleTags.ToArray();
     }
 }

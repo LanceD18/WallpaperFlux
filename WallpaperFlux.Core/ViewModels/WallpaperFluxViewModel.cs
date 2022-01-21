@@ -25,6 +25,7 @@ using WallpaperFlux.Core.External;
 using WallpaperFlux.Core.JSON.Temp;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Models.Controls;
+using WallpaperFlux.Core.Models.Tagging;
 using WallpaperFlux.Core.Models.Theme;
 using WallpaperFlux.Core.Util;
 
@@ -187,7 +188,6 @@ namespace WallpaperFlux.Core.ViewModels
         #region Commands
         //-----Commands-----
 
-
         #region Command Properties
 
         //  -----Command Properties-----
@@ -205,12 +205,11 @@ namespace WallpaperFlux.Core.ViewModels
 
         public IMvxCommand SelectImagesCommand { get; set; }
 
-        public IMvxCommand OpenImageEditorCommand { get; set; }
+        public IMvxCommand ToggleInspectorCommand { get; set; }
 
-        public IMvxCommand CloseImageEditorCommand { get; set; }
+        public IMvxCommand CloseInspectorCommand { get; set; }
 
         #endregion
-
 
         public void InitializeCommands()
         {
@@ -222,8 +221,8 @@ namespace WallpaperFlux.Core.ViewModels
             RemoveFolderCommand = new MvxCommand(RemoveFolder);
             SyncCommand = new MvxCommand(Sync);
             SelectImagesCommand = new MvxCommand(SelectImages);
-            OpenImageEditorCommand = new MvxCommand(ToggleImageEditor);
-            CloseImageEditorCommand = new MvxCommand(CloseImageEditor);
+            ToggleInspectorCommand = new MvxCommand(ToggleInspector);
+            CloseInspectorCommand = new MvxCommand(CloseInspector);
         }
 
         #region Command Methods
@@ -530,11 +529,15 @@ namespace WallpaperFlux.Core.ViewModels
             RaisePropertyChanged(() => ImageSelectorTabs);
             SelectedImageSelectorTab = ImageSelectorTabs[0];
         }
+        #endregion
 
-        private void ToggleImageEditor()
+        #region Inspector
+        private void ToggleInspector()
         {
             IsImageEditorDrawerOpen = !IsImageEditorDrawerOpen;
             RaisePropertyChanged(() => IsImageEditorDrawerOpen);
+
+            // TODO Put the tags into the Drawer
         }
 
         private void OpenImageEditor()
@@ -543,7 +546,7 @@ namespace WallpaperFlux.Core.ViewModels
             RaisePropertyChanged(() => IsImageEditorDrawerOpen);
         }
 
-        private void CloseImageEditor()
+        private void CloseInspector()
         {
             IsImageEditorDrawerOpen = false;
             RaisePropertyChanged(() => IsImageEditorDrawerOpen);

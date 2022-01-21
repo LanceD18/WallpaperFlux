@@ -23,6 +23,7 @@ using MvvmCross.Platforms.Wpf.Presenters.Attributes;
 using MvvmCross.Platforms.Wpf.Views;
 using MvvmCross.ViewModels;
 using WallpaperFlux.Core.Models;
+using WallpaperFlux.Core.Models.Controls;
 using WallpaperFlux.Core.Models.Theme;
 using WallpaperFlux.Core.ViewModels;
 using WallpaperFlux.WPF.Util;

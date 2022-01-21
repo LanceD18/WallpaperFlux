@@ -56,7 +56,7 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
-        public Action<int, int> OnRankChange;
+        [JsonIgnore] public Action<int, int> OnRankChange; //! Don't think you'll be using this, remove it at some point
 
         // Note: A rank 0 image is still active if able, it just has a 0% chance of being selected
         [DataMember(Name = "Active")]
@@ -129,14 +129,15 @@ namespace WallpaperFlux.Core.Models
         // ----- XAML Values -----
         // TODO Replace this section with ResourceDictionaries at some point
         #region XAML Values
-        public int ImageSelectorSettingsHeight => 25;
+        [JsonIgnore] public int ImageSelectorSettingsHeight => 25;
 
-        public int ImageSelectorThumbnailHeight => 150;
+        [JsonIgnore] public int ImageSelectorThumbnailHeight => 150;
 
-        public int ImageSelectorThumbnailWidth => 150;
+        [JsonIgnore] public int ImageSelectorThumbnailWidth => 150;
 
-        public int ImageSelectorThumbnailWidthVideo => ImageSelectorThumbnailWidth - 20; // until the GroupBox is no longer needed this will account for it
+        [JsonIgnore] public int ImageSelectorThumbnailWidthVideo => ImageSelectorThumbnailWidth - 20; // until the GroupBox is no longer needed this will account for it
         #endregion
+        [JsonIgnore] public bool IsSelected { get; set; }
 
         public ImageModel(string path, int rank = 0, TagCollection tags = null)
         {
@@ -171,9 +172,11 @@ namespace WallpaperFlux.Core.Models
             IncreaseRankCommand = new MvxCommand(() => Rank++);
         }
 
+        #region Tags
         public void AddTag(TagModel tag) => Tags.Add(tag);
 
         public void RemoveTag(TagModel tag) => Tags.Remove(tag);
+        #endregion
 
         #region Command Methods
         // opens the file's folder in the explorer and selects it to navigate the scrollbar to the file

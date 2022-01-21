@@ -253,12 +253,12 @@ namespace WallpaperFlux.Core.Models.Tagging
             int minIndex = TaggingUtil.TagsPerPage * (pageNumber - 1);
             int maxIndex = TaggingUtil.TagsPerPage * pageNumber;
 
-            Debug.WriteLine("minIndex: " + minIndex + " | maxIndex: " + maxIndex);
+            //xDebug.WriteLine("minIndex: " + minIndex + " | maxIndex: " + maxIndex);
 
             List<TagModel> pageTags = new List<TagModel>();
             for (int i = minIndex; i < maxIndex; i++)
             {
-                Debug.WriteLine("i: " + i + " | filterLength: " + _filteredTags.Length);
+                //xDebug.WriteLine("i: " + i + " | filterLength: " + _filteredTags.Length);
                 if (i > _filteredTags.Length - 1) break; // we're on the last page and we've run out of tags
                 pageTags.Add(_filteredTags[i]);
             }
