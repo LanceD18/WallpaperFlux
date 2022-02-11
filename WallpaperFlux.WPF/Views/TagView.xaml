@@ -42,10 +42,22 @@
                 <MenuItem Header="Add" IsEnabled="{Binding CategoriesExist}"/>
                 <MenuItem Header="Add to Selected Category" mvx:Bi.nd="Command AddTagToSelectedCategoryCommand" IsEnabled="{Binding CategoryIsSelected}"/>
                 <MenuItem Header="Remove"/>
+                <Separator/>
+                <MenuItem Header="Toggle Tag-Adder" IsCheckable="True" IsChecked="{Binding TagAdderToggle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                    <MenuItem.ToolTip>
+                        While this toggle is active every tag you click will be added to the selected image. The tags of the selected image will be highlighted
+                    </MenuItem.ToolTip>
+                </MenuItem>
+                <MenuItem Header="Toggle Tag-Remover" IsCheckable="True" IsChecked="{Binding TagRemoverToggle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                    <MenuItem.ToolTip>
+                        While this toggle is active every tag you click will be removed from the selected image. The tags of the selected image will be highlighted
+                    </MenuItem.ToolTip>
+                </MenuItem>
             </MenuItem>
 
             <!-- Settings -->
             <!-- TODO Remember that each CATEGORY has their own default settings -->
+            <!-- ! This seems to have been moved to the context menus now (and is handled better there anyways since each category has their own options) -->
             <!--
             <MenuItem Header="Settings">
                 <MenuItem Header="Default Tag Settings: " IsEnabled="False">
@@ -89,7 +101,7 @@
             <TabControl x:Name="TagTabControl" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                         adonisExtensions:LayerExtension.IncreaseLayer="True" SizeChanged="TagTabControl_OnSizeChanged" SelectionChanged="TagTabControl_OnSelectionChanged">
 
-                <!-- Item Template [Header] -->
+                <!-- Category Item Template [Header] -->
                 <TabControl.ItemTemplate>
                     <DataTemplate DataType="tagging:CategoryModel">
                         <TextBlock Text="{Binding Name}">
@@ -192,7 +204,7 @@
                                     </ControlTemplate>
                                 </TabControl.Template>
 
-                                <!-- Content Template [Core Content/ListBox] -->
+                                <!-- Tag List Content Template [Core Content/ListBox] -->
                                 <TabControl.ContentTemplate>
                                     <DataTemplate DataType="controls:TagTabModel">
                                         <!--? Keep the option to scroll since we're still allowing the window to be resized -->
@@ -221,7 +233,7 @@
                                             <ListBox.ItemTemplate>
                                                 <DataTemplate DataType="tagging:TagModel">
                                                     <!-- The GroupBox adds a fitting adonis background to every tag -->
-                                                    <GroupBox  adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:CornerRadiusExtension.CornerRadius="15">
+                                                    <GroupBox  adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:CornerRadiusExtension.CornerRadius="15" mvx:Bi.nd="Command TestTagInteract">
 
                                                         <!-- Tag Text Block -->
                                                         <TextBlock>

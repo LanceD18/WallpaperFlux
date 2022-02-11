@@ -73,5 +73,10 @@ namespace WallpaperFlux.WPF.Views
                 (sender as TextBox).GetBindingExpression(TextBox.TextProperty).UpdateSource();
             }
         }
+
+        private void GroupBox_Tag_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+
+        }
     }
 }

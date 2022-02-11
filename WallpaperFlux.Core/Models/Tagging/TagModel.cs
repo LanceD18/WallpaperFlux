@@ -108,6 +108,8 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         [JsonIgnore] public IMvxCommand RemoveTagFromEntireImageGroupCommand { get; set; }
 
+        [JsonIgnore] public IMvxCommand TestTagInteract { get; set; }
+
         #endregion
 
 
@@ -119,6 +121,7 @@ namespace WallpaperFlux.Core.Models.Tagging
             AddTagToEntireImageGroupCommand = new MvxCommand(() => AddTagToSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllImages()));
             RemoveTagFromSelectedImagesCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedImages()));
             RemoveTagFromEntireImageGroupCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllImages()));
+            TestTagInteract = new MvxCommand(() => { Debug.WriteLine("woa"); });
         }
 
         public void LinkImage(TagCollection tagLinker)

@@ -49,6 +49,39 @@ namespace WallpaperFlux.Core.ViewModels
 
         public bool CategoriesExist => Categories.Count > 0;
 
+        private bool _tagAdderToggle = false;
+        public bool TagAdderToggle
+        {
+            get => _tagAdderToggle; 
+            set
+            {
+
+                SetProperty(ref _tagAdderToggle, value);
+
+                if (value == true)
+                {
+                    TagRemoverToggle = false;
+                    RaisePropertyChanged(() => TagRemoverToggle); // toggles off the opposing toggle
+                }
+            }
+        }
+
+        private bool _tagRemoverToggle = false;
+        public bool TagRemoverToggle
+        {
+            get => _tagRemoverToggle;
+            set
+            {
+                SetProperty(ref _tagRemoverToggle, value);
+
+                if (value == true)
+                {
+                    TagAdderToggle = false;
+                    RaisePropertyChanged(() => TagAdderToggle); // toggles off the opposing toggle
+                }
+            }
+        }
+
         #endregion
 
         #region Commands
