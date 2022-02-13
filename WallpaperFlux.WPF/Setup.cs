@@ -22,7 +22,7 @@ namespace WallpaperFlux.WPF
             //initializes IoCProvider
             base.InitializeFirstChance(iocProvider);
             Mvx.IoCProvider.RegisterType<IExternalTimer, ExternalTimer>();
-            Mvx.IoCProvider.RegisterType<IExternalImageSource, ExternalImageSource>();
+            Mvx.IoCProvider.RegisterType<IExternalBitmapImage, ExternalBitmapImage>();
             Mvx.IoCProvider.RegisterType<IExternalDisplayUtil, ExternalDisplayUtil>();
             Mvx.IoCProvider.RegisterType<IExternalImage, ExternalImage>();
             Mvx.IoCProvider.RegisterType<IExternalWallpaperHandler, ExternalWallpaperHandler>();

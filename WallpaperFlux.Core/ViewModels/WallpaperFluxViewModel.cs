@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -108,6 +109,28 @@ namespace WallpaperFlux.Core.ViewModels
             get => _selectedImageSelectorTab;
             set => SetProperty(ref _selectedImageSelectorTab, value);
         }
+
+        public string SelectedImagePathText
+        {
+            get
+            {
+                if (SelectedImageSelectorTab == null || SelectedImageSelectorTab.SelectedImage == null) return "";
+
+                return SelectedImageSelectorTab.SelectedImage?.Path;
+            }
+        }
+
+        public string SelectedImageDimensionsText
+        {
+            get
+            {
+                if (SelectedImageSelectorTab == null || SelectedImageSelectorTab.SelectedImage == null) return "";
+
+                Size size = SelectedImageSelectorTab.SelectedImage.GetSize();
+                return size.Width + "x" + size.Height;
+            }
+        }
+
         #endregion
 
         #region Enablers
@@ -209,6 +232,8 @@ namespace WallpaperFlux.Core.ViewModels
 
         public IMvxCommand CloseInspectorCommand { get; set; }
 
+        public IMvxCommand DeselectImagesCommand { get; set; }
+
         #endregion
 
         public void InitializeCommands()
@@ -223,6 +248,7 @@ namespace WallpaperFlux.Core.ViewModels
             SelectImagesCommand = new MvxCommand(SelectImages);
             ToggleInspectorCommand = new MvxCommand(ToggleInspector);
             CloseInspectorCommand = new MvxCommand(CloseInspector);
+            DeselectImagesCommand = new MvxCommand(() => SelectedImageSelectorTab?.DeselectAllImages());
         }
 
         #region Command Methods

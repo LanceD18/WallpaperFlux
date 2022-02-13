@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Models.Tagging;
+using WallpaperFlux.Core.Util;
 using WallpaperFlux.Core.ViewModels;
 
 namespace WallpaperFlux.Core.Collections
@@ -28,14 +29,14 @@ namespace WallpaperFlux.Core.Collections
         {
             _tags.Add(tag);
             tag.LinkImage(this);
-            TagViewModel.Instance.HighlightTags(this);
+            TaggingUtil.HighlightTags(this);
         }
 
         public void Remove(TagModel tag)
         {
             _tags.Remove(tag);
             tag.UnlinkImage(this);
-            TagViewModel.Instance.HighlightTags(this);
+            TaggingUtil.HighlightTags(this);
         }
 
         public bool Contains(TagModel tag) => _tags.Contains(tag);

@@ -303,11 +303,14 @@
                     <Button Width="75" Height="25" Content="Move" Margin="5"/>
                     <Button Width="75" Height="25" Content="Delete" Margin="5"/>
                     <Button Width="75" Height="25" Content="Rank" Margin="5"/>
+                    <Button Width="75" Height="25" Content="Deselect" Margin="5" mvx:Bi.nd="Command DeselectImagesCommand"/>
                     <CheckBox Content="Apply to entire selection" Margin="5"/>
                 </StackPanel>
 
-                <TextBlock x:Name="SelectedImagePathTextBox" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" HorizontalAlignment="Center"/>
-                <TextBlock x:Name="SelectedImageDimensionsTextBox" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Center" />
+                <TextBlock x:Name="SelectedImagePathTextBox" Text="{Binding SelectedImagePathText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
+                           Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" HorizontalAlignment="Center"/>
+                <TextBlock x:Name="SelectedImageDimensionsTextBox" Text="{Binding SelectedImageDimensionsText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
+                           Grid.Row="3" Grid.Column="1" HorizontalAlignment="Center" />
 
                 <!-- Image Selector Tab Control -->
                 <!-- !<GroupBox Grid.Row="4" Grid.Column="1" Width="650" Height="525" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="3">-->

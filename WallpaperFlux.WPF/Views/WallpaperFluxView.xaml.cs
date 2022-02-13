@@ -108,6 +108,7 @@ namespace WallpaperFlux.WPF.Views
         //? Now that the window scales dynamically you probably won't need font scaling but keep that consideration in mind
         private async void ImageSelectorTabListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            return;
             if (e.AddedItems.Count > 0)
             {
                 if (e.AddedItems.ElementAt(0) is ImageModel imageModel)
@@ -119,7 +120,6 @@ namespace WallpaperFlux.WPF.Views
                     Size dimensions;
                     if (!imageModel.IsVideo)
                     {
-
                         System.Drawing.Image image = System.Drawing.Image.FromFile(path); // TODO The ExternalDisplayUtil can handle this now
                         dimensions = new Size(image.Width, image.Height);
                         image.Dispose();

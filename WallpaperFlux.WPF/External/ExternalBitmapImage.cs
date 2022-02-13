@@ -8,7 +8,7 @@ using WallpaperFlux.Core.External;
 
 namespace WallpaperFlux.WPF.External
 {
-    public class ExternalImageSource : IExternalImageSource
+    public class ExternalBitmapImage : IExternalBitmapImage
     {
         public BitmapImage ImageSource;
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -9,6 +10,7 @@ using System.Text;
 using AdonisUI.Controls;
 using LanceTools.DiagnosticsUtil;
 using Microsoft.WindowsAPICodePack.Dialogs;
+using MvvmCross;
 using MvvmCross.Commands;
 using MvvmCross.ViewModels;
 using Newtonsoft.Json;
@@ -82,7 +84,6 @@ namespace WallpaperFlux.Core.Models
 
         [DataMember(Name = "Tags")] public TagCollection Tags;
 
-
         [DataMember(Name = "Image Type")] public ImageType ImageType { get; set; }
 
         // Video Properties
@@ -137,7 +138,14 @@ namespace WallpaperFlux.Core.Models
 
         [JsonIgnore] public int ImageSelectorThumbnailWidthVideo => ImageSelectorThumbnailWidth - 20; // until the GroupBox is no longer needed this will account for it
         #endregion
-        [JsonIgnore] public bool IsSelected { get; set; }
+
+        private bool _isSelected;
+        [JsonIgnore]
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set => SetProperty(ref _isSelected, value);
+        }
 
         public ImageModel(string path, int rank = 0, TagCollection tags = null)
         {
@@ -170,6 +178,20 @@ namespace WallpaperFlux.Core.Models
 
             DecreaseRankCommand = new MvxCommand(() => Rank--);
             IncreaseRankCommand = new MvxCommand(() => Rank++);
+        }
+
+        public Size GetSize()
+        {
+            if (!IsVideo)
+            {
+                IExternalImage imageSource = Mvx.IoCProvider.Resolve<IExternalImage>();
+                imageSource.SetImage(Path);
+                return imageSource.GetSize();
+            }
+            else
+            {
+                return new Size(0, 0);
+            }
         }
 
         #region Tags

@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using MvvmCross.ViewModels;
+using WallpaperFlux.Core.Util;
 using WallpaperFlux.Core.ViewModels;
 
 namespace WallpaperFlux.Core.Models.Controls
@@ -27,7 +28,14 @@ namespace WallpaperFlux.Core.Models.Controls
             set
             {
                 SetProperty(ref _selectedImage, value);
-                TagViewModel.Instance.HighlightTags(value.Tags);
+
+                WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.SelectedImagePathText);
+                WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.SelectedImageDimensionsText);
+
+                if (value != null)
+                {
+                    TaggingUtil.HighlightTags(value.Tags);
+                }
             }
         }
 
@@ -59,5 +67,13 @@ namespace WallpaperFlux.Core.Models.Controls
         public ImageModel[] GetHighlightedSelectedImages() => Images.Where(f => f.IsSelected).ToArray();
 
         public ImageModel[] GetAllSelectedImages() => Images.ToArray();
+
+        public void DeselectAllImages()
+        {
+            foreach (ImageModel image in Images)
+            {
+                image.IsSelected = false;
+            }
+        }
     }
 }
