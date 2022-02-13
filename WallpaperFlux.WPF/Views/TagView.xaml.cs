@@ -16,6 +16,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using MvvmCross.Presenters;
+using WallpaperFlux.Core.Util;
 using WallpaperFlux.Core.ViewModels;
 using WallpaperFlux.WPF.Util;
 using WallpaperFlux.WPF.Windows;
@@ -34,17 +35,7 @@ namespace WallpaperFlux.WPF.Views
             InitializeComponent();
 
             ViewModel = TagViewModel.Instance = WindowUtil.InitializeViewModel(TagViewModel.Instance);
-
-            /*x
-            if (TagViewModel.Instance == null)
-            {
-                ViewModel = TagViewModel.Instance = new TagViewModel();
-            }
-            else
-            {
-                ViewModel = TagViewModel.Instance;
-            }
-            */
+            TaggingUtil.SetInstance(TagViewModel.Instance);
         }
 
         private void TagTabControl_OnSizeChanged(object sender, SizeChangedEventArgs e) => UpdateTagSelectorWrapperSize();

@@ -21,7 +21,9 @@
                 <!-- Property Elements-->
                 <ResourceDictionary>
                     <!-- Converters -->
-                    <converters:EnumToStringConverter x:Key="DefaultEnumToStringConverter"/>
+                    <converters:EnumToStringConverter x:Key="EnumToStringConverter"/>
+                    <converters:ColorToBrushConverter x:Key="ColorToBrushConverter"/>
+                    <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
 
                     <!-- Static Values -->
                     <x:Static x:Key="MaxInt32" Member="system:Int32.MaxValue"/>

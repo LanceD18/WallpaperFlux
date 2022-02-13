@@ -21,6 +21,10 @@
     mc:Ignorable="d" FontSize="12" FontFamily="Segoe UI"
     d:DesignHeight="450" d:DesignWidth="800">
 
+
+    <!-- Might want to take a look at this in the future: https://stackoverflow.com/questions/24925421/execute-command-in-viewmodel-from-mouse-event -->
+    <!-- ? Also this to potentially remove some xaml.cs code and other IoC complications https://stackoverflow.com/questions/47199489/wpf-how-to-bind-mousedown-command-action-to-label -->
+
     <views:MvxWpfView.Resources>
 
     </views:MvxWpfView.Resources>

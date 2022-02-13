@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Dynamic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -41,6 +42,9 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
+        public double WindowBorderThickness => (TagAdderToggle || TagRemoverToggle) ? 5 : 0;
+        public Color WindowBorderBrushColor => TagAdderToggle ? Color.LimeGreen : Color.Red;
+
         #endregion
 
         #region Enablers
@@ -55,14 +59,17 @@ namespace WallpaperFlux.Core.ViewModels
             get => _tagAdderToggle; 
             set
             {
-
                 SetProperty(ref _tagAdderToggle, value);
 
                 if (value == true)
                 {
-                    TagRemoverToggle = false;
-                    RaisePropertyChanged(() => TagRemoverToggle); // toggles off the opposing toggle
+                    TagRemoverToggle = false; // toggles off the opposing toggle, we don't want both of them active at the same time
+                    RaisePropertyChanged(() => TagRemoverToggle);
                 }
+
+                RaisePropertyChanged(() => WindowBorderThickness);
+                RaisePropertyChanged(() => WindowBorderBrushColor);
+                RaisePropertyChanged(() => EditingTagsOfAnImage);
             }
         }
 
@@ -76,11 +83,17 @@ namespace WallpaperFlux.Core.ViewModels
 
                 if (value == true)
                 {
-                    TagAdderToggle = false;
-                    RaisePropertyChanged(() => TagAdderToggle); // toggles off the opposing toggle
+                    TagAdderToggle = false; // toggles off the opposing toggle, we don't want both of them active at the same time
+                    RaisePropertyChanged(() => TagAdderToggle);
                 }
+
+                RaisePropertyChanged(() => WindowBorderThickness);
+                RaisePropertyChanged(() => WindowBorderBrushColor);
+                RaisePropertyChanged(() => EditingTagsOfAnImage);
             }
         }
+
+        public bool EditingTagsOfAnImage => TagAdderToggle || TagRemoverToggle;
 
         #endregion
 

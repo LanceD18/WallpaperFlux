@@ -8,8 +8,13 @@
              xmlns:adonisExtensions="clr-namespace:AdonisUI.Extensions;assembly=AdonisUI"
              xmlns:tagging="clr-namespace:WallpaperFlux.Core.Models.Tagging;assembly=WallpaperFlux.Core"
              xmlns:controls="clr-namespace:WallpaperFlux.Core.Models.Controls;assembly=WallpaperFlux.Core"
+             xmlns:converters="clr-namespace:LanceTools.WPF.Converters;assembly=LanceTools.WPF"
+             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              mc:Ignorable="d" FontSize="12" FontFamily="Segoe UI"
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="450" d:DesignWidth="800"
+             BorderBrush="{Binding WindowBorderBrushColor, Converter={StaticResource ColorToBrushConverter}, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+             BorderThickness="{Binding WindowBorderThickness, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
+
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="8"/>
@@ -90,11 +95,21 @@
         <GroupBox Grid.Row="3" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:LayerExtension.Layer="2">
             <!-- Header -->
             <GroupBox.Header>
-                <TextBlock Text="Right-Click a Category or Tag for more options">
-                    <TextBlock.Style>
-                        <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
-                    </TextBlock.Style>
-                </TextBlock>
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="Right-Click a Category or Tag for more options" Margin="0 0 0 5">
+                        <TextBlock.Style>
+                            <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="Targeting Tags of the currently selected image" Margin="0 5 0 5"
+                               Visibility="{Binding EditingTagsOfAnImage, Converter={StaticResource BooleanToVisibilityConverter}}"
+                               Foreground="{Binding WindowBorderBrushColor, Converter={StaticResource ColorToBrushConverter}, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
+                        <TextBlock.Style>
+                            <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+
             </GroupBox.Header>
 
             <!-- Category TabControl -->
@@ -109,7 +124,7 @@
                                 <ContextMenu>
                                     <MenuItem Header="{Binding Name}" IsEnabled="False"/>
                                     <Separator/>
-                                    <MenuItem Header="Total Number of Tags: 0" IsEnabled="False"></MenuItem>
+                                    <MenuItem Header="Total Number of Tags: 0" IsEnabled="False"/>
                                     <MenuItem Header="Rename"/>
                                     <MenuItem Header="Delete"/>
                                     <MenuItem Header="Reposition [Use if making drag-and-drop is too difficult]"/>
@@ -233,7 +248,12 @@
                                             <ListBox.ItemTemplate>
                                                 <DataTemplate DataType="tagging:TagModel">
                                                     <!-- The GroupBox adds a fitting adonis background to every tag -->
-                                                    <GroupBox  adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:CornerRadiusExtension.CornerRadius="15" mvx:Bi.nd="Command TestTagInteract">
+                                                    <GroupBox  adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:CornerRadiusExtension.CornerRadius="15">
+                                                        <i:Interaction.Triggers>
+                                                            <i:EventTrigger EventName="MouseUp">
+                                                                <i:InvokeCommandAction Command="{Binding TagInteractCommand}"/>
+                                                            </i:EventTrigger>
+                                                        </i:Interaction.Triggers>
 
                                                         <!-- Tag Text Block -->
                                                         <TextBlock>
@@ -244,7 +264,7 @@
                                                                 <Style TargetType="TextBlock">
                                                                     <Style.Triggers>
                                                                         <DataTrigger Binding="{Binding IsHighlighted, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Value="True">
-                                                                            <Setter Property="Foreground" Value="GreenYellow"/>
+                                                                            <Setter Property="Foreground" Value="LimeGreen"/>
                                                                         </DataTrigger>
                                                                     </Style.Triggers>
                                                                 </Style>
@@ -278,6 +298,7 @@
                                                                         <MenuItem Header="Selected Image(s)" mvx:Bi.nd="Command RemoveTagFromSelectedImagesCommand"/>
                                                                         <MenuItem Header="Entire Image Group" mvx:Bi.nd="Command RemoveTagFromEntireImageGroupCommand"/>
                                                                     </MenuItem>
+                                                                    <MenuItem Header="Add Selected Tags to Tagboard"/>
                                                                 </MenuItem>
                                                                 <MenuItem Header="Tag Linking">
                                                                     <MenuItem Header="Link to Tag"/>

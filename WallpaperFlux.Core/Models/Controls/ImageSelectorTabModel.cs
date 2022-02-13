@@ -56,8 +56,8 @@ namespace WallpaperFlux.Core.Models.Controls
             }
         }
 
-        public ImageModel[] GetSelectedImages() => Images.Where(f => f.IsSelected).ToArray();
+        public ImageModel[] GetHighlightedSelectedImages() => Images.Where(f => f.IsSelected).ToArray();
 
-        public ImageModel[] GetAllImages() => Images.ToArray();
+        public ImageModel[] GetAllSelectedImages() => Images.ToArray();
     }
 }
