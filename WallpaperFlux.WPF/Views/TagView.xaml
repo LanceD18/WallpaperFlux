@@ -101,7 +101,7 @@
                             <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
                         </TextBlock.Style>
                     </TextBlock>
-                    <TextBlock Text="Targeting Tags of the currently selected image" Margin="0 5 0 5"
+                    <TextBlock Text="Editing tags of the currently highlighted image(s)" Margin="0 5 0 5"
                                Visibility="{Binding EditingTagsOfAnImage, Converter={StaticResource BooleanToVisibilityConverter}}"
                                Foreground="{Binding WindowBorderBrushColor, Converter={StaticResource ColorToBrushConverter}, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
                         <TextBlock.Style>
