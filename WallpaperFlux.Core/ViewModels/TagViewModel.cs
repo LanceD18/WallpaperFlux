@@ -93,6 +93,8 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
+        public bool TagboardToggle { get; set; }
+
         public bool EditingTagsOfAnImage => TagAdderToggle || TagRemoverToggle;
 
         #endregion

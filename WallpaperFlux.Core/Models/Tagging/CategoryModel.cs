@@ -191,7 +191,7 @@ namespace WallpaperFlux.Core.Models.Tagging
                 Tags.Add(tag);
             }
             
-            VerifyTagTabs();
+            VerifyTagTabs(); //? Required for the addition and sorting to be visible right-away. All AddTag() methods should trace back to this method
         }
 
         public void VerifyTagTabs()
