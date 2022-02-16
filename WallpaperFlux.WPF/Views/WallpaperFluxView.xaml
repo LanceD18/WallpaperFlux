@@ -460,13 +460,15 @@
                                                                             <MenuItem Header="Open File" mvx:Bi.nd="Command OpenFileCommand"/>
                                                                             <MenuItem Header="Set As Wallpaper" mvx:Bi.nd="Command SetWallpaperCommand"/>
                                                                             <Separator/>
-                                                                            <MenuItem Header="Volume" mvx:Bi.nd="Command SetVolumeCommand"/>
-                                                                            <MenuItem Header="Speed" mvx:Bi.nd="Command SetSpeedCommand"/>
-                                                                            <Separator/>
                                                                             <MenuItem Header="Rename"/>
                                                                             <MenuItem Header="Move"/>
                                                                             <MenuItem Header="Delete"/>
                                                                             <MenuItem Header="Rank"/>
+                                                                            <Separator/>
+                                                                            <MenuItem Header="Volume" mvx:Bi.nd="Command SetVolumeCommand"/>
+                                                                            <MenuItem Header="Speed" mvx:Bi.nd="Command SetSpeedCommand"/>
+                                                                            <MenuItem Header="Override Max Loop Count"/>
+                                                                            <MenuItem Header="Override Max Video Timer"/>
                                                                         </ContextMenu>
                                                                     </GroupBox.ContextMenu>
                                                                     <!-- Displays the first frame/thumbnail of videos due to the Loaded event -->
