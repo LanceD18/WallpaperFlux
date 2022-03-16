@@ -102,7 +102,8 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
-        private ImageSelectorTabModel _selectedImageSelectorTab;
+        //! Without this initialization we will crash references on empty themes, may have to fix this for other properties
+        private ImageSelectorTabModel _selectedImageSelectorTab = new ImageSelectorTabModel();
 
         public ImageSelectorTabModel SelectedImageSelectorTab
         {

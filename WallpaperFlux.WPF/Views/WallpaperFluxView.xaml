@@ -388,7 +388,7 @@
                                                                     <Image.Source>
                                                                         <!-- I'm sure that you only need to decode either Pixel Height or Width -->
                                                                         <BitmapImage
-                                                                        DecodePixelHeight="{Binding ImageSelectorThumbnailHeight}" 
+                                                                        DecodePixelHeight="{Binding ImageSelectorThumbnailHeight}"
                                                                         RenderOptions.BitmapScalingMode="LowQuality"
                                                                         UriSource="{Binding Path}">
                                                                         </BitmapImage>
