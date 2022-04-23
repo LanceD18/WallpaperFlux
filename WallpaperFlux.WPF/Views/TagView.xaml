@@ -30,7 +30,7 @@
             <RowDefinition Height="8"/>
         </Grid.RowDefinitions>
 
-        <!-- Image Inspector -->
+        <!-- Tagboard -->
         <hc:Drawer Dock="Left" ShowMode="Cover" IsOpen="{Binding TagboardToggle}">
             <GroupBox DataContext="WallpaperFluxViewModel">
                 <Grid>
@@ -50,7 +50,7 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <Button Grid.Row="1" Grid.Column="3" Content="X" mvx:Bi.nd="Command CloseInspectorCommand"/>
+                    <Button Grid.Row="1" Grid.Column="3" Content="X" mvx:Bi.nd="Command CloseTagboardCommand"/>
                 </Grid>
 
             </GroupBox>
@@ -69,10 +69,7 @@
 
             <!-- Tags -->
             <MenuItem Header="Tags">
-                <!-- TODO If accessed through here the application will ask which category you want to add to / remove from -->
-                <!-- TODO A button within the category Tab itself should be used for directly adding/removing tags -->
-                <MenuItem Header="Add" IsEnabled="{Binding CategoriesExist}"/>
-                <MenuItem Header="Add to Selected Category" mvx:Bi.nd="Command AddTagToSelectedCategoryCommand" IsEnabled="{Binding CategoryIsSelected}"/>
+                <MenuItem Header="Add" mvx:Bi.nd="Command AddTagToSelectedCategoryCommand" IsEnabled="{Binding CategoryIsSelected}"/>
                 <MenuItem Header="Remove"/>
                 <Separator/>
                 <MenuItem Header="Toggle Tag-Adder" IsCheckable="True" IsChecked="{Binding TagAdderToggle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
@@ -205,9 +202,15 @@
                                              adonisExtensions:WatermarkExtension.Watermark="Search Tag... (Press Enter to Confirm)" Margin="5 0 5 5"
                                              ToolTip="Press Enter to Confirm" KeyDown="SearchBar_OnKeyDown"/>
                                     <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="5 5 5 0">
+                                        <!-- Sorting -->
                                         <TextBlock Text="Sort By: " VerticalAlignment="Center"/>
                                         <Button  Content="Name" Margin="5 0 5 0" mvx:Bi.nd="Command ToggleSortByNameCommand"/>
                                         <Button  Content="Count" Margin="5 0 5 0" mvx:Bi.nd="Command ToggleSortByCountCommand"/>
+                                        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                                        <TextBlock Text="Tagboard: " Margin="5 0 0 0" VerticalAlignment="Center"/>
+                                        <Button Content="View" Margin="5 0 5 0"/>
+                                        <Button Content="Add Selected" Margin="5 0 5 0"/>
+                                        <Button Content="Clear" Margin="5 0 5 0"/>
                                     </StackPanel>
                                 </Grid>
                             </GroupBox>
@@ -326,6 +329,7 @@
                                                                         <MenuItem Header="Selected Image(s)" mvx:Bi.nd="Command RemoveTagFromSelectedImagesCommand"/>
                                                                         <MenuItem Header="Entire Image Group" mvx:Bi.nd="Command RemoveTagFromEntireImageGroupCommand"/>
                                                                     </MenuItem>
+                                                                    <!-- Tagboard -->
                                                                     <MenuItem Header="Add Selected Tags to Tagboard"/>
                                                                 </MenuItem>
                                                                 <MenuItem Header="Tag Linking">
