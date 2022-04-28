@@ -359,7 +359,7 @@
                                         </ItemsPanelTemplate>
                                     </ListBox.ItemsPanel>
 
-                                    <!-- Item Container Style [Handles Selection of multiple items by binding IsSelected] -->
+                                    <!-- Item Container Style [Handles Selection of multiple items by binding to the IsSelected property of the object] -->
                                     <ListBox.ItemContainerStyle>
                                         <Style TargetType="{x:Type ListBoxItem}">
                                             <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
@@ -545,36 +545,6 @@
                     </StackPanel>
  
                 </Expander>
-                -->
-
-                <!-- Tagboard -->
-                <!-- TODO Might be better to just squish the tag editor and continuously show the board while it is active -->
-                <!-- ! If you use the drawer you still need to fix the window issue, it'll crash the program if you close and re-open the tag view while the drawer is open -->
-                <!--
-                <hc:Drawer Dock="Left" ShowMode="Press" IsOpen="{Binding IsImageEditorDrawerOpen}">
-                    <GroupBox DataContext="WallpaperFluxViewModel">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="0"/>
-                                <ColumnDefinition Width="auto"/>
-                                <ColumnDefinition Width="auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="0"/>
-                                <RowDefinition Height="auto"/>
-                                <RowDefinition Height="auto"/>
-                                <RowDefinition Height="auto"/>
-                                <RowDefinition Height="auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-
-                            <Button Grid.Row="1" Grid.Column="3" Content="X" mvx:Bi.nd="Command CloseInspectorCommand"/>
-                        </Grid>
-
-
-                    </GroupBox>
-                </hc:Drawer>
                 -->
 
             </Grid>

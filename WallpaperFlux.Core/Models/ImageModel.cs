@@ -139,6 +139,8 @@ namespace WallpaperFlux.Core.Models
         [JsonIgnore] public int ImageSelectorThumbnailWidthVideo => ImageSelectorThumbnailWidth - 20; // until the GroupBox is no longer needed this will account for it
         #endregion
 
+        #region UI Control
+
         private bool _isSelected;
         [JsonIgnore]
         public bool IsSelected
@@ -146,6 +148,8 @@ namespace WallpaperFlux.Core.Models
             get => _isSelected;
             set => SetProperty(ref _isSelected, value);
         }
+
+        #endregion
 
         public ImageModel(string path, int rank = 0, TagCollection tags = null)
         {

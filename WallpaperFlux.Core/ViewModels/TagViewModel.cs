@@ -42,8 +42,25 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
+        // TagBoard Collection
+        private MvxObservableCollection<TagModel> _tagBoardTags = new MvxObservableCollection<TagModel>();
+
+        public MvxObservableCollection<TagModel> TagBoardTags
+        {
+            get => _tagBoardTags;
+            set => SetProperty(ref _tagBoardTags, value);
+        }
+
+        // Minor UI Settings
         public double WindowBorderThickness => (TagAdderToggle || TagRemoverToggle) ? 5 : 0;
         public Color WindowBorderBrushColor => TagAdderToggle ? Color.LimeGreen : Color.Red;
+
+        private double _tagBoardWrapHeight;
+        public double TagBoardWrapHeight
+        {
+            get => _tagBoardWrapHeight;
+            set => SetProperty(ref _tagBoardWrapHeight, value);
+        }
 
         #endregion
 
@@ -74,6 +91,7 @@ namespace WallpaperFlux.Core.ViewModels
         }
 
         private bool _tagRemoverToggle = false;
+
         public bool TagRemoverToggle
         {
             get => _tagRemoverToggle;
@@ -93,7 +111,12 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
-        public bool TagboardToggle { get; set; }
+        private bool _tagboardToggle;
+        public bool TagboardToggle
+        {
+            get => _tagboardToggle;
+            set => SetProperty(ref _tagboardToggle, value);
+        }
 
         public bool EditingTagsOfAnImage => TagAdderToggle || TagRemoverToggle;
 
@@ -105,6 +128,10 @@ namespace WallpaperFlux.Core.ViewModels
 
         public IMvxCommand AddTagToSelectedCategoryCommand { get; set; }
 
+        public IMvxCommand ViewTagBoardCommand { get; set; }
+
+        public IMvxCommand CloseTagBoardCommand { get; set; }
+
         #endregion
 
         // TODO Add a ToolTip explaining how Category Order determines the order of image-naming
@@ -112,6 +139,12 @@ namespace WallpaperFlux.Core.ViewModels
         {
             AddCategoryCommand = new MvxCommand(PromptAddCategory);
             AddTagToSelectedCategoryCommand = new MvxCommand(() => PromptAddTagToCategory(SelectedCategory));
+            ViewTagBoardCommand = new MvxCommand(() =>
+            {
+                Debug.WriteLine("yes");
+                TagboardToggle = true;
+            });
+            CloseTagBoardCommand = new MvxCommand(() => TagboardToggle = false);
         }
 
         public void HighlightTags(TagCollection tags)
@@ -122,7 +155,7 @@ namespace WallpaperFlux.Core.ViewModels
                 if (tags.Contains(tag))
                 {
                     tag.IsHighlighted = true;
-                    Debug.WriteLine("Highlighting: " + tag.Name);
+                    //x Debug.WriteLine("Highlighting: " + tag.Name);
                 }
                 else
                 {
@@ -130,6 +163,27 @@ namespace WallpaperFlux.Core.ViewModels
                 }
             }
         }
+
+        #region TagBoard
+
+        public void AddTagsToTagBoard(TagModel[] tags) //! Range actions [AddRange()] are not supported for observable collections so we must do this manually
+        {
+            foreach (TagModel tag in tags)
+            {
+                if (!TagBoardTags.Contains(tag))
+                {
+                    TagBoardTags.Add(tag);
+                }
+            }
+        }
+
+        public void ClearTagBoardTags() => TagBoardTags.Clear();
+
+        public void RemoveTagFromTagBoard(TagModel tag) => TagBoardTags.Remove(tag);
+
+        public void SetTagBoardWrapperHeight(double newHeight) => TagBoardWrapHeight = newHeight;
+
+        #endregion
 
         #region Command Methods
         public void PromptAddCategory()
@@ -164,7 +218,7 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
-        //? for testing the tagging system
+        //? for testing the tagging system [TODO: REMOVE LATER]
         private void AddDebugTags(CategoryModel category)
         {
             Debug.WriteLine("Adding Debug Tags...");

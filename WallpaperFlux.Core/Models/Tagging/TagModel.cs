@@ -94,7 +94,13 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         #region UI Control
 
-        [JsonIgnore] public bool IsSelected { get; set; }
+        private bool _isSelected;
+        [JsonIgnore]
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set => SetProperty(ref _isSelected, value);
+        }
 
         private bool _isHighlighted;
         [JsonIgnore]
@@ -118,6 +124,8 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         [JsonIgnore] public IMvxCommand TagInteractCommand { get; set; }
 
+        [JsonIgnore] public IMvxCommand RemoveTagFromTagBoardCommand { get; set; }
+
         #endregion
 
 
@@ -130,6 +138,7 @@ namespace WallpaperFlux.Core.Models.Tagging
             RemoveTagFromSelectedImagesCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetHighlightedSelectedImages()));
             RemoveTagFromEntireImageGroupCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllSelectedImages()));
             TagInteractCommand = new MvxCommand( () => InteractWithTag(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetHighlightedSelectedImages()));
+            RemoveTagFromTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.RemoveTagFromTagBoard(this));
         }
 
         public void LinkImage(TagCollection tagLinker)

@@ -69,5 +69,11 @@ namespace WallpaperFlux.WPF.Views
         {
 
         }
+
+        private void TagView_OnSizeChanged_UpdateTagBoardWrapper(object sender, SizeChangedEventArgs e)
+        {
+            TagViewModel viewModel = (TagViewModel)this.DataContext;
+            viewModel.SetTagBoardWrapperHeight(ActualHeight - 100);
+        }
     }
 }

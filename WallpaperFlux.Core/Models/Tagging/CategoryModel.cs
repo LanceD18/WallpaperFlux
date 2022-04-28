@@ -9,6 +9,7 @@ using MvvmCross.ViewModels;
 using Newtonsoft.Json;
 using WallpaperFlux.Core.Models.Controls;
 using WallpaperFlux.Core.Util;
+using WallpaperFlux.Core.ViewModels;
 
 namespace WallpaperFlux.Core.Models.Tagging
 {
@@ -159,6 +160,12 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         [JsonIgnore] public IMvxCommand ToggleSortByCountCommand { get; set; }
 
+        [JsonIgnore] public IMvxCommand ViewTagBoardCommand { get; set; }
+
+        [JsonIgnore] public IMvxCommand AddSelectedTagsToTagBoardCommand { get; set; }
+
+        [JsonIgnore] public IMvxCommand ClearTagBoardCommand { get; set; }
+
         #endregion
 
         public CategoryModel(string name)
@@ -167,6 +174,9 @@ namespace WallpaperFlux.Core.Models.Tagging
 
             ToggleSortByNameCommand = new MvxCommand(() => ToggleSortOption(TagSortType.Name));
             ToggleSortByCountCommand = new MvxCommand(() => ToggleSortOption(TagSortType.Count));
+            ViewTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.TagboardToggle = true);
+            AddSelectedTagsToTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.AddTagsToTagBoard(GetSelectedTags()));
+            ClearTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.ClearTagBoardTags());
         }
 
         public void AddTag(string newTag) => AddTagRange(new string[] {newTag});
@@ -266,6 +276,8 @@ namespace WallpaperFlux.Core.Models.Tagging
             SelectedTagTab.VisibleTags.SwitchTo(pageTags);
         }
 
+        public TagModel[] GetSelectedTags() => Tags.Where((f) => f.IsSelected).ToArray();
+
         #region Command Methods
 
         public void ToggleSortOption(TagSortType sortType)
@@ -319,7 +331,7 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         #endregion
         
-        // Operators
+        // ----- Operators -----
         public static bool operator ==(CategoryModel category1, CategoryModel category2)
         {
             return category1?.Name == category2?.Name;
