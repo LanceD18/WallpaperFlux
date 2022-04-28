@@ -174,7 +174,7 @@ namespace WallpaperFlux.Core.Models.Tagging
 
             ToggleSortByNameCommand = new MvxCommand(() => ToggleSortOption(TagSortType.Name));
             ToggleSortByCountCommand = new MvxCommand(() => ToggleSortOption(TagSortType.Count));
-            ViewTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.TagboardToggle = true);
+            ViewTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.ToggleTagBoard());
             AddSelectedTagsToTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.AddTagsToTagBoard(GetSelectedTags()));
             ClearTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.ClearTagBoardTags());
         }

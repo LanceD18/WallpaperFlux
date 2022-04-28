@@ -80,14 +80,24 @@ namespace WallpaperFlux.WPF.Views
 
         #region Menu Items
 
-        #region Window Control
-        private void MenuItem_OpenTagWindow_Click(object sender, RoutedEventArgs e) => 
+        #region Child Window Control
+        private void MenuItem_OpenTagWindow_Click(object sender, RoutedEventArgs e)
+        {
+            bool initializing = false;
+
             PresentWindow(ref TagPresenter, typeof(TagView), typeof(TagViewModel),
                 WindowUtil.TAGGING_WINDOW_WIDTH, WindowUtil.TAGGING_WINDOW_HEIGHT, "Tag View", false);
+
+            //! Keep in mind that the ViewWindow will be destroyed upon closing the TagView, so yes we need to add the event again
+            //? prevents the TagBoard from causing a crash the next time the tag view is opened if the tag view is closed with it open
+            TagPresenter.ViewWindow.Closed += TagPresenter_ViewWindow_Closed_TagBoardFix;
+        }
 
         private void MenuItem_MoreSettings_Click(object sender, RoutedEventArgs e) => 
             PresentWindow(ref SettingsPresenter, typeof(SettingsView), typeof(SettingsViewModel),
                 WindowUtil.SETTINGS_WINDOW_WIDTH, WindowUtil.SETTINGS_WINDOW_HEIGHT, "Settings", false);
+
+        private void TagPresenter_ViewWindow_Closed_TagBoardFix(object sender, EventArgs e) => TagViewModel.Instance.TagboardToggle = false;
 
         private void PresentWindow(ref ViewPresenter presenter, Type viewType, Type viewModelType, float width, float height, string title, bool modal)
         {

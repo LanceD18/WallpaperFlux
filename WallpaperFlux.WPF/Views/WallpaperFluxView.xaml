@@ -295,16 +295,19 @@
                 <!-- Header Controls -->
                 <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
                     <!-- TODO Standardize the Height, Margin, and maybe the Width here (Give them variables) -->
-                    <Button Width="115" Height="25" Content="Select Image(s)" mvx:Bi.nd="Command SelectImagesCommand" IsEnabled="{Binding CanSelectImages}" Margin="5"/>
-                    <Button Width="60" Height="25" Content="Inspect" mvx:Bi.nd="Command ToggleInspectorCommand" Margin="5"/>
-                    <Button Width="60" Height="25" Content="Clear" Margin="5"/>
+                    <Button Width="115" Height="25" Content="Select Image(s)" mvx:Bi.nd="Command SelectImagesCommand" IsEnabled="{Binding CanSelectImages}" Margin="5 0 5 0"/>
+                    <Button Width="60" Height="25" Content="Inspect" mvx:Bi.nd="Command ToggleInspectorCommand" Margin="5 0 5 0"/>
+                    <Button Width="60" Height="25" Content="Clear" Margin="5 0 5 0"/>
                     <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
-                    <Button Width="75" Height="25" Content="Rename" Margin="5"/>
-                    <Button Width="75" Height="25" Content="Move" Margin="5"/>
-                    <Button Width="75" Height="25" Content="Delete" Margin="5"/>
-                    <Button Width="75" Height="25" Content="Rank" Margin="5"/>
-                    <Button Width="75" Height="25" Content="Deselect" Margin="5" mvx:Bi.nd="Command DeselectImagesCommand"/>
-                    <CheckBox Content="Apply to entire selection" Margin="5"/>
+                    <Button Width="75" Height="25" Content="Rename" Margin="5 0 5 0"/>
+                    <Button Width="75" Height="25" Content="Move" Margin="5 0 5 0"/>
+                    <Button Width="75" Height="25" Content="Delete" Margin="5 0 5 0"/>
+                    <Button Width="75" Height="25" Content="Rank" Margin="5 0 5 0"/>
+                    <Button Width="115" Height="25" Content="Paste Tagboard" Margin="5 0 5 0"/>
+                    <CheckBox Content="Apply to all selected" Margin="5"/>
+                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
+                    <Button Width="75" Height="25" Content="Select All" Margin="5 0 5 0"/>
+                    <Button Width="75" Height="25" Content="Deselect" Margin="5 0 5 0" mvx:Bi.nd="Command DeselectImagesCommand"/>
                 </StackPanel>
 
                 <TextBlock x:Name="SelectedImagePathTextBox" Text="{Binding SelectedImagePathText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
@@ -393,6 +396,7 @@
                                                                         UriSource="{Binding Path}">
                                                                         </BitmapImage>
                                                                     </Image.Source>
+
                                                                     <!-- Image Tooltip-->
                                                                     <Image.ToolTip>
                                                                         <ContentControl Content="{Binding}">
@@ -423,6 +427,7 @@
                                                                             </ContentControl.ContentTemplate>
                                                                         </ContentControl>
                                                                     </Image.ToolTip>
+
                                                                     <!-- Image Context Menu -->
                                                                     <Image.ContextMenu>
                                                                         <ContextMenu>
@@ -464,6 +469,7 @@
                                                                             <MenuItem Header="Move"/>
                                                                             <MenuItem Header="Delete"/>
                                                                             <MenuItem Header="Rank"/>
+                                                                            <MenuItem Header="Paste Tagboard"/>
                                                                             <Separator/>
                                                                             <MenuItem Header="Volume" mvx:Bi.nd="Command SetVolumeCommand"/>
                                                                             <MenuItem Header="Speed" mvx:Bi.nd="Command SetSpeedCommand"/>

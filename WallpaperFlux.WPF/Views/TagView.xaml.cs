@@ -35,7 +35,8 @@ namespace WallpaperFlux.WPF.Views
             InitializeComponent();
 
             ViewModel = TagViewModel.Instance = WindowUtil.InitializeViewModel(TagViewModel.Instance);
-            TaggingUtil.SetInstance(TagViewModel.Instance);
+            //? The below may be re-implemented in the future is the bug associated with it is fixed
+            //x TaggingUtil.SetInstance(TagViewModel.Instance);
         }
 
         private void TagTabControl_OnSizeChanged(object sender, SizeChangedEventArgs e) => UpdateTagSelectorWrapperSize();

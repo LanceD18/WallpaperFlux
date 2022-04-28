@@ -128,8 +128,6 @@ namespace WallpaperFlux.Core.ViewModels
 
         public IMvxCommand AddTagToSelectedCategoryCommand { get; set; }
 
-        public IMvxCommand ViewTagBoardCommand { get; set; }
-
         public IMvxCommand CloseTagBoardCommand { get; set; }
 
         #endregion
@@ -139,11 +137,7 @@ namespace WallpaperFlux.Core.ViewModels
         {
             AddCategoryCommand = new MvxCommand(PromptAddCategory);
             AddTagToSelectedCategoryCommand = new MvxCommand(() => PromptAddTagToCategory(SelectedCategory));
-            ViewTagBoardCommand = new MvxCommand(() =>
-            {
-                Debug.WriteLine("yes");
-                TagboardToggle = true;
-            });
+            //? the open/toggle TagBoard is initially called by CategoryModel and sent to a method here
             CloseTagBoardCommand = new MvxCommand(() => TagboardToggle = false);
         }
 
@@ -152,19 +146,13 @@ namespace WallpaperFlux.Core.ViewModels
             TagModel[] visibleTags = SelectedCategory.SelectedTagTab.GetAllVisibleTags();
             foreach (TagModel tag in visibleTags)
             {
-                if (tags.Contains(tag))
-                {
-                    tag.IsHighlighted = true;
-                    //x Debug.WriteLine("Highlighting: " + tag.Name);
-                }
-                else
-                {
-                    tag.IsHighlighted = false;
-                }
+                tag.IsHighlighted = tags.Contains(tag);
             }
         }
 
         #region TagBoard
+
+        public void ToggleTagBoard() => TagboardToggle = !TagboardToggle;
 
         public void AddTagsToTagBoard(TagModel[] tags) //! Range actions [AddRange()] are not supported for observable collections so we must do this manually
         {
