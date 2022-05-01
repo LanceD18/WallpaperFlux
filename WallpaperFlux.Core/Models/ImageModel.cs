@@ -18,6 +18,7 @@ using WallpaperFlux.Core.Collections;
 using WallpaperFlux.Core.External;
 using WallpaperFlux.Core.Models.Tagging;
 using WallpaperFlux.Core.Util;
+using WallpaperFlux.Core.ViewModels;
 
 namespace WallpaperFlux.Core.Models
 {
@@ -110,6 +111,8 @@ namespace WallpaperFlux.Core.Models
 
         public IMvxCommand IncreaseRankCommand { get; set; }
 
+        public IMvxCommand PasteTagBoardCommand { get; set; }
+
         /*x
         // IoC Property
         private IExternalImageSource _imageSource;
@@ -168,12 +171,6 @@ namespace WallpaperFlux.Core.Models
             InitCommands();
         }
 
-        //! Why was this added? Remove at some point
-        public void Dispose()
-        {
-
-        }
-
         private void InitCommands()
         {
             ViewFileCommand = new MvxCommand(ViewFile);
@@ -182,6 +179,8 @@ namespace WallpaperFlux.Core.Models
 
             DecreaseRankCommand = new MvxCommand(() => Rank--);
             IncreaseRankCommand = new MvxCommand(() => Rank++);
+
+            PasteTagBoardCommand = new MvxCommand(PasteTagBoard);
         }
 
         public Size GetSize()
@@ -192,7 +191,7 @@ namespace WallpaperFlux.Core.Models
                 imageSource.SetImage(Path);
                 return imageSource.GetSize();
             }
-            else
+            else // TODO Implement a process for getting the video size
             {
                 return new Size(0, 0);
             }
@@ -202,6 +201,14 @@ namespace WallpaperFlux.Core.Models
         public void AddTag(TagModel tag) => Tags.Add(tag);
 
         public void RemoveTag(TagModel tag) => Tags.Remove(tag);
+
+        public void PasteTagBoard()
+        {
+            foreach (TagModel tag in TagViewModel.Instance.TagBoardTags)
+            {
+                AddTag(tag);
+            }
+        }
         #endregion
 
         #region Command Methods

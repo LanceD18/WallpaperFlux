@@ -303,7 +303,7 @@
                     <Button Width="75" Height="25" Content="Move" Margin="5 0 5 0"/>
                     <Button Width="75" Height="25" Content="Delete" Margin="5 0 5 0"/>
                     <Button Width="75" Height="25" Content="Rank" Margin="5 0 5 0"/>
-                    <Button Width="115" Height="25" Content="Paste Tagboard" Margin="5 0 5 0"/>
+                    <Button Width="115" Height="25" Content="Paste Tagboard" Margin="5 0 5 0" Command="{Binding PasteTagBoardCommand}"/>
                     <CheckBox Content="Apply to all selected" Margin="5"/>
                     <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
                     <Button Width="75" Height="25" Content="Select All" Margin="5 0 5 0"/>
@@ -314,6 +314,7 @@
                            Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" HorizontalAlignment="Center"/>
                 <TextBlock x:Name="SelectedImageDimensionsTextBox" Text="{Binding SelectedImageDimensionsText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
                            Grid.Row="3" Grid.Column="1" HorizontalAlignment="Center" />
+                <TextBlock></TextBlock>
 
                 <!-- Image Selector Tab Control -->
                 <!-- !<GroupBox Grid.Row="4" Grid.Column="1" Width="650" Height="525" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="3">-->
@@ -439,6 +440,7 @@
                                                                             <MenuItem Header="Move"/>
                                                                             <MenuItem Header="Delete"/>
                                                                             <MenuItem Header="Rank"/>
+                                                                            <MenuItem Header="Paste Tagboard" Command="{Binding PasteTagBoardCommand}"/>
                                                                         </ContextMenu>
                                                                     </Image.ContextMenu>
                                                                 </Image>
@@ -469,7 +471,7 @@
                                                                             <MenuItem Header="Move"/>
                                                                             <MenuItem Header="Delete"/>
                                                                             <MenuItem Header="Rank"/>
-                                                                            <MenuItem Header="Paste Tagboard"/>
+                                                                            <MenuItem Header="Paste Tagboard" Command="{Binding PasteTagBoardCommand}"/>
                                                                             <Separator/>
                                                                             <MenuItem Header="Volume" mvx:Bi.nd="Command SetVolumeCommand"/>
                                                                             <MenuItem Header="Speed" mvx:Bi.nd="Command SetSpeedCommand"/>

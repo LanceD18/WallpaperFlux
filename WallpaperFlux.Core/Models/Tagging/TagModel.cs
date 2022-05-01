@@ -133,11 +133,11 @@ namespace WallpaperFlux.Core.Models.Tagging
         {
             Name = name;
 
-            AddTagToSelectedImagesCommand = new MvxCommand(() => AddTagToSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetHighlightedSelectedImages()));
-            AddTagToEntireImageGroupCommand = new MvxCommand(() => AddTagToSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllSelectedImages()));
-            RemoveTagFromSelectedImagesCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetHighlightedSelectedImages()));
-            RemoveTagFromEntireImageGroupCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllSelectedImages()));
-            TagInteractCommand = new MvxCommand( () => InteractWithTag(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetHighlightedSelectedImages()));
+            AddTagToSelectedImagesCommand = new MvxCommand(() => AddTagToSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetHighlightedImages()));
+            AddTagToEntireImageGroupCommand = new MvxCommand(() => AddTagToSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllImagesInTab()));
+            RemoveTagFromSelectedImagesCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetHighlightedImages()));
+            RemoveTagFromEntireImageGroupCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllImagesInTab()));
+            TagInteractCommand = new MvxCommand( () => InteractWithTag(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetHighlightedImages()));
             RemoveTagFromTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.RemoveTagFromTagBoard(this));
         }
 

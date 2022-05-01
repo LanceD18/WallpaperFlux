@@ -27,7 +27,7 @@ namespace WallpaperFlux.Core.Collections
 
         public void Add(TagModel tag)
         {
-            _tags.Add(tag);
+            _tags.Add(tag); // we're using a hashset, no need to worry about duplicate tags
             tag.LinkImage(this);
             TaggingUtil.HighlightTags(this);
         }
@@ -42,5 +42,8 @@ namespace WallpaperFlux.Core.Collections
         public bool Contains(TagModel tag) => _tags.Contains(tag);
 
         public TagModel[] GetTags() => _tags.ToArray();
+
+        // for use with the JSON
+        public string[] GetTagsString() => _tags.Select(f => f.Name).ToArray();
     }
 }

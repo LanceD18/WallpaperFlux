@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Text;
@@ -12,6 +13,8 @@ namespace WallpaperFlux.WPF.External
     {
         private Image internalImage;
 
+        private readonly string PATH_NOT_SET_ERROR = "ERROR: An ExternalImage was created but the Image path was never set, fix this";
+
         public bool SetImage(string imagePath)
         {
             if (File.Exists(imagePath) && !WallpaperUtil.IsSupportedVideoType(imagePath))
@@ -23,12 +26,56 @@ namespace WallpaperFlux.WPF.External
             return false;
         }
 
-        public Size GetSize() => internalImage.Size;
+        public Size GetSize()
+        {
+            try
+            {
+                return internalImage.Size;
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("PATH_NOT_SET_ERROR");
+                throw;
+            }
+        }
 
-        public object GetTag() => internalImage.Tag;
+        public object GetTag()
+        {
+            try
+            {
+                return internalImage.Tag;
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("PATH_NOT_SET_ERROR");
+                throw;
+            }
+        }
 
-        public void SetTag(object tag) => internalImage.Tag = tag;
+        public void SetTag(object tag)
+        {
+            try
+            {
+                internalImage.Tag = tag;
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("PATH_NOT_SET_ERROR");
+                throw;
+            }
+        }
 
-        public void Dispose() => internalImage.Dispose();
+        public void Dispose()
+        {
+            try
+            {
+                internalImage.Dispose();
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("PATH_NOT_SET_ERROR");
+                throw;
+            }
+        }
     }
 }

@@ -10,7 +10,7 @@ namespace WallpaperFlux.Core.Models.Controls
     //? Represents a tab within the Image Selector
     public class ImageSelectorTabModel : MvxNotifyPropertyChanged
     {
-        public string TabIndex { get; set; }
+        public string TabIndex { get; set; } // allows us to visually display this tab's index
 
         private MvxObservableCollection<ImageModel> _images = new MvxObservableCollection<ImageModel>();
 
@@ -64,9 +64,9 @@ namespace WallpaperFlux.Core.Models.Controls
             }
         }
 
-        public ImageModel[] GetHighlightedSelectedImages() => Images.Where(f => f.IsSelected).ToArray();
+        public ImageModel[] GetHighlightedImages() => Images.Where(f => f.IsSelected).ToArray();
 
-        public ImageModel[] GetAllSelectedImages() => Images.ToArray();
+        public ImageModel[] GetAllImagesInTab() => Images.ToArray();
 
         public void DeselectAllImages()
         {
