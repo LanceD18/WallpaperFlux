@@ -65,7 +65,8 @@ namespace WallpaperFlux.Core.Util
         public static IntPtr GetDesktopWorkerW()
         {
             //?-----Fetch the Program window-----
-            IntPtr progman = Win32.FindWindow("Progman", null); // progman (not program) allows the form to be represented as a child window of the desktop itself
+            //! Progman (not program) allows the form to be represented as a child window of the desktop itself
+            IntPtr progman = Win32.FindWindow("Progman", null);
 
             //?-----Spawn a WorkerW behind the desktop icons (If it is already there, nothing happens)-----
             IntPtr result = IntPtr.Zero;
@@ -92,8 +93,7 @@ namespace WallpaperFlux.Core.Util
 
             IntPtr workerw = IntPtr.Zero;
 
-            // We enumerate all Windows, until we find one, that has the SHELLDLL_DefView 
-            // as a child. 
+            // We enumerate all Windows, until we find one, that has the SHELLDLL_DefView as a child. 
             // If we found that window, we take its next sibling and assign it to workerw.
             Win32.EnumWindows(new Win32.EnumWindowsProc((tophandle, topparamhandle) =>
             {

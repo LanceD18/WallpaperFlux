@@ -21,7 +21,6 @@
     mc:Ignorable="d" FontSize="12" FontFamily="Segoe UI"
     d:DesignHeight="450" d:DesignWidth="800">
 
-
     <!-- Might want to take a look at this in the future: https://stackoverflow.com/questions/24925421/execute-command-in-viewmodel-from-mouse-event -->
     <!-- ? Also this to potentially remove some xaml.cs code and other IoC complications https://stackoverflow.com/questions/47199489/wpf-how-to-bind-mousedown-command-action-to-label -->
 
@@ -295,32 +294,32 @@
                 <!-- Header Controls -->
                 <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
                     <!-- TODO Standardize the Height, Margin, and maybe the Width here (Give them variables) -->
-                    <Button Width="115" Height="25" Content="Select Image(s)" mvx:Bi.nd="Command SelectImagesCommand" IsEnabled="{Binding CanSelectImages}" Margin="5 0 5 0"/>
-                    <Button Width="60" Height="25" Content="Inspect" mvx:Bi.nd="Command ToggleInspectorCommand" Margin="5 0 5 0"/>
-                    <Button Width="60" Height="25" Content="Clear" Margin="5 0 5 0"/>
+                    <Button Width="115" Height="25" Content="Select Image(s)" IsEnabled="{Binding CanSelectImages}" Margin="5 0 5 0" Command="{Binding SelectImagesCommand}" />
+                    <Button Width="60" Height="25" Content="Inspect" Margin="5 0 5 0" Command="{Binding ToggleInspectorCommand}"/>
+                    <Button Width="60" Height="25" Content="Clear" Margin="5 0 5 0" Command="{Binding ClearImagesCommand}"/>
                     <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
                     <Button Width="75" Height="25" Content="Rename" Margin="5 0 5 0"/>
                     <Button Width="75" Height="25" Content="Move" Margin="5 0 5 0"/>
                     <Button Width="75" Height="25" Content="Delete" Margin="5 0 5 0"/>
                     <Button Width="75" Height="25" Content="Rank" Margin="5 0 5 0"/>
                     <Button Width="115" Height="25" Content="Paste Tagboard" Margin="5 0 5 0" Command="{Binding PasteTagBoardCommand}"/>
-                    <CheckBox Content="Apply to all selected" Margin="5"/>
+                    <CheckBox Content="Apply to all" Margin="5" ToolTip="Will apply the given modificationt to all images in this selection. Another form of 'Select All'"/>
                     <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
-                    <Button Width="75" Height="25" Content="Select All" Margin="5 0 5 0"/>
-                    <Button Width="75" Height="25" Content="Deselect" Margin="5 0 5 0" mvx:Bi.nd="Command DeselectImagesCommand"/>
+                    <Button Width="75" Height="25" Content="Select All" Margin="5 0 5 0" Command="{Binding SelectAllImagesCommand}"/>
+                    <Button Width="75" Height="25" Content="Deselect" Margin="5 0 5 0" Command="{Binding DeselectImagesCommand}"/>
                 </StackPanel>
 
+                <!-- Selection Info -->
                 <TextBlock x:Name="SelectedImagePathTextBox" Text="{Binding SelectedImagePathText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
                            Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" HorizontalAlignment="Center"/>
                 <TextBlock x:Name="SelectedImageDimensionsTextBox" Text="{Binding SelectedImageDimensionsText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
                            Grid.Row="3" Grid.Column="1" HorizontalAlignment="Center" />
-                <TextBlock></TextBlock>
 
                 <!-- Image Selector Tab Control -->
                 <!-- !<GroupBox Grid.Row="4" Grid.Column="1" Width="650" Height="525" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="3">-->
                 <GroupBox Grid.Row="4" Grid.Column="1" 
                           adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="3">
-                    <TabControl x:Name="ImageSelectorTabControl" ItemsSource="{Binding ImageSelectorTabs}" 
+                    <TabControl x:Name="ImageSelectorTabControl" ItemsSource="{Binding ImageSelectorTabs}"
                                 SizeChanged="ImageSelectorTabControl_OnSizeChanged" SelectionChanged="ImageSelectorTabControl_OnSelectionChanged"
                                 SelectedItem="{Binding SelectedImageSelectorTab, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" >
 
@@ -351,7 +350,7 @@
                         <TabControl.ContentTemplate>
                             <DataTemplate DataType="controlModels:ImageSelectorTabModel">
                                 <!-- Image List Box -->
-                                <ListBox ItemsSource="{Binding Images}" 
+                                <ListBox ItemsSource="{Binding Items}" 
                                          SelectedItem="{Binding SelectedImage}"
                                          SelectionMode="Extended" SelectionChanged="ImageSelectorTabListBox_SelectionChanged">
 
@@ -373,7 +372,7 @@
                                     <!-- // Image Info Item Template // -->
                                     <ListBox.ItemTemplate>
                                         <DataTemplate DataType="models:ImageModel">
-                                            <GroupBox HorizontalAlignment="Center">
+                                            <GroupBox HorizontalAlignment="Center" MouseDown="ImageSelector_ListBoxItem_OnMouseDown">
                                                 <StackPanel Focusable="False">
 
                                                     <!-- //// Binding to ImageModel //// -->
@@ -385,7 +384,7 @@
                                                             <!-- // StaticOrGIFTemplate // -->
                                                             <DataTemplate x:Key="StaticOrGIFTemplate">
                                                                 <Image ToolTipService.ShowDuration="{StaticResource MaxInt32}"
-                                                               Width="{Binding ImageSelectorThumbnailWidth}" 
+                                                               Width="{Binding ImageSelectorThumbnailWidth}"
                                                                Height="{Binding ImageSelectorThumbnailHeight}"
                                                                Margin="3"
                                                                HorizontalAlignment="Center">
@@ -430,6 +429,7 @@
                                                                     </Image.ToolTip>
 
                                                                     <!-- Image Context Menu -->
+                                                                    <!-- !Changes made here need to be made to the Media Context Menu as well!!! -->
                                                                     <Image.ContextMenu>
                                                                         <ContextMenu>
                                                                             <MenuItem Header="Open File Location" mvx:Bi.nd="Command ViewFileCommand"/>
@@ -461,6 +461,7 @@
                                                                             Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded"/>
                                                                     </GroupBox.ToolTip>
                                                                     <!-- Media Element Context Menu-->
+                                                                    <!-- !Changes made here need to be made to the Image Context Menu as well!!! -->
                                                                     <GroupBox.ContextMenu>
                                                                         <ContextMenu>
                                                                             <MenuItem Header="Open File Location" mvx:Bi.nd="Command ViewFileCommand"/>

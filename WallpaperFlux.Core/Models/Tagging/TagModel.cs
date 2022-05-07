@@ -6,12 +6,13 @@ using MvvmCross.Commands;
 using MvvmCross.ViewModels;
 using Newtonsoft.Json;
 using WallpaperFlux.Core.Collections;
+using WallpaperFlux.Core.Models.Controls;
 using WallpaperFlux.Core.Util;
 using WallpaperFlux.Core.ViewModels;
 
 namespace WallpaperFlux.Core.Models.Tagging
 {
-    public class TagModel : MvxNotifyPropertyChanged
+    public class TagModel : ListBoxItemModel
     {
         public string Name { get; private set; }
 
@@ -94,6 +95,7 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         #region UI Control
 
+        /*
         private bool _isSelected;
         [JsonIgnore]
         public bool IsSelected
@@ -101,7 +103,9 @@ namespace WallpaperFlux.Core.Models.Tagging
             get => _isSelected;
             set => SetProperty(ref _isSelected, value);
         }
+        */
 
+        //? Used for determining which tag's font to highlight when an image is selected
         private bool _isHighlighted;
         [JsonIgnore]
         public bool IsHighlighted
@@ -133,11 +137,11 @@ namespace WallpaperFlux.Core.Models.Tagging
         {
             Name = name;
 
-            AddTagToSelectedImagesCommand = new MvxCommand(() => AddTagToSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetHighlightedImages()));
-            AddTagToEntireImageGroupCommand = new MvxCommand(() => AddTagToSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllImagesInTab()));
-            RemoveTagFromSelectedImagesCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetHighlightedImages()));
-            RemoveTagFromEntireImageGroupCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllImagesInTab()));
-            TagInteractCommand = new MvxCommand( () => InteractWithTag(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetHighlightedImages()));
+            AddTagToSelectedImagesCommand = new MvxCommand(() => AddTagToSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems()));
+            AddTagToEntireImageGroupCommand = new MvxCommand(() => AddTagToSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllItems()));
+            RemoveTagFromSelectedImagesCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems()));
+            RemoveTagFromEntireImageGroupCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllItems()));
+            TagInteractCommand = new MvxCommand( () => InteractWithTag(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems()));
             RemoveTagFromTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.RemoveTagFromTagBoard(this));
         }
 

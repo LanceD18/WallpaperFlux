@@ -16,6 +16,7 @@ using MvvmCross.ViewModels;
 using Newtonsoft.Json;
 using WallpaperFlux.Core.Collections;
 using WallpaperFlux.Core.External;
+using WallpaperFlux.Core.Models.Controls;
 using WallpaperFlux.Core.Models.Tagging;
 using WallpaperFlux.Core.Util;
 using WallpaperFlux.Core.ViewModels;
@@ -23,7 +24,7 @@ using WallpaperFlux.Core.ViewModels;
 namespace WallpaperFlux.Core.Models
 {
     //TODO You should verify if the extension is valid (Look into the methods you used for this in WallpaperManager to determine said extensions)
-    public class ImageModel : MvxNotifyPropertyChanged
+    public class ImageModel : ListBoxItemModel
     {
         // Properties
         [DataMember(Name = "Path")]
@@ -144,13 +145,23 @@ namespace WallpaperFlux.Core.Models
 
         #region UI Control
 
+        /*
         private bool _isSelected;
         [JsonIgnore]
         public bool IsSelected
         {
             get => _isSelected;
-            set => SetProperty(ref _isSelected, value);
+            set
+            {
+                if (IsSelected != value) // this should only update if there's actually a change
+                {
+                    WallpaperFluxViewModel.Instance.SelectedImageCount += value ? 1 : -1;
+                }
+                
+                SetProperty(ref _isSelected, value);
+            }
         }
+        */
 
         #endregion
 
@@ -167,6 +178,14 @@ namespace WallpaperFlux.Core.Models
             Rank = rank;
 
             Tags = tags ?? new TagCollection(this); // create a new tag collection if the given one is null
+
+            OnIsSelectedChanged += (value) =>
+            {
+                if (IsSelected != value) // this should only update if there's actually a change
+                {
+                    WallpaperFluxViewModel.Instance.SelectedImageCount += value ? 1 : -1;
+                }
+            };
 
             InitCommands();
         }

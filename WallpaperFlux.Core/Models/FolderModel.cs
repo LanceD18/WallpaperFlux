@@ -86,7 +86,6 @@ namespace WallpaperFlux.Core.Models
             foreach (string image in _images)
             {
                 DataUtil.Theme.Images.RemoveImage(image);
-                DataUtil.Theme.Images.RemoveImage("Dummy test");
             }
         }
     }

@@ -115,10 +115,11 @@ namespace WallpaperFlux.WPF.Views
         #endregion
 
         #region Image Selector Tab
-        //? Now that the window scales dynamically you probably won't need font scaling but keep that consideration in mind
+        //? Now that the window scales dynamically you probably won't need font scaling but keep this consideration in mind
         private async void ImageSelectorTabListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             return;
+            // Font Scaling
             if (e.AddedItems.Count > 0)
             {
                 if (e.AddedItems.ElementAt(0) is ImageModel imageModel)
@@ -150,7 +151,6 @@ namespace WallpaperFlux.WPF.Views
 
                         SelectedImageDimensionsTextBox.Text = "";
                     }
-
                 }
             }
         }
@@ -171,5 +171,10 @@ namespace WallpaperFlux.WPF.Views
             }
         }
         #endregion
+
+        private void ImageSelector_ListBoxItem_OnMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            ControlUtil.EnsureSingularSelection(ImageSelectorTabControl.Items.OfType<ImageSelectorTabModel>().ToArray(), ImageSelectorTabControl.SelectedItem as ITabModel<ImageModel>);
+        }
     }
 }

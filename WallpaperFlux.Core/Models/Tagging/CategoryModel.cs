@@ -269,11 +269,11 @@ namespace WallpaperFlux.Core.Models.Tagging
             for (int i = minIndex; i < maxIndex; i++)
             {
                 //xDebug.WriteLine("i: " + i + " | filterLength: " + _filteredTags.Length);
-                if (i > _filteredTags.Length - 1) break; // we're on the last page and we've run out of tags
+                if (i > _filteredTags.Length - 1) break; // we're on the last page and we've run out of tags, break the loop to avoid an index error
                 pageTags.Add(_filteredTags[i]);
             }
 
-            SelectedTagTab.VisibleTags.SwitchTo(pageTags);
+            SelectedTagTab.Items.SwitchTo(pageTags);
         }
 
         public TagModel[] GetSelectedTags() => Tags.Where((f) => f.IsSelected).ToArray();

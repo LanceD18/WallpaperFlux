@@ -143,7 +143,7 @@ namespace WallpaperFlux.Core.ViewModels
 
         public void HighlightTags(TagCollection tags)
         {
-            TagModel[] visibleTags = SelectedCategory.SelectedTagTab.GetAllVisibleTags();
+            TagModel[] visibleTags = SelectedCategory.SelectedTagTab.GetAllItems();
             foreach (TagModel tag in visibleTags)
             {
                 tag.IsHighlighted = tags.Contains(tag);
@@ -154,7 +154,7 @@ namespace WallpaperFlux.Core.ViewModels
 
         public void ToggleTagBoard() => TagboardToggle = !TagboardToggle;
 
-        public void AddTagsToTagBoard(TagModel[] tags) //! Range actions [AddRange()] are not supported for observable collections so we must do this manually
+        public void AddTagsToTagBoard(TagModel[] tags) //! Range actions { AddRange() } are not supported for observable collections so we must do this manually
         {
             foreach (TagModel tag in tags)
             {

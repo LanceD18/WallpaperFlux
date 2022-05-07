@@ -44,7 +44,7 @@ namespace WallpaperFlux.Core.ViewModels
 
         #region View Variables
         //-----View Variables-----
-        public int MaxToolTipMilliseconds { get; set; } = int.MaxValue;
+        public int MaxToolTipMilliseconds { get; set; } = int.MaxValue; // TODO See if you can make this a static resource in the main xaml instead
 
         /// Image Folders
         private MvxObservableCollection<FolderModel> _imageFolders = new MvxObservableCollection<FolderModel>();
@@ -90,11 +90,15 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
-        private MvxObservableCollection<ImageSelectorTabModel> _imageSelectorTabs;
+        #region Image Selector
+
+        private readonly int IMAGES_PER_PAGE = 20;
+
+        private MvxObservableCollection<ImageSelectorTabModel> _imageSelectorTabs = new MvxObservableCollection<ImageSelectorTabModel>();
 
         public MvxObservableCollection<ImageSelectorTabModel> ImageSelectorTabs
         {
-            get { return _imageSelectorTabs; }
+            get => _imageSelectorTabs;
             set
             {
                 SetProperty(ref _imageSelectorTabs, value);
@@ -103,7 +107,7 @@ namespace WallpaperFlux.Core.ViewModels
         }
 
         //! Without this initialization we will crash references on empty themes, may have to fix this for other properties
-        private ImageSelectorTabModel _selectedImageSelectorTab = new ImageSelectorTabModel();
+        private ImageSelectorTabModel _selectedImageSelectorTab = new ImageSelectorTabModel(-1);
 
         public ImageSelectorTabModel SelectedImageSelectorTab
         {
@@ -117,7 +121,23 @@ namespace WallpaperFlux.Core.ViewModels
             {
                 if (SelectedImageSelectorTab == null || SelectedImageSelectorTab.SelectedImage == null) return "";
 
-                return SelectedImageSelectorTab.SelectedImage?.Path;
+                if (SelectedImageCount <= 1)
+                {
+                    return SelectedImageSelectorTab.SelectedImage?.Path;
+                }
+
+                return "Selected Images: " + SelectedImageCount;
+            }
+        }
+
+        private int _selectedImageCount;
+        public int SelectedImageCount
+        {
+            get => _selectedImageCount;
+            set
+            {
+                _selectedImageCount = value;
+                RaisePropertyChanged(() => SelectedImagePathText);
             }
         }
 
@@ -131,6 +151,8 @@ namespace WallpaperFlux.Core.ViewModels
                 return size.Width + "x" + size.Height;
             }
         }
+
+        #endregion
 
         #endregion
 
@@ -211,10 +233,7 @@ namespace WallpaperFlux.Core.ViewModels
 
         #region Commands
         //-----Commands-----
-
-        #region Command Properties
-
-        //  -----Command Properties-----
+        
         public IMvxCommand NextWallpaperCommand { get; set; }
 
         public IMvxCommand PreviousWallpaperCommand { get; set; }
@@ -229,9 +248,13 @@ namespace WallpaperFlux.Core.ViewModels
 
         #region Image Selector
 
+        public IMvxCommand ClearImagesCommand { get; set; }
+
         public IMvxCommand SelectImagesCommand { get; set; }
 
         public IMvxCommand PasteTagBoardCommand { get; set; }
+
+        public IMvxCommand SelectAllImagesCommand { get; set; }
 
         public IMvxCommand DeselectImagesCommand { get; set; }
 
@@ -257,9 +280,11 @@ namespace WallpaperFlux.Core.ViewModels
             RemoveFolderCommand = new MvxCommand(RemoveFolder);
             SyncCommand = new MvxCommand(Sync);
 
+            ClearImagesCommand = new MvxCommand(ClearImages);
             SelectImagesCommand = new MvxCommand(SelectImages);
             PasteTagBoardCommand = new MvxCommand(PasteTagBoard);
-            DeselectImagesCommand = new MvxCommand(() => SelectedImageSelectorTab?.DeselectAllImages());
+            SelectAllImagesCommand = new MvxCommand(SelectAllImages);
+            DeselectImagesCommand = new MvxCommand(DeselectAllImages);
 
             ToggleInspectorCommand = new MvxCommand(ToggleInspector);
             CloseInspectorCommand = new MvxCommand(CloseInspector);
@@ -429,8 +454,8 @@ namespace WallpaperFlux.Core.ViewModels
         public void RemoveFolder()
         {
             Debug.WriteLine("Removing: " + SelectedImageFolder.Path);
-            ImageFolders.Remove(SelectedImageFolder);
             SelectedImageFolder.DeactivateFolder();
+            ImageFolders.Remove(SelectedImageFolder);
             //xImageFolders.ValidateImageFolders();
 
             UpdateTheme();
@@ -494,7 +519,6 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
-        private readonly int IMAGES_PER_PAGE = 20;
         public void RebuildImageSelector(string[] selectedImages, bool reverseOrder)
         {
             //-----Checking Conditions-----
@@ -518,7 +542,7 @@ namespace WallpaperFlux.Core.ViewModels
 
             if (invalidCounter > 0)
             {
-                MessageBoxUtil.ShowError("Some of the images selected do not exist: \n" + invalidImageString);
+                MessageBoxUtil.ShowError("Some of the selected images do not exist: \n" + invalidImageString);
                 return;
             }
 
@@ -538,10 +562,7 @@ namespace WallpaperFlux.Core.ViewModels
             for (int i = 0; i < tabCount; i++)
             {
                 // a reference of the index for use with the XAML code
-                ImageSelectorTabModel tabModel = new ImageSelectorTabModel
-                {
-                    TabIndex = (i + 1).ToString()
-                };
+                ImageSelectorTabModel tabModel = new ImageSelectorTabModel(i + 1);
 
                 // Add images to the current tabModel until we run out of images for this page
                 for (int j = 0; j < IMAGES_PER_PAGE; j++)
@@ -549,7 +570,7 @@ namespace WallpaperFlux.Core.ViewModels
                     // a needed cutoff to prevent us from going above the max index of selectedImages[] since we are looping by images per page
                     if (j + imageIndex < selectedImages.Length)
                     {
-                        tabModel.Images.Add(Theme.Images.GetImage(selectedImages[j + imageIndex]));
+                        tabModel.Items.Add(Theme.Images.GetImage(selectedImages[j + imageIndex]));
                     }
                     else
                     {
@@ -559,12 +580,18 @@ namespace WallpaperFlux.Core.ViewModels
 
                 imageIndex += IMAGES_PER_PAGE; // ensures that we traverse through selectedImages[] properly
 
-                tabModel.RaisePropertyChangedImages();
+                //x tabModel.RaisePropertyChangedImages();
                 ImageSelectorTabs.Add(tabModel);
             }
 
             RaisePropertyChanged(() => ImageSelectorTabs);
             SelectedImageSelectorTab = ImageSelectorTabs[0];
+            SelectedImageCount = 0; // without this the count will jump up to the number of images in the previous selection and be unable to reset
+        }
+
+        private void ClearImages()
+        {
+            ImageSelectorTabs.Clear();
         }
 
         // gathers all images across all image selector tabs
@@ -576,7 +603,7 @@ namespace WallpaperFlux.Core.ViewModels
             List<ImageModel> images = new List<ImageModel>();
             foreach (ImageSelectorTabModel selectorTab in ImageSelectorTabs)
             {
-                images.AddRange(selectorTab.GetAllImagesInTab());
+                images.AddRange(selectorTab.GetAllItems());
             }
 
             return images.ToArray();
@@ -588,12 +615,29 @@ namespace WallpaperFlux.Core.ViewModels
             List<ImageModel> images = new List<ImageModel>();
             foreach (ImageSelectorTabModel selectorTab in ImageSelectorTabs)
             {
-                images.AddRange(selectorTab.GetHighlightedImages());
+                images.AddRange(selectorTab.GetSelectedItems());
             }
 
             return images.ToArray();
         }
 
+        private void SelectAllImages()
+        {
+            foreach (ImageSelectorTabModel selectorTab in ImageSelectorTabs)
+            {
+                selectorTab.SelectAllItems();
+            }
+        }
+
+        public void DeselectAllImages()
+        {
+            foreach (ImageSelectorTabModel selectorTab in ImageSelectorTabs)
+            {
+                selectorTab.DeselectAllItems();
+            }
+        }
+
+        // pastes the current tagBoard selection to all highlighted images
         private void PasteTagBoard()
         {
             foreach (ImageModel image in GetAllHighlightedImages())
@@ -604,7 +648,6 @@ namespace WallpaperFlux.Core.ViewModels
                 }
             }
         }
-        #endregion
 
         #region Inspector
         private void ToggleInspector()
@@ -628,8 +671,8 @@ namespace WallpaperFlux.Core.ViewModels
         }
 
         #endregion
-        #endregion
 
+        #endregion
         #endregion
     }
 }

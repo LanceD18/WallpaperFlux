@@ -4,6 +4,7 @@ using MvvmCross.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -16,7 +17,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using MvvmCross.Presenters;
-using WallpaperFlux.Core.Util;
+using WallpaperFlux.Core.Models.Controls;
+using WallpaperFlux.Core.Models.Tagging;
 using WallpaperFlux.Core.ViewModels;
 using WallpaperFlux.WPF.Util;
 using WallpaperFlux.WPF.Windows;
@@ -52,7 +54,7 @@ namespace WallpaperFlux.WPF.Views
                 double widthOffset = 25; // pushes the wrap cutoff closer as the right-side can also be cut off
                 double heightOffset = 170; // the bottom tends to be cut off so we need an offset
 
-                viewModel.SelectedCategory.SelectedTagTab.SetTagWrapSize(TagTabControl.ActualWidth - widthOffset, TagTabControl.ActualHeight - heightOffset);
+                viewModel.SelectedCategory.SelectedTagTab.SetTagWrapSize(CategoryTabControl.ActualWidth - widthOffset, CategoryTabControl.ActualHeight - heightOffset);
             }
         }
 
@@ -75,6 +77,13 @@ namespace WallpaperFlux.WPF.Views
         {
             TagViewModel viewModel = (TagViewModel)this.DataContext;
             viewModel.SetTagBoardWrapperHeight(ActualHeight - 100);
+        }
+
+        private void TagTabControl_ListBoxItem_OnMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            CategoryModel category = CategoryTabControl.SelectedItem as CategoryModel;
+
+            ControlUtil.EnsureSingularSelection(category.TagTabs, category.SelectedTagTab);
         }
     }
 }

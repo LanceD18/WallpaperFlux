@@ -200,7 +200,7 @@
             </GroupBox.Header>
 
             <!-- Category TabControl -->
-            <TabControl x:Name="TagTabControl" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+            <TabControl x:Name="CategoryTabControl" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                         adonisExtensions:LayerExtension.IncreaseLayer="True" SizeChanged="TagTabControl_OnSizeChanged" SelectionChanged="TagTabControl_OnSelectionChanged">
 
                 <!-- Category Item Template [Header] -->
@@ -287,10 +287,10 @@
                                 </TextBlock.Style>
                             </TextBlock> -->
 
-                            <!-- Tag ListBox -->
+                            <!-- Tag Tab Control -->
                             <!--x<GroupBox>-->
                             <TabControl ItemsSource="{Binding TagTabs, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
-                                SelectedItem="{Binding SelectedTagTab, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" >
+                                SelectedItem="{Binding SelectedTagTab, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
 
                                 <!-- Item Template [Header] -->
                                 <TabControl.ItemTemplate>
@@ -319,7 +319,7 @@
                                 <TabControl.ContentTemplate>
                                     <DataTemplate DataType="controls:TagTabModel">
                                         <!--? Keep the option to scroll since we're still allowing the window to be resized -->
-                                        <ListBox ItemsSource="{Binding VisibleTags}" SelectionMode="Extended"
+                                        <ListBox ItemsSource="{Binding Items}" SelectionMode="Extended"
                                                  Height="{Binding TagWrapHeight, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
                                                  adonisExtensions:ScrollViewerExtension.HideScrollBarsUntilMouseOver="True"
                                                  adonisExtensions:ScrollViewerExtension.VerticalScrollBarPlacement="Overlay"
@@ -344,7 +344,8 @@
                                             <ListBox.ItemTemplate>
                                                 <DataTemplate DataType="tagging:TagModel">
                                                     <!-- The GroupBox adds a fitting adonis background to every tag -->
-                                                    <GroupBox  adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:CornerRadiusExtension.CornerRadius="15">
+                                                    <GroupBox  adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:CornerRadiusExtension.CornerRadius="15"
+                                                               MouseDown="TagTabControl_ListBoxItem_OnMouseDown">
                                                         <!-- This interaction trigger allows us to highlight images used by a given tag when the tag is clicked on -->
                                                         <i:Interaction.Triggers>
                                                             <i:EventTrigger EventName="MouseUp">
