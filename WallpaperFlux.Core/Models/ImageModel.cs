@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Threading.Tasks;
 using AdonisUI.Controls;
 using LanceTools.DiagnosticsUtil;
 using Microsoft.WindowsAPICodePack.Dialogs;
@@ -145,6 +146,7 @@ namespace WallpaperFlux.Core.Models
 
         #region UI Control
 
+        //? Replaced by ListBoxItemModel
         /*
         private bool _isSelected;
         [JsonIgnore]
@@ -162,6 +164,8 @@ namespace WallpaperFlux.Core.Models
             }
         }
         */
+
+        private Size _imageSize = Size.Empty; //! Do NOT save this to JSON unless you devise an efficient way to detect size changes
 
         #endregion
 
@@ -204,15 +208,25 @@ namespace WallpaperFlux.Core.Models
 
         public Size GetSize()
         {
-            if (!IsVideo)
+            if (_imageSize == Size.Empty) // initializing the size multiple times would bog down resources, so just set it after the first call and be done with it
             {
-                IExternalImage imageSource = Mvx.IoCProvider.Resolve<IExternalImage>();
-                imageSource.SetImage(Path);
-                return imageSource.GetSize();
+                if (!IsVideo)
+                {
+                    using (IExternalImage imageSource = Mvx.IoCProvider.Resolve<IExternalImage>())
+                    {
+                        imageSource.SetImage(Path);
+                        _imageSize = imageSource.GetSize();
+                    }
+                    return _imageSize;
+                }
+                else // TODO Implement a process for getting the video size
+                {
+                    return new Size(0, 0);
+                }
             }
-            else // TODO Implement a process for getting the video size
+            else
             {
-                return new Size(0, 0);
+                return _imageSize;
             }
         }
 

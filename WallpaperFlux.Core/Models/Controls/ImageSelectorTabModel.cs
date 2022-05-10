@@ -44,7 +44,7 @@ namespace WallpaperFlux.Core.Models.Controls
         public void SelectAllItems()
         {
             // so that methods such as DeselectItems() can function as intended to images being selected in tabs that are not visible
-            if (SelectedImage == null) SelectedImage = (ImageModel)Items[0];
+            if (SelectedImage == null) SelectedImage = Items[0];
 
             foreach (ImageModel image in Items)
             {
@@ -54,8 +54,9 @@ namespace WallpaperFlux.Core.Models.Controls
 
         public void DeselectAllItems()
         {
-            if (SelectedImage != null)
+            if (SelectedImage != null) // if this is null, then no images have been selected here so we have no need to deselect
             {
+                Debug.WriteLine("Hello yes hi");
                 foreach (ImageModel image in Items)
                 {
                     image.IsSelected = false;

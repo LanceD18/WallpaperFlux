@@ -95,16 +95,6 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         #region UI Control
 
-        /*
-        private bool _isSelected;
-        [JsonIgnore]
-        public bool IsSelected
-        {
-            get => _isSelected;
-            set => SetProperty(ref _isSelected, value);
-        }
-        */
-
         //? Used for determining which tag's font to highlight when an image is selected
         private bool _isHighlighted;
         [JsonIgnore]

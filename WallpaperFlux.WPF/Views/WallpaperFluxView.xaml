@@ -388,6 +388,7 @@
                                                                Height="{Binding ImageSelectorThumbnailHeight}"
                                                                Margin="3"
                                                                HorizontalAlignment="Center">
+                                                                    <!-- TODO Turn this segment into an event that loads all image sources on one separate thread one by one -->
                                                                     <Image.Source>
                                                                         <!-- I'm sure that you only need to decode either Pixel Height or Width -->
                                                                         <BitmapImage

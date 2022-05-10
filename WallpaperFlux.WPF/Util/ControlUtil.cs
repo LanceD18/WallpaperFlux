@@ -21,9 +21,9 @@ namespace WallpaperFlux.WPF.Util
             if (Keyboard.Modifiers != ModifierKeys.Control && Keyboard.Modifiers != ModifierKeys.Shift)
             {
                 Debug.WriteLine("Singular Selection | Deselecting Other Tabs");
-                foreach (ITabModel<T> tab in items)
+                foreach (ITabModel<U> tab in items)
                 {
-                    if (tab != selectedItem) // the WPF will handle this itself
+                    if (tab != selectedItem) // the WPF will handle deselecting the selected item itself (without deselecting the singular selection)
                     {
                         tab.DeselectAllItems();
                     }

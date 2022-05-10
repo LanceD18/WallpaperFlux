@@ -32,7 +32,7 @@
             <RowDefinition Height="8"/>
         </Grid.RowDefinitions>
 
-        <!-- Tagboard -->
+        <!-- Tagboard Drawer -->
         <hc:Drawer Dock="Right" ShowMode="Cover" IsOpen="{Binding TagboardToggle}" x:Name="TagBoardDrawer">
             <GroupBox>
                 <Grid>

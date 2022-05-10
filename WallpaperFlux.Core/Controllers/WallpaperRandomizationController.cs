@@ -4,9 +4,11 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using LanceTools;
 using MvvmCross;
 using WallpaperFlux.Core.External;
+using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Util;
 
 namespace WallpaperFlux.Core.Controllers
@@ -236,14 +238,15 @@ namespace WallpaperFlux.Core.Controllers
 
         // the speed of this can be improved by not loading the image at all and instead using alternative options:
         // https://www.codeproject.com/Articles/35978/Reading-Image-Headers-to-Get-Width-and-Height
-        // however doing so is not needed for such a small collection
+        // however doing so is not needed for such a small array (doubt anyone will have hundreds of monitors)
         private string[] LargestImagesWithCustomFilePath(string[] customFilePath)
         {
+            /*x
             IExternalImage[] images = new IExternalImage[customFilePath.Length];
 
             for (var i = 0; i < images.Length; i++)
             {
-                images[i].SetImage(customFilePath[i]);
+                Task.Run(() => images[i].SetImage(customFilePath[i]));
 
                 //? Note that the tag is empty beforehand | This is used to organize the images below based on their width and height
                 images[i].SetTag(customFilePath[i]);
@@ -258,6 +261,21 @@ namespace WallpaperFlux.Core.Controllers
 
             // Dispose the loaded images once finished
             foreach (IExternalImage image in images) image.Dispose();
+            */
+
+            ImageModel[] images = new ImageModel[customFilePath.Length];
+
+            for (var i = 0; i < customFilePath.Length; i++)
+            {
+                images[i] = DataUtil.Theme.Images.GetImage(customFilePath[i]);
+            }
+
+            customFilePath = (
+                from f 
+                    in images 
+                orderby f.GetSize().Width + f.GetSize().Height 
+                    descending 
+                select f.Path).ToArray();
 
             return customFilePath;
         }

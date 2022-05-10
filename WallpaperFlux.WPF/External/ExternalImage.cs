@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using WallpaperFlux.Core.External;
 using WallpaperFlux.Core.Util;
 
@@ -11,70 +14,94 @@ namespace WallpaperFlux.WPF.External
 {
     public class ExternalImage : IExternalImage
     {
-        private Image internalImage;
+        private Image _internalImage;
 
         private readonly string PATH_NOT_SET_ERROR = "ERROR: An ExternalImage was created but the Image path was never set, fix this";
 
         public bool SetImage(string imagePath)
         {
-            if (File.Exists(imagePath) && !WallpaperUtil.IsSupportedVideoType(imagePath))
-            {
-                internalImage = Image.FromFile(imagePath);
-                return true;
-            }
+            if (ImageUtil.SetImageThread.IsAlive) ImageUtil.SetImageThread.Join();
 
-            return false;
+            bool success = false;
+
+            ImageUtil.SetImageThread = new Thread(() =>
+            {
+                if (_internalImage == null)
+                {
+                    if (File.Exists(imagePath) && !WallpaperUtil.IsSupportedVideoType(imagePath))
+                    {
+                        _internalImage = Image.FromFile(imagePath);
+                        success = true;
+                    }
+                }
+                else // no need to do anything if the image already exists
+                {
+                    success = true;
+                }
+
+                success = false;
+            });
+            ImageUtil.SetImageThread.Start();
+            ImageUtil.SetImageThread.Join();
+
+            return success;
         }
 
         public Size GetSize()
         {
-            try
+            if (ImageUtil.SetImageThread.IsAlive) ImageUtil.SetImageThread.Join();
+
+            if (_internalImage != null)
             {
-                return internalImage.Size;
+                return _internalImage.Size;
             }
-            catch (Exception e)
+            else
             {
-                Debug.WriteLine("PATH_NOT_SET_ERROR");
-                throw;
+                Debug.WriteLine(PATH_NOT_SET_ERROR);
+                return Size.Empty;
             }
         }
 
         public object GetTag()
         {
-            try
+            if (ImageUtil.SetImageThread.IsAlive) ImageUtil.SetImageThread.Join();
+
+            if (_internalImage != null)
             {
-                return internalImage.Tag;
+                return _internalImage.Tag;
             }
-            catch (Exception e)
+            else
             {
-                Debug.WriteLine("PATH_NOT_SET_ERROR");
-                throw;
+                Debug.WriteLine(PATH_NOT_SET_ERROR);
+                return null;
             }
         }
 
         public void SetTag(object tag)
         {
-            try
+            if (ImageUtil.SetImageThread.IsAlive) ImageUtil.SetImageThread.Join();
+
+            if (_internalImage != null)
             {
-                internalImage.Tag = tag;
+                _internalImage.Tag = tag;
             }
-            catch (Exception e)
+            else
             {
-                Debug.WriteLine("PATH_NOT_SET_ERROR");
-                throw;
+                Debug.WriteLine(PATH_NOT_SET_ERROR);
             }
         }
 
         public void Dispose()
         {
-            try
+            if (ImageUtil.SetImageThread.IsAlive) ImageUtil.SetImageThread.Join();
+
+            if (_internalImage != null)
             {
-                internalImage.Dispose();
+                _internalImage.Dispose();
             }
-            catch (Exception e)
+            else
             {
-                Debug.WriteLine("PATH_NOT_SET_ERROR");
-                throw;
+                Debug.WriteLine(PATH_NOT_SET_ERROR);
             }
         }
     }
