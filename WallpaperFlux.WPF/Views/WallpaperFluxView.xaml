@@ -18,14 +18,19 @@
     xmlns:controlModels="clr-namespace:WallpaperFlux.Core.Models.Controls;assembly=WallpaperFlux.Core"
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:tagging="clr-namespace:WallpaperFlux.Core.Models.Tagging;assembly=WallpaperFlux.Core"
     mc:Ignorable="d" FontSize="12" FontFamily="Segoe UI"
-    d:DesignHeight="450" d:DesignWidth="800">
+    d:DesignHeight="450" d:DesignWidth="800"
+    SizeChanged="WallpaperFluxView_OnSizeChanged_UpdateInspectorHeight">
 
     <!-- Might want to take a look at this in the future: https://stackoverflow.com/questions/24925421/execute-command-in-viewmodel-from-mouse-event -->
     <!-- ? Also this to potentially remove some xaml.cs code and other IoC complications https://stackoverflow.com/questions/47199489/wpf-how-to-bind-mousedown-command-action-to-label -->
 
     <views:MvxWpfView.Resources>
-
+        <ResourceDictionary>
+            <system:Double x:Key="InspectorWidth">375</system:Double>
+            <system:Double x:Key="InspectorCategoryHeight">400</system:Double>
+        </ResourceDictionary>
     </views:MvxWpfView.Resources>
 
     <Grid>
@@ -403,9 +408,11 @@
                                                                         <ContentControl Content="{Binding}">
                                                                             <!-- Resources -->
                                                                             <ContentControl.Resources>
+                                                                                <!-- Static -->
                                                                                 <DataTemplate x:Key="StaticTemplate">
                                                                                     <Image Source="{Binding Path}"/>
                                                                                 </DataTemplate>
+                                                                                <!-- GIF -->
                                                                                 <DataTemplate x:Key="GIFTemplate">
                                                                                     <ffme:MediaElement 
                                                                                 UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play" Loaded="MediaElement_OnLoaded"/>
@@ -459,7 +466,7 @@
                                                                     <!-- Media Element Tooltip-->
                                                                     <GroupBox.ToolTip>
                                                                         <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play" 
-                                                                            Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded"/>
+                                                                            Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" />
                                                                     </GroupBox.ToolTip>
                                                                     <!-- Media Element Context Menu-->
                                                                     <!-- !Changes made here need to be made to the Image Context Menu as well!!! -->
@@ -559,5 +566,204 @@
 
             </Grid>
         </GroupBox>
+
+        <!-- Image Inspector Drawer -->
+        <hc:Drawer Dock="Left" ShowMode="Cover" IsOpen="{Binding InspectorToggle}" x:Name="TagBoardDrawer">
+            <ScrollViewer Height="{Binding InspectorHeight, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
+                <GroupBox Width="{StaticResource InspectorWidth}"
+                          adonisExtensions:ScrollViewerExtension.HideScrollBarsUntilMouseOver="True"
+                          adonisExtensions:ScrollViewerExtension.VerticalScrollBarPlacement="Overlay"
+                          adonisExtensions:ScrollViewerExtension.VerticalScrollBarExpansionMode="ExpandOnHover"
+                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                          BorderBrush="DarkGray" BorderThickness="2">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <!--<ColumnDefinition Width="{adonisUi:Space 1}"/>-->
+                            <ColumnDefinition Width="0"/>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="0"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" Text="Inspector" FontWeight="Medium" Margin="0 0 0 5">
+                            <TextBlock.Style>
+                                <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <Button Grid.Row="1" Grid.Column="3" HorizontalAlignment="Right" Content="X" Command="{Binding CloseInspectorCommand}" 
+                            Margin="5 0 5 0" Foreground="Red" FontSize="16" FontWeight="Bold" adonisExtensions:LayerExtension.Layer="1"/>
+
+                        <!-- Image Viewer -->
+                        <GroupBox  Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3"
+                               Margin="0 5 0 0" HorizontalAlignment="Center">
+                            <StackPanel Focusable="False">
+
+                                <!-- //// Binding to ImageModel //// -->
+                                <ContentControl Content="{Binding SelectedImage}" HorizontalAlignment="Center">
+                                    <!-- Resources -->
+                                    <ContentControl.Resources>
+                                        <!-- Remember that the Binding context here refers to what's given in the Content of the ContentTemplate, not what ReSharper says -->
+
+                                        <!-- // StaticOrGIFTemplate // -->
+                                        <DataTemplate x:Key="StaticOrGIFTemplate">
+                                            <ContentControl Content="{Binding}">
+                                                <!-- Resources -->
+                                                <ContentControl.Resources>
+                                                    <!-- Static -->
+                                                    <DataTemplate x:Key="StaticTemplate">
+                                                        <Image Source="{Binding Path}"/>
+                                                    </DataTemplate>
+                                                    <!-- GIF -->
+                                                    <DataTemplate x:Key="GIFTemplate">
+                                                        <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play" Loaded="MediaElement_OnLoaded"/>
+                                                    </DataTemplate>
+                                                </ContentControl.Resources>
+                                                <!-- Template Control -->
+                                                <ContentControl.ContentTemplate>
+                                                    <DataTemplate>
+                                                        <!-- Default Template -->
+                                                        <ContentControl Name="cc" Content="{Binding }" 
+                                                                                ContentTemplate="{StaticResource StaticTemplate}"/>
+                                                        <!-- Triggers -->
+                                                        <DataTemplate.Triggers>
+                                                            <DataTrigger Binding="{Binding IsGIF}" Value="True">
+                                                                <!-- Sets the ContentTemplate to be GIFTemplate instead of StaticTemplate -->
+                                                                <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource GIFTemplate}"/>
+                                                            </DataTrigger>
+                                                        </DataTemplate.Triggers>
+                                                    </DataTemplate>
+                                                </ContentControl.ContentTemplate>
+                                            </ContentControl>
+                                        </DataTemplate>
+
+                                        <!-- // VideoTemplate // -->
+                                        <DataTemplate x:Key="VideoTemplate">
+                                            <GroupBox adonisExtensions:LayerExtension.IncreaseLayer="False" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play" 
+                                                               Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded"/>
+                                            </GroupBox>
+                                            <!--</Border>-->
+                                        </DataTemplate>
+                                    </ContentControl.Resources>
+
+                                    <!-- // Template Control // -->
+                                    <ContentControl.ContentTemplate>
+                                        <DataTemplate>
+                                            <!-- Default Control -->
+                                            <ContentControl Name="cc" Content="{Binding }" ContentTemplate="{StaticResource StaticOrGIFTemplate}"/>
+                                            <!-- Triggers -->
+                                            <DataTemplate.Triggers>
+                                                <!-- If IsVideo, use the VideoTemplate instead -->
+                                                <DataTrigger Binding="{Binding IsVideo}" Value="True">
+                                                    <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource VideoTemplate}"/>
+                                                </DataTrigger>
+                                            </DataTemplate.Triggers>
+                                        </DataTemplate>
+                                    </ContentControl.ContentTemplate>
+                                </ContentControl>
+                            </StackPanel>
+                        </GroupBox>
+
+                        <!-- Tags -->
+                        <GroupBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3"
+                              adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:LayerExtension.Layer="2">
+                            <!-- Header -->
+                            <GroupBox.Header>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="0"/>
+                                        <ColumnDefinition Width="auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="0"/>
+                                        <RowDefinition Height="auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" Text="Tags" FontWeight="Medium" Margin="0 0 0 5">
+                                        <TextBlock.Style>
+                                            <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </GroupBox.Header>
+
+                            <!-- ListBox  -->
+                            <ListBox ItemsSource="{Binding InspectedImageTags}" SelectionMode="Extended" Height="400"
+                                 adonisExtensions:ScrollViewerExtension.HideScrollBarsUntilMouseOver="True"
+                                 adonisExtensions:ScrollViewerExtension.VerticalScrollBarPlacement="Overlay"
+                                 adonisExtensions:ScrollViewerExtension.VerticalScrollBarExpansionMode="ExpandOnHover"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+
+                                <!-- Wrap Setup -->
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel IsItemsHost="True" Width="{StaticResource InspectorWidth}"/>
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+
+                                <!-- Tags Item Template -->
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate DataType="tagging:TagModel">
+                                        <!-- The GroupBox adds a fitting adonis background to every tag -->
+                                        <GroupBox  adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:CornerRadiusExtension.CornerRadius="15">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock VerticalAlignment="Center" Text="{Binding Name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <Button VerticalAlignment="Center" Content="X"  Command="{Binding RemoveTagFromSelectedImageCommand}" 
+                                                    Foreground="Red" FontSize="10" FontWeight="Medium" Margin="5 0 5 0"/>
+                                            </StackPanel>
+                                        </GroupBox>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </GroupBox>
+
+                        <!-- Settings -->
+                        <GroupBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3" Height="{StaticResource InspectorCategoryHeight}"
+                                  adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:LayerExtension.Layer="2">
+                            <!-- Header -->
+                            <GroupBox.Header>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="0"/>
+                                        <ColumnDefinition Width="auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="0"/>
+                                        <RowDefinition Height="auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" Text="Settings" FontWeight="Medium" Margin="0 0 0 5">
+                                        <TextBlock.Style>
+                                            <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </GroupBox.Header>
+
+                            <StackPanel>
+
+                            </StackPanel>
+
+                        </GroupBox>
+
+                    </Grid>
+                </GroupBox>
+            </ScrollViewer>
+        </hc:Drawer>
+
     </Grid>
 </views:MvxWpfView>

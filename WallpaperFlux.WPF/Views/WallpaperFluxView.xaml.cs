@@ -176,5 +176,7 @@ namespace WallpaperFlux.WPF.Views
         {
             ControlUtil.EnsureSingularSelection(ImageSelectorTabControl.Items.OfType<ImageSelectorTabModel>().ToArray(), ImageSelectorTabControl.SelectedItem as ITabModel<ImageModel>);
         }
+
+        private void WallpaperFluxView_OnSizeChanged_UpdateInspectorHeight(object sender, SizeChangedEventArgs e) => WallpaperFluxViewModel.Instance.SetInspectorHeight(ActualHeight - 75);
     }
 }

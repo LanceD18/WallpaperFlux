@@ -112,6 +112,8 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         [JsonIgnore] public IMvxCommand AddTagToEntireImageGroupCommand { get; set; }
 
+        [JsonIgnore] public IMvxCommand RemoveTagFromSelectedImageCommand { get; set; } //? for use with the Inspector
+
         [JsonIgnore] public IMvxCommand RemoveTagFromSelectedImagesCommand { get; set; }
 
         [JsonIgnore] public IMvxCommand RemoveTagFromEntireImageGroupCommand { get; set; }
@@ -122,13 +124,13 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         #endregion
 
-
         public TagModel(string name)
         {
             Name = name;
 
             AddTagToSelectedImagesCommand = new MvxCommand(() => AddTagToSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems()));
             AddTagToEntireImageGroupCommand = new MvxCommand(() => AddTagToSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllItems()));
+            RemoveTagFromSelectedImageCommand = new MvxCommand(() => RemoveTagFromSelectedImages(new[] { WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.SelectedImage } ));
             RemoveTagFromSelectedImagesCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems()));
             RemoveTagFromEntireImageGroupCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllItems()));
             TagInteractCommand = new MvxCommand( () => InteractWithTag(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems()));

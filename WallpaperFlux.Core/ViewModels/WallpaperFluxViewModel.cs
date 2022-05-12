@@ -115,6 +115,7 @@ namespace WallpaperFlux.Core.ViewModels
             set => SetProperty(ref _selectedImageSelectorTab, value);
         }
 
+        //? Updated by RaisePropertyChanged() calls in references
         public string SelectedImagePathText
         {
             get
@@ -141,6 +142,7 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
+        //? Updated by RaisePropertyChanged() calls in references
         public string SelectedImageDimensionsText
         {
             get
@@ -151,6 +153,30 @@ namespace WallpaperFlux.Core.ViewModels
                 return size.Width + "x" + size.Height;
             }
         }
+
+        public ImageModel SelectedImage => SelectedImageSelectorTab?.SelectedImage;
+
+        #region Inspector
+
+        //? Updated by RaisePropertyChanged() calls in references
+        public MvxObservableCollection<TagModel> InspectedImageTags
+        {
+            get
+            {
+                if (SelectedImageSelectorTab == null || SelectedImageSelectorTab.SelectedImage == null) return null;
+                
+                return new MvxObservableCollection<TagModel>(SelectedImageSelectorTab.SelectedImage.Tags.GetTags());
+            }
+        }
+
+        private double _inspectorHeight;
+        public double InspectorHeight
+        {
+            get => _inspectorHeight;
+            set => SetProperty(ref _inspectorHeight, value); //? needed to update the height when resizing the window
+        }
+
+        #endregion
 
         #endregion
 
@@ -168,7 +194,7 @@ namespace WallpaperFlux.Core.ViewModels
 
         public bool CanSelectImages => ImageFolders.Count > 0;
 
-        public bool IsImageEditorDrawerOpen { get; set; } = false;
+        public bool InspectorToggle { get; set; } = false;
 
         #endregion
 
@@ -650,25 +676,26 @@ namespace WallpaperFlux.Core.ViewModels
         }
 
         #region Inspector
+
         private void ToggleInspector()
         {
-            IsImageEditorDrawerOpen = !IsImageEditorDrawerOpen;
-            RaisePropertyChanged(() => IsImageEditorDrawerOpen);
-
-            // TODO Put the tags into the Drawer
+            InspectorToggle = !InspectorToggle;
+            RaisePropertyChanged(() => InspectorToggle);
         }
 
         private void OpenImageEditor()
         {
-            IsImageEditorDrawerOpen = true;
-            RaisePropertyChanged(() => IsImageEditorDrawerOpen);
+            InspectorToggle = true;
+            RaisePropertyChanged(() => InspectorToggle);
         }
 
         private void CloseInspector()
         {
-            IsImageEditorDrawerOpen = false;
-            RaisePropertyChanged(() => IsImageEditorDrawerOpen);
+            InspectorToggle = false;
+            RaisePropertyChanged(() => InspectorToggle);
         }
+
+        public void SetInspectorHeight(double newHeight) => InspectorHeight = newHeight;
 
         #endregion
 

@@ -42,7 +42,7 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
-        // TagBoard Collection
+        #region TagBoard
         private MvxObservableCollection<TagModel> _tagBoardTags = new MvxObservableCollection<TagModel>();
 
         public MvxObservableCollection<TagModel> TagBoardTags
@@ -51,16 +51,19 @@ namespace WallpaperFlux.Core.ViewModels
             set => SetProperty(ref _tagBoardTags, value);
         }
 
-        // Minor UI Settings
+        private double _tagBoardHeight;
+        public double TagBoardHeight
+        {
+            get => _tagBoardHeight;
+            set => SetProperty(ref _tagBoardHeight, value); //? needed to update the height when resizing the window
+        }
+
+        #endregion
+
+        #region Minor UI Settings
         public double WindowBorderThickness => (TagAdderToggle || TagRemoverToggle) ? 5 : 0;
         public Color WindowBorderBrushColor => TagAdderToggle ? Color.LimeGreen : Color.Red;
-
-        private double _tagBoardWrapHeight;
-        public double TagBoardWrapHeight
-        {
-            get => _tagBoardWrapHeight;
-            set => SetProperty(ref _tagBoardWrapHeight, value);
-        }
+        #endregion
 
         #endregion
 
@@ -112,6 +115,7 @@ namespace WallpaperFlux.Core.ViewModels
         }
 
         private bool _tagboardToggle;
+
         public bool TagboardToggle
         {
             get => _tagboardToggle;
@@ -144,6 +148,7 @@ namespace WallpaperFlux.Core.ViewModels
         public void HighlightTags(TagCollection tags)
         {
             TagModel[] visibleTags = SelectedCategory.SelectedTagTab.GetAllItems();
+            
             foreach (TagModel tag in visibleTags)
             {
                 tag.IsHighlighted = tags.Contains(tag);
@@ -169,7 +174,7 @@ namespace WallpaperFlux.Core.ViewModels
 
         public void RemoveTagFromTagBoard(TagModel tag) => TagBoardTags.Remove(tag);
 
-        public void SetTagBoardWrapperHeight(double newHeight) => TagBoardWrapHeight = newHeight;
+        public void SetTagBoardHeight(double newHeight) => TagBoardHeight = newHeight;
 
         #endregion
 

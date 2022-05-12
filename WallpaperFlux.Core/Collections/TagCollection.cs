@@ -30,6 +30,8 @@ namespace WallpaperFlux.Core.Collections
             _tags.Add(tag); // we're using a hashset, no need to worry about duplicate tags
             tag.LinkImage(this);
             TaggingUtil.HighlightTags(this);
+
+            WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.InspectedImageTags);
         }
 
         public void Remove(TagModel tag)
@@ -37,6 +39,8 @@ namespace WallpaperFlux.Core.Collections
             _tags.Remove(tag);
             tag.UnlinkImage(this);
             TaggingUtil.HighlightTags(this);
+
+            WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.InspectedImageTags);
         }
 
         public bool Contains(TagModel tag) => _tags.Contains(tag);

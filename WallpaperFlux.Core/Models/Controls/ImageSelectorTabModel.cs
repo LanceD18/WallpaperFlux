@@ -19,12 +19,18 @@ namespace WallpaperFlux.Core.Models.Controls
             {
                 SetProperty(ref _selectedImage, value);
 
-                WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.SelectedImagePathText);
-                WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.SelectedImageDimensionsText);
-
-                if (value != null) // allows us to see what tags this image has if the TagView is open
+                // no need to do any of this if it's not the active tab (Which can cause freezes on large selections)
+                if (WallpaperFluxViewModel.Instance.SelectedImageSelectorTab == this)
                 {
-                    TaggingUtil.HighlightTags(value.Tags);
+                    WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.SelectedImage);
+                    WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.SelectedImagePathText);
+                    WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.SelectedImageDimensionsText);
+                    WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.InspectedImageTags);
+
+                    if (value != null) // allows us to see what tags this image has if the TagView is open
+                    {
+                        TaggingUtil.HighlightTags(value.Tags);
+                    }
                 }
             }
         }

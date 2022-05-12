@@ -12,11 +12,18 @@
              xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              xmlns:hc="https://handyorg.github.io/handycontrol"
              xmlns:viewModels="clr-namespace:WallpaperFlux.Core.ViewModels;assembly=WallpaperFlux.Core"
+             xmlns:system="clr-namespace:System;assembly=System.Runtime"
              mc:Ignorable="d" FontSize="12" FontFamily="Segoe UI"
              d:DesignHeight="450" d:DesignWidth="800"
              BorderBrush="{Binding WindowBorderBrushColor, Converter={StaticResource ColorToBrushConverter}, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
              BorderThickness="{Binding WindowBorderThickness, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
-             SizeChanged="TagView_OnSizeChanged_UpdateTagBoardWrapper">
+             SizeChanged="TagView_OnSizeChanged_UpdateTagBoardHeight">
+
+    <views:MvxWpfView.Resources>
+        <ResourceDictionary>
+            <system:Double x:Key="TagBoardWith">375</system:Double>
+        </ResourceDictionary>
+    </views:MvxWpfView.Resources>
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -52,8 +59,9 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Tags -->
-                    <GroupBox Width="375" Grid.Row="2" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:LayerExtension.Layer="2">
+                    <!-- Tags Selected -->
+                    <GroupBox Width="{StaticResource TagBoardWith}"
+                              Grid.Row="2" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:LayerExtension.Layer="2">
                         <!-- Header -->
                         <GroupBox.Header>
                             <Grid>
@@ -86,7 +94,7 @@
 
                         <!-- ListBox  -->
                         <ListBox ItemsSource="{Binding TagBoardTags}" SelectionMode="Extended" 
-                                 Height="{Binding TagBoardWrapHeight, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                                 Height="{Binding TagBoardHeight, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                                                  adonisExtensions:ScrollViewerExtension.HideScrollBarsUntilMouseOver="True"
                                                  adonisExtensions:ScrollViewerExtension.VerticalScrollBarPlacement="Overlay"
                                                  adonisExtensions:ScrollViewerExtension.VerticalScrollBarExpansionMode="ExpandOnHover"
@@ -95,7 +103,7 @@
                             <!-- Wrap Setup -->
                             <ListBox.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <WrapPanel IsItemsHost="True" Width="{Binding TagWrapWidth, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <WrapPanel IsItemsHost="True" Width="{StaticResource TagBoardWith}"/>
                                 </ItemsPanelTemplate>
                             </ListBox.ItemsPanel>
 

@@ -31,8 +31,9 @@ namespace WallpaperFlux.Core.Models
         [DataMember(Name = "Path")]
         public string Path { get; set; }
 
-        [JsonIgnore]
-        public string PathFolder => new FileInfo(Path).DirectoryName;
+        [JsonIgnore] public string PathName => new FileInfo(Path).Name;
+
+        [JsonIgnore] public string PathFolder => new FileInfo(Path).DirectoryName;
 
         [DataMember(Name = "Rank")]
         private int _rank;
