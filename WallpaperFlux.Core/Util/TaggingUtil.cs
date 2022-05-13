@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using WallpaperFlux.Core.Collections;
+using WallpaperFlux.Core.Models.Tagging;
 using WallpaperFlux.Core.ViewModels;
 
 namespace WallpaperFlux.Core.Util
@@ -38,12 +39,16 @@ namespace WallpaperFlux.Core.Util
 
         public static bool GetTagRemoverToggle() => InstanceExists() && TagViewModel.Instance.TagRemoverToggle;
 
+        public static bool GetTagLinkerToggle() => InstanceExists() && TagViewModel.Instance.TagLinkerToggle;
+
         public static void HighlightTags(TagCollection tags)
         {
-            if (InstanceExists())
-            {
-                TagViewModel.Instance.HighlightTags(tags);
-            }
+            if (InstanceExists()) TagViewModel.Instance.HighlightTags(tags.GetTags_HashSet());
+        }
+
+        public static void HighlightTags(HashSet<TagModel> tags)
+        {
+            if (InstanceExists()) TagViewModel.Instance.HighlightTags(tags);
         }
     }
 }

@@ -60,40 +60,35 @@ namespace WallpaperFlux.Core.ViewModels
 
         #endregion
 
-        #region Minor UI Settings
-        public double WindowBorderThickness => (TagAdderToggle || TagRemoverToggle) ? 5 : 0;
-        public Color WindowBorderBrushColor => TagAdderToggle ? Color.LimeGreen : Color.Red;
         #endregion
 
-        #endregion
 
-        #region Enablers
-
-        public bool CategoryIsSelected => SelectedCategory != null;
-
-        public bool CategoriesExist => Categories.Count > 0;
-
-        private bool _tagAdderToggle = false;
+        #region Filters
+        private bool _tagAdderToggle;
         public bool TagAdderToggle
         {
-            get => _tagAdderToggle; 
+            get => _tagAdderToggle;
             set
             {
                 SetProperty(ref _tagAdderToggle, value);
 
-                if (value == true)
+                if (value)
                 {
-                    TagRemoverToggle = false; // toggles off the opposing toggle, we don't want both of them active at the same time
+                    // toggles off the other toggles, we don't want both of them active at the same time
+                    TagRemoverToggle = false;
+                    TagLinkerToggle = false;
                     RaisePropertyChanged(() => TagRemoverToggle);
+                    RaisePropertyChanged(() => TagLinkerToggle);
                 }
 
                 RaisePropertyChanged(() => WindowBorderThickness);
                 RaisePropertyChanged(() => WindowBorderBrushColor);
                 RaisePropertyChanged(() => EditingTagsOfAnImage);
+                RaisePropertyChanged(() => EditingTagLinks);
             }
         }
 
-        private bool _tagRemoverToggle = false;
+        private bool _tagRemoverToggle;
 
         public bool TagRemoverToggle
         {
@@ -102,17 +97,87 @@ namespace WallpaperFlux.Core.ViewModels
             {
                 SetProperty(ref _tagRemoverToggle, value);
 
-                if (value == true)
+                if (value)
                 {
-                    TagAdderToggle = false; // toggles off the opposing toggle, we don't want both of them active at the same time
+                    // toggles off the other toggles, we don't want both of them active at the same time
+                    TagAdderToggle = false;
+                    TagLinkerToggle = false;
                     RaisePropertyChanged(() => TagAdderToggle);
+                    RaisePropertyChanged(() => TagLinkerToggle);
                 }
 
                 RaisePropertyChanged(() => WindowBorderThickness);
                 RaisePropertyChanged(() => WindowBorderBrushColor);
                 RaisePropertyChanged(() => EditingTagsOfAnImage);
+                RaisePropertyChanged(() => EditingTagLinks);
             }
         }
+
+        private bool _tagLinkerToggle;
+
+        public bool TagLinkerToggle
+        {
+            get => _tagLinkerToggle;
+            set
+            {
+                SetProperty(ref _tagLinkerToggle, value);
+
+                if (value)
+                {
+                    // toggles off the other toggles, we don't want both of them active at the same time
+                    TagAdderToggle = false;
+                    TagRemoverToggle = false;
+                    RaisePropertyChanged(() => TagAdderToggle);
+                    RaisePropertyChanged(() => TagRemoverToggle);
+
+                    if (TagLinkingSource != null)
+                    {
+                        TaggingUtil.HighlightTags(TagLinkingSource.ParentTags); // since the selected tag only changes when the tag-linker is off, we will highlight here
+                    }
+                }
+                else
+                {
+                    // the linking source will not be set to null on turning off the linker, so we'll just send in an empty HashSet instead to un-highlight everything
+                    TaggingUtil.HighlightTags(new HashSet<TagModel>());
+                }
+
+                RaisePropertyChanged(() => WindowBorderThickness);
+                RaisePropertyChanged(() => WindowBorderBrushColor);
+                RaisePropertyChanged(() => EditingTagsOfAnImage);
+                RaisePropertyChanged(() => EditingTagLinks);
+            }
+        }
+
+        public TagModel TagLinkingSource;
+
+        public string TagLinkingSourceName => TagLinkingSource?.Name;
+
+        public double WindowBorderThickness => (TagAdderToggle || TagRemoverToggle || TagLinkerToggle) ? 5 : 0;
+
+        public Color WindowBorderBrushColor
+        {
+            get
+            {
+                if (TagAdderToggle) return Color.LimeGreen;
+                if (TagRemoverToggle) return Color.Red;
+                if (TagLinkerToggle) return Color.Yellow;
+
+                return Color.Transparent;
+            }
+        }
+
+        public bool EditingTagsOfAnImage => TagAdderToggle || TagRemoverToggle;
+
+        public bool EditingTagLinks => TagLinkerToggle;
+
+        #endregion
+
+
+        #region Enablers
+
+        public bool CategoryIsSelected => SelectedCategory != null;
+
+        public bool CategoriesExist => Categories.Count > 0;
 
         private bool _tagboardToggle;
 
@@ -122,7 +187,7 @@ namespace WallpaperFlux.Core.ViewModels
             set => SetProperty(ref _tagboardToggle, value);
         }
 
-        public bool EditingTagsOfAnImage => TagAdderToggle || TagRemoverToggle;
+        public bool CanUseTagLinker => SelectedCategory?.SelectedTagTab?.SelectedTag != null;
 
         #endregion
 
@@ -145,7 +210,7 @@ namespace WallpaperFlux.Core.ViewModels
             CloseTagBoardCommand = new MvxCommand(() => TagboardToggle = false);
         }
 
-        public void HighlightTags(TagCollection tags)
+        public void HighlightTags(HashSet<TagModel> tags)
         {
             TagModel[] visibleTags = SelectedCategory.SelectedTagTab.GetAllItems();
             
@@ -159,7 +224,7 @@ namespace WallpaperFlux.Core.ViewModels
 
         public void ToggleTagBoard() => TagboardToggle = !TagboardToggle;
 
-        public void AddTagsToTagBoard(TagModel[] tags) //! Range actions { AddRange() } are not supported for observable collections so we must do this manually
+        public void AddTagsToTagBoard(TagModel[] tags) //! Range actions [ i.e., AddRange() ] are not supported for observable collections so we must do this manually
         {
             foreach (TagModel tag in tags)
             {

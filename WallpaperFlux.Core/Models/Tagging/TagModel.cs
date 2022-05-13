@@ -68,8 +68,11 @@ namespace WallpaperFlux.Core.Models.Tagging
             }
         }
 
-        public HashSet<Tuple<string, string>> ParentTags = new HashSet<Tuple<string, string>>();
-        public HashSet<Tuple<string, string>> ChildTags = new HashSet<Tuple<string, string>>();
+        //? Just create a TagModelJSON.cs that converts all of these into strings on saving the theme
+        [JsonIgnore] public HashSet<TagModel> ParentTags = new HashSet<TagModel>(); //? Will be converted to strings in TagModelJson.cs for saving purposes instead of saving the entire object
+        [JsonIgnore] public HashSet<TagModel> ChildTags = new HashSet<TagModel>(); //? Will be converted to strings in TagModelJson.cs for saving purposes instead of saving the entire object
+        //xpublic HashSet<Tuple<string, string>> ParentTags = new HashSet<Tuple<string, string>>();
+        //xpublic HashSet<Tuple<string, string>> ChildTags = new HashSet<Tuple<string, string>>();
 
         private string parentCategoryName;
         
@@ -91,7 +94,7 @@ namespace WallpaperFlux.Core.Models.Tagging
         }
 
         //? We are ignoring this since these should get implemented on loading in the images through their TagCollection
-        [JsonIgnore] public HashSet<ImageModel> LinkedImages = new HashSet<ImageModel>();
+        [JsonIgnore] public HashSet<ImageModel> LinkedImages = new HashSet<ImageModel>(); //? Will be converted to strings in TagModelJson.cs for saving purposes instead of saving the entire object
 
         #region UI Control
 
@@ -118,7 +121,7 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         [JsonIgnore] public IMvxCommand RemoveTagFromEntireImageGroupCommand { get; set; }
 
-        [JsonIgnore] public IMvxCommand TagInteractCommand { get; set; }
+        [JsonIgnore] public IMvxCommand TagInteractCommand { get; set; }  //? Handles functions such as Tag-Adding, Removing, & Linking
 
         [JsonIgnore] public IMvxCommand RemoveTagFromTagBoardCommand { get; set; }
 
@@ -133,7 +136,17 @@ namespace WallpaperFlux.Core.Models.Tagging
             RemoveTagFromSelectedImageCommand = new MvxCommand(() => RemoveTagFromSelectedImages(new[] { WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.SelectedImage } ));
             RemoveTagFromSelectedImagesCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems()));
             RemoveTagFromEntireImageGroupCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllItems()));
-            TagInteractCommand = new MvxCommand( () => InteractWithTag(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems()));
+            TagInteractCommand = new MvxCommand( () =>
+            {
+                ImageModel[] selectedImages = null;
+
+                if (TaggingUtil.GetTagAdderToggle() || TaggingUtil.GetTagRemoverToggle()) // no need to grab the images if we aren't adding/removing tags from one
+                {
+                    selectedImages = WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems();
+                }
+
+                InteractWithTag(selectedImages);
+            });
             RemoveTagFromTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.RemoveTagFromTagBoard(this));
         }
 
@@ -151,6 +164,22 @@ namespace WallpaperFlux.Core.Models.Tagging
         {
             Debug.WriteLine("Find an efficient way to get the number of images linked to a tag without having multiple references like in the previous TagData vs ImageData");
             return 0;
+        }
+
+        public void LinkTag(TagModel tag)
+        {
+            if (tag == this) return; // can't link a tag to itself
+
+            if (!ParentTags.Contains(tag))
+            {
+                ParentTags.Add(tag);
+            }
+            else
+            {
+                ParentTags.Remove(tag);
+            }
+
+            TaggingUtil.HighlightTags(ParentTags);
         }
 
         #region Command Methods
@@ -175,6 +204,11 @@ namespace WallpaperFlux.Core.Models.Tagging
             if (TaggingUtil.GetTagRemoverToggle())
             {
                 foreach (ImageModel image in images) image.RemoveTag(this);
+            }
+
+            if (TaggingUtil.GetTagLinkerToggle())
+            {
+                TagViewModel.Instance.TagLinkingSource.LinkTag(this);
             }
         }
 

@@ -19,7 +19,7 @@ namespace WallpaperFlux.Core.Models.Controls
             {
                 SetProperty(ref _selectedImage, value);
 
-                // no need to do any of this if it's not the active tab (Which can cause freezes on large selections)
+                // no need to do any of this if it's not the active tab (Which can cause delays on large selections)
                 if (WallpaperFluxViewModel.Instance.SelectedImageSelectorTab == this)
                 {
                     WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.SelectedImage);

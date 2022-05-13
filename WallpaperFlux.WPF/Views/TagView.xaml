@@ -154,6 +154,13 @@
                         While this toggle is active every tag you click will be removed from the selected image. The tags of the selected image will be highlighted
                     </MenuItem.ToolTip>
                 </MenuItem>
+                <MenuItem Header="Toggle Tag-Linker" IsCheckable="True"
+                          IsChecked="{Binding TagLinkerToggle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                          IsEnabled="{Binding CanUseTagLinker, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
+                    <MenuItem.ToolTip>
+                        While this toggle is active every tag you click will be linked to the selected tag. The already linked tags will be highlighted
+                    </MenuItem.ToolTip>
+                </MenuItem>
             </MenuItem>
 
             <!-- Settings -->
@@ -203,6 +210,15 @@
                         <TextBlock.Style>
                             <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
                         </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Margin="0 5 0 5"
+                               Visibility="{Binding EditingTagLinks, Converter={StaticResource BooleanToVisibilityConverter}}"
+                               Foreground="{Binding WindowBorderBrushColor, Converter={StaticResource ColorToBrushConverter}, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
+                        <TextBlock.Style>
+                            <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
+                        </TextBlock.Style>
+                        <Run Text="Editing linked tags of the tag: "/>
+                        <Run Text="{Binding TagLinkingSourceName, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
                     </TextBlock>
                 </StackPanel>
             </GroupBox.Header>
@@ -327,7 +343,7 @@
                                 <TabControl.ContentTemplate>
                                     <DataTemplate DataType="controls:TagTabModel">
                                         <!--? Keep the option to scroll since we're still allowing the window to be resized -->
-                                        <ListBox ItemsSource="{Binding Items}" SelectionMode="Extended"
+                                        <ListBox ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedTag}" SelectionMode="Extended"
                                                  Height="{Binding TagWrapHeight, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
                                                  adonisExtensions:ScrollViewerExtension.HideScrollBarsUntilMouseOver="True"
                                                  adonisExtensions:ScrollViewerExtension.VerticalScrollBarPlacement="Overlay"
@@ -406,7 +422,7 @@
                                                                     </MenuItem>
                                                                 </MenuItem>
                                                                 <MenuItem Header="Tag Linking">
-                                                                    <MenuItem Header="Link to Tag"/>
+                                                                    <MenuItem Header="Link to Tag" Command="{Binding LinkTagCommand}"/>
                                                                     <MenuItem Header="Show Parent Tags"/>
                                                                     <MenuItem Header="Show Child Tags"/>
                                                                 </MenuItem>

@@ -47,6 +47,8 @@ namespace WallpaperFlux.Core.Collections
 
         public TagModel[] GetTags() => _tags.ToArray();
 
+        public HashSet<TagModel> GetTags_HashSet() => _tags;
+
         // for use with the JSON
         public string[] GetTagsString() => _tags.Select(f => f.Name).ToArray();
     }
