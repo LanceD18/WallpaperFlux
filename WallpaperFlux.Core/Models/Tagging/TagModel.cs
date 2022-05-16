@@ -107,6 +107,24 @@ namespace WallpaperFlux.Core.Models.Tagging
             set => SetProperty(ref _isHighlighted, value);
         }
 
+        //? Similar to IsHighlighted but exists to choose a different color
+        private bool _isHighlightedParent;
+        [JsonIgnore]
+        public bool IsHighlightedParent
+        {
+            get => _isHighlightedParent;
+            set => SetProperty(ref _isHighlightedParent, value);
+        }
+
+        //? Similar to IsHighlighted but exists to choose a different color
+        private bool _isHighlightedChild;
+        [JsonIgnore]
+        public bool IsHighlightedChild
+        {
+            get => _isHighlightedChild;
+            set => SetProperty(ref _isHighlightedChild, value);
+        }
+
         #endregion
 
         #region Commands
@@ -170,16 +188,35 @@ namespace WallpaperFlux.Core.Models.Tagging
         {
             if (tag == this) return; // can't link a tag to itself
 
-            if (!ParentTags.Contains(tag))
+            if (!ChildTags.Contains(tag)) // can't make a child tag of this tag also its parent tag, would cause looping errors and just not make sense
             {
-                ParentTags.Add(tag);
+                if (!ParentTags.Contains(tag))
+                {
+                    ParentTags.Add(tag);
+                    tag.ChildTags.Add(this); // when becoming the parent tag of another tag we must also become its child tag
+                }
+                else // a simple toggle to also remove the parent/child reference of this tag when attempting to link again
+                {
+                    ParentTags.Remove(tag);
+                    tag.ChildTags.Remove(this);
+                }
+                
+                TaggingUtil.HighlightTags(ParentChildTagsUnionWithSelf());
             }
-            else
-            {
-                ParentTags.Remove(tag);
-            }
+        }
 
-            TaggingUtil.HighlightTags(ParentTags);
+        public HashSet<TagModel> ParentChildTagsUnion()
+        {
+            HashSet<TagModel> parentChildTags = new HashSet<TagModel>(ParentTags);
+            parentChildTags.UnionWith(ChildTags);
+            return parentChildTags;
+        }
+
+        public HashSet<TagModel> ParentChildTagsUnionWithSelf()
+        {
+            HashSet<TagModel> parentChildTags = ParentChildTagsUnion();
+            parentChildTags.Add(this);
+            return parentChildTags;
         }
 
         #region Command Methods

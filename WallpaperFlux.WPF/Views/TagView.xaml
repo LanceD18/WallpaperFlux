@@ -385,9 +385,39 @@
                                                             <TextBlock.Style>
                                                                 <Style TargetType="TextBlock">
                                                                     <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding IsHighlighted, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Value="True">
-                                                                            <Setter Property="Foreground" Value="LimeGreen"/>
-                                                                        </DataTrigger>
+                                                                        <!-- Normal Tag Highlight -->
+                                                                        <MultiDataTrigger>
+                                                                            <MultiDataTrigger.Conditions>
+                                                                                <Condition Binding="{Binding IsHighlighted, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="True"/>
+                                                                                <Condition Binding="{Binding IsHighlightedParent, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="False"/>
+                                                                                <Condition Binding="{Binding IsHighlightedChild, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="False"/>
+                                                                            </MultiDataTrigger.Conditions>
+                                                                            <MultiDataTrigger.Setters>
+                                                                                <Setter Property="Foreground" Value="LimeGreen"/>
+                                                                            </MultiDataTrigger.Setters>
+                                                                        </MultiDataTrigger>
+                                                                        <!-- Parent Tag Highlight -->
+                                                                        <MultiDataTrigger>
+                                                                            <MultiDataTrigger.Conditions>
+                                                                                <Condition Binding="{Binding IsHighlighted, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="True"/>
+                                                                                <Condition Binding="{Binding IsHighlightedParent, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="True"/>
+                                                                                <Condition Binding="{Binding IsHighlightedChild, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="False"/>
+                                                                            </MultiDataTrigger.Conditions>
+                                                                            <MultiDataTrigger.Setters>
+                                                                                <Setter Property="Foreground" Value="Yellow"/>
+                                                                            </MultiDataTrigger.Setters>
+                                                                        </MultiDataTrigger>
+                                                                        <!-- Child Tag Highlight -->
+                                                                        <MultiDataTrigger>
+                                                                            <MultiDataTrigger.Conditions>
+                                                                                <Condition Binding="{Binding IsHighlighted, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="True"/>
+                                                                                <Condition Binding="{Binding IsHighlightedParent, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="False"/>
+                                                                                <Condition Binding="{Binding IsHighlightedChild, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="True"/>
+                                                                            </MultiDataTrigger.Conditions>
+                                                                            <MultiDataTrigger.Setters>
+                                                                                <Setter Property="Foreground" Value="Blue"/>
+                                                                            </MultiDataTrigger.Setters>
+                                                                        </MultiDataTrigger>
                                                                     </Style.Triggers>
                                                                 </Style>
                                                             </TextBlock.Style>

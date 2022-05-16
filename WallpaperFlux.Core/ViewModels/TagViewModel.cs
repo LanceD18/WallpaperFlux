@@ -62,7 +62,6 @@ namespace WallpaperFlux.Core.ViewModels
 
         #endregion
 
-
         #region Filters
         private bool _tagAdderToggle;
         public bool TagAdderToggle
@@ -132,7 +131,7 @@ namespace WallpaperFlux.Core.ViewModels
 
                     if (TagLinkingSource != null)
                     {
-                        TaggingUtil.HighlightTags(TagLinkingSource.ParentTags); // since the selected tag only changes when the tag-linker is off, we will highlight here
+                        TaggingUtil.HighlightTags(TagLinkingSource.ParentChildTagsUnionWithSelf()); // since the selected tag only changes when the tag-linker is off, we will highlight here
                     }
                 }
                 else
@@ -171,7 +170,6 @@ namespace WallpaperFlux.Core.ViewModels
         public bool EditingTagLinks => TagLinkerToggle;
 
         #endregion
-
 
         #region Enablers
 
@@ -217,6 +215,8 @@ namespace WallpaperFlux.Core.ViewModels
             foreach (TagModel tag in visibleTags)
             {
                 tag.IsHighlighted = tags.Contains(tag);
+                tag.IsHighlightedParent = TagLinkingSource.ParentTags.Contains(tag);
+                tag.IsHighlightedChild = TagLinkingSource.ChildTags.Contains(tag);
             }
         }
 
