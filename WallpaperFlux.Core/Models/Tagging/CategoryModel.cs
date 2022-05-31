@@ -144,6 +144,10 @@ namespace WallpaperFlux.Core.Models.Tagging
             get => _selectedTagTab;
             set
             {
+                //! Workaround to the EnsureSingularSelection() methods from WPF ControlUtil ; ideally we'd look for a less brute force solution
+                SelectedTagTab?.DeselectAllItems(); //? this is the previously selected tab as we are calling this before the value is set
+                //! Workaround to the EnsureSingularSelection() methods from WPF ControlUtil ; ideally we'd look for a less brute force solution
+
                 SetProperty(ref _selectedTagTab, value);
                 VerifyVisibleTags();
             }
@@ -168,9 +172,11 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         #endregion
 
-        public CategoryModel(string name)
+        public CategoryModel(string name, bool useForNaming = true, bool enabled = true)
         {
             Name = name;
+            UseForNaming = useForNaming;
+            Enabled = enabled;
 
             ToggleSortByNameCommand = new MvxCommand(() => ToggleSortOption(TagSortType.Name));
             ToggleSortByCountCommand = new MvxCommand(() => ToggleSortOption(TagSortType.Count));
@@ -179,9 +185,16 @@ namespace WallpaperFlux.Core.Models.Tagging
             ClearTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.ClearTagBoardTags());
         }
 
-        public void AddTag(string newTag) => AddTagRange(new string[] {newTag});
+        #region Tag Control
 
-        public void AddTagRange(string[] newTags)
+        public TagModel AddTag(string tagName, bool useForNaming = true, bool enabled = true)
+        {
+            TagModel tag = new TagModel(tagName, useForNaming, enabled);
+            AddTag(tag);
+            return tag;
+        }
+
+        public TagModel[] AddTagRange(string[] newTags)
         {
             List<TagModel> tags = new List<TagModel>();
             foreach (string tag in newTags)
@@ -189,7 +202,9 @@ namespace WallpaperFlux.Core.Models.Tagging
                 tags.Add(new TagModel(tag));
             }
 
-            AddTagRange(tags.ToArray());
+            TagModel[] tagArray = tags.ToArray();
+            AddTagRange(tagArray);
+            return tagArray;
         }
 
         public void AddTag(TagModel newTag) => AddTagRange(new TagModel[] { newTag });
@@ -204,6 +219,56 @@ namespace WallpaperFlux.Core.Models.Tagging
             VerifyTagTabs(); //? Required for the addition and sorting to be visible right-away. All AddTag() methods should trace back to this method
         }
 
+        public bool ContainsTag(string tagName) => GetTag(tagName) != null;
+
+        public TagModel GetTag(string tagName)
+        {
+            foreach (TagModel tag in Tags)
+            {
+                if (tag.Name == tagName) return tag;
+            }
+
+            return null;
+        }
+
+        public HashSet<TagModel> GetTags() => Tags;
+
+        /// <summary>
+        /// Ensures that the tag with the given name exists and returns it
+        /// </summary>
+        /// <param name="tagName"></param>
+        /// <param name="useForNaming"></param>
+        /// <param name="enabled"></param>
+        /// <returns></returns>
+        public TagModel VerifyTag(string tagName, bool useForNaming = true, bool enabled = true)
+        {
+            if (!ContainsTag(tagName))
+            {
+                Debug.WriteLine("Tag " + tagName + " is missing, adding");
+                // tag is missing, add it
+                return AddTag(tagName, useForNaming, enabled);
+            }
+            else
+            {
+                TagModel tag = GetTag(tagName);
+
+                //? In the context that this method is being used, in some cases the category will be added before these values are
+                //? set (A tag is found as a parent to another tag first), but it will eventually reach this point
+                tag.UseForNaming = useForNaming;
+                tag.Enabled = enabled;
+
+                return tag;
+            }
+        }
+        #endregion
+
+        #region Tag Tab Contol
+
+        public TagModel[] GetSelectedTags() => Tags.Where((f) => f.IsSelected).ToArray();
+
+        /// <summary>
+        /// verifies the number of pages, tag sorting, and what tags are visible based on the given search
+        /// </summary>
         public void VerifyTagTabs()
         {
             SortTags();
@@ -242,7 +307,10 @@ namespace WallpaperFlux.Core.Models.Tagging
 
             VerifyVisibleTags();
         }
-
+        
+        /// <summary>
+        /// verifies what tags are visible based on the given search
+        /// </summary>
         public void VerifyVisibleTags()
         {
             if (SelectedTagTab == null)
@@ -276,7 +344,31 @@ namespace WallpaperFlux.Core.Models.Tagging
             SelectedTagTab.Items.SwitchTo(pageTags);
         }
 
-        public TagModel[] GetSelectedTags() => Tags.Where((f) => f.IsSelected).ToArray();
+        public void SortTags()
+        {
+            // Sort
+            IEnumerable<TagModel> sortedItems = string.IsNullOrEmpty(SearchFilter)
+                ? Tags.ToArray()
+                : _filteredTags.ToArray();
+
+            switch (ActiveSortType)
+            {
+                case TagSortType.Name:
+                    sortedItems = SortByNameDirection
+                        ? (from f in Tags orderby f.Name select f) // ascending
+                        : (from f in Tags orderby f.Name descending select f);
+                    break;
+
+                case TagSortType.Count:
+                    sortedItems = SortByCountDirection
+                        ? (from f in Tags orderby f.GetLinkedImageCount() select f) // ascending
+                        : (from f in Tags orderby f.GetLinkedImageCount() descending select f);
+                    break;
+            }
+
+            _sortedTags = sortedItems.ToArray();
+        }
+        #endregion
 
         #region Command Methods
 
@@ -304,33 +396,8 @@ namespace WallpaperFlux.Core.Models.Tagging
             VerifyTagTabs();
         }
 
-        public void SortTags()
-        {
-            // Sort
-            IEnumerable<TagModel> sortedItems = string.IsNullOrEmpty(SearchFilter)
-                ? Tags.ToArray()
-                : _filteredTags.ToArray();
-
-            switch (ActiveSortType)
-            {
-                case TagSortType.Name:
-                    sortedItems = SortByNameDirection
-                        ? (from f in Tags orderby f.Name select f) // ascending
-                        : (from f in Tags orderby f.Name descending select f);
-                    break;
-
-                case TagSortType.Count:
-                    sortedItems = SortByCountDirection
-                        ? (from f in Tags orderby f.GetLinkedImageCount() select f) // ascending
-                        : (from f in Tags orderby f.GetLinkedImageCount() descending select f);
-                    break;
-            }
-
-            _sortedTags = sortedItems.ToArray();
-        }
-
         #endregion
-        
+
         // ----- Operators -----
         public static bool operator ==(CategoryModel category1, CategoryModel category2)
         {

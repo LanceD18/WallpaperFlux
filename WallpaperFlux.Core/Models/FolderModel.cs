@@ -45,8 +45,11 @@ namespace WallpaperFlux.Core.Models
 
         public FolderModel(string path, bool active)
         {
-            //? internally adds the images to the model
+            if (!Directory.Exists(path)) throw new DirectoryNotFoundException(); // ! Handle this outside of this constructor!
+
+            //? internally adds the images to the model (see setter)
             Path = path;
+
             //! this will internally validate the image folder so this must be placed after the images are added
             Active = active;
 

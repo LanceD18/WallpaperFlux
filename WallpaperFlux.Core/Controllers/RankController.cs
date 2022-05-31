@@ -152,15 +152,8 @@ namespace WallpaperFlux.Core.Controllers
             }
             else // Update RankData, giving it a new size and adjusting the existing images accordingly
             {
-                MessageBoxModel messageBox = new MessageBoxModel
-                {
-                    Text = "Are you sure you want to change the max rank? \n(All images will have their ranks adjusted in proportion to this change)",
-                    Caption = "Choose an option",
-                    Icon = MessageBoxImage.Question,
-                    Buttons = MessageBoxButtons.YesNo()
-                };
-
-                if (MessageBox.Show(messageBox) == MessageBoxResult.Yes)
+                if (!JsonUtil.IsLoadingData && 
+                    MessageBoxUtil.PromptYesNo("Are you sure you want to change the max rank? \n(All images will have their ranks adjusted in proportion to this change)"))
                 {
                     UpdateMaxRank(maxRank);
                     rankWasUpdated = true;
@@ -208,6 +201,8 @@ namespace WallpaperFlux.Core.Controllers
                 {
                     for (int i = oldRankMax; i < newMaxRank; i++)
                     {
+                        if (JsonUtil.IsLoadingData) Debug.WriteLine("ERROR: This is unnecessary processing that should be avoided, especially for larger themes, under UpdateMaxRank()");
+
                         RankData[imageType].Add(new ReactiveList<string>());
                         Debug.WriteLine(i + " | " + imageType);
                     }

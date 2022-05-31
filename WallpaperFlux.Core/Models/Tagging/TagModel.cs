@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using LanceTools;
 using MvvmCross.Commands;
 using MvvmCross.ViewModels;
 using Newtonsoft.Json;
@@ -74,11 +75,12 @@ namespace WallpaperFlux.Core.Models.Tagging
         //xpublic HashSet<Tuple<string, string>> ParentTags = new HashSet<Tuple<string, string>>();
         //xpublic HashSet<Tuple<string, string>> ChildTags = new HashSet<Tuple<string, string>>();
 
-        private string parentCategoryName;
+        private string _parentCategoryName;
         
+        [JsonIgnore]
         public string ParentCategoryName
         {
-            get => parentCategoryName;
+            get => _parentCategoryName;
 
             set
             {
@@ -89,7 +91,7 @@ namespace WallpaperFlux.Core.Models.Tagging
                 }
                 */
 
-                parentCategoryName = value;
+                _parentCategoryName = value;
             }
         }
 
@@ -145,16 +147,19 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         #endregion
 
-        public TagModel(string name)
+        public TagModel(string name, bool useForNaming = true, bool enabled = true)
         {
             Name = name;
+            UseForNaming = true;
+            Enabled = true;
 
-            AddTagToSelectedImagesCommand = new MvxCommand(() => AddTagToSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems()));
-            AddTagToEntireImageGroupCommand = new MvxCommand(() => AddTagToSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllItems()));
-            RemoveTagFromSelectedImageCommand = new MvxCommand(() => RemoveTagFromSelectedImages(new[] { WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.SelectedImage } ));
-            RemoveTagFromSelectedImagesCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems()));
-            RemoveTagFromEntireImageGroupCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllItems()));
-            TagInteractCommand = new MvxCommand( () =>
+            AddTagToSelectedImagesCommand = new MvxCommand(() => AddTagToSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems(), false));
+            AddTagToEntireImageGroupCommand = new MvxCommand(() => AddTagToSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllItems(), true));
+            RemoveTagFromSelectedImageCommand = new MvxCommand(() => RemoveTagFromSelectedImages(new[] { WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.SelectedImage }, false));
+            RemoveTagFromSelectedImagesCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems(), false));
+            RemoveTagFromEntireImageGroupCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllItems(), true));
+
+            TagInteractCommand = new MvxCommand(() =>
             {
                 ImageModel[] selectedImages = null;
 
@@ -165,18 +170,13 @@ namespace WallpaperFlux.Core.Models.Tagging
 
                 InteractWithTag(selectedImages);
             });
+
             RemoveTagFromTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.RemoveTagFromTagBoard(this));
         }
 
-        public void LinkImage(TagCollection tagLinker)
-        {
-            LinkedImages.Add(tagLinker.ParentImage);
-        }
+        public void LinkImage(ImageTagCollection imageTags) => LinkedImages.Add(imageTags.ParentImage);
 
-        public void UnlinkImage(TagCollection tagLinker)
-        {
-            LinkedImages.Remove(tagLinker.ParentImage);
-        }
+        public void UnlinkImage(ImageTagCollection imageTags) => LinkedImages.Remove(imageTags.ParentImage);
 
         public int GetLinkedImageCount()
         {
@@ -201,7 +201,7 @@ namespace WallpaperFlux.Core.Models.Tagging
                     tag.ChildTags.Remove(this);
                 }
                 
-                TaggingUtil.HighlightTags(ParentChildTagsUnionWithSelf());
+                TaggingUtil.HighlightTags(ParentChildTagsUnion_IncludeSelf());
             }
         }
 
@@ -212,7 +212,7 @@ namespace WallpaperFlux.Core.Models.Tagging
             return parentChildTags;
         }
 
-        public HashSet<TagModel> ParentChildTagsUnionWithSelf()
+        public HashSet<TagModel> ParentChildTagsUnion_IncludeSelf()
         {
             HashSet<TagModel> parentChildTags = ParentChildTagsUnion();
             parentChildTags.Add(this);
@@ -221,13 +221,17 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         #region Command Methods
 
-        public void AddTagToSelectedImages(ImageModel[] images)
+        public void AddTagToSelectedImages(ImageModel[] images, bool promptUser)
         {
+            if (promptUser) MessageBoxUtil.PromptYesNo("Are you sure you want to add the tag [" + Name + "] to " + images.Length + " image(s)?");
+
             foreach (ImageModel image in images) image.AddTag(this);
         }
 
-        public void RemoveTagFromSelectedImages(ImageModel[] images)
+        public void RemoveTagFromSelectedImages(ImageModel[] images, bool promptUser)
         {
+            if (promptUser) MessageBoxUtil.PromptYesNo("Are you sure you want to remove the tag [" + Name + "] from " + images.Length + " image(s)?");
+
             foreach (ImageModel image in images) image.RemoveTag(this);
         }
 

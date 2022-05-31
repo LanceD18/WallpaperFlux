@@ -5,7 +5,6 @@ using Newtonsoft.Json;
 
 namespace WallpaperFlux.Core.JSON.Temp
 {
-
     public class TempCategoryData
     {
         private string name;
@@ -99,13 +98,11 @@ namespace WallpaperFlux.Core.JSON.Temp
         public TempCategoryData(string name, HashSet<TempTagData> tags = null, bool enabled = true, bool useForNaming = true)
         {
             Tags = tags ?? new HashSet<TempTagData>(); //! must be placed first to avoid getter setter errors (ex: enabled's setter)
-
-            /*x
+            
             Name = name;
             Enabled = enabled;
             UseForNaming = useForNaming;
             Initialized = false;
-            */
         }
 
         /*x

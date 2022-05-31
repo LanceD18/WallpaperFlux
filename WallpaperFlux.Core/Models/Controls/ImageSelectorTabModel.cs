@@ -62,7 +62,6 @@ namespace WallpaperFlux.Core.Models.Controls
         {
             if (SelectedImage != null) // if this is null, then no images have been selected here so we have no need to deselect
             {
-                Debug.WriteLine("Hello yes hi");
                 foreach (ImageModel image in Items)
                 {
                     image.IsSelected = false;

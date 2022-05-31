@@ -86,7 +86,7 @@ namespace WallpaperFlux.Core.Models
         }
         */
 
-        [DataMember(Name = "Tags")] public TagCollection Tags;
+        [DataMember(Name = "Tags")] public ImageTagCollection Tags;
 
         [DataMember(Name = "Image Type")] public ImageType ImageType { get; set; }
 
@@ -170,7 +170,7 @@ namespace WallpaperFlux.Core.Models
 
         #endregion
 
-        public ImageModel(string path, int rank = 0, TagCollection tags = null)
+        public ImageModel(string path, int rank = 0, ImageTagCollection tags = null)
         {
             Path = path;
 
@@ -182,7 +182,7 @@ namespace WallpaperFlux.Core.Models
 
             Rank = rank;
 
-            Tags = tags ?? new TagCollection(this); // create a new tag collection if the given one is null
+            Tags = tags ?? new ImageTagCollection(this); // create a new tag collection if the given one is null
 
             OnIsSelectedChanged += (value) =>
             {

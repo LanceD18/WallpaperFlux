@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
@@ -14,6 +15,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Xml;
 using AdonisUI.Controls;
+using HandyControl.Controls;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Microsoft.WindowsAPICodePack.Shell.PropertySystem;
 using MvvmCross;
@@ -22,6 +24,7 @@ using MvvmCross.Commands;
 using MvvmCross.Core;
 using MvvmCross.Navigation;
 using MvvmCross.ViewModels;
+using WallpaperFlux.Core.Collections;
 using WallpaperFlux.Core.External;
 using WallpaperFlux.Core.JSON.Temp;
 using WallpaperFlux.Core.Models;
@@ -29,6 +32,7 @@ using WallpaperFlux.Core.Models.Controls;
 using WallpaperFlux.Core.Models.Tagging;
 using WallpaperFlux.Core.Models.Theme;
 using WallpaperFlux.Core.Util;
+using MessageBox = AdonisUI.Controls.MessageBox;
 
 namespace WallpaperFlux.Core.ViewModels
 {
@@ -249,14 +253,6 @@ namespace WallpaperFlux.Core.ViewModels
             }).ConfigureAwait(false);
         }
 
-        // updates some properties that may change during runtime but shouldn't be processed constantly
-        // TODO This should be attached to the eventual Update Theme/Quick Save Button
-        public void UpdateTheme()
-        {
-            Debug.WriteLine("Updating theme...");
-            Theme.Settings.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence();
-        }
-
         #region Commands
         //-----Commands-----
         
@@ -387,55 +383,264 @@ namespace WallpaperFlux.Core.ViewModels
         #endregion
 
         #region Theme Data
+
+        // updates some properties that may change during runtime but shouldn't be processed constantly
+        // TODO This should be attached to the eventual Update Theme/Quick Save Button
+        public void UpdateTheme()
+        {
+            Debug.WriteLine("Updating theme...");
+            Theme.Settings.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence();
+        }
+
         public void LoadTheme()
         {
             using (CommonOpenFileDialog dialog = new CommonOpenFileDialog())
             {
-                //dialog.InitialDirectory = lastSelectedPath;
+                //x dialog.InitialDirectory = lastSelectedPath;
                 dialog.Multiselect = false;
                 dialog.Title = "Select a theme";
                 dialog.Filters.Add(new CommonFileDialogFilter(JsonUtil.JSON_FILE_DISPLAY_NAME, JsonUtil.JSON_FILE_EXTENSION));
 
                 if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
                 {
-                    ProcessTheme(JsonUtil.LoadData(dialog.FileName));
+                    JsonUtil.IsLoadingData = true;
+                    ConvertOldTheme(JsonUtil.LoadData(dialog.FileName));
+                    JsonUtil.IsLoadingData = false;
                 }
             }
         }
 
-        private void ProcessTheme(TemporaryJsonWallpaperData wallpaperData)
+        public void SaveTheme()
         {
+            //! Do NOT save Child Tags! Those are handled on their own whenever the Parent Tag is linked!
+
+        }
+
+        // TODO Consider moving this to JsonUtil or its own class (i.e., DataConverter.cs) [JsonUtil will do just fine though and well, serve its purpose]
+        // TODO Consider moving this to JsonUtil or its own class (i.e., DataConverter.cs) [JsonUtil will do just fine though and well, serve its purpose]
+        // TODO Consider moving this to JsonUtil or its own class (i.e., DataConverter.cs) [JsonUtil will do just fine though and well, serve its purpose]
+        // TODO Consider moving this to JsonUtil or its own class (i.e., DataConverter.cs) [JsonUtil will do just fine though and well, serve its purpose]
+        // TODO Consider moving this to JsonUtil or its own class (i.e., DataConverter.cs) [JsonUtil will do just fine though and well, serve its purpose]
+        #region JSON Conversion
+
+        private void ConvertTheme( /*JsonWallpaperData wallpaperData*/)
+        {
+            #region Convert Tags
+            //! You will use SimplifiedTag here instead of a Tuple<string, string>
+            #endregion
+
+            #region Convert Images
+            //! The Dictionary<string, HashSet<string>> from ConvertOldImagesAndFolders should be converted to SimplifiedTagCollection
+            #endregion
+
+            #region Reference Me Later
+            /*
+
+            //! Do NOT turn the regions here into methods, they are only called once and should only be called right after each other!!!
+            //! Do NOT turn the regions here into methods, they are only called once and should only be called right after each other!!!
+            //! Do NOT turn the regions here into methods, they are only called once and should only be called right after each other!!!
+            //! Do NOT turn the regions here into methods, they are only called once and should only be called right after each other!!!
+            //? A local method might be okay but still doesn't enforce singular 'calls' (Unless you want to introduce additional boolean variables)
+
             Theme.RankController.SetMaxRank(wallpaperData.miscData.maxRank); //! This needs to be done before any images are added
 
+            #region Convert Theme Options
+            Debug.WriteLine("Converting Theme Options...");
             // TODO wallpaperData.themeOptions;
+            #endregion
 
+            #region Convert Misc
+            Debug.WriteLine("Converting Misc...");
             // TODO wallpaperData.miscData;
+            #endregion
 
-            ProcessImagesAndFolders(wallpaperData);
-        }
+            #region Convert Tags
+            Debug.WriteLine("Converting Tags...");
+            // ----- Add Categories -----
+            foreach (TempCategoryData tempCat in wallpaperData.tagData)
+            {
+                Debug.WriteLine("Temp Cat Name: "  + tempCat.Name);
+                // verify category before adding tags
+                                                // TODO Consider converting the data held up by the TagViewModel Instance into another subset of ThemeModel
+                CategoryModel instanceCategory = TaggingUtil.VerifyCategory(tempCat.Name, tempCat.UseForNaming, tempCat.Enabled);
 
-        private void ProcessThemeOptions(TemporaryJsonWallpaperData wallpaperData)
-        {
+                // ----- Add Tags (of this Category) -----
+                foreach (TempTagData tempTag in tempCat.Tags)
+                {
+                    // verify tag before adding
+                    TagModel instanceTag = instanceCategory.VerifyTag(tempTag.Name, tempTag.UseForNaming, tempTag.Enabled);
 
-        }
+                    // ----- Add Parent Tags (of this Tag) -----
+                    foreach (Tuple<string, string> parentInfo in tempTag.ParentTags)
+                    {
+                        //? This Tuple should be replace with SimplifiedTag in the official conversion
+                        string parentCategoryName = parentInfo.Item1;
+                        string parentName = parentInfo.Item2;
 
-        private void ProcessMiscData(TemporaryJsonWallpaperData wallpaperData)
-        {
+                        //! Keep in mind that this tackles both Parent and Child tags, no need to loop through the Child Tag list as well
+                        //! (There's no way to directly add child tags anyways)
+                        instanceTag.LinkTag(TaggingUtil.VerifyCategory(parentCategoryName).VerifyTag(parentName));
+                    }
 
-        }
+                    Debug.WriteLine("Adding Tag: " + instanceTag.Name);
+                    instanceCategory.AddTag(instanceTag);
+                }
 
-        private void ProcessImagesAndFolders(TemporaryJsonWallpaperData wallpaperData)
-        {
-            //! Placing this after AddFolderRange() will *significantly* increase load times as the images are attempted to be added multiple times
+                Debug.WriteLine("Adding Category: " + instanceCategory.Name + "\n\n\n");
+                TaggingUtil.AddCategory(instanceCategory);
+            }
+            #endregion
+
+            #region Convert Images & Folders
+            Debug.WriteLine("Converting Images...");
+            //! Placing this after AddFolderRange() will *significantly* increase load times as the images will attempt to be added multiple times
             // TODO Even with the above statement, this still takes a considerable amount of time to load
             // TODO Some of the lag may have to do with the conversions, it'll likely be a bit better once TempImageData is no longer needed
             foreach (TempImageData imageData in wallpaperData.imageData)
             {
-                DataUtil.Theme.Images.AddImage(new ImageModel(imageData.Path, imageData.Rank));
+                ImageModel image = new ImageModel(imageData.Path, imageData.Rank);
+
+                ImageTagCollection tags = new ImageTagCollection(image);
+
+                foreach (string categoryName in imageData.Tags.Keys)
+                {
+                    //? We will not be verifying anything here, that was done in the Convert Tag section. If it doesn't exist, it will not be added (Instead of crashing)
+                    CategoryModel category = TaggingUtil.GetCategory(categoryName);
+
+                    if (category == null)
+                    {
+                        Debug.WriteLine("Category [" + categoryName + "] was referenced while converting images but was not found while converting tags, dropping");
+                        continue;
+                    }
+
+                    foreach (string tagName in imageData.Tags[categoryName])
+                    {
+                        TagModel tag = category.GetTag(tagName);
+
+                        if (tag == null)
+                        {
+                            Debug.WriteLine("Tag [" + tagName + "] was referenced while converting images but was not found while converting tags, dropping");
+                            continue;
+                        }
+
+                        tags.Add(tag);
+                    }
+                }
+
+                DataUtil.Theme.Images.AddImage(image);
             }
 
+            //! Folders need to be added after images are added so that they don't have to be verified twice
             AddFolderRange(wallpaperData.imageFolders.Keys.ToArray());
+            #endregion
+
+            */
+            #endregion
         }
+
+        private void ConvertOldTheme(TemporaryJsonWallpaperData wallpaperData)
+        {
+            //! Do NOT turn the regions here into methods, they are only called once and should only be called right after each other!!!
+            //! Do NOT turn the regions here into methods, they are only called once and should only be called right after each other!!!
+            //! Do NOT turn the regions here into methods, they are only called once and should only be called right after each other!!!
+            //! Do NOT turn the regions here into methods, they are only called once and should only be called right after each other!!!
+            //? A local method might be okay but still doesn't enforce singular 'calls' (Unless you want to introduce additional boolean variables)
+
+            Theme.RankController.SetMaxRank(wallpaperData.miscData.maxRank); //! This needs to be done before any images are added
+
+            #region Convert Theme Options
+            Debug.WriteLine("Converting Theme Options...");
+            // TODO wallpaperData.themeOptions;
+            #endregion
+
+            #region Convert Misc
+            Debug.WriteLine("Converting Misc...");
+            // TODO wallpaperData.miscData;
+            #endregion
+
+            #region Convert Tags
+            Debug.WriteLine("Converting Tags...");
+            // ----- Add Categories -----
+            foreach (TempCategoryData tempCat in wallpaperData.tagData)
+            {
+                // verify category before adding tags
+                                                // TODO Consider converting the data held up by the TagViewModel Instance into another subset of ThemeModel
+                CategoryModel instanceCategory = TaggingUtil.VerifyCategory(tempCat.Name, tempCat.UseForNaming, tempCat.Enabled);
+
+                // ----- Add Tags (of this Category) -----
+                foreach (TempTagData tempTag in tempCat.Tags)
+                {
+                    // verify tag before adding
+                    TagModel instanceTag = instanceCategory.VerifyTag(tempTag.Name, tempTag.UseForNaming, tempTag.Enabled);
+                    instanceTag.ParentCategoryName = instanceCategory.Name; // not saved into the tag's JSON as it would be unnecessary bloat since the category has this
+
+                    // ----- Add Parent Tags (of this Tag) -----
+                    foreach (Tuple<string, string> parentInfo in tempTag.ParentTags)
+                    {
+                        //? This Tuple should be replace with SimplifiedTag in the official conversion
+                        string parentCategoryName = parentInfo.Item1;
+                        string parentName = parentInfo.Item2;
+
+                        //! Keep in mind that this tackles both Parent and Child tags, no need to loop through the Child Tag list as well
+                        //! (There's no way to directly add child tags anyways)
+                        instanceTag.LinkTag(TaggingUtil.VerifyCategory(parentCategoryName).VerifyTag(parentName));
+                    }
+
+                    //x Debug.WriteLine("Adding Tag: " + instanceTag.Name);
+                    instanceCategory.AddTag(instanceTag);
+                }
+
+                //x Debug.WriteLine("Adding Category: " + instanceCategory.Name + "\n\n\n");
+                TaggingUtil.AddCategory(instanceCategory);
+            }
+            #endregion
+
+            #region Convert Images & Folders
+            Debug.WriteLine("Converting Images...");
+            //! Placing this after AddFolderRange() will *significantly* increase load times as the images will attempt to be added multiple times
+            // TODO Even with the above statement, this still takes a considerable amount of time to load
+            // TODO Some of the lag may have to do with the conversions, it'll likely be a bit better once TempImageData is no longer needed
+            foreach (TempImageData imageData in wallpaperData.imageData)
+            {
+                ImageModel image = new ImageModel(imageData.Path, imageData.Rank);
+
+                ImageTagCollection tags = new ImageTagCollection(image);
+
+                foreach (string categoryName in imageData.Tags.Keys)
+                {
+                    //? We will not be verifying anything here, that was done in the Convert Tag section. If it doesn't exist, it will not be added (Instead of crashing)
+                    CategoryModel category = TaggingUtil.GetCategory(categoryName);
+
+                    if (category == null)
+                    {
+                        Debug.WriteLine("Category [" + categoryName + "] was referenced while converting images but was not found while converting tags, dropping");
+                        continue;
+                    }
+
+                    foreach (string tagName in imageData.Tags[categoryName])
+                    {
+                        TagModel tag = category.GetTag(tagName);
+
+                        if (tag == null)
+                        {
+                            Debug.WriteLine("Tag [" + tagName + "] was referenced while converting images but was not found while converting tags, dropping");
+                            continue;
+                        }
+
+                        tags.Add(tag);
+                    }
+                }
+
+                //x Debug.WriteLine("Adding Image: " + image.PathName);
+                DataUtil.Theme.Images.AddImage(image);
+            }
+
+            //! Folders need to be added after images are added so that they don't have to be verified twice
+            AddFolderRange(wallpaperData.imageFolders.Keys.ToArray());
+            #endregion
+        }
+        #endregion
+
         #endregion
 
         #region Image Folders
@@ -465,10 +670,23 @@ namespace WallpaperFlux.Core.ViewModels
 
         public void AddFolderRange(string[] paths)
         {
+            string errorOutput = "Could not add the folder(s):\n";
+            bool errorOccured = false;
+
             foreach (string path in paths)
             {
-                ImageFolders.Add(new FolderModel(path, true));
+                if (Directory.Exists(path))
+                {
+                    ImageFolders.Add(new FolderModel(path, true));
+                }
+                else
+                {
+                    errorOutput += path + "\n";
+                    errorOccured = true;
+                }
             }
+
+            if (errorOccured) MessageBoxUtil.ShowError(errorOutput);
 
             RaisePropertyChanged(() => CanNextWallpaper);
             RaisePropertyChanged(() => CanSelectImages);

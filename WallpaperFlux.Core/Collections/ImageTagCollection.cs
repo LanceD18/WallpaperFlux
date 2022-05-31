@@ -9,7 +9,7 @@ using WallpaperFlux.Core.ViewModels;
 
 namespace WallpaperFlux.Core.Collections
 {
-    public class TagCollection
+    public class ImageTagCollection
     {
         public readonly ImageModel ParentImage;
 
@@ -18,11 +18,17 @@ namespace WallpaperFlux.Core.Collections
         // TODO Try to avoid adding parent tags into this list, find another way around this
         // TODO Try to avoid adding parent tags into this list, find another way around this
         private readonly HashSet<TagModel> _tags = new HashSet<TagModel>();
-
-        // this exists to help restrict control of the information in both TagModel and ImageModel that allows the two to refer to each other
-        public TagCollection(ImageModel parentImage)
+        
+        /// <summary>
+        /// this exists to help restrict control of the information in both TagModel and ImageModel that allows the two to refer to each other
+        /// </summary>
+        /// <param name="parentImage"> the image the tag collection will be linked to </param>
+        /// <param name="relinkTagCollection"> we will likely create an image and tag collection simultaneously, hence this is defaulted to true </param>
+        public ImageTagCollection(ImageModel parentImage, bool relinkTagCollection = true)
         {
             ParentImage = parentImage;
+
+            if (relinkTagCollection) parentImage.Tags = this;
         }
 
         public void Add(TagModel tag)

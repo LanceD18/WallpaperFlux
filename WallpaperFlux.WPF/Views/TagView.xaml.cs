@@ -41,9 +41,9 @@ namespace WallpaperFlux.WPF.Views
             //x TaggingUtil.SetInstance(TagViewModel.Instance);
         }
 
-        private void TagTabControl_OnSizeChanged(object sender, SizeChangedEventArgs e) => UpdateTagSelectorWrapperSize();
+        private void CategoryTabControl_OnSizeChanged(object sender, SizeChangedEventArgs e) => UpdateTagSelectorWrapperSize();
 
-        private void TagTabControl_OnSelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateTagSelectorWrapperSize();
+        private void CategoryTabControl_OnSelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateTagSelectorWrapperSize();
 
         private void UpdateTagSelectorWrapperSize()
         {
@@ -70,16 +70,27 @@ namespace WallpaperFlux.WPF.Views
 
         private void GroupBox_Tag_MouseUp(object sender, MouseButtonEventArgs e)
         {
-
+            // TODO Remove me
         }
 
         private void TagView_OnSizeChanged_UpdateTagBoardHeight(object sender, SizeChangedEventArgs e) => ((TagViewModel)this.DataContext).SetTagBoardHeight(ActualHeight - 75);
 
         private void TagTabControl_ListBoxItem_OnMouseDown(object sender, MouseButtonEventArgs e)
         {
-            CategoryModel category = CategoryTabControl.SelectedItem as CategoryModel;
+            if (ControlUtil.UsingSingularSelection()) //? Placing this check ahead of time to avoid the additional processing time
+            {
+                CategoryModel selectedCategory = CategoryTabControl.SelectedItem as CategoryModel;
 
-            ControlUtil.EnsureSingularSelection(category.TagTabs, category.SelectedTagTab);
+                // get all tabs in all categories
+                List<TagTabModel> tagTabs = new List<TagTabModel>();
+                foreach (CategoryModel category in CategoryTabControl.Items)
+                {
+                    tagTabs.AddRange(category.TagTabs.ToList());
+                }
+
+                ControlUtil.EnsureSingularSelection(tagTabs.ToArray(), selectedCategory.SelectedTagTab);
+            }
+
         }
     }
 }

@@ -11,6 +11,7 @@ using MvvmCross.Commands;
 using MvvmCross.ViewModels;
 using WallpaperFlux.Core.Collections;
 using WallpaperFlux.Core.Models;
+using WallpaperFlux.Core.Models.Controls;
 using WallpaperFlux.Core.Models.Tagging;
 using WallpaperFlux.Core.Util;
 
@@ -37,10 +38,18 @@ namespace WallpaperFlux.Core.ViewModels
             get => _selectedCategory;
             set
             {
+                //! Workaround to the EnsureSingularSelection() methods from WPF ControlUtil ; ideally we'd look for a less brute force solution
+                SelectedCategory?.SelectedTagTab?.DeselectAllItems(); //? this is the previously selected tab as we are calling this before the value is set 
+                //! Workaround to the EnsureSingularSelection() methods from WPF ControlUtil ; ideally we'd look for a less brute force solution
+
                 SetProperty(ref _selectedCategory, value);
+
+                HighlightTags(SelectedCategory);
                 RaisePropertyChanged(() => CategoryIsSelected);
             }
         }
+
+        private HashSet<TagModel> TagsToHighlight = new HashSet<TagModel>();
 
         #region TagBoard
         private MvxObservableCollection<TagModel> _tagBoardTags = new MvxObservableCollection<TagModel>();
@@ -113,7 +122,6 @@ namespace WallpaperFlux.Core.ViewModels
         }
 
         private bool _tagLinkerToggle;
-
         public bool TagLinkerToggle
         {
             get => _tagLinkerToggle;
@@ -131,7 +139,7 @@ namespace WallpaperFlux.Core.ViewModels
 
                     if (TagLinkingSource != null)
                     {
-                        TaggingUtil.HighlightTags(TagLinkingSource.ParentChildTagsUnionWithSelf()); // since the selected tag only changes when the tag-linker is off, we will highlight here
+                        TaggingUtil.HighlightTags(TagLinkingSource.ParentChildTagsUnion_IncludeSelf()); // since the selected tag only changes when the tag-linker is off, we will highlight here
                     }
                 }
                 else
@@ -147,7 +155,18 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
-        public TagModel TagLinkingSource;
+        private TagModel _tagLinkingSource;
+
+        public TagModel TagLinkingSource
+        {
+            get => _tagLinkingSource;
+            set
+            {
+                _tagLinkingSource = value;
+
+                RaisePropertyChanged(() => CanUseTagLinker);
+            }
+        }
 
         public string TagLinkingSourceName => TagLinkingSource?.Name;
 
@@ -185,7 +204,8 @@ namespace WallpaperFlux.Core.ViewModels
             set => SetProperty(ref _tagboardToggle, value);
         }
 
-        public bool CanUseTagLinker => SelectedCategory?.SelectedTagTab?.SelectedTag != null;
+        // need to also check if the tag-linking source is null for just in case the selected tag is deselected
+        public bool CanUseTagLinker => SelectedCategory?.SelectedTagTab?.SelectedTag != null || TagLinkingSource != null;
 
         #endregion
 
@@ -202,24 +222,40 @@ namespace WallpaperFlux.Core.ViewModels
         // TODO Add a ToolTip explaining how Category Order determines the order of image-naming
         public TagViewModel()
         {
+            //? We will use this theme reference for categories so that tags and categories can be referenced outside of this control
+            //! So do NOT add Category functionality here, give it to TaggingUtil
+            Categories.SwitchTo(DataUtil.Theme.Categories);
+
             AddCategoryCommand = new MvxCommand(PromptAddCategory);
             AddTagToSelectedCategoryCommand = new MvxCommand(() => PromptAddTagToCategory(SelectedCategory));
             //? the open/toggle TagBoard is initially called by CategoryModel and sent to a method here
             CloseTagBoardCommand = new MvxCommand(() => TagboardToggle = false);
         }
 
-        public void HighlightTags(HashSet<TagModel> tags)
+        public void SetTagsToHighlight(HashSet<TagModel> tags)
         {
-            TagModel[] visibleTags = SelectedCategory.SelectedTagTab.GetAllItems();
-            
-            foreach (TagModel tag in visibleTags)
-            {
-                tag.IsHighlighted = tags.Contains(tag);
-                tag.IsHighlightedParent = TagLinkingSource.ParentTags.Contains(tag);
-                tag.IsHighlightedChild = TagLinkingSource.ChildTags.Contains(tag);
-            }
+            TagsToHighlight = new HashSet<TagModel>(tags);
+            HighlightTags(SelectedCategory);
         }
 
+        public void HighlightTags(CategoryModel category)
+        {
+            if (TagsToHighlight == null) return;
+
+            HashSet<TagModel> tags = category.GetTags();
+            
+            foreach (TagModel tag in tags)
+            {
+                tag.IsHighlighted = TagsToHighlight.Contains(tag);
+
+                if (TagLinkingSource != null)
+                {
+                    tag.IsHighlightedParent = TagLinkingSource.ParentTags.Contains(tag);
+                    tag.IsHighlightedChild = TagLinkingSource.ChildTags.Contains(tag);
+                }
+            }
+        }
+        
         #region TagBoard
 
         public void ToggleTagBoard() => TagboardToggle = !TagboardToggle;
@@ -250,7 +286,7 @@ namespace WallpaperFlux.Core.ViewModels
 
             if (!string.IsNullOrEmpty(categoryName))
             {
-                CategoryModel category = new CategoryModel(categoryName);
+                CategoryModel category = TaggingUtil.AddCategory(categoryName);
                 Categories.Add(category);
                 SelectedCategory = category;
                 RaisePropertyChanged(() => CategoriesExist);
@@ -266,7 +302,7 @@ namespace WallpaperFlux.Core.ViewModels
 
                 if (!string.IsNullOrEmpty(tagName))
                 {
-                    category.AddTag(new TagModel(tagName));
+                    category.AddTag(tagName);
                     AddDebugTags(category);
                 }
             }

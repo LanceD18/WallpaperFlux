@@ -51,7 +51,7 @@ namespace WallpaperFlux.Core.Collections
 
         public void AddImage(ImageModel image)
         {
-            if (ContainsImage(image.Path)) return;
+            if (ContainsImage(image)) return;
 
             ImageContainer[image.ImageType].Add(image.Path, image);
         }
@@ -143,7 +143,7 @@ namespace WallpaperFlux.Core.Collections
             {
                 if (!ContainsImage(path)) continue;
 
-                images.Add((GetImage(path)));
+                images.Add(GetImage(path));
             }
 
             return images.ToArray();

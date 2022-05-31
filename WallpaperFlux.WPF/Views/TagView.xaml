@@ -225,7 +225,7 @@
 
             <!-- Category TabControl -->
             <TabControl x:Name="CategoryTabControl" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                        adonisExtensions:LayerExtension.IncreaseLayer="True" SizeChanged="TagTabControl_OnSizeChanged" SelectionChanged="TagTabControl_OnSelectionChanged">
+                        adonisExtensions:LayerExtension.IncreaseLayer="True" SizeChanged="CategoryTabControl_OnSizeChanged" SelectionChanged="CategoryTabControl_OnSelectionChanged">
 
                 <!-- Category Item Template [Header] -->
                 <TabControl.ItemTemplate>

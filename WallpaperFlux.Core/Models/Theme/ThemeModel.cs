@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using LanceTools;
 using WallpaperFlux.Core.Collections;
 using WallpaperFlux.Core.Controllers;
+using WallpaperFlux.Core.Models.Tagging;
 
 namespace WallpaperFlux.Core.Models.Theme
 {
@@ -11,6 +13,8 @@ namespace WallpaperFlux.Core.Models.Theme
         public SettingsModel Settings { get; set; } //? getter and setter needed for the XAML file
 
         public ImageCollection Images;
+
+        public List<CategoryModel> Categories = new List<CategoryModel>();
 
         public RankController RankController;
 
@@ -33,7 +37,6 @@ namespace WallpaperFlux.Core.Models.Theme
         {
             // Without this the UI won't represent the default FrequencyModel settings on launch, everything would be 0
             Settings.ThemeSettings.FrequencyModel.Init();
-
         }
 
         public string GetRandomImagePath(int displayIndex)

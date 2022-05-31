@@ -18,15 +18,12 @@ namespace WallpaperFlux.Core.Util
         [JsonProperty("ImageFolders")] public Dictionary<string, bool> imageFolders;
 
         [JsonProperty("TagData")] public TempCategoryData[] tagData;
-
-        //! ImageData MUST remain at the bottom at all times to ensure that the needed info above is loaded first
-        //! (This allows you to initialize more data in the constructor like the EvaluateActiveState() method)
+        
         [JsonProperty("ImageData")] public TempImageData[] imageData;
 
         public TemporaryJsonWallpaperData(TempMiscData miscData, TempThemeOptions themeOptions, TempCategoryData[] tagData, TempImageData[] imageData, Dictionary<string, bool> imageFolders)
         {
-            //x //! This handles SAVING!!! | Don't go to this code segment for modifying how data is loaded!
-            //? While yes this does handle saving initialization is still done when loading, without this, imageData and imageFolders would not work on the initial load
+            //? This was not needed to load information properly in the previous version for an arbitrary reason, it is now though
 
             this.miscData = miscData; //x new MiscData(); // TODO values are updated in the constructor [THIS CONSTRUCTOR IS CURRENTLY UNFINISHED]
             this.themeOptions = themeOptions; //xOptionsData.ThemeOptions;
@@ -74,7 +71,7 @@ namespace WallpaperFlux.Core.Util
         public static readonly string JSON_FILE_DISPLAY_NAME = "JSON Files (*.json)";
         public static readonly string JSON_FILE_EXTENSION = "*.json";
 
-        public static bool IsLoadingData { get; private set; }
+        public static bool IsLoadingData { get; set; } // used to speed up the loading process by preventing unnecessary calls
 
         /*TODO
         // Save Data
@@ -154,7 +151,6 @@ namespace WallpaperFlux.Core.Util
 
             if (File.Exists(path))
             {
-                IsLoadingData = true; // used to speed up the loading process by preventing unnecessary calls
                 /* TODO
                 jpxToJpgWarning = "";
 
@@ -192,8 +188,7 @@ namespace WallpaperFlux.Core.Util
                     MessageBox.Show(jpxStringPrompt + jpxToJpgWarning);
                 }
                 */
-
-                IsLoadingData = false;
+                
                 /* TODO
                 WallpaperPathSetter.ActiveWallpaperTheme = path;
                 UpdateRankPercentiles(ImageType.None); //! Now that image types exist this preemptive change may not be worth it
@@ -203,7 +198,7 @@ namespace WallpaperFlux.Core.Util
                 return jsonWallpaperData;
             }
 
-            //! MessageBox warnings for non-existent files should not be used in this method but rather the ones that call it
+            //! MessageBox warnings for non-existent files should not be used in this method but rather the ones that call it***************************************************************************************-------------
             Debug.WriteLine("Attempted to load a non-existent file");
             return null;
         }
@@ -294,5 +289,4 @@ namespace WallpaperFlux.Core.Util
         }
         */
     }
-
 }

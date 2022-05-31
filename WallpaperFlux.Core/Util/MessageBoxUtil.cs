@@ -74,6 +74,19 @@ namespace WallpaperFlux.Core.Util
             MessageBox.Show(messageBox);
         }
 
+        public static bool PromptYesNo(string text)
+        {
+            MessageBoxModel messageBox = new MessageBoxModel
+            {
+                Text = text,
+                Caption = "Choose an option",
+                Icon = MessageBoxImage.Question,
+                Buttons = MessageBoxButtons.YesNo()
+            };
+
+            return MessageBox.Show(messageBox) == MessageBoxResult.Yes;
+        }
+
         #region Input Box
         // TODO Find a better way to implement this
         public static Func<string, string, string, InputBoxType, string> InputBoxFunc;
