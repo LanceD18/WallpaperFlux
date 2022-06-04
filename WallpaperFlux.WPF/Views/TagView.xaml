@@ -134,13 +134,13 @@
             <!-- Categories -->
             <MenuItem Header="Categories">
                 <MenuItem Header="Add" mvx:Bi.nd="Command AddCategoryCommand"/>
-                <MenuItem Header="Remove"/>
+                <!-- <MenuItem Header="Remove"/> -->
             </MenuItem>
 
             <!-- Tags -->
             <MenuItem Header="Tags">
                 <MenuItem Header="Add" mvx:Bi.nd="Command AddTagToSelectedCategoryCommand" IsEnabled="{Binding CategoryIsSelected}"/>
-                <MenuItem Header="Remove"/>
+                <!-- <MenuItem Header="Remove"/> -->
 
                 <Separator/>
 
@@ -227,6 +227,15 @@
             <TabControl x:Name="CategoryTabControl" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                         adonisExtensions:LayerExtension.IncreaseLayer="True" SizeChanged="CategoryTabControl_OnSizeChanged" SelectionChanged="CategoryTabControl_OnSelectionChanged">
 
+                <!-- Drag n' Drog Control -->
+                <TabControl.Resources>
+                    <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
+                        <Setter Property="AllowDrop" Value="True"/>
+                        <EventSetter Event="PreviewMouseMove" Handler="TabItem_PreviewMouseMove"/>
+                        <EventSetter Event="Drop" Handler="TabItem_Drop"/>
+                    </Style>
+                </TabControl.Resources>
+
                 <!-- Category Item Template [Header] -->
                 <TabControl.ItemTemplate>
                     <DataTemplate DataType="tagging:CategoryModel">
@@ -235,10 +244,9 @@
                                 <ContextMenu>
                                     <MenuItem Header="{Binding Name}" IsEnabled="False"/>
                                     <Separator/>
-                                    <MenuItem Header="Total Number of Tags: 0" IsEnabled="False"/>
-                                    <MenuItem Header="Rename"/>
-                                    <MenuItem Header="Delete"/>
-                                    <MenuItem Header="Reposition [Use if making drag-and-drop is too difficult]"/>
+                                    <MenuItem Header="{Binding TagCountString, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="False"/>
+                                    <MenuItem Header="Rename" Command="{Binding RenameCategoryCommand}"/>
+                                    <MenuItem Header="Delete" Command="{Binding RemoveCategoryCommand}"/>
                                     <MenuItem Header="Enabled" IsCheckable="True"  StaysOpenOnClick="True" 
                                               IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                     <MenuItem Header="Use For Naming" IsCheckable="True"  StaysOpenOnClick="True" 
@@ -428,10 +436,10 @@
                                                             <ContextMenu>
                                                                 <!-- Core -->
                                                                 <MenuItem Header="{Binding Name}" IsEnabled="False"/>
-                                                                <MenuItem Header="Found in x images" IsEnabled="False"/>
+                                                                <MenuItem Header="{Binding ImageCountString}" IsEnabled="False"/>
                                                                 <Separator/>
-                                                                <MenuItem Header="Rename"/>
-                                                                <MenuItem Header="Delete"/>
+                                                                <MenuItem Header="Rename" Command="{Binding RenameTagCommand}"/>
+                                                                <MenuItem Header="Delete" Command="{Binding RemoveTagCommand}"/>
                                                                 <MenuItem Header="Frequencies">
                                                                     <MenuItem Header="Relative Frequency: 100%"/>
                                                                     <MenuItem Header="Exact Frequency: 100%"/>
@@ -443,16 +451,16 @@
                                                                 <MenuItem Header="Image Control">
                                                                     <MenuItem Header="Select Images with Tag"/>
                                                                     <MenuItem Header="Add To">
-                                                                        <MenuItem Header="Selected Image(s)" mvx:Bi.nd="Command AddTagToSelectedImagesCommand"/>
-                                                                        <MenuItem Header="Entire Image Group" mvx:Bi.nd="Command AddTagToEntireImageGroupCommand"/>
+                                                                        <MenuItem Header="Selected Image(s)" Command="{Binding AddTagToSelectedImagesCommand}"/>
+                                                                        <MenuItem Header="Entire Image Group" Command="{Binding AddTagToEntireImageGroupCommand}"/>
                                                                     </MenuItem>
                                                                     <MenuItem Header="Remove From">
-                                                                        <MenuItem Header="Selected Image(s)" mvx:Bi.nd="Command RemoveTagFromSelectedImagesCommand"/>
-                                                                        <MenuItem Header="Entire Image Group" mvx:Bi.nd="Command RemoveTagFromEntireImageGroupCommand"/>
+                                                                        <MenuItem Header="Selected Image(s)" Command="{Binding RemoveTagFromSelectedImagesCommand}"/>
+                                                                        <MenuItem Header="Entire Image Group" Command="{Binding RemoveTagFromEntireImageGroupCommand}"/>
                                                                     </MenuItem>
                                                                 </MenuItem>
                                                                 <MenuItem Header="Tag Linking">
-                                                                    <MenuItem Header="Link to Tag" Command="{Binding LinkTagCommand}"/>
+                                                                    <!--x<MenuItem Header="Link to Tag" Command="{Binding LinkTagCommand}"/>-->
                                                                     <MenuItem Header="Show Parent Tags"/>
                                                                     <MenuItem Header="Show Child Tags"/>
                                                                 </MenuItem>

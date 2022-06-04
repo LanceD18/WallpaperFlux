@@ -97,7 +97,7 @@ namespace WallpaperFlux.Core.Util
             return InputBoxFunc.Invoke(title, caption, watermark, inputBoxType);
         }
 
-        public static string GetString(string title, string caption, string watermark = "", InputBoxType inputBoxType = InputBoxType.Default)
+        public static string GetString(string title, string caption, string watermark = "")
         {
             return InputBoxFunc.Invoke(title, caption, watermark, InputBoxType.Default);
         }
@@ -144,16 +144,16 @@ namespace WallpaperFlux.Core.Util
         // Integer
         public static bool GetInteger(string title, string caption, out int response, string watermark = "")
         {
-            bool promptResult = PromptNumber(title, caption, out float responseFloat, watermark, InputBoxType.Integer);
+            bool resultValid = PromptNumber(title, caption, out float responseFloat, watermark, InputBoxType.Integer);
             response = (int)responseFloat;
-            return promptResult;
+            return resultValid;
         }
 
         public static bool GetPositiveInteger(string title, string caption, out int response, string watermark = "")
         {
-            bool promptResult = PromptNumber(title, caption, out float responseFloat, watermark, InputBoxType.PositiveInteger);
+            bool resultValid = PromptNumber(title, caption, out float responseFloat, watermark, InputBoxType.PositiveInteger);
             response = (int)responseFloat;
-            return promptResult;
+            return resultValid;
         }
 
         // Float

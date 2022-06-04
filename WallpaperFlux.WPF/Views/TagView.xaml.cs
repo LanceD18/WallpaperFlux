@@ -22,6 +22,8 @@ using WallpaperFlux.Core.Models.Tagging;
 using WallpaperFlux.Core.ViewModels;
 using WallpaperFlux.WPF.Util;
 using WallpaperFlux.WPF.Windows;
+using WallpaperFlux.Core.Util;
+using ControlUtil = WallpaperFlux.WPF.Util.ControlUtil;
 
 namespace WallpaperFlux.WPF.Views
 {
@@ -90,7 +92,64 @@ namespace WallpaperFlux.WPF.Views
 
                 ControlUtil.EnsureSingularSelection(tagTabs.ToArray(), selectedCategory.SelectedTagTab);
             }
-
         }
+
+        #region Tab Item Drag n Drop
+        // Help:s https://stackoverflow.com/questions/10738161/is-it-possible-to-rearrange-tab-items-in-tab-control-in-wpf
+        private void TabItem_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            if (!(e.Source is TabItem tabItem))
+            {
+                return;
+            }
+
+            if (Mouse.PrimaryDevice.LeftButton == MouseButtonState.Pressed)
+            {
+                DragDrop.DoDragDrop(tabItem, tabItem, DragDropEffects.All);
+            }
+        }
+
+        private void TabItem_Drop(object sender, DragEventArgs e)
+        {
+            // target, or e.Sourcem is the item the drop lands on
+            // source, or data, is the item we are dragging
+
+            if (e.Source is TabItem tabItemTarget &&
+                e.Data.GetData(typeof(TabItem)) is TabItem tabItemSource &&
+                !tabItemTarget.Equals(tabItemSource)  /*x&&
+               tabItemTarget.Parent is TabControl tabControl*/)
+            {
+                if (tabItemSource.Header is CategoryModel sourceCategory &&
+                    tabItemTarget.Header is CategoryModel targetCategory)
+                {
+                    Debug.WriteLine("Dropped");
+
+                    Debug.WriteLine("Source: " + sourceCategory.Name);
+                    Debug.WriteLine("Target: " + targetCategory.Name);
+
+                    //xint targetIndex = tabControl.Items.IndexOf(tabItemTarget);
+
+                    //xint sourceIndex = CategoryTabControl.Items.IndexOf(tabItemTarget);
+                    //xint targetIndex = CategoryTabControl.Items.IndexOf(tabItemSource);
+
+                    //xIEnumerable<TabItem> tabItems = CategoryTabControl.Items;
+
+                    TaggingUtil.ShiftCategories(sourceCategory, targetCategory);
+
+                    //xtabControl.Items.Remove(tabItemSource);
+                    //xtabControl.Items.Insert(targetIndex, tabItemSource);
+                    tabItemSource.IsSelected = true;
+                }
+                else
+                {
+                    Debug.WriteLine("Invalid");
+                }
+            }
+            else
+            {
+                Debug.WriteLine("Self");
+            }
+        }
+        #endregion
     }
 }

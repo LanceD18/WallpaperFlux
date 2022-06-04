@@ -572,7 +572,7 @@ namespace WallpaperFlux.Core.ViewModels
                 {
                     // verify tag before adding
                     TagModel instanceTag = instanceCategory.VerifyTag(tempTag.Name, tempTag.UseForNaming, tempTag.Enabled);
-                    instanceTag.ParentCategoryName = instanceCategory.Name; // not saved into the tag's JSON as it would be unnecessary bloat since the category has this
+                    instanceTag.ParentCategory = instanceCategory; // not saved into the tag's JSON as it would be unnecessary bloat since the category has this
 
                     // ----- Add Parent Tags (of this Tag) -----
                     foreach (Tuple<string, string> parentInfo in tempTag.ParentTags)

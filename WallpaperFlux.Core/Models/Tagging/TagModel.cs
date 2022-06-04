@@ -70,17 +70,19 @@ namespace WallpaperFlux.Core.Models.Tagging
         }
 
         //? Just create a TagModelJSON.cs that converts all of these into strings on saving the theme
-        [JsonIgnore] public HashSet<TagModel> ParentTags = new HashSet<TagModel>(); //? Will be converted to strings in TagModelJson.cs for saving purposes instead of saving the entire object
-        [JsonIgnore] public HashSet<TagModel> ChildTags = new HashSet<TagModel>(); //? Will be converted to strings in TagModelJson.cs for saving purposes instead of saving the entire object
+        //! Using a string will require us to update this on rename, and search for the tag when needed, so lets just save the string portion for when saving
+        private HashSet<TagModel> ParentTags = new HashSet<TagModel>(); //? Will be converted to strings in TagModelJson.cs for saving purposes instead of saving the entire object
+        private HashSet<TagModel> ChildTags = new HashSet<TagModel>(); //? Will be converted to strings in TagModelJson.cs for saving purposes instead of saving the entire object
         //xpublic HashSet<Tuple<string, string>> ParentTags = new HashSet<Tuple<string, string>>();
         //xpublic HashSet<Tuple<string, string>> ChildTags = new HashSet<Tuple<string, string>>();
 
-        private string _parentCategoryName;
+        private CategoryModel _parentCategory;
         
         [JsonIgnore]
-        public string ParentCategoryName
+        //! Using a string will require us to update this on rename, and search for the category when needed, and this isn't even being saved so lets just avoid the hassle
+        public CategoryModel ParentCategory
         {
-            get => _parentCategoryName;
+            get => _parentCategory;
 
             set
             {
@@ -91,14 +93,14 @@ namespace WallpaperFlux.Core.Models.Tagging
                 }
                 */
 
-                _parentCategoryName = value;
+                _parentCategory = value;
             }
         }
 
         //? We are ignoring this since these should get implemented on loading in the images through their TagCollection
-        [JsonIgnore] public HashSet<ImageModel> LinkedImages = new HashSet<ImageModel>(); //? Will be converted to strings in TagModelJson.cs for saving purposes instead of saving the entire object
+        private HashSet<ImageModel> LinkedImages = new HashSet<ImageModel>(); //? Will be converted to strings in TagModelJson.cs for saving purposes instead of saving the entire object
 
-        #region UI Control
+        #region View Variables
 
         //? Used for determining which tag's font to highlight when an image is selected
         private bool _isHighlighted;
@@ -127,10 +129,19 @@ namespace WallpaperFlux.Core.Models.Tagging
             set => SetProperty(ref _isHighlightedChild, value);
         }
 
+        [JsonIgnore] public string ImageCountString => "Found in " + LinkedImages.Count + " image(s)";
+
         #endregion
 
         #region Commands
 
+        [JsonIgnore] public IMvxCommand RenameTagCommand { get; set; }
+
+        [JsonIgnore] public IMvxCommand RemoveTagCommand { get; set; }
+
+        [JsonIgnore] public IMvxCommand TagInteractCommand { get; set; }  //? Handles functions such as Tag-Adding, Removing, & Linking
+
+        #region ----- Image Control -----
         [JsonIgnore] public IMvxCommand AddTagToSelectedImagesCommand { get; set; }
 
         [JsonIgnore] public IMvxCommand AddTagToEntireImageGroupCommand { get; set; }
@@ -140,16 +151,16 @@ namespace WallpaperFlux.Core.Models.Tagging
         [JsonIgnore] public IMvxCommand RemoveTagFromSelectedImagesCommand { get; set; }
 
         [JsonIgnore] public IMvxCommand RemoveTagFromEntireImageGroupCommand { get; set; }
-
-        [JsonIgnore] public IMvxCommand TagInteractCommand { get; set; }  //? Handles functions such as Tag-Adding, Removing, & Linking
+        #endregion
 
         [JsonIgnore] public IMvxCommand RemoveTagFromTagBoardCommand { get; set; }
 
         #endregion
 
-        public TagModel(string name, bool useForNaming = true, bool enabled = true)
+        public TagModel(string name, CategoryModel parentCategory, bool useForNaming = true, bool enabled = true)
         {
             Name = name;
+            ParentCategory = parentCategory;
             UseForNaming = true;
             Enabled = true;
 
@@ -172,17 +183,56 @@ namespace WallpaperFlux.Core.Models.Tagging
             });
 
             RemoveTagFromTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.RemoveTagFromTagBoard(this));
+
+            RenameTagCommand = new MvxCommand(PromptRename);
+            RemoveTagCommand = new MvxCommand(PromptRemoveTag);
         }
 
-        public void LinkImage(ImageTagCollection imageTags) => LinkedImages.Add(imageTags.ParentImage);
+        public void PromptRename()
+        {
+            string name = MessageBoxUtil.GetString("Rename", "Give a new name for this tag", "Tag Name...");
 
-        public void UnlinkImage(ImageTagCollection imageTags) => LinkedImages.Remove(imageTags.ParentImage);
+            if (!string.IsNullOrWhiteSpace(name)) Name = name;
+        }
+
+        public void PromptRemoveTag()
+        {
+            if (MessageBoxUtil.PromptYesNo("Are you sure you want to remove the tag: [" + Name + "] ?"))
+            {
+                if (!TaggingUtil.RemoveTag(this)) MessageBoxUtil.ShowError("The tag, " + Name + ", does not exist");
+            }
+        }
+
+        public void LinkImage(ImageTagCollection imageTags)
+        {
+            LinkedImages.Add(imageTags.ParentImage);
+            RaisePropertyChanged(() => ImageCountString);
+        }
+
+        public void UnlinkImage(ImageTagCollection imageTags)
+        {
+            LinkedImages.Remove(imageTags.ParentImage);
+            RaisePropertyChanged(() => ImageCountString);
+        }
+
+        public void UnlinkAllImages() // for removing/resetting a tag
+        {
+            List<TagModel> imagesToUnlink = new List<TagModel>();
+            foreach(ImageModel image in LinkedImages)
+            {
+                //ximage.RemoveTag(this); // will call UnlinkImage()
+            }
+
+            RaisePropertyChanged(() => ImageCountString); //? Not really needed in current use cases but would ideally still exist here
+        }
 
         public int GetLinkedImageCount()
         {
             Debug.WriteLine("Find an efficient way to get the number of images linked to a tag without having multiple references like in the previous TagData vs ImageData");
             return 0;
         }
+
+        #region Parent / Child Tag Linking
 
         public void LinkTag(TagModel tag)
         {
@@ -218,6 +268,11 @@ namespace WallpaperFlux.Core.Models.Tagging
             parentChildTags.Add(this);
             return parentChildTags;
         }
+
+        public bool HasParent(TagModel tag) => ParentTags.Contains(tag);
+        public bool HasChild(TagModel tag) => ChildTags.Contains(tag);
+
+        #endregion
 
         #region Command Methods
 

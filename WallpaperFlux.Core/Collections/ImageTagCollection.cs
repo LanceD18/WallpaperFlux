@@ -6,6 +6,7 @@ using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Models.Tagging;
 using WallpaperFlux.Core.Util;
 using WallpaperFlux.Core.ViewModels;
+using System.Diagnostics;
 
 namespace WallpaperFlux.Core.Collections
 {
@@ -42,11 +43,13 @@ namespace WallpaperFlux.Core.Collections
 
         public void Remove(TagModel tag)
         {
+            Debug.WriteLine("Before: " + WallpaperFluxViewModel.Instance.InspectedImageTags.Contains(tag));
             _tags.Remove(tag);
             tag.UnlinkImage(this);
             TaggingUtil.HighlightTags(this);
 
             WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.InspectedImageTags);
+            Debug.WriteLine("After: " + WallpaperFluxViewModel.Instance.InspectedImageTags.Contains(tag));
         }
 
         public bool Contains(TagModel tag) => _tags.Contains(tag);

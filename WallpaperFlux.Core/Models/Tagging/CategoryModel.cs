@@ -47,7 +47,7 @@ namespace WallpaperFlux.Core.Models.Tagging
                 }
                 */
 
-                _name = value;
+                SetProperty(ref _name, value);
             }
         }
 
@@ -158,6 +158,12 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         #endregion
 
+        #region View Variables
+
+        [JsonIgnore] public string TagCountString => "Contains " + Tags.Count + " tag(s)";
+
+        #endregion
+
         #region Commands
 
         [JsonIgnore] public IMvxCommand ToggleSortByNameCommand { get; set; }
@@ -170,6 +176,10 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         [JsonIgnore] public IMvxCommand ClearTagBoardCommand { get; set; }
 
+        [JsonIgnore] public IMvxCommand RenameCategoryCommand { get; set; }
+
+        [JsonIgnore] public IMvxCommand RemoveCategoryCommand { get; set; }
+
         #endregion
 
         public CategoryModel(string name, bool useForNaming = true, bool enabled = true)
@@ -180,16 +190,42 @@ namespace WallpaperFlux.Core.Models.Tagging
 
             ToggleSortByNameCommand = new MvxCommand(() => ToggleSortOption(TagSortType.Name));
             ToggleSortByCountCommand = new MvxCommand(() => ToggleSortOption(TagSortType.Count));
+
             ViewTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.ToggleTagBoard());
             AddSelectedTagsToTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.AddTagsToTagBoard(GetSelectedTags()));
             ClearTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.ClearTagBoardTags());
+
+            RenameCategoryCommand = new MvxCommand(PromptRename);
+            RemoveCategoryCommand = new MvxCommand(PromptRemoveCategory);
+        }
+
+        public void PromptRename()
+        {
+            string name = MessageBoxUtil.GetString("Rename", "Give a new name for this category", "Category Name...");
+
+            if (!string.IsNullOrWhiteSpace(name)) Name = name;
+        }
+
+        public void PromptRemoveCategory()
+        {
+            //xif (category != null)
+            //x{
+                if (MessageBoxUtil.PromptYesNo("Are you sure you want to remove the category: [" + Name + "] ?"))
+                {
+                    if (!TaggingUtil.RemoveCategory(this)) MessageBoxUtil.ShowError("The category, " + Name + ", does not exist");
+                }
+            //x}
+            //xelse
+            //x{
+            //x    MessageBoxUtil.ShowError("Selected category does not exist");
+            //x}
         }
 
         #region Tag Control
 
         public TagModel AddTag(string tagName, bool useForNaming = true, bool enabled = true)
         {
-            TagModel tag = new TagModel(tagName, useForNaming, enabled);
+            TagModel tag = new TagModel(tagName, this, useForNaming, enabled);
             AddTag(tag);
             return tag;
         }
@@ -199,7 +235,7 @@ namespace WallpaperFlux.Core.Models.Tagging
             List<TagModel> tags = new List<TagModel>();
             foreach (string tag in newTags)
             {
-                tags.Add(new TagModel(tag));
+                tags.Add(new TagModel(tag, this));
             }
 
             TagModel[] tagArray = tags.ToArray();
@@ -211,12 +247,39 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         public void AddTagRange(TagModel[] newTags)
         {
+            bool displayWarning = false;
+            int errorCount = 0;
+            string existingTagWarning = "";
             foreach (TagModel tag in newTags)
             {
-                Tags.Add(tag);
+                if (!ContainsTag(tag.Name))
+                {
+                    Tags.Add(tag);
+                }
+                else
+                {
+                    displayWarning = true;
+                    errorCount++;
+                    existingTagWarning += "\n" + tag.Name;
+                }
             }
+
+            if (displayWarning)
+            {
+                MessageBoxUtil.ShowError(errorCount <= 1 ? "The following tag already exists: " + existingTagWarning : "The following tags already exist: " + existingTagWarning);
+            }
+
+            RaisePropertyChanged(() => TagCountString);
             
             VerifyTagTabs(); //? Required for the addition and sorting to be visible right-away. All AddTag() methods should trace back to this method
+        }
+
+        public bool RemoveTag(TagModel tag)
+        {
+            tag.UnlinkAllImages();
+            bool removed = Tags.Remove(tag);
+            VerifyTagTabs(); // needed to visually update the tag's removal
+            return removed;
         }
 
         public bool ContainsTag(string tagName) => GetTag(tagName) != null;

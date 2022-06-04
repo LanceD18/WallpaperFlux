@@ -226,10 +226,20 @@ namespace WallpaperFlux.Core.ViewModels
             //! So do NOT add Category functionality here, give it to TaggingUtil
             Categories.SwitchTo(DataUtil.Theme.Categories);
 
-            AddCategoryCommand = new MvxCommand(PromptAddCategory);
-            AddTagToSelectedCategoryCommand = new MvxCommand(() => PromptAddTagToCategory(SelectedCategory));
-            //? the open/toggle TagBoard is initially called by CategoryModel and sent to a method here
-            CloseTagBoardCommand = new MvxCommand(() => TagboardToggle = false);
+            AddCategoryCommand = new MvxCommand(() =>
+            {
+                SelectedCategory = TaggingUtil.PromptAddCategory();
+
+                RaisePropertyChanged(() => CategoriesExist);
+                RaisePropertyChanged(() => SelectedCategory);
+            });
+            AddTagToSelectedCategoryCommand = new MvxCommand(() =>
+            {
+                TaggingUtil.PromptAddTagToCategory(SelectedCategory);
+
+                if (SelectedCategory != null) { AddDebugTags(SelectedCategory); }
+            });
+            CloseTagBoardCommand = new MvxCommand(() => TagboardToggle = false); //? the open/toggle TagBoard is initially called by CategoryModel and sent to a method here
         }
 
         public void SetTagsToHighlight(HashSet<TagModel> tags)
@@ -241,6 +251,7 @@ namespace WallpaperFlux.Core.ViewModels
         public void HighlightTags(CategoryModel category)
         {
             if (TagsToHighlight == null) return;
+            if (category == null) return;
 
             HashSet<TagModel> tags = category.GetTags();
             
@@ -250,8 +261,8 @@ namespace WallpaperFlux.Core.ViewModels
 
                 if (TagLinkingSource != null)
                 {
-                    tag.IsHighlightedParent = TagLinkingSource.ParentTags.Contains(tag);
-                    tag.IsHighlightedChild = TagLinkingSource.ChildTags.Contains(tag);
+                    tag.IsHighlightedParent = TagLinkingSource.HasParent(tag);
+                    tag.IsHighlightedChild = TagLinkingSource.HasChild(tag);
                 }
             }
         }
@@ -280,43 +291,12 @@ namespace WallpaperFlux.Core.ViewModels
         #endregion
 
         #region Command Methods
-        public void PromptAddCategory()
-        {
-            string categoryName = MessageBoxUtil.GetString("Create New Category", "Give a name for this category", "Category Name...");
 
-            if (!string.IsNullOrEmpty(categoryName))
-            {
-                CategoryModel category = TaggingUtil.AddCategory(categoryName);
-                Categories.Add(category);
-                SelectedCategory = category;
-                RaisePropertyChanged(() => CategoriesExist);
-                RaisePropertyChanged(() => SelectedCategory);
-            }
-        }
-
-        public void PromptAddTagToCategory(CategoryModel category)
-        {
-            if (category != null)
-            {
-                string tagName = MessageBoxUtil.GetString("Create New Tag", "Give a name for this tag", "Tag Name...");
-
-                if (!string.IsNullOrEmpty(tagName))
-                {
-                    category.AddTag(tagName);
-                    AddDebugTags(category);
-                }
-            }
-            else
-            {
-                MessageBoxUtil.ShowError("Selected category does not exist");
-            }
-        }
-
-        //? for testing the tagging system [TODO: REMOVE LATER]
+        // TODO REMOVE AT SOME POiNT
+        //! temp debug code for generating a bunch of random tags
         private void AddDebugTags(CategoryModel category)
         {
             Debug.WriteLine("Adding Debug Tags...");
-            //! temp debug code for generating a bunch of random tags
             string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
             Random charRand = new Random();
             Random intRand = new Random();
@@ -336,12 +316,12 @@ namespace WallpaperFlux.Core.ViewModels
                 }
 
                 string finalString = new string(stringChars);
-                tagsToAdd[i] = new TagModel(finalString);
+                tagsToAdd[i] = new TagModel(finalString, category);
             }
 
             category.AddTagRange(tagsToAdd);
-            //! temp debug code
         }
+        //! temp debug code
         #endregion
     }
 }

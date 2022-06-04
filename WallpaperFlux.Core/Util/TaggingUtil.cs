@@ -52,6 +52,33 @@ namespace WallpaperFlux.Core.Util
             if (InstanceExists()) TagViewModel.Instance.SetTagsToHighlight(tags);
         }
 
+        #region Category Control
+        public static void UpdateCategoryView()
+        {
+            if (InstanceExists())
+            {
+                if (TagViewModel.Instance.Categories != null)
+                {
+                    //xTagViewModel.Instance.Categories = new MvvmCross.ViewModels.MvxObservableCollection<CategoryModel>(DataUtil.Theme.Categories);
+                    TagViewModel.Instance.Categories.SwitchTo(DataUtil.Theme.Categories); //! each switch increases the minimum nmber of required events (CHECK THIS) so we'll use a new statement in the meanime
+
+                    /*x
+                    List<CategoryModel> categories = new List<CategoryModel>(DataUtil.Theme.Categories);
+                    if (DataUtil.Theme.Categories.Count > 1)
+                    {
+                        TagViewModel.Instance.Categories.Add(categories[0]);
+                    }
+                    */
+                    /*x
+                    for (int i = 0; i < TagViewModel.Instance.Categories.Count; i++)
+                    {
+                        TagViewModel.Instance.Categories.Add(Taf)
+                    }
+                    */
+                }
+            }
+        }
+
         public static bool ContainsCategory(string categoryName) => GetCategory(categoryName) != null;
 
         public static CategoryModel GetCategory(string categoryName)
@@ -85,7 +112,28 @@ namespace WallpaperFlux.Core.Util
             foreach (CategoryModel category in newCategories)
             {
                 DataUtil.Theme.Categories.Add(category);
+                UpdateCategoryView();
             }
+        }
+
+        public static bool RemoveCategory(CategoryModel category)
+        {
+            bool removed = DataUtil.Theme.Categories.Remove(category);
+            UpdateCategoryView();
+            return removed;
+        }
+
+        public static void RemoveCategoryAt(int index)
+        {
+            DataUtil.Theme.Categories.RemoveAt(index);
+            UpdateCategoryView();
+        }
+
+        public static void InsertCategory(int index, CategoryModel category)
+        {
+            DataUtil.Theme.Categories.Insert(index, category);
+            UpdateCategoryView();
+
         }
 
         /// <summary>
@@ -115,5 +163,60 @@ namespace WallpaperFlux.Core.Util
                 return category;
             }
         }
+
+        /// <summary>
+        /// Moves a category to the selected position via insertion & removal, shifting the categories in-between accordingly
+        /// </summary>
+        public static void ShiftCategories(CategoryModel sourceCategory, CategoryModel targetCategory)
+        {
+            int sourceIndex = DataUtil.Theme.Categories.IndexOf(sourceCategory);
+            int targetIndex = DataUtil.Theme.Categories.IndexOf(targetCategory);
+
+            int insertOffset = sourceIndex < targetIndex ? 1 : 0; // only need to shift insert index if the insertion target is above the source, as otherwise it will push it behind the target
+            InsertCategory(targetIndex + insertOffset, sourceCategory);
+
+            int removeOffset = sourceIndex < targetIndex ? 0 : 1; // only need to shift remove index if the insert pushes the location of the source
+            DataUtil.Theme.Categories.RemoveAt(sourceIndex + removeOffset);
+
+            UpdateCategoryView();
+        }
+
+        #region Prompt
+        public static CategoryModel PromptAddCategory()
+        {
+            string categoryName = MessageBoxUtil.GetString("Create New Category", "Give a name for this category", "Category Name...");
+
+            if (!string.IsNullOrEmpty(categoryName))
+            {
+                CategoryModel category = AddCategory(categoryName);
+
+                return category;
+            }
+
+            return null;
+        }
+
+        public static void PromptAddTagToCategory(CategoryModel category)
+        {
+            if (category != null)
+            {
+                string tagName = MessageBoxUtil.GetString("Create New Tag", "Give a name for this tag", "Tag Name...");
+
+                if (!string.IsNullOrEmpty(tagName))
+                {
+                    category.AddTag(tagName);
+                }
+            }
+            else
+            {
+                MessageBoxUtil.ShowError("Selected category does not exist");
+            }
+        }
+        #endregion
+        #endregion
+
+        #region Tag Control
+        public static bool RemoveTag(TagModel tag) => tag.ParentCategory.RemoveTag(tag);
+        #endregion
     }
 }
