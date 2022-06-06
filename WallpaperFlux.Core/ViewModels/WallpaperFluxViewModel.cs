@@ -571,7 +571,7 @@ namespace WallpaperFlux.Core.ViewModels
                 foreach (TempTagData tempTag in tempCat.Tags)
                 {
                     // verify tag before adding
-                    TagModel instanceTag = instanceCategory.VerifyTag(tempTag.Name, tempTag.UseForNaming, tempTag.Enabled);
+                    TagModel instanceTag = instanceCategory.VerifyTag(tempTag.Name, tempTag.UseForNaming, tempTag.Enabled); // TODO Redundant at the moment but may not be so in the actual conversion
                     instanceTag.ParentCategory = instanceCategory; // not saved into the tag's JSON as it would be unnecessary bloat since the category has this
 
                     // ----- Add Parent Tags (of this Tag) -----
@@ -587,11 +587,11 @@ namespace WallpaperFlux.Core.ViewModels
                     }
 
                     //x Debug.WriteLine("Adding Tag: " + instanceTag.Name);
-                    instanceCategory.AddTag(instanceTag);
+                    instanceCategory.AddTag(instanceTag); // TODO May want to convert this to AddRange in the actual conversion
                 }
 
                 //x Debug.WriteLine("Adding Category: " + instanceCategory.Name + "\n\n\n");
-                TaggingUtil.AddCategory(instanceCategory);
+                TaggingUtil.AddCategory(instanceCategory); // TODO May want to convert this to AddRange in the actual conversion
             }
             #endregion
 

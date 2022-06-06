@@ -388,7 +388,7 @@
                                                         <!-- Tag Text Block -->
                                                         <TextBlock>
                                                             <Run Text="{Binding Name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                            <Run Text="(0)"/>
+                                                            <Run Text="{Binding ImageCountStringTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
 
                                                             <TextBlock.Style>
                                                                 <Style TargetType="TextBlock">
@@ -436,7 +436,7 @@
                                                             <ContextMenu>
                                                                 <!-- Core -->
                                                                 <MenuItem Header="{Binding Name}" IsEnabled="False"/>
-                                                                <MenuItem Header="{Binding ImageCountString}" IsEnabled="False"/>
+                                                                <MenuItem Header="{Binding ImageCountStringContext}" IsEnabled="False"/>
                                                                 <Separator/>
                                                                 <MenuItem Header="Rename" Command="{Binding RenameTagCommand}"/>
                                                                 <MenuItem Header="Delete" Command="{Binding RemoveTagCommand}"/>

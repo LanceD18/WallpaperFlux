@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using LanceTools;
 using MvvmCross.Commands;
@@ -76,26 +77,8 @@ namespace WallpaperFlux.Core.Models.Tagging
         //xpublic HashSet<Tuple<string, string>> ParentTags = new HashSet<Tuple<string, string>>();
         //xpublic HashSet<Tuple<string, string>> ChildTags = new HashSet<Tuple<string, string>>();
 
-        private CategoryModel _parentCategory;
-        
-        [JsonIgnore]
         //! Using a string will require us to update this on rename, and search for the category when needed, and this isn't even being saved so lets just avoid the hassle
-        public CategoryModel ParentCategory
-        {
-            get => _parentCategory;
-
-            set
-            {
-                /*x
-                if (parentCategoryName != "")
-                {
-                    UpdateLinkedTagsCategoryName(value);
-                }
-                */
-
-                _parentCategory = value;
-            }
-        }
+        [JsonIgnore] public CategoryModel ParentCategory;
 
         //? We are ignoring this since these should get implemented on loading in the images through their TagCollection
         private HashSet<ImageModel> LinkedImages = new HashSet<ImageModel>(); //? Will be converted to strings in TagModelJson.cs for saving purposes instead of saving the entire object
@@ -129,7 +112,9 @@ namespace WallpaperFlux.Core.Models.Tagging
             set => SetProperty(ref _isHighlightedChild, value);
         }
 
-        [JsonIgnore] public string ImageCountString => "Found in " + LinkedImages.Count + " image(s)";
+        [JsonIgnore] public string ImageCountStringContext => "Found in " + LinkedImages.Count + " image(s)";
+
+        [JsonIgnore] public string ImageCountStringTag => "(" + LinkedImages.Count + ")";
 
         #endregion
 
@@ -206,31 +191,29 @@ namespace WallpaperFlux.Core.Models.Tagging
         public void LinkImage(ImageTagCollection imageTags)
         {
             LinkedImages.Add(imageTags.ParentImage);
-            RaisePropertyChanged(() => ImageCountString);
+            RaisePropertyChanged(() => ImageCountStringTag);
+            RaisePropertyChanged(() => ImageCountStringContext);
         }
 
         public void UnlinkImage(ImageTagCollection imageTags)
         {
             LinkedImages.Remove(imageTags.ParentImage);
-            RaisePropertyChanged(() => ImageCountString);
+            RaisePropertyChanged(() => ImageCountStringTag);
+            RaisePropertyChanged(() => ImageCountStringContext);
         }
 
         public void UnlinkAllImages() // for removing/resetting a tag
         {
-            List<TagModel> imagesToUnlink = new List<TagModel>();
-            foreach(ImageModel image in LinkedImages)
+            foreach(ImageModel image in LinkedImages.ToArray()) //? We have to redirect the collection type to prevent the collection modified error
             {
-                //ximage.RemoveTag(this); // will call UnlinkImage()
+                image.RemoveTag(this); // will call UnlinkImage()
             }
 
-            RaisePropertyChanged(() => ImageCountString); //? Not really needed in current use cases but would ideally still exist here
+            RaisePropertyChanged(() => ImageCountStringTag); //? Not really needed in current use cases but would ideally still exist here
+            RaisePropertyChanged(() => ImageCountStringContext); //? Not really needed in current use cases but would ideally still exist here
         }
 
-        public int GetLinkedImageCount()
-        {
-            Debug.WriteLine("Find an efficient way to get the number of images linked to a tag without having multiple references like in the previous TagData vs ImageData");
-            return 0;
-        }
+        public int GetLinkedImageCount() => LinkedImages.Count;
 
         #region Parent / Child Tag Linking
 

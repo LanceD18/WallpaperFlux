@@ -264,7 +264,7 @@ namespace WallpaperFlux.Core.Models.Tagging
                 }
             }
 
-            if (displayWarning)
+            if (displayWarning && !JsonUtil.IsLoadingData)
             {
                 MessageBoxUtil.ShowError(errorCount <= 1 ? "The following tag already exists: " + existingTagWarning : "The following tags already exist: " + existingTagWarning);
             }
