@@ -84,7 +84,7 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
-        public void DeactivateFolder()
+        public void RemoveAllImagesOfFolder()
         {
             foreach (string image in _images)
             {

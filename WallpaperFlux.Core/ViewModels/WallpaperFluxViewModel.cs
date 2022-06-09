@@ -600,8 +600,19 @@ namespace WallpaperFlux.Core.ViewModels
             //! Placing this after AddFolderRange() will *significantly* increase load times as the images will attempt to be added multiple times
             // TODO Even with the above statement, this still takes a considerable amount of time to load
             // TODO Some of the lag may have to do with the conversions, it'll likely be a bit better once TempImageData is no longer needed
+
+            int invalidImageCount = 0;
+            string invalidImageString = "The following image(s) no longer exist and have been removed from the theme: ";
+
             foreach (TempImageData imageData in wallpaperData.imageData)
             {
+                if (!File.Exists(imageData.Path))
+                {
+                    invalidImageCount++;
+                    invalidImageString += "\n" + imageData.Path;
+                    continue;
+                }
+
                 ImageModel image = new ImageModel(imageData.Path, imageData.Rank);
 
                 ImageTagCollection tags = new ImageTagCollection(image);
@@ -635,9 +646,15 @@ namespace WallpaperFlux.Core.ViewModels
                 DataUtil.Theme.Images.AddImage(image);
             }
 
+            if (invalidImageCount > 0) MessageBoxUtil.ShowError(invalidImageString);
+
+            Debug.WriteLine("Adding folders...");
             //! Folders need to be added after images are added so that they don't have to be verified twice
+            //! (The folders will add all images as their default if added first, if added second they'll just find that the image already exists)
             AddFolderRange(wallpaperData.imageFolders.Keys.ToArray());
             #endregion
+
+            Debug.WriteLine("Conversion Finished");
         }
         #endregion
 
@@ -670,23 +687,35 @@ namespace WallpaperFlux.Core.ViewModels
 
         public void AddFolderRange(string[] paths)
         {
-            string errorOutput = "Could not add the folder(s):\n";
+            string errorOutput = "Could not add the folder(s):";
             bool errorOccured = false;
+
+            string alreadyExistsString = "The following folder(s) already exist:";
+            bool alreadyExistsOccured = false;
 
             foreach (string path in paths)
             {
                 if (Directory.Exists(path))
                 {
-                    ImageFolders.Add(new FolderModel(path, true));
+                    if (!ContainsFolder(path))
+                    {
+                        ImageFolders.Add(new FolderModel(path, true));
+                    }
+                    else
+                    {
+                        alreadyExistsString += "\n" + path;
+                        alreadyExistsOccured = true;
+                    }
                 }
                 else
                 {
-                    errorOutput += path + "\n";
+                    errorOutput += "\n" + path;
                     errorOccured = true;
                 }
             }
 
             if (errorOccured) MessageBoxUtil.ShowError(errorOutput);
+            if (alreadyExistsOccured) MessageBoxUtil.ShowError(alreadyExistsString);
 
             RaisePropertyChanged(() => CanNextWallpaper);
             RaisePropertyChanged(() => CanSelectImages);
@@ -698,12 +727,23 @@ namespace WallpaperFlux.Core.ViewModels
         public void RemoveFolder()
         {
             Debug.WriteLine("Removing: " + SelectedImageFolder.Path);
-            SelectedImageFolder.DeactivateFolder();
+            SelectedImageFolder.RemoveAllImagesOfFolder();
             ImageFolders.Remove(SelectedImageFolder);
             //xImageFolders.ValidateImageFolders();
 
             UpdateTheme();
         }
+
+        public bool ContainsFolder(string path)
+        {
+            foreach (FolderModel folder in ImageFolders)
+            {
+                if (folder.Path == path) return true;
+            }
+
+            return false;
+        }
+
         #endregion
 
         #region Display Settings
@@ -753,7 +793,7 @@ namespace WallpaperFlux.Core.ViewModels
 
                     if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
                     {
-                        RebuildImageSelector(dialog.FileNames.ToArray(), false);
+                        RebuildImageSelector(dialog.FileNames.ToArray());
                     }
                 }
             }
@@ -763,36 +803,72 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
-        public void RebuildImageSelector(string[] selectedImages, bool reverseOrder)
+        private readonly string INVALID_IMAGE_STRING_DEFAULT = "The following selected images do not exist in your theme:\n(Please add the folder that they reside in to include them)";
+        private readonly string INVALID_IMAGE_STRING_ALL_INVALID = "None of the selected images exist in your theme. Please add the folder that they reside in to include them.";
+        public void RebuildImageSelector(string[] selectedImages, bool reverseOrder = false)
+        {
+            List<ImageModel> selectedImageModels = new List<ImageModel>();
+
+            int invalidCounter = 0;
+            string invalidImageString = INVALID_IMAGE_STRING_DEFAULT;
+
+            foreach (string imagePath in selectedImages)
+            {
+                if (DataUtil.Theme.Images.ContainsImage(imagePath))
+                {
+                    selectedImageModels.Add(DataUtil.Theme.Images.GetImage(imagePath));
+                }
+                else
+                {
+                    invalidCounter++;
+                    invalidImageString += "\n" + imagePath;
+                }
+            }
+
+            if (invalidCounter == selectedImages.Length)
+            {
+                MessageBoxUtil.ShowError(INVALID_IMAGE_STRING_ALL_INVALID);
+                return;
+            }
+
+            if (invalidCounter > 0)
+            {
+                MessageBoxUtil.ShowError(invalidImageString);
+            }
+
+            RebuildImageSelector(selectedImageModels.ToArray(), reverseOrder);
+        }
+
+        public void RebuildImageSelector(ImageModel[] selectedImages, bool reverseOrder = false)
         {
             //-----Checking Conditions-----
-            if (selectedImages == null)
+            if (selectedImages == null || selectedImages.Length == 0)
             {
                 MessageBoxUtil.ShowError("No images were selected");
                 return;
             }
 
             // Check for null images (The EnableDetectionOfInactiveImages function is handled further down)
-            int invalidCounter = 0;
-            string invalidImageString = "";
-            foreach (string image in selectedImages)
+            int nullCounter = 0;
+            string nullImageString = "The following selected images do not exist:";
+            foreach (ImageModel image in selectedImages)
             {
                 if (image == null)
                 {
-                    invalidCounter++;
-                    invalidImageString += image + "\n";
+                    nullCounter++;
+                    nullImageString += "\n" + image;
                 }
             }
 
-            if (invalidCounter > 0)
+            if (nullCounter == selectedImages.Length)
             {
-                MessageBoxUtil.ShowError("Some of the selected images do not exist: \n" + invalidImageString);
+                MessageBoxUtil.ShowError("All selected images do not exist");
                 return;
             }
 
-            if (invalidCounter == selectedImages.Length)
+            if (nullCounter > 0)
             {
-                MessageBoxUtil.ShowError("All selected images do not exist");
+                MessageBoxUtil.ShowError(nullImageString);
                 return;
             }
 
@@ -800,9 +876,11 @@ namespace WallpaperFlux.Core.ViewModels
             ImageSelectorTabs.Clear();
 
             int tabCount = (selectedImages.Length / IMAGES_PER_PAGE) + 1;
-
             int imageIndex = 0;
-            
+
+            int invalidCounter = 0;
+            string invalidImageString = INVALID_IMAGE_STRING_DEFAULT;
+
             for (int i = 0; i < tabCount; i++)
             {
                 // a reference of the index for use with the XAML code
@@ -814,7 +892,16 @@ namespace WallpaperFlux.Core.ViewModels
                     // a needed cutoff to prevent us from going above the max index of selectedImages[] since we are looping by images per page
                     if (j + imageIndex < selectedImages.Length)
                     {
-                        tabModel.Items.Add(Theme.Images.GetImage(selectedImages[j + imageIndex]));
+                        ImageModel image = selectedImages[j + imageIndex];
+                        if (DataUtil.Theme.Images.ContainsImage(image.Path, image.ImageType))
+                        {
+                            tabModel.Items.Add(image);
+                        }
+                        else
+                        {
+                            invalidCounter++;
+                            invalidImageString += "\n" + image.Path;
+                        }
                     }
                     else
                     {
@@ -826,6 +913,17 @@ namespace WallpaperFlux.Core.ViewModels
 
                 //x tabModel.RaisePropertyChangedImages();
                 ImageSelectorTabs.Add(tabModel);
+            }
+
+            if (invalidCounter == selectedImages.Length)
+            {
+                MessageBoxUtil.ShowError(INVALID_IMAGE_STRING_ALL_INVALID);
+                //? we don't return here because the collection was modified
+            }
+
+            if (invalidCounter > 0)
+            {
+                MessageBoxUtil.ShowError(invalidImageString);
             }
 
             RaisePropertyChanged(() => ImageSelectorTabs);

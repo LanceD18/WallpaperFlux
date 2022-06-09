@@ -14,6 +14,7 @@ namespace WallpaperFlux.Core.Collections
     // TODO Might rename to ImageController since there's only one instance of this
     public class ImageCollection
     {
+        // [ImageType, [Path, ImageModel] ; Allows us to either use the string path to reference an image or a value method such as ContainsValue()
         private Dictionary<ImageType, Dictionary<string, ImageModel>> ImageContainer = new Dictionary<ImageType, Dictionary<string, ImageModel>>()
         {
             {ImageType.Static, new Dictionary<string, ImageModel>()},
@@ -52,6 +53,7 @@ namespace WallpaperFlux.Core.Collections
         public void AddImage(ImageModel image)
         {
             if (ContainsImage(image)) return;
+            if (ImageContainer[image.ImageType].ContainsKey(image.Path)) return; //? an image with the same path may not necessarily have the same object
 
             ImageContainer[image.ImageType].Add(image.Path, image);
         }
@@ -77,6 +79,8 @@ namespace WallpaperFlux.Core.Collections
         {
             DataUtil.Theme.RankController.RemoveRankedImage(image);
 
+            image.RemoveAllTags();
+
             return ImageContainer[image.ImageType].Remove(image.Path);
         }
 
@@ -98,7 +102,7 @@ namespace WallpaperFlux.Core.Collections
 
         public bool RemoveImage(string path)
         {
-            return RemoveImage((GetImage(path)));
+            return RemoveImage(GetImage(path));
         }
 
         public bool RemoveImageRange(string[] paths, out string[] failedRemovals)

@@ -230,6 +230,8 @@ namespace WallpaperFlux.Core.Models
                 return _imageSize;
             }
         }
+        
+        public void RemoveAllTags() => Tags.RemoveAllTags();
 
         #region Tags
         public void AddTag(TagModel tag) => Tags.Add(tag);

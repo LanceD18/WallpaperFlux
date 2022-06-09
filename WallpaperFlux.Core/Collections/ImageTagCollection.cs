@@ -43,13 +43,27 @@ namespace WallpaperFlux.Core.Collections
 
         public void Remove(TagModel tag)
         {
-            Debug.WriteLine("Before: " + WallpaperFluxViewModel.Instance.InspectedImageTags.Contains(tag));
             _tags.Remove(tag);
             tag.UnlinkImage(this);
             TaggingUtil.HighlightTags(this);
 
             WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.InspectedImageTags);
-            Debug.WriteLine("After: " + WallpaperFluxViewModel.Instance.InspectedImageTags.Contains(tag));
+        }
+
+        /// <summary>
+        /// For removing the image itself
+        /// </summary>
+        /// <param name="tag"></param>
+        public void RemoveAllTags()
+        {
+            foreach (TagModel tag in _tags)
+            {
+                tag.UnlinkImage(this);
+            }
+
+            TaggingUtil.HighlightTags(this); // may still have the highlight of this image active while doing this, so re-highlight
+
+            _tags.Clear();
         }
 
         public bool Contains(TagModel tag) => _tags.Contains(tag);

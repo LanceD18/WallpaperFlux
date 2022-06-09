@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using LanceTools;
@@ -19,6 +20,7 @@ namespace WallpaperFlux.Core.Models.Tagging
         public string Name { get; private set; }
 
         private bool _enabled;
+
         public bool Enabled
         {
             get => _enabled;
@@ -45,6 +47,7 @@ namespace WallpaperFlux.Core.Models.Tagging
         }
 
         private bool _UseForNaming;
+
         public bool UseForNaming
         {
             get => _UseForNaming;
@@ -73,6 +76,7 @@ namespace WallpaperFlux.Core.Models.Tagging
         //? Just create a TagModelJSON.cs that converts all of these into strings on saving the theme
         //! Using a string will require us to update this on rename, and search for the tag when needed, so lets just save the string portion for when saving
         private HashSet<TagModel> ParentTags = new HashSet<TagModel>(); //? Will be converted to strings in TagModelJson.cs for saving purposes instead of saving the entire object
+
         private HashSet<TagModel> ChildTags = new HashSet<TagModel>(); //? Will be converted to strings in TagModelJson.cs for saving purposes instead of saving the entire object
         //xpublic HashSet<Tuple<string, string>> ParentTags = new HashSet<Tuple<string, string>>();
         //xpublic HashSet<Tuple<string, string>> ChildTags = new HashSet<Tuple<string, string>>();
@@ -85,8 +89,14 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         #region View Variables
 
+        [JsonIgnore] public string ImageCountStringContext => "Found in " + LinkedImages.Count + " image(s)";
+
+        [JsonIgnore] public string ImageCountStringTag => "(" + LinkedImages.Count + ")";
+
+        #region ----- Highlighting -----
         //? Used for determining which tag's font to highlight when an image is selected
         private bool _isHighlighted;
+
         [JsonIgnore]
         public bool IsHighlighted
         {
@@ -96,6 +106,7 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         //? Similar to IsHighlighted but exists to choose a different color
         private bool _isHighlightedParent;
+
         [JsonIgnore]
         public bool IsHighlightedParent
         {
@@ -105,20 +116,90 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         //? Similar to IsHighlighted but exists to choose a different color
         private bool _isHighlightedChild;
+
         [JsonIgnore]
         public bool IsHighlightedChild
         {
             get => _isHighlightedChild;
             set => SetProperty(ref _isHighlightedChild, value);
         }
+        #endregion
 
-        [JsonIgnore] public string ImageCountStringContext => "Found in " + LinkedImages.Count + " image(s)";
+        #region ----- TagBoard -----
 
-        [JsonIgnore] public string ImageCountStringTag => "(" + LinkedImages.Count + ")";
+        
+        [JsonIgnore] private TagSearchType _searchType = TaggingUtil.DEFAULT_TAG_SEARCH_TYPE;
+        public TagSearchType SearchType
+        {
+            get => _searchType;
+            set
+            {
+                SetProperty(ref _searchType, value);
+
+                RaisePropertyChanged(() => SearchTypeString);
+                RaisePropertyChanged(() => SearchTypeColor);
+                RaisePropertyChanged(() => SearchTypeToolTip);
+            }
+        }
+
+        [JsonIgnore]
+        public string SearchTypeString
+        {
+            get
+            {
+                switch (SearchType)
+                {
+                    case TagSearchType.Mandatory: return "+";
+
+                    case TagSearchType.Optional: return "~";
+
+                    case TagSearchType.Excluded: return "-";
+                }
+
+                return "?";
+            }
+        }
+
+        public Color SearchTypeColor
+        {
+            get
+            {
+                switch (SearchType)
+                {
+                    case TagSearchType.Mandatory: return Color.White;
+
+                    case TagSearchType.Optional: return Color.LimeGreen;
+
+                    case TagSearchType.Excluded: return Color.Red;
+                }
+
+                return Color.Purple;
+            }
+        }
+
+        public string SearchTypeToolTip
+        {
+            get
+            {
+                switch (SearchType)
+                {
+                    case TagSearchType.Mandatory: return "Mandatory (Selection *must* have this tag)";
+
+                    case TagSearchType.Optional: return "Optional (Selection *may* have this tag)";
+
+                    case TagSearchType.Excluded: return "Excluded (Selection *cannot* have this tag)";
+                }
+
+                return "ERROR";
+            }
+        }
+        #endregion
 
         #endregion
 
         #region Commands
+
+        [JsonIgnore] public IMvxCommand SelectImagesWithTag { get; set; } //! There should be a button for selecting all tags in the TagBoard and/or all selected tags
 
         [JsonIgnore] public IMvxCommand RenameTagCommand { get; set; }
 
@@ -138,7 +219,12 @@ namespace WallpaperFlux.Core.Models.Tagging
         [JsonIgnore] public IMvxCommand RemoveTagFromEntireImageGroupCommand { get; set; }
         #endregion
 
+        #region ----- TagBoard -----
         [JsonIgnore] public IMvxCommand RemoveTagFromTagBoardCommand { get; set; }
+
+        [JsonIgnore] public  IMvxCommand CycleSearchTypeCommand { get; set; }
+
+        #endregion
 
         #endregion
 
@@ -149,13 +235,10 @@ namespace WallpaperFlux.Core.Models.Tagging
             UseForNaming = true;
             Enabled = true;
 
-            AddTagToSelectedImagesCommand = new MvxCommand(() => AddTagToSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems(), false));
-            AddTagToEntireImageGroupCommand = new MvxCommand(() => AddTagToSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllItems(), true));
-            RemoveTagFromSelectedImageCommand = new MvxCommand(() => RemoveTagFromSelectedImages(new[] { WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.SelectedImage }, false));
-            RemoveTagFromSelectedImagesCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems(), false));
-            RemoveTagFromEntireImageGroupCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllItems(), true));
-
-            TagInteractCommand = new MvxCommand(() =>
+            SelectImagesWithTag = new MvxCommand(() => WallpaperFluxViewModel.Instance.RebuildImageSelector(LinkedImages.ToArray()));
+            RenameTagCommand = new MvxCommand(PromptRename);
+            RemoveTagCommand = new MvxCommand(PromptRemoveTag);
+            TagInteractCommand = new MvxCommand(() => //? handles TagAdder, TagLinker, etc.
             {
                 ImageModel[] selectedImages = null;
 
@@ -167,10 +250,33 @@ namespace WallpaperFlux.Core.Models.Tagging
                 InteractWithTag(selectedImages);
             });
 
-            RemoveTagFromTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.RemoveTagFromTagBoard(this));
+            // Image Control
+            AddTagToSelectedImagesCommand = new MvxCommand(() => AddTagToSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems(), false));
+            AddTagToEntireImageGroupCommand = new MvxCommand(() => AddTagToSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllItems(), true));
+            RemoveTagFromSelectedImageCommand = new MvxCommand(() => RemoveTagFromSelectedImages(new[] { WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.SelectedImage }, false));
+            RemoveTagFromSelectedImagesCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems(), false));
+            RemoveTagFromEntireImageGroupCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllItems(), true));
 
-            RenameTagCommand = new MvxCommand(PromptRename);
-            RemoveTagCommand = new MvxCommand(PromptRemoveTag);
+            // TagBoard
+            RemoveTagFromTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.RemoveTagFromTagBoard(this));
+            CycleSearchTypeCommand = new MvxCommand(() =>
+            {
+                // cycles between the search types
+                switch (SearchType)
+                {
+                    case TagSearchType.Mandatory:
+                        SearchType = TagSearchType.Optional;
+                        break;
+
+                    case TagSearchType.Optional:
+                        SearchType = TagSearchType.Excluded;
+                        break;
+
+                    case TagSearchType.Excluded:
+                        SearchType = TagSearchType.Mandatory;
+                        break;
+                }
+            });
         }
 
         public void PromptRename()
@@ -188,6 +294,7 @@ namespace WallpaperFlux.Core.Models.Tagging
             }
         }
 
+        #region Image Linking
         public void LinkImage(ImageTagCollection imageTags)
         {
             LinkedImages.Add(imageTags.ParentImage);
@@ -214,6 +321,12 @@ namespace WallpaperFlux.Core.Models.Tagging
         }
 
         public int GetLinkedImageCount() => LinkedImages.Count;
+
+        public ImageModel[] GetLinkedImages() => LinkedImages.ToArray();
+
+        public bool ContainsLinkedImage(ImageModel image) => LinkedImages.Contains(image);
+
+        #endregion
 
         #region Parent / Child Tag Linking
 

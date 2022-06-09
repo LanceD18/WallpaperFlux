@@ -55,7 +55,9 @@
             <!-- File -->
             <MenuItem Header="File">
                 <MenuItem Header="Load Theme" mvx:Bi.nd="Command LoadThemeCommand"/>
-                <MenuItem Header="Save Theme [Not implemented]"/>
+                <!-- ! Should be disabled when no theme is loaded, saves the current theme to itself -->
+                <MenuItem Header="Save Theme [Not implemented]" IsEnabled="False"/>
+                <MenuItem Header="Save Theme As [Not implemented]"/>
             </MenuItem>
 
             <!-- Edit -->

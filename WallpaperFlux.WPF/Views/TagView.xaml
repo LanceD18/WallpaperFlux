@@ -41,7 +41,7 @@
 
         <!-- Tagboard Drawer -->
         <hc:Drawer Dock="Right" ShowMode="Cover" IsOpen="{Binding TagboardToggle}" x:Name="TagBoardDrawer">
-            <GroupBox>
+                <GroupBox>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <!--<ColumnDefinition Width="{adonisUi:Space 1}"/>-->
@@ -74,6 +74,7 @@
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="0"/>
                                     <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
                                     <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
 
@@ -84,6 +85,20 @@
                                 </TextBlock>
                                 <Button Grid.Row="1" Grid.Column="3" HorizontalAlignment="Right" Content="X" mvx:Bi.nd="Command CloseTagBoardCommand" 
                                         Margin="5 0 5 0" Foreground="Red" FontSize="16" FontWeight="Bold" adonisExtensions:LayerExtension.Layer="1"/>
+                                <StackPanel Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                            adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="0 5 0 0">
+                                    <Button Content="Select Images" Margin="5 0 5 0" Command="{Binding SelectImagesFromTagBoardCommand}"/>
+
+                                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
+
+                                    <TextBlock Text="Set All: " Margin="5 0 0 0" VerticalAlignment="Center"/>
+                                    <Button Content="+" Margin="5 0 5 0" Command="{Binding SetMandatoryTagBoardSelectionCommand}" FontWeight="Medium"
+                                            adonisExtensions:CursorSpotlightExtension.BorderBrush="White" ToolTip="Mandatory (Selection *must* have this tag)"/>
+                                    <Button Content="~" Margin="5 0 5 0" Command="{Binding SetOptionalTagBoardSelectionCommand}" FontWeight="Medium"
+                                            Foreground="LimeGreen" adonisExtensions:CursorSpotlightExtension.BorderBrush="LimeGreen" ToolTip="Optional (Selection *may* have this tag)"/>
+                                    <Button Content="-" Margin="5 0 5 0" Command="{Binding SetExcludedTagBoardSelectionCommand}" FontWeight="Medium"
+                                            Foreground="Red" adonisExtensions:CursorSpotlightExtension.BorderBrush="Red" ToolTip="Excluded (Selection *cannot* have this tag)"/>
+                                </StackPanel>
                             </Grid>
                             <!--
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -113,9 +128,18 @@
                                     <!-- The GroupBox adds a fitting adonis background to every tag -->
                                     <GroupBox  adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:CornerRadiusExtension.CornerRadius="15">
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock VerticalAlignment="Center" Text="{Binding Name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                            <Button VerticalAlignment="Center" Content="{Binding SearchTypeString}" ToolTip="{Binding SearchTypeToolTip}"
+                                                    Foreground="{Binding SearchTypeColor,  Converter={StaticResource ColorToBrushConverter}}"
+                                                    Command="{Binding CycleSearchTypeCommand}"
+                                                    adonisExtensions:RippleExtension.FadeInDuration="0"
+                                                    adonisExtensions:RippleExtension.FadeOutDuration="0"
+                                                    adonisExtensions:RippleExtension.ForegroundBrush="{Binding SearchTypeColor,  Converter={StaticResource ColorToBrushConverter}}"
+                                                    FontSize="10" FontWeight="Medium" Margin="0 0 5 0" BorderThickness="0" Width="22"/>
+                                            <!-- ! Without a set width, the excluded parameter will change the size of the button and cause potential formatting jumps -->
+                                            <TextBlock VerticalAlignment="Center" Text="{Binding Name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                                                       Foreground="{Binding SearchTypeColor,  Converter={StaticResource ColorToBrushConverter}}"/>
                                             <Button VerticalAlignment="Center" Content="X"  Command="{Binding RemoveTagFromTagBoardCommand}" 
-                                                    Foreground="Red" FontSize="10" FontWeight="Medium" Margin="5 0 5 0"/>
+                                                    Foreground="Red" FontSize="10" FontWeight="Medium" Margin="5 0 0 0" BorderThickness="0" />
                                         </StackPanel>
                                     </GroupBox>
                                 </DataTemplate>
@@ -124,6 +148,7 @@
                     </GroupBox>
                 </Grid>
             </GroupBox>
+
         </hc:Drawer>
 
         <!-- TODO Rename category can just be a ContextMenu button now -->
@@ -298,16 +323,26 @@
                                     <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="5 5 5 0">
                                         <!-- Sorting -->
                                         <TextBlock Text="Sort By: " VerticalAlignment="Center"/>
-                                        <Button  Content="Name" Margin="5 0 5 0" Command="{Binding ToggleSortByNameCommand}"/>
-                                        <Button  Content="Count" Margin="5 0 5 0" Command="{Binding ToggleSortByCountCommand}"/>
+                                        <Button Content="Name" Margin="5 0 5 0" Command="{Binding ToggleSortByNameCommand}"/>
+                                        <Button Content="Count" Margin="0 0 5 0" Command="{Binding ToggleSortByCountCommand}"/>
 
                                         <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
 
                                         <!-- TagBoard -->
                                         <TextBlock Text="Tagboard: " Margin="5 0 0 0" VerticalAlignment="Center"/>
                                         <Button Content="View" Margin="5 0 5 0" Command="{Binding ViewTagBoardCommand}"/>
-                                        <Button Content="Add Selected" Margin="5 0 5 0" Command="{Binding AddSelectedTagsToTagBoardCommand}"/>
-                                        <Button Content="Clear" Margin="5 0 5 0" Command="{Binding ClearTagBoardCommand}"/>
+                                        <Button Content="Add" Margin="0 0 5 0" Command="{Binding AddSelectedTagsToTagBoardCommand}"
+                                                ToolTip="Add selected tags to the Tagboard"/>
+                                        <Button Content="Clear" Margin="0 0 5 0" Command="{Binding ClearTagBoardCommand}"/>
+
+                                        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+
+                                        <!-- Image Selection -->
+                                        <TextBlock Text="Select Images With: " Margin="5 0 0 0" VerticalAlignment="Center"/>
+                                        <Button Content="Every Sel. Tag" Margin="5 0 5 0" Command="{Binding SelectImagesWithEverySelTag}"/>
+                                        <Button Content="Any Sel. Tag" Margin="0 0 5 0" Command="{Binding SelectImagesWithAnySelTag}"/>
+                                        <Button Content="Any Tag In Category" Margin="0 0 5 0" Command="{Binding SelectImagesWithAnyCategoryTag}"/>
+
                                     </StackPanel>
                                 </Grid>
                             </GroupBox>
@@ -449,7 +484,7 @@
 
                                                                 <!-- Image Control & Linking-->
                                                                 <MenuItem Header="Image Control">
-                                                                    <MenuItem Header="Select Images with Tag"/>
+                                                                    <MenuItem Header="Select Images with Tag" Command="{Binding SelectImagesWithTag}"/>
                                                                     <MenuItem Header="Add To">
                                                                         <MenuItem Header="Selected Image(s)" Command="{Binding AddTagToSelectedImagesCommand}"/>
                                                                         <MenuItem Header="Entire Image Group" Command="{Binding AddTagToEntireImageGroupCommand}"/>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Drawing;
 using System.Dynamic;
@@ -51,27 +52,8 @@ namespace WallpaperFlux.Core.ViewModels
 
         private HashSet<TagModel> TagsToHighlight = new HashSet<TagModel>();
 
-        #region TagBoard
-        private MvxObservableCollection<TagModel> _tagBoardTags = new MvxObservableCollection<TagModel>();
 
-        public MvxObservableCollection<TagModel> TagBoardTags
-        {
-            get => _tagBoardTags;
-            set => SetProperty(ref _tagBoardTags, value);
-        }
-
-        private double _tagBoardHeight;
-        public double TagBoardHeight
-        {
-            get => _tagBoardHeight;
-            set => SetProperty(ref _tagBoardHeight, value); //? needed to update the height when resizing the window
-        }
-
-        #endregion
-
-        #endregion
-
-        #region Filters
+        #region ----- Filters -----
         private bool _tagAdderToggle;
         public bool TagAdderToggle
         {
@@ -190,6 +172,26 @@ namespace WallpaperFlux.Core.ViewModels
 
         #endregion
 
+        #region ----- TagBoard -----
+        private MvxObservableCollection<TagModel> _tagBoardTags = new MvxObservableCollection<TagModel>();
+
+        public MvxObservableCollection<TagModel> TagBoardTags
+        {
+            get => _tagBoardTags;
+            set => SetProperty(ref _tagBoardTags, value);
+        }
+
+        private double _tagBoardHeight;
+        public double TagBoardHeight
+        {
+            get => _tagBoardHeight;
+            set => SetProperty(ref _tagBoardHeight, value); //? needed to update the height when resizing the window
+        }
+
+        #endregion
+
+        #endregion
+
         #region Enablers
 
         public bool CategoryIsSelected => SelectedCategory != null;
@@ -215,7 +217,19 @@ namespace WallpaperFlux.Core.ViewModels
 
         public IMvxCommand AddTagToSelectedCategoryCommand { get; set; }
 
+        #region ----- TagBoard -----
+
         public IMvxCommand CloseTagBoardCommand { get; set; }
+
+        public IMvxCommand SelectImagesFromTagBoardCommand { get; set; }
+
+        public IMvxCommand SetMandatoryTagBoardSelectionCommand { get; set; }
+
+        public IMvxCommand SetOptionalTagBoardSelectionCommand { get; set; }
+
+        public IMvxCommand SetExcludedTagBoardSelectionCommand { get; set; }
+
+        #endregion
 
         #endregion
 
@@ -233,15 +247,42 @@ namespace WallpaperFlux.Core.ViewModels
                 RaisePropertyChanged(() => CategoriesExist);
                 RaisePropertyChanged(() => SelectedCategory);
             });
+
             AddTagToSelectedCategoryCommand = new MvxCommand(() =>
             {
                 TaggingUtil.PromptAddTagToCategory(SelectedCategory);
 
                 if (SelectedCategory != null) { AddDebugTags(SelectedCategory); }
             });
+
+            // TagBoard
             CloseTagBoardCommand = new MvxCommand(() => TagboardToggle = false); //? the open/toggle TagBoard is initially called by CategoryModel and sent to a method here
+            SelectImagesFromTagBoardCommand = new MvxCommand(() => WallpaperFluxViewModel.Instance.RebuildImageSelector(SearchValidImagesWithTagBoard()));
+            SetMandatoryTagBoardSelectionCommand = new MvxCommand(() => SetAllTagBoardTagsSearchType(TagSearchType.Mandatory));
+            SetOptionalTagBoardSelectionCommand = new MvxCommand(() => SetAllTagBoardTagsSearchType(TagSearchType.Optional));
+            SetExcludedTagBoardSelectionCommand = new MvxCommand(() => SetAllTagBoardTagsSearchType(TagSearchType.Excluded));
+
+            TagBoardTags.CollectionChanged += TagBoardTagsOnCollectionChanged;
         }
 
+        private void TagBoardTagsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null && e.NewItems.Count > 0)
+            {
+                // reset search type to default on re-adding tag
+                foreach (TagModel tag in e.NewItems)
+                {
+                    tag.SearchType = TaggingUtil.DEFAULT_TAG_SEARCH_TYPE;
+                }
+            }
+        }
+
+        public void VerifyImagesOfCategories()
+        {
+
+        }
+
+        #region Tag Highlighting
         public void SetTagsToHighlight(HashSet<TagModel> tags)
         {
             TagsToHighlight = new HashSet<TagModel>(tags);
@@ -266,7 +307,8 @@ namespace WallpaperFlux.Core.ViewModels
                 }
             }
         }
-        
+        #endregion
+
         #region TagBoard
 
         public void ToggleTagBoard() => TagboardToggle = !TagboardToggle;
@@ -287,6 +329,49 @@ namespace WallpaperFlux.Core.ViewModels
         public void RemoveTagFromTagBoard(TagModel tag) => TagBoardTags.Remove(tag);
 
         public void SetTagBoardHeight(double newHeight) => TagBoardHeight = newHeight;
+
+        /// <summary>
+        /// Check all potential images for validity then select the valid images. Use the tag's search type for validity comparisons.
+        /// </summary>
+        /// <returns></returns>
+        public ImageModel[] SearchValidImagesWithTagBoard()
+        {
+            HashSet<ImageModel> validImages = new HashSet<ImageModel>(); //? we don't want the same image to appear twice, so we'll use a HashSet
+
+            foreach (TagModel tag in TagBoardTags)
+            {
+                foreach (ImageModel image in tag.GetLinkedImages())
+                {
+                    bool validImage = true;
+                    foreach (TagModel tagToCheck in TagBoardTags)
+                    {
+                        if (tagToCheck.SearchType == TagSearchType.Optional) continue; // if optional, do nothing
+
+                        switch (tagToCheck.SearchType)
+                        {
+                            case TagSearchType.Mandatory: // if mandatory, not containing this tag will set validity to false
+                                if (!tagToCheck.ContainsLinkedImage(image)) validImage = false; 
+                                break;
+
+                            case TagSearchType.Excluded: // if excluded, containing this tag will set validity to false
+                                if (tagToCheck.ContainsLinkedImage(image)) validImage = false;
+                                break;
+                        }
+
+                        if (validImage == false) break; // if validity is falsified, no need to continue checking
+                    }
+
+                    if (validImage) validImages.Add(image); // if it's still a valid image by now we can add it
+                }
+            }
+
+            return validImages.ToArray();
+        }
+
+        public void SetAllTagBoardTagsSearchType(TagSearchType searchType)
+        {
+            foreach (TagModel tag in TagBoardTags) tag.SearchType = searchType;
+        }
 
         #endregion
 

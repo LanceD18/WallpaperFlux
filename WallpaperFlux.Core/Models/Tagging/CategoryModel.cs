@@ -180,6 +180,12 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         [JsonIgnore] public IMvxCommand RemoveCategoryCommand { get; set; }
 
+        [JsonIgnore] public IMvxCommand SelectImagesWithEverySelTag { get; set; }
+
+        [JsonIgnore] public IMvxCommand SelectImagesWithAnySelTag { get; set; }
+
+        [JsonIgnore] public IMvxCommand SelectImagesWithAnyCategoryTag { get; set; }
+
         #endregion
 
         public CategoryModel(string name, bool useForNaming = true, bool enabled = true)
@@ -197,6 +203,10 @@ namespace WallpaperFlux.Core.Models.Tagging
 
             RenameCategoryCommand = new MvxCommand(PromptRename);
             RemoveCategoryCommand = new MvxCommand(PromptRemoveCategory);
+
+            SelectImagesWithEverySelTag = new MvxCommand(() => WallpaperFluxViewModel.Instance.RebuildImageSelector(SelectValidImages(TagSearchType.Mandatory, GetSelectedTags())));
+            SelectImagesWithAnySelTag = new MvxCommand(() => WallpaperFluxViewModel.Instance.RebuildImageSelector(SelectValidImages(TagSearchType.Optional, GetSelectedTags())));
+            SelectImagesWithAnyCategoryTag = new MvxCommand(() => WallpaperFluxViewModel.Instance.RebuildImageSelector(SelectValidImages(TagSearchType.Optional, Tags.ToArray())));
         }
 
         public void PromptRename()
@@ -323,6 +333,7 @@ namespace WallpaperFlux.Core.Models.Tagging
                 return tag;
             }
         }
+
         #endregion
 
         #region Tag Tab Contol
@@ -424,8 +435,8 @@ namespace WallpaperFlux.Core.Models.Tagging
 
                 case TagSortType.Count:
                     sortedItems = SortByCountDirection
-                        ? (from f in Tags orderby f.GetLinkedImageCount() select f) // ascending
-                        : (from f in Tags orderby f.GetLinkedImageCount() descending select f);
+                        ? (from f in Tags orderby f.GetLinkedImageCount() descending select f) // we want descending to be the default to start from the highest number
+                        : (from f in Tags orderby f.GetLinkedImageCount() select f); // ascending
                     break;
             }
 
@@ -441,6 +452,7 @@ namespace WallpaperFlux.Core.Models.Tagging
             switch (sortType)
             {
                 case TagSortType.Name:
+                    ActiveSortType = TagSortType.Name;
                     SortByNameDirection = !SortByNameDirection;
 
                     // the next time the following option is selected it'll default to one direction
@@ -448,6 +460,7 @@ namespace WallpaperFlux.Core.Models.Tagging
                     break;
 
                 case TagSortType.Count:
+                    ActiveSortType = TagSortType.Count;
                     SortByCountDirection = !SortByCountDirection;
 
                     // the next time the following option is selected it'll default to one direction
@@ -457,6 +470,37 @@ namespace WallpaperFlux.Core.Models.Tagging
 
             // Re-Verify
             VerifyTagTabs();
+        }
+
+        /// <summary>
+        /// Check all potential images for validity then select the valid images
+        /// </summary>
+        /// <returns></returns>
+        public ImageModel[] SelectValidImages(TagSearchType searchType, TagModel[] selectedTags)
+        {
+            HashSet<ImageModel> validImages = new HashSet<ImageModel>(); //? we don't want the same image to appear twice, so we'll use a HashSet
+
+            foreach (TagModel tag in selectedTags)
+            {
+                foreach (ImageModel image in tag.GetLinkedImages())
+                {
+                    bool validImage = true;
+
+                    if (searchType == TagSearchType.Mandatory)
+                    {
+                        foreach (TagModel tagToCheck in selectedTags)
+                        { 
+                            if (!tagToCheck.ContainsLinkedImage(image)) validImage = false;
+
+                            if (validImage == false) break; // if validity is falsified, no need to continue checking
+                        }
+                    }
+
+                    if (validImage) validImages.Add(image); // if it's still a valid image by now we can add it
+                }
+            }
+
+            return validImages.ToArray();
         }
 
         #endregion

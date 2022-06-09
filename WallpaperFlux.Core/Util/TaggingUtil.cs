@@ -14,6 +14,13 @@ namespace WallpaperFlux.Core.Util
         Count
     }
 
+    public enum TagSearchType
+    {
+        Mandatory,
+        Optional,
+        Excluded
+    }
+
     public static class TaggingUtil
     {
         //? This was supposed to remove the static references to Instance all together but a complication with the view creation has made this into an issue I'll look into later
@@ -21,7 +28,7 @@ namespace WallpaperFlux.Core.Util
         //x private static TagViewModel Instance;
 
         public const float TAGGING_WINDOW_WIDTH = 950;
-        public const float TAGGING_WINDOW_HEIGHT = 625;
+        public const float TAGGING_WINDOW_HEIGHT = 650;
 
         public static int TagsPerPage = 50;
 
@@ -33,6 +40,8 @@ namespace WallpaperFlux.Core.Util
             Instance = instance;
         }
         */
+
+        public const TagSearchType DEFAULT_TAG_SEARCH_TYPE = TagSearchType.Mandatory;
 
         public static bool InstanceExists() => TagViewModel.Instance != null;
 
