@@ -415,6 +415,16 @@ namespace WallpaperFlux.Core.Models.Tagging
                 pageTags.Add(_filteredTags[i]);
             }
 
+            //? prevents tags from remaining selected out of view whenever we search or change the sort option
+            //? and unlike images, tags already deselect on every page swap
+            foreach (TagModel tag in GetSelectedTags())
+            {
+                if (!pageTags.Contains(tag))
+                {
+                    tag.IsSelected = false;
+                }
+            }
+
             SelectedTagTab.Items.SwitchTo(pageTags);
         }
 
@@ -435,7 +445,7 @@ namespace WallpaperFlux.Core.Models.Tagging
 
                 case TagSortType.Count:
                     sortedItems = SortByCountDirection
-                        ? (from f in Tags orderby f.GetLinkedImageCount() descending select f) // we want descending to be the default to start from the highest number
+                        ? (from f in Tags orderby f.GetLinkedImageCount() descending select f) // with descending as the default we'll start from the highest number
                         : (from f in Tags orderby f.GetLinkedImageCount() select f); // ascending
                     break;
             }

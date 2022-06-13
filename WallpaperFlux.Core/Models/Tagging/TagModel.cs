@@ -104,7 +104,7 @@ namespace WallpaperFlux.Core.Models.Tagging
             set => SetProperty(ref _isHighlighted, value);
         }
 
-        //? Similar to IsHighlighted but exists to choose a different color
+        //? Similar to IsHighlighted but exists to choose a different color for Parent tags of a given tag
         private bool _isHighlightedParent;
 
         [JsonIgnore]
@@ -114,7 +114,7 @@ namespace WallpaperFlux.Core.Models.Tagging
             set => SetProperty(ref _isHighlightedParent, value);
         }
 
-        //? Similar to IsHighlighted but exists to choose a different color
+        //? Similar to IsHighlighted but exists to choose a different color for Child tags of a given tag
         private bool _isHighlightedChild;
 
         [JsonIgnore]
@@ -123,11 +123,21 @@ namespace WallpaperFlux.Core.Models.Tagging
             get => _isHighlightedChild;
             set => SetProperty(ref _isHighlightedChild, value);
         }
+
+        //? Similar to IsHighlighted but exists to choose a different color for tags that exist in only *some* images of a multi-image selection
+        private bool _isHighlightedInSomeImages;
+
+        [JsonIgnore]
+        public bool IsHighlightedInSomeImages
+        {
+            get => _isHighlightedInSomeImages;
+            set => SetProperty(ref _isHighlightedInSomeImages, value);
+        }
         #endregion
 
         #region ----- TagBoard -----
 
-        
+
         [JsonIgnore] private TagSearchType _searchType = TaggingUtil.DEFAULT_TAG_SEARCH_TYPE;
         public TagSearchType SearchType
         {
@@ -238,24 +248,14 @@ namespace WallpaperFlux.Core.Models.Tagging
             SelectImagesWithTag = new MvxCommand(() => WallpaperFluxViewModel.Instance.RebuildImageSelector(LinkedImages.ToArray()));
             RenameTagCommand = new MvxCommand(PromptRename);
             RemoveTagCommand = new MvxCommand(PromptRemoveTag);
-            TagInteractCommand = new MvxCommand(() => //? handles TagAdder, TagLinker, etc.
-            {
-                ImageModel[] selectedImages = null;
-
-                if (TaggingUtil.GetTagAdderToggle() || TaggingUtil.GetTagRemoverToggle()) // no need to grab the images if we aren't adding/removing tags from one
-                {
-                    selectedImages = WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems();
-                }
-
-                InteractWithTag(selectedImages);
-            });
+            TagInteractCommand = new MvxCommand(InteractTag);
 
             // Image Control
-            AddTagToSelectedImagesCommand = new MvxCommand(() => AddTagToSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems(), false));
-            AddTagToEntireImageGroupCommand = new MvxCommand(() => AddTagToSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllItems(), true));
-            RemoveTagFromSelectedImageCommand = new MvxCommand(() => RemoveTagFromSelectedImages(new[] { WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.SelectedImage }, false));
-            RemoveTagFromSelectedImagesCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems(), false));
-            RemoveTagFromEntireImageGroupCommand = new MvxCommand(() => RemoveTagFromSelectedImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllItems(), true));
+            AddTagToSelectedImagesCommand = new MvxCommand(() => AddTagToImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems(), false));
+            AddTagToEntireImageGroupCommand = new MvxCommand(() => AddTagToImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllItems(), true));
+            RemoveTagFromSelectedImageCommand = new MvxCommand(() => RemoveTagFromImages(new[] { WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.SelectedImage }, false));
+            RemoveTagFromSelectedImagesCommand = new MvxCommand(() => RemoveTagFromImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems(), false));
+            RemoveTagFromEntireImageGroupCommand = new MvxCommand(() => RemoveTagFromImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllItems(), true));
 
             // TagBoard
             RemoveTagFromTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.RemoveTagFromTagBoard(this));
@@ -279,20 +279,40 @@ namespace WallpaperFlux.Core.Models.Tagging
             });
         }
 
-        public void PromptRename()
+        #region Image Addition / Removal
+        public void AddTagToImages(ImageModel[] images, bool promptUser)
         {
-            string name = MessageBoxUtil.GetString("Rename", "Give a new name for this tag", "Tag Name...");
+            if (promptUser) MessageBoxUtil.PromptYesNo("Are you sure you want to add the tag [" + Name + "] to " + images.Length + " image(s)?");
 
-            if (!string.IsNullOrWhiteSpace(name)) Name = name;
+            foreach (ImageModel image in images) image.AddTag(this);
         }
 
-        public void PromptRemoveTag()
+        public void RemoveTagFromImages(ImageModel[] images, bool promptUser)
         {
-            if (MessageBoxUtil.PromptYesNo("Are you sure you want to remove the tag: [" + Name + "] ?"))
+            if (promptUser) MessageBoxUtil.PromptYesNo("Are you sure you want to remove the tag [" + Name + "] from " + images.Length + " image(s)?");
+
+            foreach (ImageModel image in images) image.RemoveTag(this);
+        }
+
+        public void ToggleTagWithImages(ImageModel[] images)
+        {
+            // toggles tags for the given group of images
+            foreach (ImageModel image in images)
             {
-                if (!TaggingUtil.RemoveTag(this)) MessageBoxUtil.ShowError("The tag, " + Name + ", does not exist");
+                if (!image.ContainsTag(this))
+                {
+                    image.AddTag(this);
+                }
+                else
+                {
+                    if (!IsHighlightedInSomeImages) //? in this case we will only add the tag to ensure that it is added to all corresponding images before allowing removal
+                    {
+                        image.RemoveTag(this);
+                    }
+                }
             }
         }
+        #endregion
 
         #region Image Linking
         public void LinkImage(ImageTagCollection imageTags)
@@ -341,13 +361,34 @@ namespace WallpaperFlux.Core.Models.Tagging
                     ParentTags.Add(tag);
                     tag.ChildTags.Add(this); // when becoming the parent tag of another tag we must also become its child tag
                 }
-                else // a simple toggle to also remove the parent/child reference of this tag when attempting to link again
-                {
-                    ParentTags.Remove(tag);
-                    tag.ChildTags.Remove(this);
-                }
                 
-                TaggingUtil.HighlightTags(ParentChildTagsUnion_IncludeSelf());
+                TaggingUtil.HighlightTags(/*xParentChildTagsUnion_IncludeSelf()*/);
+            }
+        }
+
+        public void UnlinkTag(TagModel tag)
+        {
+            if (tag == this) return; // can't link a tag to itself
+
+            if (ParentTags.Contains(tag)) // can't unlink a tag that isn't linked
+            {
+                ParentTags.Remove(tag);
+                tag.ChildTags.Remove(this);
+            }
+
+            TaggingUtil.HighlightTags(/*xParentChildTagsUnion_IncludeSelf()*/);
+        }
+
+        public void ToggleTagLink(TagModel tag)
+        {
+            // toggles the source tag's link status with this tag
+            if (!tag.HasParent(this))
+            {
+                tag.LinkTag(this);
+            }
+            else
+            {
+                tag.UnlinkTag(this);
             }
         }
 
@@ -372,38 +413,37 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         #region Command Methods
 
-        public void AddTagToSelectedImages(ImageModel[] images, bool promptUser)
+        //? handles TagAdder, TagLinker, etc.
+        public void InteractTag()
         {
-            if (promptUser) MessageBoxUtil.PromptYesNo("Are you sure you want to add the tag [" + Name + "] to " + images.Length + " image(s)?");
-
-            foreach (ImageModel image in images) image.AddTag(this);
-        }
-
-        public void RemoveTagFromSelectedImages(ImageModel[] images, bool promptUser)
-        {
-            if (promptUser) MessageBoxUtil.PromptYesNo("Are you sure you want to remove the tag [" + Name + "] from " + images.Length + " image(s)?");
-
-            foreach (ImageModel image in images) image.RemoveTag(this);
-        }
-
-        public void InteractWithTag(ImageModel[] images)
-        {
-            if (TaggingUtil.GetTagAdderToggle())
+            if (TaggingUtil.GetTagAdderToggle()) // no need to grab the images if we aren't adding/removing tags from one
             {
-                foreach (ImageModel image in images) image.AddTag(this);
-            }
-
-            if (TaggingUtil.GetTagRemoverToggle())
-            {
-                foreach (ImageModel image in images) image.RemoveTag(this);
+                ToggleTagWithImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems());
+                IsHighlightedInSomeImages = false; // after calling this there's no way for the tag to still be highlighted in only some images
+                return; // we should only be doing one of these at a time
             }
 
             if (TaggingUtil.GetTagLinkerToggle())
             {
-                TagViewModel.Instance.TagLinkingSource.LinkTag(this);
+                ToggleTagLink(TagViewModel.Instance.TagLinkingSource);
+                return; // we should only be doing one of these at a time
             }
         }
 
+        public void PromptRename()
+        {
+            string name = MessageBoxUtil.GetString("Rename", "Give a new name for this tag", "Tag Name...");
+
+            if (!string.IsNullOrWhiteSpace(name)) Name = name;
+        }
+
+        public void PromptRemoveTag() //? removes the tag from the theme
+        {
+            if (MessageBoxUtil.PromptYesNo("Are you sure you want to remove the tag: [" + Name + "] ?"))
+            {
+                if (!TaggingUtil.RemoveTag(this)) MessageBoxUtil.ShowError("The tag, " + Name + ", does not exist");
+            }
+        }
         #endregion
     }
 }

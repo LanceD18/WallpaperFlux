@@ -47,18 +47,13 @@ namespace WallpaperFlux.Core.Util
 
         public static bool GetTagAdderToggle() => InstanceExists() && TagViewModel.Instance.TagAdderToggle;
 
-        public static bool GetTagRemoverToggle() => InstanceExists() && TagViewModel.Instance.TagRemoverToggle;
-
         public static bool GetTagLinkerToggle() => InstanceExists() && TagViewModel.Instance.TagLinkerToggle;
 
-        public static void HighlightTags(ImageTagCollection tags)
-        {
-            if (InstanceExists()) TagViewModel.Instance.SetTagsToHighlight(tags.GetTags_HashSet());
-        }
+        //xpublic static void HighlightTags(ImageTagCollection tags) => HighlightTags(tags.GetTags_HashSet());
 
-        public static void HighlightTags(HashSet<TagModel> tags)
+        public static void HighlightTags(/*xHashSet<TagModel> tags*/)
         {
-            if (InstanceExists()) TagViewModel.Instance.SetTagsToHighlight(tags);
+            if (InstanceExists()) TagViewModel.Instance.HighlightTags(/*xtags*/);
         }
 
         #region Category Control
@@ -69,7 +64,8 @@ namespace WallpaperFlux.Core.Util
                 if (TagViewModel.Instance.Categories != null)
                 {
                     //xTagViewModel.Instance.Categories = new MvvmCross.ViewModels.MvxObservableCollection<CategoryModel>(DataUtil.Theme.Categories);
-                    TagViewModel.Instance.Categories.SwitchTo(DataUtil.Theme.Categories); //! each switch increases the minimum nmber of required events (CHECK THIS) so we'll use a new statement in the meanime
+                    //! each switch increases the minimum number of required events (CHECK THIS), could maybe use a 'new' statement instead (see above commented code)
+                    TagViewModel.Instance.Categories.SwitchTo(DataUtil.Theme.Categories);
 
                     /*x
                     List<CategoryModel> categories = new List<CategoryModel>(DataUtil.Theme.Categories);
@@ -90,6 +86,8 @@ namespace WallpaperFlux.Core.Util
 
         public static bool ContainsCategory(string categoryName) => GetCategory(categoryName) != null;
 
+        public static bool ContainsCategory(CategoryModel category) => DataUtil.Theme.Categories.Contains(category);
+
         public static CategoryModel GetCategory(string categoryName)
         {
             foreach (CategoryModel category in DataUtil.Theme.Categories)
@@ -102,16 +100,9 @@ namespace WallpaperFlux.Core.Util
 
         public static CategoryModel AddCategory(string categoryName, bool useForNaming = true, bool enabled = true)
         {
-            if (!ContainsCategory(categoryName))
-            {
-                CategoryModel category = new CategoryModel(categoryName, useForNaming, enabled);
-                AddCategory(category);
-                return category;
-            }
-            else // this category already exists
-            {
-                return null;
-            }
+            CategoryModel category = new CategoryModel(categoryName, useForNaming, enabled);
+            AddCategory(category);
+            return category;
         }
 
         public static void AddCategory(CategoryModel newCategory) => AddCategoryRange(new CategoryModel[] { newCategory });
@@ -120,9 +111,13 @@ namespace WallpaperFlux.Core.Util
         {
             foreach (CategoryModel category in newCategories)
             {
-                DataUtil.Theme.Categories.Add(category);
-                UpdateCategoryView();
+                if (!ContainsCategory(category))
+                {
+                    DataUtil.Theme.Categories.Add(category);
+                }
             }
+
+            UpdateCategoryView();
         }
 
         public static bool RemoveCategory(CategoryModel category)

@@ -36,7 +36,7 @@ namespace WallpaperFlux.Core.Collections
         {
             _tags.Add(tag); // we're using a hashset, no need to worry about duplicate tags
             tag.LinkImage(this);
-            TaggingUtil.HighlightTags(this);
+            TaggingUtil.HighlightTags(/*xthis*/);
 
             WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.InspectedImageTags);
         }
@@ -45,7 +45,7 @@ namespace WallpaperFlux.Core.Collections
         {
             _tags.Remove(tag);
             tag.UnlinkImage(this);
-            TaggingUtil.HighlightTags(this);
+            TaggingUtil.HighlightTags(/*xthis*/);
 
             WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.InspectedImageTags);
         }
@@ -61,7 +61,7 @@ namespace WallpaperFlux.Core.Collections
                 tag.UnlinkImage(this);
             }
 
-            TaggingUtil.HighlightTags(this); // may still have the highlight of this image active while doing this, so re-highlight
+            TaggingUtil.HighlightTags(/*xthis*/); // may still have the highlight of this image active while doing this, so re-highlight
 
             _tags.Clear();
         }

@@ -184,13 +184,9 @@ namespace WallpaperFlux.Core.Models
 
             Tags = tags ?? new ImageTagCollection(this); // create a new tag collection if the given one is null
 
-            OnIsSelectedChanged += (value) =>
-            {
-                if (IsSelected != value) // this should only update if there's actually a change
-                {
-                    WallpaperFluxViewModel.Instance.SelectedImageCount += value ? 1 : -1;
-                }
-            };
+            //? this is only called if there is actually a change, if the same value was sent in then nothing will happen
+            // increments or decrements based on the IsSelected state
+            OnIsSelectedChanged += (value) => WallpaperFluxViewModel.Instance.SelectedImageCount += value ? 1 : -1;
 
             InitCommands();
         }
@@ -245,6 +241,8 @@ namespace WallpaperFlux.Core.Models
                 AddTag(tag);
             }
         }
+
+        public bool ContainsTag(TagModel tag) => Tags.Contains(tag);
         #endregion
 
         #region Command Methods

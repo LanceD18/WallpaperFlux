@@ -14,7 +14,15 @@ namespace WallpaperFlux.Core.Models.Controls
         private ImageModel _selectedImage;
         public ImageModel SelectedImage
         {
-            get => _selectedImage;
+            get
+            {
+                if (_selectedImage != null && !_selectedImage.IsSelected)
+                {
+                    SelectedImage = null; //? Deselecting the image won't ensure that this is nullified
+                }
+
+                return _selectedImage;
+            }
             set
             {
                 SetProperty(ref _selectedImage, value);
@@ -26,10 +34,10 @@ namespace WallpaperFlux.Core.Models.Controls
                     WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.SelectedImagePathText);
                     WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.SelectedImageDimensionsText);
                     WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.InspectedImageTags);
-
+                    
                     if (value != null) // allows us to see what tags this image has if the TagView is open
                     {
-                        TaggingUtil.HighlightTags(value.Tags);
+                        TaggingUtil.HighlightTags();
                     }
                 }
             }
@@ -40,8 +48,8 @@ namespace WallpaperFlux.Core.Models.Controls
         //? Set through the View.xaml.cs
         public double ImageSelectorTabWrapWidth { get; set; }
 
-        //? Not sure if this actually helps, *seems* to work just fine without this but there might have been some issue you forgot about
-        public void RaisePropertyChangedImages() => RaisePropertyChanged(() => Items);
+        //x//? The items won't on time without this (tags won't be properyl added)
+        //xpublic void RaisePropertyChangedImages() => RaisePropertyChanged(() => Items);
 
         public ImageModel[] GetSelectedItems() => Items.Where(f => f.IsSelected).ToArray();
 
@@ -68,7 +76,7 @@ namespace WallpaperFlux.Core.Models.Controls
                 }
             }
 
-            SelectedImage = null;
+            //xSelectedImage = null;
         }
     }
 }

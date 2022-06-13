@@ -143,6 +143,8 @@ namespace WallpaperFlux.Core.ViewModels
             {
                 _selectedImageCount = value;
                 RaisePropertyChanged(() => SelectedImagePathText);
+                
+                TaggingUtil.HighlightTags();
             }
         }
 
@@ -158,7 +160,7 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
-        public ImageModel SelectedImage => SelectedImageSelectorTab?.SelectedImage;
+        public ImageModel SelectedImage => SelectedImageSelectorTab?.SelectedImage; //? for the xaml
 
         #region Inspector
 
@@ -299,7 +301,7 @@ namespace WallpaperFlux.Core.ViewModels
             PreviousWallpaperCommand = new MvxCommand(() => { MessageBox.Show("Not implemented"); });
             LoadThemeCommand = new MvxCommand(LoadTheme);
             AddFolderCommand = new MvxCommand(PromptAddFolder);
-            RemoveFolderCommand = new MvxCommand(RemoveFolder);
+            RemoveFolderCommand = new MvxCommand(PromptRemoveFolder);
             SyncCommand = new MvxCommand(Sync);
 
             ClearImagesCommand = new MvxCommand(ClearImages);
@@ -591,7 +593,8 @@ namespace WallpaperFlux.Core.ViewModels
                 }
 
                 //x Debug.WriteLine("Adding Category: " + instanceCategory.Name + "\n\n\n");
-                TaggingUtil.AddCategory(instanceCategory); // TODO May want to convert this to AddRange in the actual conversion
+                //? handled via verification
+                //x TaggingUtil.AddCategory(instanceCategory); // TODO May want to convert this to AddRange in the actual conversion
             }
             #endregion
 
@@ -723,7 +726,15 @@ namespace WallpaperFlux.Core.ViewModels
             UpdateTheme();
         }
 
-        // TODO Figure out how to remove multiple folders at once
+        public void PromptRemoveFolder()
+        {
+            if (MessageBoxUtil.PromptYesNo("Are you sure you want to remove the following folder?" + "\n" + SelectedImageFolder.Path))
+            {
+                RemoveFolder();
+            }
+        }
+
+        // TODO Figure out how to remove multiple folders at once [Already done with tags & image selections, just apply what you did there here]
         public void RemoveFolder()
         {
             Debug.WriteLine("Removing: " + SelectedImageFolder.Path);
@@ -782,7 +793,7 @@ namespace WallpaperFlux.Core.ViewModels
 
             MessageBox.Show(messageBox);
 
-            if (messageBox.ButtonPressed.Id == EXPLORER_BUTTON_ID)
+            if ((string)messageBox.ButtonPressed.Id == EXPLORER_BUTTON_ID)
             {
                 using (CommonOpenFileDialog dialog = new CommonOpenFileDialog())
                 {
@@ -797,7 +808,7 @@ namespace WallpaperFlux.Core.ViewModels
                     }
                 }
             }
-            else if (messageBox.ButtonPressed.Id == OTHER_BUTTON_ID)
+            else if ((string)messageBox.ButtonPressed.Id == OTHER_BUTTON_ID)
             {
                 // do thing
             }

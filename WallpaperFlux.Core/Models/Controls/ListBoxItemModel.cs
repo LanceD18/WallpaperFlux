@@ -13,8 +13,10 @@ namespace WallpaperFlux.Core.Models.Controls
             get => _isSelected;
             set
             {
-                OnIsSelectedChanged?.Invoke(value);
+                bool changed = _isSelected != value;
+
                 SetProperty(ref _isSelected, value);
+                if (changed) OnIsSelectedChanged?.Invoke(value);
             }
         }
 

@@ -129,7 +129,7 @@ namespace WallpaperFlux.Core.Util
                 
                 return true;
             }
-            catch (Exception e)
+            catch
             {
                 if (ShowErrorRequestRetry())
                 {

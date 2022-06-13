@@ -8,6 +8,7 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using HandyControl.Tools.Extension;
 using MvvmCross.Commands;
 using MvvmCross.ViewModels;
 using WallpaperFlux.Core.Collections;
@@ -45,15 +46,15 @@ namespace WallpaperFlux.Core.ViewModels
 
                 SetProperty(ref _selectedCategory, value);
 
-                HighlightTags(SelectedCategory);
+                HighlightTags();
                 RaisePropertyChanged(() => CategoryIsSelected);
             }
         }
 
-        private HashSet<TagModel> TagsToHighlight = new HashSet<TagModel>();
-
+        private List<TagModel> previouslyHighlightedTags = new List<TagModel>();
 
         #region ----- Filters -----
+        //? utilizes the TagInteractCommand from TagModel to function
         private bool _tagAdderToggle;
         public bool TagAdderToggle
         {
@@ -65,44 +66,18 @@ namespace WallpaperFlux.Core.ViewModels
                 if (value)
                 {
                     // toggles off the other toggles, we don't want both of them active at the same time
-                    TagRemoverToggle = false;
                     TagLinkerToggle = false;
-                    RaisePropertyChanged(() => TagRemoverToggle);
                     RaisePropertyChanged(() => TagLinkerToggle);
                 }
 
                 RaisePropertyChanged(() => WindowBorderThickness);
                 RaisePropertyChanged(() => WindowBorderBrushColor);
-                RaisePropertyChanged(() => EditingTagsOfAnImage);
-                RaisePropertyChanged(() => EditingTagLinks);
+                RaisePropertyChanged(() => EditingTags);
+                RaisePropertyChanged(() => EditingTagsText);
             }
         }
 
-        private bool _tagRemoverToggle;
-
-        public bool TagRemoverToggle
-        {
-            get => _tagRemoverToggle;
-            set
-            {
-                SetProperty(ref _tagRemoverToggle, value);
-
-                if (value)
-                {
-                    // toggles off the other toggles, we don't want both of them active at the same time
-                    TagAdderToggle = false;
-                    TagLinkerToggle = false;
-                    RaisePropertyChanged(() => TagAdderToggle);
-                    RaisePropertyChanged(() => TagLinkerToggle);
-                }
-
-                RaisePropertyChanged(() => WindowBorderThickness);
-                RaisePropertyChanged(() => WindowBorderBrushColor);
-                RaisePropertyChanged(() => EditingTagsOfAnImage);
-                RaisePropertyChanged(() => EditingTagLinks);
-            }
-        }
-
+        //? utilizes the TagInteractCommand from TagModel to function
         private bool _tagLinkerToggle;
         public bool TagLinkerToggle
         {
@@ -115,25 +90,23 @@ namespace WallpaperFlux.Core.ViewModels
                 {
                     // toggles off the other toggles, we don't want both of them active at the same time
                     TagAdderToggle = false;
-                    TagRemoverToggle = false;
                     RaisePropertyChanged(() => TagAdderToggle);
-                    RaisePropertyChanged(() => TagRemoverToggle);
 
-                    if (TagLinkingSource != null)
-                    {
-                        TaggingUtil.HighlightTags(TagLinkingSource.ParentChildTagsUnion_IncludeSelf()); // since the selected tag only changes when the tag-linker is off, we will highlight here
-                    }
+                    TagLinkingSource = SelectedCategory.SelectedTagTab.SelectedTag; // update the linking source to the currently selected tag on activating the tag linker
+                    //xTaggingUtil.HighlightTags(TagLinkingSource.ParentChildTagsUnion_IncludeSelf()); // since the selected tag only changes when the tag-linker is off, we will highlight here
                 }
                 else
                 {
-                    // the linking source will not be set to null on turning off the linker, so we'll just send in an empty HashSet instead to un-highlight everything
-                    TaggingUtil.HighlightTags(new HashSet<TagModel>());
+                    //? un-highlighting everything
+                    //! what happens if this is called while an image is selected?
+                    TagLinkingSource = null;
+                    //xTaggingUtil.HighlightTags(new HashSet<TagModel>());
                 }
 
                 RaisePropertyChanged(() => WindowBorderThickness);
                 RaisePropertyChanged(() => WindowBorderBrushColor);
-                RaisePropertyChanged(() => EditingTagsOfAnImage);
-                RaisePropertyChanged(() => EditingTagLinks);
+                RaisePropertyChanged(() => EditingTags);
+                RaisePropertyChanged(() => EditingTagsText);
             }
         }
 
@@ -146,29 +119,39 @@ namespace WallpaperFlux.Core.ViewModels
             {
                 _tagLinkingSource = value;
 
+                HighlightTags();
                 RaisePropertyChanged(() => CanUseTagLinker);
             }
         }
 
-        public string TagLinkingSourceName => TagLinkingSource?.Name;
-
-        public double WindowBorderThickness => (TagAdderToggle || TagRemoverToggle || TagLinkerToggle) ? 5 : 0;
+        public double WindowBorderThickness => (TagAdderToggle || TagLinkerToggle) ? 5 : 0;
 
         public Color WindowBorderBrushColor
         {
             get
             {
                 if (TagAdderToggle) return Color.LimeGreen;
-                if (TagRemoverToggle) return Color.Red;
                 if (TagLinkerToggle) return Color.Yellow;
 
                 return Color.Transparent;
             }
         }
 
-        public bool EditingTagsOfAnImage => TagAdderToggle || TagRemoverToggle;
+        public bool EditingTags => TagAdderToggle || TagLinkerToggle;
 
-        public bool EditingTagLinks => TagLinkerToggle;
+        public string EditingTagsText
+        {
+            get
+            {
+                if (TagAdderToggle)
+                    return "Select a tag to add or remove from the currently highlighted image(s)";
+
+                if (TagLinkerToggle)
+                    return "Editing linked tags of the tag: " + TagLinkingSource?.Name + " (Select an non-child tag to link or unlink as a parent to the active tag)";
+
+                return "";
+            }
+        }
 
         #endregion
 
@@ -277,36 +260,76 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
-        public void VerifyImagesOfCategories()
-        {
-
-        }
-
         #region Tag Highlighting
-        public void SetTagsToHighlight(HashSet<TagModel> tags)
-        {
-            TagsToHighlight = new HashSet<TagModel>(tags);
-            HighlightTags(SelectedCategory);
-        }
 
-        public void HighlightTags(CategoryModel category)
+        public void HighlightTags()
         {
-            if (TagsToHighlight == null) return;
-            if (category == null) return;
+            Debug.WriteLine("Highlighting tags...");
+            foreach (TagModel tag in previouslyHighlightedTags) tag.IsHighlightedInSomeImages = false; //? this should be undone on each re-run in one way or another
 
-            HashSet<TagModel> tags = category.GetTags();
-            
-            foreach (TagModel tag in tags)
+            if (WallpaperFluxViewModel.Instance.SelectedImage != null && !WallpaperFluxViewModel.Instance.SelectedImage.IsSelected
+                                                                      && !TagLinkerToggle) return; // one of these need to be true to highlight anything
+            if (SelectedCategory == null) return;
+
+            HashSet<TagModel> tagsToHighlight = new HashSet<TagModel>();
+
+            if (TagLinkerToggle) // has priority of if an image is selected
             {
-                tag.IsHighlighted = TagsToHighlight.Contains(tag);
+                tagsToHighlight = new HashSet<TagModel>(TagLinkingSource.ParentChildTagsUnion_IncludeSelf());
+            }
+            else if (WallpaperFluxViewModel.Instance.SelectedImage != null && WallpaperFluxViewModel.Instance.SelectedImage.IsSelected)
+            {
+                //? if multiple images are selected, only highlight tags that all images have
+                ImageModel[] selectedImages = WallpaperFluxViewModel.Instance.GetAllHighlightedImages();
+
+                if (selectedImages.Length <= 1) // highlight tags of 1 image
+                {
+                    tagsToHighlight = new HashSet<TagModel>(WallpaperFluxViewModel.Instance.SelectedImage.Tags.GetTags_HashSet());
+                }
+                else // highlight tags of multiple images
+                {
+                    tagsToHighlight = new HashSet<TagModel>(); //? duplicate tags will be filtered out by HashSet
+                    foreach (ImageModel image in selectedImages)
+                    {
+                        tagsToHighlight.UnionWith(image.Tags.GetTags_HashSet());
+                    }
+
+                    foreach (ImageModel image in selectedImages)
+                    {
+                        // check for tags that do not exist in an image's tag-list, if so, make the tag classified as highlighted in only *some* images
+                        foreach (TagModel tag in tagsToHighlight)
+                        {
+                            if (!image.ContainsTag(tag))
+                            {
+                                tag.IsHighlightedInSomeImages = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            HashSet<TagModel> activeTags = SelectedCategory.GetTags();
+
+            foreach (TagModel tag in activeTags)
+            {
+                tag.IsHighlighted = tagsToHighlight.Contains(tag);
 
                 if (TagLinkingSource != null)
                 {
+                    tag.IsHighlightedInSomeImages = false; // this doesn't apply to this scenario so turn it off, unlike the selected images scenario it won't be automatically turned off
                     tag.IsHighlightedParent = TagLinkingSource.HasParent(tag);
                     tag.IsHighlightedChild = TagLinkingSource.HasChild(tag);
                 }
+                else // ensures that the highlights were turned off so that if we say, select an image, the parent & child highlights won't remain
+                {
+                    tag.IsHighlightedParent = false;
+                    tag.IsHighlightedChild = false;
+                }
             }
+
+            previouslyHighlightedTags = new List<TagModel>(tagsToHighlight);
         }
+
         #endregion
 
         #region TagBoard

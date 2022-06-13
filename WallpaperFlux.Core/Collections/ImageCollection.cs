@@ -53,7 +53,7 @@ namespace WallpaperFlux.Core.Collections
         public void AddImage(ImageModel image)
         {
             if (ContainsImage(image)) return;
-            if (ImageContainer[image.ImageType].ContainsKey(image.Path)) return; //? an image with the same path may not necessarily have the same object
+            if (ImageContainer[image.ImageType].ContainsKey(image.Path)) return; //? an image with the same path may not necessarily have the same object, can occur on re-load
 
             ImageContainer[image.ImageType].Add(image.Path, image);
         }
