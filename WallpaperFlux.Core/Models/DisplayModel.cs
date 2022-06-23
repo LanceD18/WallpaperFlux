@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using MvvmCross.ViewModels;
-using WallpaperFlux.Core.External;
+using WallpaperFlux.Core.IoC;
 using WallpaperFlux.Core.Util;
 
 namespace WallpaperFlux.Core.Models

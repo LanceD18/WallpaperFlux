@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using WallpaperFlux.Core;
-using WallpaperFlux.Core.External;
+﻿using WallpaperFlux.Core;
+using WallpaperFlux.Core.IoC;
 
-namespace WallpaperFlux.WPF.External
+namespace WallpaperFlux.WPF.IoC
 {
     public class ExternalWallpaperHandler : IExternalWallpaperHandler
     {

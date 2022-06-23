@@ -16,9 +16,10 @@ using MvvmCross.Commands;
 using MvvmCross.ViewModels;
 using Newtonsoft.Json;
 using WallpaperFlux.Core.Collections;
-using WallpaperFlux.Core.External;
+using WallpaperFlux.Core.IoC;
 using WallpaperFlux.Core.Models.Controls;
 using WallpaperFlux.Core.Models.Tagging;
+using WallpaperFlux.Core.Tools;
 using WallpaperFlux.Core.Util;
 using WallpaperFlux.Core.ViewModels;
 
@@ -28,8 +29,21 @@ namespace WallpaperFlux.Core.Models
     public class ImageModel : ListBoxItemModel
     {
         // Properties
+        private string _path;
         [DataMember(Name = "Path")]
-        public string Path { get; set; }
+        public string Path
+        {
+            get => _path;
+            set
+            {
+                if (_path != null) //? this should be called first so that the proper old path is obtainable
+                {
+                    DataUtil.Theme.Images.UpdateImagePath(this, _path, value);
+                } 
+
+                _path = value;
+            }
+        }
 
         [JsonIgnore] public string PathName => new FileInfo(Path).Name;
 
@@ -110,11 +124,19 @@ namespace WallpaperFlux.Core.Models
 
         public IMvxCommand SetWallpaperCommand { get; set; }
 
+        public IMvxCommand RenameImageCommand { get; set; }
+
+        public IMvxCommand MoveImageCommand { get; set; }
+
+        public IMvxCommand DeleteImageCommand { get; set; }
+
+        public IMvxCommand RankImageCommand { get; set; }
+
+        public IMvxCommand PasteTagBoardCommand { get; set; }
+
         public IMvxCommand DecreaseRankCommand { get; set; }
 
         public IMvxCommand IncreaseRankCommand { get; set; }
-
-        public IMvxCommand PasteTagBoardCommand { get; set; }
 
         /*x
         // IoC Property
@@ -197,6 +219,12 @@ namespace WallpaperFlux.Core.Models
             OpenFileCommand = new MvxCommand(OpenFile);
             SetWallpaperCommand = new MvxCommand(SetWallpaper);
 
+            RenameImageCommand = new MvxCommand(() => ImageRenamer.AutoRenameImage(this));
+            MoveImageCommand = new MvxCommand(() => ImageRenamer.AutoMoveImage(this));
+            DeleteImageCommand = new MvxCommand(() => ImageUtil.DeleteImage(this));
+
+
+            RankImageCommand = new MvxCommand(() => ImageUtil.PromptRankImage(this));
             DecreaseRankCommand = new MvxCommand(() => Rank--);
             IncreaseRankCommand = new MvxCommand(() => Rank++);
 
@@ -214,6 +242,7 @@ namespace WallpaperFlux.Core.Models
                         imageSource.SetImage(Path);
                         _imageSize = imageSource.GetSize();
                     }
+
                     return _imageSize;
                 }
                 else // TODO Implement a process for getting the video size
@@ -226,13 +255,16 @@ namespace WallpaperFlux.Core.Models
                 return _imageSize;
             }
         }
-        
-        public void RemoveAllTags() => Tags.RemoveAllTags();
+
+        public void UpdatePath(string newPath) => Path = newPath;
+
 
         #region Tags
         public void AddTag(TagModel tag) => Tags.Add(tag);
 
         public void RemoveTag(TagModel tag) => Tags.Remove(tag);
+
+        public void RemoveAllTags() => Tags.RemoveAllTags();
 
         public void PasteTagBoard()
         {
@@ -242,7 +274,11 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
+        public string GetTaggedName() => Tags.GetTaggedName();
+
         public bool ContainsTag(TagModel tag) => Tags.Contains(tag);
+
+        public void AddTagNamingException(TagModel tag) => Tags.AddNamingException(tag);
         #endregion
 
         #region Command Methods

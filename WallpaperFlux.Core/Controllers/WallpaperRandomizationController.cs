@@ -7,7 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using LanceTools;
 using MvvmCross;
-using WallpaperFlux.Core.External;
+using WallpaperFlux.Core.IoC;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Util;
 

@@ -6,7 +6,7 @@ using System.Text;
 using LanceTools.WindowsUtil;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using MvvmCross;
-using WallpaperFlux.Core.External;
+using WallpaperFlux.Core.IoC;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Models.Theme;
 using WallpaperFlux.Core.ViewModels;
@@ -174,7 +174,8 @@ namespace WallpaperFlux.Core.Util
             }
 
             Debug.WriteLine("Settings Wallpaper to Display " + index + ": " + wallpaperPath);
-            WallpaperHandler.OnWallpaperChange(index, wallpaperPath);
+            // TODO Want want to use IoC for this at some point
+            WallpaperHandler.OnWallpaperChange(index, wallpaperPath); //? hooked to a call from WallpaperFlux.WPF
             return true;
         }
 

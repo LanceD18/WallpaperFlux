@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using WallpaperFlux.Core.External;
+using WallpaperFlux.Core.IoC;
 
-namespace WallpaperFlux.WPF.External
+namespace WallpaperFlux.WPF.IoC
 {
     public class ExternalBitmapImage : IExternalBitmapImage
     {

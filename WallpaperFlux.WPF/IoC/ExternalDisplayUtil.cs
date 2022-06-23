@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using WallpaperFlux.Core.External;
+using WallpaperFlux.Core.IoC;
 using WallpaperFlux.WPF.Util;
 
-namespace WallpaperFlux.WPF.External
+namespace WallpaperFlux.WPF.IoC
 {
     // for use with parent assemblies
     public class ExternalDisplayUtil : IExternalDisplayUtil

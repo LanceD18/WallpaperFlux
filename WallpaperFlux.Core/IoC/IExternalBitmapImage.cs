@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace WallpaperFlux.Core.External
+﻿namespace WallpaperFlux.Core.IoC
 {
     // Registered with the Mvx IoCProvider
     public interface IExternalBitmapImage

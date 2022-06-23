@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using MvvmCross;
-using WallpaperFlux.Core.External;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Util;
 
@@ -72,6 +71,12 @@ namespace WallpaperFlux.Core.Collections
                 new ImageModel(s.FullName)).ToArray();
 
             return images;
+        }
+
+        public void UpdateImagePath(ImageModel image, string oldPath, string newPath)
+        {
+            ImageContainer[image.ImageType].Remove(oldPath);
+            ImageContainer[image.ImageType].Add(newPath, image);
         }
 
         //? Keep in mind that all Remove methods trace back to this method, so sweeping changes that should apply to all of them should be placed here

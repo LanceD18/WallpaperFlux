@@ -13,13 +13,11 @@ namespace WallpaperFlux.Core.Collections
     public class ImageTagCollection
     {
         public readonly ImageModel ParentImage;
-
-        // TODO Try to avoid adding parent tags into this list, find another way around this
-        // TODO Try to avoid adding parent tags into this list, find another way around this
-        // TODO Try to avoid adding parent tags into this list, find another way around this
-        // TODO Try to avoid adding parent tags into this list, find another way around this
-        private readonly HashSet<TagModel> _tags = new HashSet<TagModel>();
         
+        private readonly HashSet<TagModel> _tags = new HashSet<TagModel>();
+
+        private readonly HashSet<TagModel> _tagNamingExceptions = new HashSet<TagModel>(); // these tags can be used for naming regardless of constraints
+
         /// <summary>
         /// this exists to help restrict control of the information in both TagModel and ImageModel that allows the two to refer to each other
         /// </summary>
@@ -36,7 +34,7 @@ namespace WallpaperFlux.Core.Collections
         {
             _tags.Add(tag); // we're using a hashset, no need to worry about duplicate tags
             tag.LinkImage(this);
-            TaggingUtil.HighlightTags(/*xthis*/);
+            TaggingUtil.HighlightTags();
 
             WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.InspectedImageTags);
         }
@@ -45,7 +43,8 @@ namespace WallpaperFlux.Core.Collections
         {
             _tags.Remove(tag);
             tag.UnlinkImage(this);
-            TaggingUtil.HighlightTags(/*xthis*/);
+            TaggingUtil.HighlightTags();
+            _tagNamingExceptions.Remove(tag); // the naming exception status will be reset on re-add, also, this reduces potential JSON bloat
 
             WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.InspectedImageTags);
         }
@@ -74,5 +73,43 @@ namespace WallpaperFlux.Core.Collections
 
         // for use with the JSON
         public string[] GetTagsString() => _tags.Select(f => f.Name).ToArray();
+
+        public string GetTaggedName()
+        {
+            string taggedName = "";
+
+            // TODO Order tags by category ; go through categories in order then grabs the tags from said category ; order said group of tags alphabetically ; repeat
+
+            List<string> orderedTags = new List<string>();
+            foreach (CategoryModel category in DataUtil.Theme.Categories)
+            {
+                if (!category.UseForNaming) continue; // skipped categories tag have UseForNaming disabled
+
+                // gets the active tags within this category group
+                List<string> tagsInThisCategoryGroup = new List<string>();
+                foreach (TagModel tag in _tags)
+                {
+                    if (category.GetTags().Contains(tag))
+                    {
+                        tagsInThisCategoryGroup.Add(tag.Name);
+                    }
+                }
+
+                // alphabetically orders the given tag group then drops this group into the ordered tags list
+                orderedTags.AddRange(tagsInThisCategoryGroup.OrderBy(f => f).ToList());
+            }
+
+            foreach (string tag in orderedTags)
+            {
+                taggedName += tag;
+            }
+
+            return taggedName.Replace(' ', '_');
+        }
+
+        public void AddNamingException(TagModel tag)
+        {
+            if (_tags.Contains(tag)) _tagNamingExceptions.Add(tag);
+        }
     }
 }

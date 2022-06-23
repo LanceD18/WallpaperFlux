@@ -25,7 +25,7 @@ using MvvmCross.Core;
 using MvvmCross.Navigation;
 using MvvmCross.ViewModels;
 using WallpaperFlux.Core.Collections;
-using WallpaperFlux.Core.External;
+using WallpaperFlux.Core.IoC;
 using WallpaperFlux.Core.JSON.Temp;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Models.Controls;
@@ -664,6 +664,7 @@ namespace WallpaperFlux.Core.ViewModels
         #endregion
 
         #region Image Folders
+        // TODO Move these methods to FolderUtil.cs (Will need to modify ImageFolder, perhaps by moving it to DataUtil.Theme)
         public void PromptAddFolder()
         {
             using (CommonOpenFileDialog dialog = new CommonOpenFileDialog())

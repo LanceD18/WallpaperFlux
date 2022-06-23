@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Threading;
-using WallpaperFlux.Core.External;
+using WallpaperFlux.Core.IoC;
 
-namespace WallpaperFlux.WPF.External
+namespace WallpaperFlux.WPF.IoC
 {
     //! Be sure to call dispatcherTimer.Stop() when you close your form. The WinForms version of the timer does that automatically.
     //! (That's the advantage of making the timer a Control.) If you don't you'll have a memory leak and possibly other bugs

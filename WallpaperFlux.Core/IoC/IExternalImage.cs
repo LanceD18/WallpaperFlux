@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace WallpaperFlux.Core.External
+namespace WallpaperFlux.Core.IoC
 {
     // Registered with the Mvx IoCProvider
     public interface IExternalImage : IDisposable

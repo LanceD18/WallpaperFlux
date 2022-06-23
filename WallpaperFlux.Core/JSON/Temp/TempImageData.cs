@@ -102,10 +102,9 @@ namespace WallpaperFlux.Core.JSON.Temp
 
         [DataMember(Name = "Tags")] public Dictionary<string, HashSet<string>> Tags; // this should stay as a string for saving to JSON | Represents: Dictionary<CategoryName, HashSet<TagName>>
 
-        [DataMember(Name = "Tag Naming Exceptions")]
-        public HashSet<Tuple<string, string>> TagNamingExceptions; // these tags be used for naming regardless of constraints
+        [DataMember(Name = "Tag Naming Exceptions")] public HashSet<Tuple<string, string>> TagNamingExceptions; // these tags be used for naming regardless of constraints
 
-        [DataMember(Name = "Image Type")] public ImageType imageType;
+        [DataMember(Name = "Image Type")] public ImageType ImageType;
 
         [DataMember(Name = "Video Settings")] public TempVideoSettings VideoSettings = new TempVideoSettings(100, 1); // only applicable to images with the corresponding image type
 
@@ -133,22 +132,22 @@ namespace WallpaperFlux.Core.JSON.Temp
 
         private void InitializeImageType(FileInfo file)
         {
-            if (imageType == ImageType.None)
+            if (ImageType == ImageType.None)
             {
                 if (!WallpaperUtil.IsSupportedVideoType(file))
                 {
                     if (file.Extension != ".gif")
                     {
-                        imageType = ImageType.Static;
+                        ImageType = ImageType.Static;
                     }
                     else
                     {
-                        imageType = ImageType.GIF;
+                        ImageType = ImageType.GIF;
                     }
                 }
                 else
                 {
-                    imageType = ImageType.Video;
+                    ImageType = ImageType.Video;
                 }
             }
 

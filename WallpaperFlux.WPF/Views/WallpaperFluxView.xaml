@@ -446,10 +446,10 @@
                                                                             <MenuItem Header="Open File" mvx:Bi.nd="Command OpenFileCommand"/>
                                                                             <MenuItem Header="Set As Wallpaper" mvx:Bi.nd="Command SetWallpaperCommand"/>
                                                                             <Separator/>
-                                                                            <MenuItem Header="Rename"/>
-                                                                            <MenuItem Header="Move"/>
-                                                                            <MenuItem Header="Delete"/>
-                                                                            <MenuItem Header="Rank"/>
+                                                                            <MenuItem Header="Rename" Command="{Binding RenameImageCommand}"/>
+                                                                            <MenuItem Header="Move" Command="{Binding MoveImageCommand}"/>
+                                                                            <MenuItem Header="Delete" Command="{Binding DeleteImageCommand}"/>
+                                                                            <MenuItem Header="Rank" Command="{Binding RankImageCommand}"/>
                                                                             <MenuItem Header="Paste Tagboard" Command="{Binding PasteTagBoardCommand}"/>
                                                                         </ContextMenu>
                                                                     </Image.ContextMenu>
@@ -474,14 +474,14 @@
                                                                     <!-- !Changes made here need to be made to the Image Context Menu as well!!! -->
                                                                     <GroupBox.ContextMenu>
                                                                         <ContextMenu>
-                                                                            <MenuItem Header="Open File Location" mvx:Bi.nd="Command ViewFileCommand"/>
-                                                                            <MenuItem Header="Open File" mvx:Bi.nd="Command OpenFileCommand"/>
-                                                                            <MenuItem Header="Set As Wallpaper" mvx:Bi.nd="Command SetWallpaperCommand"/>
+                                                                            <MenuItem Header="Open File Location" Command="{Binding ViewFileCommand}"/>
+                                                                            <MenuItem Header="Open File" Command="{Binding OpenFileCommand}"/>
+                                                                            <MenuItem Header="Set As Wallpaper" Command="{Binding SetWallpaperCommand}"/>
                                                                             <Separator/>
-                                                                            <MenuItem Header="Rename"/>
-                                                                            <MenuItem Header="Move"/>
-                                                                            <MenuItem Header="Delete"/>
-                                                                            <MenuItem Header="Rank"/>
+                                                                            <MenuItem Header="Rename" Command="{Binding RenameImageCommand}"/>
+                                                                            <MenuItem Header="Move" Command="{Binding MoveImageCommand}"/>
+                                                                            <MenuItem Header="Delete" Command="{Binding DeleteImageCommand}"/>
+                                                                            <MenuItem Header="Rank" Command="{Binding RankImageCommand}"/>
                                                                             <MenuItem Header="Paste Tagboard" Command="{Binding PasteTagBoardCommand}"/>
                                                                             <Separator/>
                                                                             <MenuItem Header="Volume" mvx:Bi.nd="Command SetVolumeCommand"/>

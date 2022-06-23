@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace WallpaperFlux.Core.External
+namespace WallpaperFlux.Core.IoC
 {
     // Registered with the Mvx IoCProvider
     public interface IExternalTimer

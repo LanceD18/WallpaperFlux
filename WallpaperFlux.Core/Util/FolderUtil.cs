@@ -4,11 +4,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Microsoft.WindowsAPICodePack.Dialogs;
 using MvvmCross;
 using MvvmCross.ViewModels;
-using WallpaperFlux.Core.External;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Models.Theme;
+using WallpaperFlux.Core.ViewModels;
 
 namespace WallpaperFlux.Core.Util
 {
@@ -44,6 +45,34 @@ namespace WallpaperFlux.Core.Util
             {
                 imageFolder.ValidateImages();
             }
+        }
+
+        /// <summary>
+        /// Uses the CommonOpenFileDialog to retrieve a valid folder path
+        /// </summary>
+        /// <returns>Returns string.Empty if the folder is invalid, otherwise, returns the folder path</returns>
+        public static string GetValidFolderPath()
+        {
+            using (CommonOpenFileDialog dialog = new CommonOpenFileDialog())
+            {
+                // dialog properties
+                dialog.Multiselect = false;
+                dialog.IsFolderPicker = true;
+
+                if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
+                {
+                    if (WallpaperFluxViewModel.Instance.ContainsFolder(dialog.FileName))
+                    {
+                        return dialog.FileName;
+                    }
+                    else
+                    {
+                        MessageBoxUtil.ShowError("The theme does not contain this folder");
+                    }
+                }
+            }
+
+            return string.Empty;
         }
     }
 }

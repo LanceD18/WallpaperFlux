@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
-namespace WallpaperFlux.Core.External
+namespace WallpaperFlux.Core.IoC
 {
     public interface IExternalDisplayUtil
     {

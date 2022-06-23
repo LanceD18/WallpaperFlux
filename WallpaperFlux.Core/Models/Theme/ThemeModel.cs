@@ -18,7 +18,7 @@ namespace WallpaperFlux.Core.Models.Theme
 
         public RankController RankController;
 
-        public FolderCollection Folders;
+        public FolderCollection Folders_TODO;
 
         public WallpaperRandomizationController WallpaperRandomizer;
 
