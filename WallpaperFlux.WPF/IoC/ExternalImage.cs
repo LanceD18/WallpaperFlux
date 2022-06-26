@@ -7,13 +7,16 @@ using WallpaperFlux.Core.Util;
 
 namespace WallpaperFlux.WPF.IoC
 {
+    // TODO Consider updating this to where instead of having an _internalImage we just inherit directly from Image ; would have to check that SetImage() still works
+    // TODO Consider updating this to where instead of having an _internalImage we just inherit directly from Image ; would have to check that SetImage() still works
+    // TODO Consider updating this to where instead of having an _internalImage we just inherit directly from Image ; would have to check that SetImage() still works
     public class ExternalImage : IExternalImage
     {
         private Image _internalImage;
 
         private readonly string PATH_NOT_SET_ERROR = "ERROR: An ExternalImage was created but the Image path was never set, fix this";
 
-        public bool SetImage(string imagePath)
+        public bool SetImage(string imagePath) //! the return value is not being used at the moment, consider removing
         {
             if (ImageUtil.SetImageThread.IsAlive) ImageUtil.SetImageThread.Join();
 

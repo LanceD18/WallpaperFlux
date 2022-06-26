@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -40,13 +41,12 @@ namespace WallpaperFlux.WPF
 
         private void InitializeFFmpeg()
         {
-            // TODO This should be located within the codebase itself otherwise you'll have to change this path everytime you pull
+            // TODO This should be located within the codebase itself otherwise you'll have to change this path every time you pull on a different device
+            // TODO Combine to a local path
             Library.FFmpegDirectory = @"F:\Program Libraries\ffmpeg\ffmpeg-4.4-full_build-shared\bin";
             Library.LoadFFmpeg();
-            MediaElement.FFmpegMessageLogged += (s, ev) =>
-            {
-                System.Diagnostics.Debug.WriteLine(ev.Message);
-            };
+
+            MediaElement.FFmpegMessageLogged += (s, ev) => Debug.WriteLine(ev.Message);
         }
 
         #region Generic Control

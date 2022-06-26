@@ -11,6 +11,7 @@ using LanceTools.IO;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Util;
+using WallpaperFlux.Core.ViewModels;
 
 namespace WallpaperFlux.Core.Tools
 {
@@ -50,7 +51,7 @@ namespace WallpaperFlux.Core.Tools
         }
         */
 
-        #region Auto Naming
+        #region Tag-Based Auto Naming
 
         public static void AutoRenameImage(ImageModel image)
         {
@@ -89,7 +90,7 @@ namespace WallpaperFlux.Core.Tools
                 if (!MessageBoxUtil.PromptYesNo("Are you sure you want to rename ALL " + images.Length + " images?")) return;
             }
 
-            string renamingErrors = "The following errors were found while attempting to rename these images: \n";
+            string renamingErrors = "Errors were found while attempting to rename the following image(s): \n\n";
             bool renamingErrorFound = false;
 
             Dictionary<string, Dictionary<string, HashSet<ImageModel>>> desiredNames = GetDesiredNames(images, moveDirectory);
@@ -177,7 +178,7 @@ namespace WallpaperFlux.Core.Tools
                         Debug.WriteLine("Old Path: " + oldPath + "\nNew Path: " + newPath);
                         nameCount++;
 
-                        if (!UpdateImagePath(oldPath, newPath, image, out string errorMessage))
+                        if (!ValidateImagePathUpdate(oldPath, newPath, image, out string errorMessage))
                         {
                             //? error message will exist if we get here, so just add it
                             renamingErrors += errorMessage;
@@ -186,6 +187,8 @@ namespace WallpaperFlux.Core.Tools
                     }
                 }
             }
+
+            WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.SelectedImagePathText);
 
             if (renamingErrorFound) MessageBoxUtil.ShowError(renamingErrors);
         }
@@ -288,8 +291,8 @@ namespace WallpaperFlux.Core.Tools
         }
         #endregion
 
-
-        private static bool UpdateImagePath(string oldPath, string newPath, ImageModel image, out string errorMessage)
+        #region Image Path Updating
+        private static bool ValidateImagePathUpdate(string oldPath, string newPath, ImageModel image, out string errorMessage)
         {
             // TODO THESE ERROR MESSAGES SHOULD BE COMPILED INTO ONE LARGE MESSAGE, REMEMBER THAT YOU HAVE A SCROLLBAR NOW
             if (image != null && File.Exists(oldPath))
@@ -298,7 +301,7 @@ namespace WallpaperFlux.Core.Tools
                 {
                     if (new FileInfo(newPath).Name.IndexOfAny(Path.GetInvalidFileNameChars()) == -1)
                     {
-                        return FinalizeImagePathUpdate(oldPath, newPath, out errorMessage);
+                        return TryToUpdateImagePath(oldPath, newPath, out errorMessage);
                     }
                     else
                     {
@@ -320,7 +323,7 @@ namespace WallpaperFlux.Core.Tools
             return false;
         }
 
-        private static bool FinalizeImagePathUpdate(string oldPath, string newPath, out string errorMessage)
+        private static bool TryToUpdateImagePath(string oldPath, string newPath, out string errorMessage)
         {
             try
             {
@@ -338,7 +341,7 @@ namespace WallpaperFlux.Core.Tools
                     File.Move(oldPath, newPath);
                 }
 
-                DataUtil.Theme.Images.GetImage(oldPath).UpdatePath(newPath);
+                DataUtil.Theme.Images.GetImage(oldPath).UpdatePath(newPath); //? we rename the image object after moving for just in case an error prevents the move from happening
 
                 errorMessage = ""; // no errors found
 
@@ -369,5 +372,6 @@ namespace WallpaperFlux.Core.Tools
                 return false;
             }
         }
+        #endregion
     }
 }

@@ -435,6 +435,8 @@ namespace WallpaperFlux.Core.Models.Tagging
             string name = MessageBoxUtil.GetString("Rename", "Give a new name for this tag", "Tag Name...");
 
             if (!string.IsNullOrWhiteSpace(name)) Name = name;
+
+            RaisePropertyChanged(() => Name);
         }
 
         public void PromptRemoveTag() //? removes the tag from the theme

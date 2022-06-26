@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -13,21 +14,27 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using MediaToolkit.Model;
+using MediaToolkit.Options;
+using MvvmCross.Base;
 using MvvmCross.Binding.Extensions;
 using MvvmCross.Platforms.Wpf.Presenters.Attributes;
 using MvvmCross.Platforms.Wpf.Views;
 using MvvmCross.ViewModels;
+using Unosquare.FFME.Common;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Models.Controls;
 using WallpaperFlux.Core.Models.Theme;
 using WallpaperFlux.Core.ViewModels;
 using WallpaperFlux.WPF.Util;
 using WallpaperFlux.WPF.Windows;
+using Image = System.Windows.Controls.Image;
 using MediaElement = Unosquare.FFME.MediaElement;
 using Size = System.Windows.Size;
 
@@ -48,7 +55,7 @@ namespace WallpaperFlux.WPF.Views
             InitializeComponent();
         }
 
-        #region MediaElement
+        #region MediaElement & Images
         private void MediaElement_OnLoaded(object sender, RoutedEventArgs e)
         {
             MediaElement element = sender as MediaElement;
@@ -59,22 +66,65 @@ namespace WallpaperFlux.WPF.Views
             }
         }
 
-        private void MediaElement_OnLoaded_SimulateThumbnail(object sender, RoutedEventArgs e)
+        //? https://stackoverflow.com/questions/3024169/capture-each-wpf-mediaelement-frame - [Go down below the answer for stuff that doesn't seem to use an extension]
+        //? https://stackoverflow.com/questions/35380868/extract-frames-from-video-c-sharp - Media Toolkit [LOTS OF ADDITIONAL SOLUTIONS BENEATH TOP ONE]
+        private void Image_OnLoaded_GenerateVideoThumbnail(object sender, RoutedEventArgs e)
         {
-            MediaElement element = sender as MediaElement;
-
-            if (element?.DataContext is ImageModel elementImage)
+            if (sender is Image { DataContext: ImageModel imageModel } image)
             {
-                //TODO Consider using this option: Bitmap bitmap = await element.CaptureBitmapAsync();
-                element.Open(new Uri(elementImage.Path));
-                element.Pause();
+                using (var engine = new MediaToolkit.Engine())
+                {
+                    var video = new MediaFile(imageModel.Path);
+
+                    engine.GetMetadata(video);
+
+                    var options = new ConversionOptions { Seek = TimeSpan.FromSeconds(0) };
+                    var outputFile = new MediaFile(AppDomain.CurrentDomain.BaseDirectory + "vidThumbnail.jpeg");
+
+                    engine.GetThumbnail(video, outputFile, options);
+
+                    BitmapImage bitmap = new BitmapImage();
+                    FileStream stream = File.OpenRead(outputFile.Filename);
+
+                    bitmap.BeginInit();
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmap.StreamSource = stream;
+                    bitmap.EndInit();
+                    stream.Close();
+                    stream.Dispose();
+
+                    image.Source = bitmap;
+                }
             }
         }
-
+        
         private void MediaElement_OnUnloaded(object sender, RoutedEventArgs e)
         {
-            MediaElement element = sender as MediaElement;
-            element?.Close();
+            if (sender is MediaElement element) element.Close();
+            //! Dispose() will freeze the program
+            //xelement?.Dispose();
+        }
+
+        //? https://stackoverflow.com/questions/8352787/how-to-free-the-memory-after-the-bitmapimage-is-no-longer-needed
+        //? https://stackoverflow.com/questions/2631604/get-absolute-file-path-from-image-in-wpf
+        //? prevents the application from continuing to 'use' the image after loading it in, which also saves some memory
+        private void Image_OnLoaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is Image { DataContext: ImageModel imageModel } image)
+            {
+                BitmapImage bitmap = new BitmapImage();
+                string path = imageModel.Path;
+                FileStream stream = File.OpenRead(path);
+
+                bitmap.BeginInit();
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.StreamSource = stream;
+                bitmap.EndInit();
+                stream.Close();
+                stream.Dispose();
+
+                image.Source = bitmap;
+            }
         }
         #endregion
 
@@ -114,7 +164,7 @@ namespace WallpaperFlux.WPF.Views
 
         #endregion
 
-        #region Image Selector Tab
+        #region Image Selector
         //? Now that the window scales dynamically you probably won't need font scaling but keep this consideration in mind
         private async void ImageSelectorTabListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -170,12 +220,12 @@ namespace WallpaperFlux.WPF.Views
                 viewModel.SelectedImageSelectorTab.RaisePropertyChanged(() => viewModel.SelectedImageSelectorTab.ImageSelectorTabWrapWidth);
             }
         }
-        #endregion
 
         private void ImageSelector_ListBoxItem_OnMouseDown(object sender, MouseButtonEventArgs e)
         {
             ControlUtil.EnsureSingularSelection<ImageSelectorTabModel, ImageModel>(ImageSelectorTabControl.Items, ImageSelectorTabControl.SelectedItem as ITabModel<ImageModel>);
         }
+        #endregion
 
         private void WallpaperFluxView_OnSizeChanged_UpdateInspectorHeight(object sender, SizeChangedEventArgs e) => WallpaperFluxViewModel.Instance.SetInspectorHeight(ActualHeight - 75);
     }

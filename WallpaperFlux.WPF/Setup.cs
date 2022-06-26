@@ -25,6 +25,7 @@ namespace WallpaperFlux.WPF
             Mvx.IoCProvider.RegisterType<IExternalBitmapImage, ExternalBitmapImage>();
             Mvx.IoCProvider.RegisterType<IExternalDisplayUtil, ExternalDisplayUtil>();
             Mvx.IoCProvider.RegisterType<IExternalImage, ExternalImage>();
+            Mvx.IoCProvider.RegisterType<IExternalMediaElement, ExternalMediaElement>();
             Mvx.IoCProvider.RegisterType<IExternalWallpaperHandler, ExternalWallpaperHandler>();
             Mvx.IoCProvider.RegisterType<IExternalFileSystemUtil, ExternalFileSystemUtil>();
         }

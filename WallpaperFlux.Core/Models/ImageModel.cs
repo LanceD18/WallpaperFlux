@@ -233,7 +233,7 @@ namespace WallpaperFlux.Core.Models
 
         public Size GetSize()
         {
-            if (_imageSize == Size.Empty) // initializing the size multiple times would bog down resources, so just set it after the first call and be done with it
+            if (_imageSize == Size.Empty) //! initializing the size multiple times would bog down resources, so just set it after the first call and be done with it, it won't change in 99% of cases
             {
                 if (!IsVideo)
                 {
@@ -245,9 +245,18 @@ namespace WallpaperFlux.Core.Models
 
                     return _imageSize;
                 }
-                else // TODO Implement a process for getting the video size
+                else
                 {
-                    return new Size(0, 0);
+                    //! bugged, just returns 0x0
+                    /* TODO Find a different solution, double check that the video you think is loading is actually there
+                    using (IExternalMediaElement mediaSource = Mvx.IoCProvider.Resolve<IExternalMediaElement>())
+                    {
+                        mediaSource.SetMediaElement(Path);
+                        _imageSize = new Size(mediaSource.GetWidth(), mediaSource.GetHeight());
+                    }
+                    */
+
+                    return _imageSize;
                 }
             }
             else

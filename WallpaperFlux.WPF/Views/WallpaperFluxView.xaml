@@ -50,7 +50,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Toolbar -->
+        <!--? Toolbar -->
         <Menu Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="10" Padding="2">
             <!-- File -->
             <MenuItem Header="File">
@@ -133,7 +133,7 @@
         </StackPanel>
         -->
 
-        <!-- Image Folders -->
+        <!--? Image Folders -->
         <GroupBox Grid.Row="4" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="0 5 0 5">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -196,7 +196,7 @@
             </Grid>
         </GroupBox>
 
-        <!-- Display Settings -->
+        <!--? Display Settings -->
         <GroupBox Grid.Row="5" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="10">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -282,7 +282,7 @@
 
         <GridSplitter Grid.Row="4" Grid.Column="2" Width="5" ResizeDirection="Columns"/>
 
-        <!-- Image Selector / Image Inspector -->
+        <!--? Image Selector / Image Inspector -->
         <GroupBox Grid.Row="4" Grid.RowSpan="2" Grid.Column="3" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin=" 0 5 5 5">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -322,7 +322,7 @@
                 <TextBlock x:Name="SelectedImageDimensionsTextBox" Text="{Binding SelectedImageDimensionsText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
                            Grid.Row="3" Grid.Column="1" HorizontalAlignment="Center" />
 
-                <!-- Image Selector Tab Control -->
+                <!--? Image Selector Tab Control -->
                 <!-- !<GroupBox Grid.Row="4" Grid.Column="1" Width="650" Height="525" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="3">-->
                 <GroupBox Grid.Row="4" Grid.Column="1" 
                           adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="3">
@@ -376,19 +376,19 @@
                                         </Style>
                                     </ListBox.ItemContainerStyle>
 
-                                    <!-- // Image Info Item Template // -->
+                                    <!--? // Image Info Item Template // -->
                                     <ListBox.ItemTemplate>
                                         <DataTemplate DataType="models:ImageModel">
                                             <GroupBox HorizontalAlignment="Center" MouseDown="ImageSelector_ListBoxItem_OnMouseDown">
                                                 <StackPanel Focusable="False">
 
-                                                    <!-- //// Binding to ImageModel //// -->
+                                                    <!-- /// Binding to ImageModel /// -->
                                                     <ContentControl Content="{Binding}" HorizontalAlignment="Center">
                                                         <!-- Resources -->
                                                         <ContentControl.Resources>
                                                             <!-- Remember that the Binding context here refers to what's given in the Content of the ContentTemplate, not what ReSharper says -->
 
-                                                            <!-- // StaticOrGIFTemplate // -->
+                                                            <!--? //// StaticOrGIFTemplate //// -->
                                                             <DataTemplate x:Key="StaticOrGIFTemplate">
                                                                 <Image ToolTipService.ShowDuration="{StaticResource MaxInt32}"
                                                                Width="{Binding ImageSelectorThumbnailWidth}"
@@ -401,18 +401,26 @@
                                                                         <BitmapImage
                                                                         DecodePixelHeight="{Binding ImageSelectorThumbnailHeight}"
                                                                         RenderOptions.BitmapScalingMode="LowQuality"
+                                                                        CacheOption="OnLoad"
                                                                         UriSource="{Binding Path}">
                                                                         </BitmapImage>
                                                                     </Image.Source>
 
-                                                                    <!-- Image Tooltip-->
+                                                                    <!--? ///// Image Tooltip /////-->
                                                                     <Image.ToolTip>
                                                                         <ContentControl Content="{Binding}">
                                                                             <!-- Resources -->
                                                                             <ContentControl.Resources>
                                                                                 <!-- Static -->
                                                                                 <DataTemplate x:Key="StaticTemplate">
-                                                                                    <Image Source="{Binding Path}"/>
+                                                                                    <Image>
+                                                                                        <Image.Source>
+                                                                                            <BitmapImage
+                                                                                                CacheOption="OnLoad"
+                                                                                                UriSource="{Binding Path}">
+                                                                                            </BitmapImage>
+                                                                                        </Image.Source>
+                                                                                    </Image>
                                                                                 </DataTemplate>
                                                                                 <!-- GIF -->
                                                                                 <DataTemplate x:Key="GIFTemplate">
@@ -420,7 +428,7 @@
                                                                                 UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play" Loaded="MediaElement_OnLoaded"/>
                                                                                 </DataTemplate>
                                                                             </ContentControl.Resources>
-                                                                            <!-- Template Control -->
+                                                                            <!--? Template Control -->
                                                                             <ContentControl.ContentTemplate>
                                                                                 <DataTemplate>
                                                                                     <!-- Default Template -->
@@ -438,7 +446,7 @@
                                                                         </ContentControl>
                                                                     </Image.ToolTip>
 
-                                                                    <!-- Image Context Menu -->
+                                                                    <!--? Image Context Menu -->
                                                                     <!-- !Changes made here need to be made to the Media Context Menu as well!!! -->
                                                                     <Image.ContextMenu>
                                                                         <ContextMenu>
@@ -456,7 +464,7 @@
                                                                 </Image>
                                                             </DataTemplate>
 
-                                                            <!-- // VideoTemplate // -->
+                                                            <!--? // VideoTemplate // -->
                                                             <DataTemplate x:Key="VideoTemplate">
                                                                 <GroupBox adonisExtensions:LayerExtension.IncreaseLayer="False"
                                                                   Width="{Binding ImageSelectorThumbnailWidthVideo}"
@@ -464,13 +472,18 @@
                                                                   ToolTipService.ShowDuration="{StaticResource MaxInt32}"
                                                                   HorizontalAlignment="Center">
 
+                                                                    <!--? Thumbnail -->
+                                                                    <!-- Displays the first frame/thumbnail of videos due to the Loaded event -->
+                                                                    <Image Loaded="Image_OnLoaded_GenerateVideoThumbnail"/>
+
                                                                     <!-- The media element will fail to process the Tooltip & Context Menu, so we used a GroupBox -->
-                                                                    <!-- Media Element Tooltip-->
+                                                                    <!--? Media Element Tooltip-->
                                                                     <GroupBox.ToolTip>
                                                                         <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play" 
                                                                             Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" />
                                                                     </GroupBox.ToolTip>
-                                                                    <!-- Media Element Context Menu-->
+
+                                                                    <!--? Media Element Context Menu-->
                                                                     <!-- !Changes made here need to be made to the Image Context Menu as well!!! -->
                                                                     <GroupBox.ContextMenu>
                                                                         <ContextMenu>
@@ -490,8 +503,7 @@
                                                                             <MenuItem Header="Override Max Video Timer"/>
                                                                         </ContextMenu>
                                                                     </GroupBox.ContextMenu>
-                                                                    <!-- Displays the first frame/thumbnail of videos due to the Loaded event -->
-                                                                    <ffme:MediaElement UnloadedBehavior="Play"  LoadedBehavior="Pause" Loaded="MediaElement_OnLoaded_SimulateThumbnail"/>
+
                                                                 </GroupBox>
                                                                 <!--</Border>-->
                                                             </DataTemplate>
@@ -517,7 +529,7 @@
                                                     <Button Content="Edit" Width="75" Height="{Binding ImageSelectorSettingsHeight}" Margin="3" 
                                                         HorizontalAlignment="Center"/>
 
-                                                    <!-- Rank Handler Panel -->
+                                                    <!--? Rank Handler Panel -->
                                                     <StackPanel Orientation="Horizontal" Margin="3" Focusable="False" HorizontalAlignment="Center" >
                                                         <!-- Decrease Rank Button -->
                                                         <Button mvx:Bi.nd = "Command DecreaseRankCommand" 
@@ -569,7 +581,7 @@
             </Grid>
         </GroupBox>
 
-        <!-- Image Inspector Drawer -->
+        <!--? Image Inspector Drawer -->
         <hc:Drawer Dock="Left" ShowMode="Cover" IsOpen="{Binding InspectorToggle}" x:Name="TagBoardDrawer">
             <ScrollViewer Height="{Binding InspectorHeight, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
                 <GroupBox Width="{StaticResource InspectorWidth}"
@@ -603,7 +615,7 @@
                         <Button Grid.Row="1" Grid.Column="3" HorizontalAlignment="Right" Content="X" Command="{Binding CloseInspectorCommand}" 
                             Margin="5 0 5 0" Foreground="Red" FontSize="16" FontWeight="Bold" adonisExtensions:LayerExtension.Layer="1"/>
 
-                        <!-- Image Viewer -->
+                        <!--? Image Viewer -->
                         <GroupBox  Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3"
                                Margin="0 5 0 0" HorizontalAlignment="Center">
                             <StackPanel Focusable="False">
@@ -614,18 +626,19 @@
                                     <ContentControl.Resources>
                                         <!-- Remember that the Binding context here refers to what's given in the Content of the ContentTemplate, not what ReSharper says -->
 
-                                        <!-- // StaticOrGIFTemplate // -->
+                                        <!--? // StaticOrGIFTemplate // -->
                                         <DataTemplate x:Key="StaticOrGIFTemplate">
                                             <ContentControl Content="{Binding}">
                                                 <!-- Resources -->
                                                 <ContentControl.Resources>
                                                     <!-- Static -->
                                                     <DataTemplate x:Key="StaticTemplate">
-                                                        <Image Source="{Binding Path}"/>
+                                                        <Image  Loaded="Image_OnLoaded"/>
                                                     </DataTemplate>
                                                     <!-- GIF -->
                                                     <DataTemplate x:Key="GIFTemplate">
-                                                        <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play" Loaded="MediaElement_OnLoaded"/>
+                                                        <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play" 
+                                                                           Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded"/>
                                                     </DataTemplate>
                                                 </ContentControl.Resources>
                                                 <!-- Template Control -->
@@ -674,7 +687,7 @@
                             </StackPanel>
                         </GroupBox>
 
-                        <!-- Tags -->
+                        <!--? Tags -->
                         <GroupBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3"
                               adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:LayerExtension.Layer="2">
                             <!-- Header -->
@@ -700,7 +713,7 @@
                                 </Grid>
                             </GroupBox.Header>
 
-                            <!-- ListBox  -->
+                            <!--? ListBox  -->
                             <ListBox ItemsSource="{Binding InspectedImageTags}" SelectionMode="Extended" Height="400"
                                  adonisExtensions:ScrollViewerExtension.HideScrollBarsUntilMouseOver="True"
                                  adonisExtensions:ScrollViewerExtension.VerticalScrollBarPlacement="Overlay"
@@ -730,7 +743,7 @@
                             </ListBox>
                         </GroupBox>
 
-                        <!-- Settings -->
+                        <!--? Settings -->
                         <GroupBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3" Height="{StaticResource InspectorCategoryHeight}"
                                   adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:LayerExtension.Layer="2">
                             <!-- Header -->
