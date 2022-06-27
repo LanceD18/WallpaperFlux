@@ -78,5 +78,25 @@ namespace WallpaperFlux.Core.Models.Controls
 
             //xSelectedImage = null;
         }
+
+        public void RemoveImage(ImageModel image) => RemoveImageRange(new ImageModel[] { image });
+
+        public void RemoveImageRange(ImageModel[] images) => Items.RemoveItems(images);
+
+        /// <summary>
+        /// Checks for potentially deleted images and removes them accordingly
+        /// </summary>
+        public void VerifyImages()
+        {
+            for (var i = 0; i < Items.Count; i++)
+            {
+                ImageModel image = Items[i];
+                if (!DataUtil.Theme.Images.ContainsImage(image))
+                {
+                    Items.RemoveAt(i);
+                    i--;
+                }
+            }
+        }
     }
 }

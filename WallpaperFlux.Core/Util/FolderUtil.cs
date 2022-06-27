@@ -15,14 +15,37 @@ namespace WallpaperFlux.Core.Util
 {
     public static class FolderUtil
     {
+        /*x
         public static MvxObservableCollection<FolderModel> ThemeImageFolders { get; private set; }
 
+        
         // TODO Consider removing the reliance on this link
         // Links the ImageFolders property of WallpaperFluxViewModel to a static value,
         // allowing the ImageFolderModel to access and validate image folders (Processed on activation change)
         public static void LinkThemeImageFolders(MvxObservableCollection<FolderModel> imageFolders)
         {
             ThemeImageFolders = imageFolders;
+        }
+        */
+
+        // TODO The way that the references are being handled is a bit of a mess at the moment
+
+        // TODO Decide on if you really want to keep compatibility for multiple observable FolderModel collections,
+        // TODO or just cater to the only one that's likely to exist: ImageFolders from WallpaperFluxVieWModel
+
+        // TODO Decide on if you really want to keep compatibility for multiple observable FolderModel collections,
+        // TODO or just cater to the only one that's likely to exist: ImageFolders from WallpaperFluxVieWModel
+
+        // TODO Decide on if you really want to keep compatibility for multiple observable FolderModel collections,
+        // TODO or just cater to the only one that's likely to exist: ImageFolders from WallpaperFluxVieWModel
+
+        //? This serves a dual purpose, enabling/disabling images within a folder AND detecting new images upon validation (But for ALL folders)
+        public static void ValidateImageFolders(this MvxObservableCollection<FolderModel> imageFolders)
+        {
+            foreach (FolderModel imageFolder in imageFolders)
+            {
+                imageFolder.ValidateImages();
+            }
         }
 
         public static bool ContainsImageFolder(this MvxObservableCollection<FolderModel> imageFolders, string imageFolderPath)
@@ -36,15 +59,6 @@ namespace WallpaperFlux.Core.Util
             }
 
             return false;
-        }
-
-        //? This serves a dual purpose, enabling/disabling images within a folder AND detecting new images upon validation (But for ALL folders)
-        public static void ValidateImageFolders(this MvxObservableCollection<FolderModel> imageFolders)
-        {
-            foreach (FolderModel imageFolder in imageFolders)
-            {
-                imageFolder.ValidateImages();
-            }
         }
 
         /// <summary>
@@ -73,6 +87,25 @@ namespace WallpaperFlux.Core.Util
             }
 
             return string.Empty;
+        }
+
+        public static FolderModel GetValidFolderModel()
+        {
+            string folderPath = GetValidFolderPath();
+
+            if (folderPath != string.Empty)
+            {
+                foreach (FolderModel imageFolder in WallpaperFluxViewModel.Instance.ImageFolders)
+                {
+                    if (imageFolder.Path == folderPath)
+                    {
+                        return imageFolder;
+                    }
+                }
+
+            }
+
+            return null;
         }
     }
 }

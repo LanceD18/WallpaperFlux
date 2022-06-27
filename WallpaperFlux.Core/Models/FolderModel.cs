@@ -23,7 +23,7 @@ namespace WallpaperFlux.Core.Models
             private set
             {
                 _path = value;
-                _images = new DirectoryInfo(Path).GetFiles().Select((s) => s.FullName);
+                _images = new DirectoryInfo(Path).GetFiles().Select((s) => s.FullName).ToList();
             }
         }
 
@@ -41,7 +41,7 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
-        private IEnumerable<string> _images;
+        private List<string> _images;
 
         public FolderModel(string path, bool active)
         {
@@ -70,6 +70,8 @@ namespace WallpaperFlux.Core.Models
         // TODO Optimize Me
         public void ValidateImages()
         {
+            //! This currently doesn't check for non-image files
+
             foreach (string image in _images)
             {
                 if (DataUtil.Theme.Images.ContainsImage(image))
@@ -78,8 +80,15 @@ namespace WallpaperFlux.Core.Models
                 }
                 else
                 {
-                    DataUtil.Theme.Images.AddImage(image);
-                    DataUtil.Theme.Images.GetImage(image).Active = Active;
+                    if (File.Exists(image))
+                    {
+                        DataUtil.Theme.Images.AddImage(image);
+                        DataUtil.Theme.Images.GetImage(image).Active = Active;
+                    }
+                    else //? this image was removed, delete it
+                    {
+                        _images.Remove(image);
+                    }
                 }
             }
         }
@@ -91,5 +100,14 @@ namespace WallpaperFlux.Core.Models
                 DataUtil.Theme.Images.RemoveImage(image);
             }
         }
+
+        public string[] GetImagePaths()
+        {
+            ValidateImages(); // check for potentially deleted images
+
+            return _images.ToArray();
+        }
+
+        public ImageModel[] GetImageModels() => DataUtil.Theme.Images.GetImageRange(GetImagePaths());
     }
 }

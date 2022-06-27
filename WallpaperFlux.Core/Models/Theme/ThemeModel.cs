@@ -18,6 +18,7 @@ namespace WallpaperFlux.Core.Models.Theme
 
         public RankController RankController;
 
+        // TODO Will need to be implemented for saving
         public FolderCollection Folders_TODO;
 
         public WallpaperRandomizationController WallpaperRandomizer;

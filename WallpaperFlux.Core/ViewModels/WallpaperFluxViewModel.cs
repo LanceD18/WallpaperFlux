@@ -31,6 +31,7 @@ using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Models.Controls;
 using WallpaperFlux.Core.Models.Tagging;
 using WallpaperFlux.Core.Models.Theme;
+using WallpaperFlux.Core.Tools;
 using WallpaperFlux.Core.Util;
 using MessageBox = AdonisUI.Controls.MessageBox;
 
@@ -200,11 +201,61 @@ namespace WallpaperFlux.Core.ViewModels
 
         public bool CanSelectImages => ImageFolders.Count > 0;
 
-        public bool InspectorToggle { get; set; } = false;
+        public bool InspectorToggle { get; set; }
+
+        public bool GroupRenamed { get; set; }
+
+        public bool ApplyToAll { get; set; }
+
 
         #endregion
 
-        //xprivate readonly IMvxNavigationService _navigationService;
+        #region Commands
+        //-----Commands-----
+
+        public IMvxCommand NextWallpaperCommand { get; set; }
+
+        public IMvxCommand PreviousWallpaperCommand { get; set; }
+
+        public IMvxCommand LoadThemeCommand { get; set; }
+
+        public IMvxCommand AddFolderCommand { get; set; }
+
+        public IMvxCommand RemoveFolderCommand { get; set; }
+
+        public IMvxCommand SyncCommand { get; set; }
+
+        #region Image Selector
+
+        public IMvxCommand ClearImagesCommand { get; set; }
+
+        public IMvxCommand SelectImagesCommand { get; set; }
+
+        public IMvxCommand PasteTagBoardCommand { get; set; }
+
+        public IMvxCommand SelectAllImagesCommand { get; set; }
+
+        public IMvxCommand DeselectImagesCommand { get; set; }
+
+        public IMvxCommand RenameImagesCommand { get; set; }
+
+        public IMvxCommand MoveImagesCommand { get; set; }
+
+        public IMvxCommand DeleteImagesCommand { get; set; }
+
+        public IMvxCommand RankImagesCommand { get; set; }
+
+        #endregion
+
+        #region Inspector
+
+        public IMvxCommand ToggleInspectorCommand { get; set; }
+
+        public IMvxCommand CloseInspectorCommand { get; set; }
+
+        #endregion
+
+        #endregion
 
         public WallpaperFluxViewModel(/*xIMvxNavigationService navigationService*/)
         {
@@ -255,45 +306,6 @@ namespace WallpaperFlux.Core.ViewModels
             }).ConfigureAwait(false);
         }
 
-        #region Commands
-        //-----Commands-----
-        
-        public IMvxCommand NextWallpaperCommand { get; set; }
-
-        public IMvxCommand PreviousWallpaperCommand { get; set; }
-
-        public IMvxCommand LoadThemeCommand { get; set; }
-
-        public IMvxCommand AddFolderCommand { get; set; }
-
-        public IMvxCommand RemoveFolderCommand { get; set; }
-
-        public IMvxCommand SyncCommand { get; set; }
-
-        #region Image Selector
-
-        public IMvxCommand ClearImagesCommand { get; set; }
-
-        public IMvxCommand SelectImagesCommand { get; set; }
-
-        public IMvxCommand PasteTagBoardCommand { get; set; }
-
-        public IMvxCommand SelectAllImagesCommand { get; set; }
-
-        public IMvxCommand DeselectImagesCommand { get; set; }
-
-        #endregion
-
-        #region Inspector
-
-        public IMvxCommand ToggleInspectorCommand { get; set; }
-
-        public IMvxCommand CloseInspectorCommand { get; set; }
-        
-        #endregion
-
-        #endregion
-
         public void InitializeCommands()
         {
             // TODO Consider using models to hold command information (Including needed data)
@@ -304,12 +316,18 @@ namespace WallpaperFlux.Core.ViewModels
             RemoveFolderCommand = new MvxCommand(PromptRemoveFolder);
             SyncCommand = new MvxCommand(Sync);
 
+            // Image Selector
             ClearImagesCommand = new MvxCommand(ClearImages);
             SelectImagesCommand = new MvxCommand(SelectImages);
             PasteTagBoardCommand = new MvxCommand(PasteTagBoard);
             SelectAllImagesCommand = new MvxCommand(SelectAllImages);
             DeselectImagesCommand = new MvxCommand(DeselectAllImages);
+            RenameImagesCommand = new MvxCommand(() => ImageRenamer.AutoRenameImageRange(GetAllHighlightedImages()));
+            MoveImagesCommand = new MvxCommand(() => ImageRenamer.AutoMoveImageRange(GetAllHighlightedImages()));
+            DeleteImagesCommand = new MvxCommand(() => ImageUtil.DeleteImageRange(GetAllHighlightedImages()));
+            RankImagesCommand = new MvxCommand(() => ImageUtil.PromptRankImageRange(GetAllHighlightedImages()));
 
+            // Image Inspector
             ToggleInspectorCommand = new MvxCommand(ToggleInspector);
             CloseInspectorCommand = new MvxCommand(CloseInspector);
         }
@@ -746,15 +764,16 @@ namespace WallpaperFlux.Core.ViewModels
             UpdateTheme();
         }
 
-        public bool ContainsFolder(string path)
-        {
+        public bool ContainsFolder(string path) => ImageFolders.ContainsImageFolder(path);
+
+        /*x
             foreach (FolderModel folder in ImageFolders)
             {
                 if (folder.Path == path) return true;
             }
 
             return false;
-        }
+            */
 
         #endregion
 
@@ -777,23 +796,26 @@ namespace WallpaperFlux.Core.ViewModels
         #region Image Selector
         private const string EXPLORER_BUTTON_ID = "explorer";
         private const string OTHER_BUTTON_ID = "other";
+        private const string CANCEL_BUTTON_ID = "cancel";
         public void SelectImages()
         {
-            if (_imageSelectorTabs == null)
-            {
-                _imageSelectorTabs = new MvxObservableCollection<ImageSelectorTabModel>();
-            }
+            if (_imageSelectorTabs == null) _imageSelectorTabs = new MvxObservableCollection<ImageSelectorTabModel>();
 
+            // ----- Create Button -----
             MessageBoxModel messageBox = new MessageBoxModel
             {
                 Text = "Choose a selection type",
                 Caption = "Choose an option",
                 Icon = MessageBoxImage.Question,
-                Buttons = new[] { MessageBoxButtons.Custom("File Explorer", EXPLORER_BUTTON_ID), MessageBoxButtons.Custom("Other...", OTHER_BUTTON_ID) }
+                Buttons = new[] { MessageBoxButtons.Custom("File Explorer", EXPLORER_BUTTON_ID), 
+                    MessageBoxButtons.Custom("Other...", OTHER_BUTTON_ID),
+                    MessageBoxButtons.Custom("Cancel", CANCEL_BUTTON_ID)
+                }
             };
 
             MessageBox.Show(messageBox);
 
+            // ----- Evaluate Button Result -----
             if ((string)messageBox.ButtonPressed.Id == EXPLORER_BUTTON_ID)
             {
                 using (CommonOpenFileDialog dialog = new CommonOpenFileDialog())
@@ -811,10 +833,15 @@ namespace WallpaperFlux.Core.ViewModels
             }
             else if ((string)messageBox.ButtonPressed.Id == OTHER_BUTTON_ID)
             {
-                // do thing
+                Mvx.IoCProvider.Resolve<IExternalViewPresenter>().PresentImageSelectionOptions();
+            }
+            else if ((string)messageBox.ButtonPressed.Id == CANCEL_BUTTON_ID)
+            {
+                // do nothing
             }
         }
 
+        //? ----- Rebuild Image Selector (String) -----
         private readonly string INVALID_IMAGE_STRING_DEFAULT = "The following selected images do not exist in your theme:\n(Please add the folder that they reside in to include them)";
         private readonly string INVALID_IMAGE_STRING_ALL_INVALID = "None of the selected images exist in your theme. Please add the folder that they reside in to include them.";
         public void RebuildImageSelector(string[] selectedImages, bool reverseOrder = false)
@@ -851,6 +878,7 @@ namespace WallpaperFlux.Core.ViewModels
             RebuildImageSelector(selectedImageModels.ToArray(), reverseOrder);
         }
 
+        //? ----- Rebuild Image Selector (ImageModel) -----
         public void RebuildImageSelector(ImageModel[] selectedImages, bool reverseOrder = false)
         {
             //-----Checking Conditions-----
@@ -883,6 +911,9 @@ namespace WallpaperFlux.Core.ViewModels
                 MessageBoxUtil.ShowError(nullImageString);
                 return;
             }
+
+            // Apply Reverse
+            if (reverseOrder) selectedImages = selectedImages.Reverse().ToArray();
 
             //-----Rebuild-----
             ImageSelectorTabs.Clear();
@@ -1002,6 +1033,12 @@ namespace WallpaperFlux.Core.ViewModels
                 }
             }
         }
+
+        /// <summary>
+        /// Checks for potentially deleted images and removes them accordingly
+        /// </summary>
+        /// <param name="tab">the Image Selector Tab to be scanned</param>
+        public void VerifyImageSelectorTab(ImageSelectorTabModel tab) => tab.VerifyImages();
 
         #region Inspector
 

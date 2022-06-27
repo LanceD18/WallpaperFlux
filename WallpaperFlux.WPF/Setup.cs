@@ -28,6 +28,7 @@ namespace WallpaperFlux.WPF
             Mvx.IoCProvider.RegisterType<IExternalMediaElement, ExternalMediaElement>();
             Mvx.IoCProvider.RegisterType<IExternalWallpaperHandler, ExternalWallpaperHandler>();
             Mvx.IoCProvider.RegisterType<IExternalFileSystemUtil, ExternalFileSystemUtil>();
+            Mvx.IoCProvider.RegisterType<IExternalViewPresenter, ExternalViewPresenter>();
         }
 
         protected override ILoggerProvider CreateLogProvider()

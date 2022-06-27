@@ -55,6 +55,8 @@ namespace WallpaperFlux.WPF.Views
             InitializeComponent();
         }
 
+        private void WallpaperFluxView_OnSizeChanged_UpdateInspectorHeight(object sender, SizeChangedEventArgs e) => WallpaperFluxViewModel.Instance.SetInspectorHeight(ActualHeight - 75);
+
         #region MediaElement & Images
         private void MediaElement_OnLoaded(object sender, RoutedEventArgs e)
         {
@@ -127,46 +129,33 @@ namespace WallpaperFlux.WPF.Views
             }
         }
         #endregion
-
-        #region Menu Items
-
+        
         #region Child Window Control
         private void MenuItem_OpenTagWindow_Click(object sender, RoutedEventArgs e)
         {
-            bool initializing = false;
-
-            PresentWindow(ref TagPresenter, typeof(TagView), typeof(TagViewModel),
+            WindowUtil.PresentWindow(ref TagPresenter, typeof(TagView), typeof(TagViewModel),
                 WindowUtil.TAGGING_WINDOW_WIDTH, WindowUtil.TAGGING_WINDOW_HEIGHT, "Tag View", false);
 
             //! Keep in mind that the ViewWindow will be destroyed upon closing the TagView, so yes we need to add the event again
-            //? prevents the TagBoard from causing a crash the next time the tag view is opened if the tag view is closed with it open
+            //? Prevents the TagBoard from causing a crash the next time the tag view is opened if the tag view is closed with the TagBoard open
             TagPresenter.ViewWindow.Closed += TagPresenter_ViewWindow_Closed_TagBoardFix;
         }
 
         private void MenuItem_MoreSettings_Click(object sender, RoutedEventArgs e) => 
-            PresentWindow(ref SettingsPresenter, typeof(SettingsView), typeof(SettingsViewModel),
+            WindowUtil.PresentWindow(ref SettingsPresenter, typeof(SettingsView), typeof(SettingsViewModel),
                 WindowUtil.SETTINGS_WINDOW_WIDTH, WindowUtil.SETTINGS_WINDOW_HEIGHT, "Settings", false);
 
+        /// <summary>
+        /// Disables the TagBoard on closing the view
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void TagPresenter_ViewWindow_Closed_TagBoardFix(object sender, EventArgs e) => TagViewModel.Instance.TagboardToggle = false;
-
-        private void PresentWindow(ref ViewPresenter presenter, Type viewType, Type viewModelType, float width, float height, string title, bool modal)
-        {
-            if (presenter == null || presenter.ViewWindow == null) // for the case where either the presenter or the view itself do not exist
-            {
-                presenter = new ViewPresenter(viewType, viewModelType, width, height, title, modal);
-            }
-            else // if the window is already open, just focus it
-            {
-                presenter.ViewWindow.Focus();
-            }
-        }
-        #endregion
-
         #endregion
 
         #region Image Selector
         //? Now that the window scales dynamically you probably won't need font scaling but keep this consideration in mind
-        private async void ImageSelectorTabListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void ImageSelectorTabListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             return;
             // Font Scaling
@@ -209,7 +198,16 @@ namespace WallpaperFlux.WPF.Views
         //? alternative options were hard to find due to the structure of this segment
         private void ImageSelectorTabControl_OnSizeChanged(object sender, SizeChangedEventArgs e) => UpdateImageSelectorTabWrapperWidth();
 
-        private void ImageSelectorTabControl_OnSelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateImageSelectorTabWrapperWidth();
+        private void ImageSelectorTabControl_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            Debug.WriteLine(sender.GetType());
+            if (sender is TabControl { SelectedItem: ImageSelectorTabModel tab })
+            {
+                WallpaperFluxViewModel.Instance.VerifyImageSelectorTab(tab);
+            }
+
+            UpdateImageSelectorTabWrapperWidth();
+        }
 
         private void UpdateImageSelectorTabWrapperWidth()
         {
@@ -226,7 +224,5 @@ namespace WallpaperFlux.WPF.Views
             ControlUtil.EnsureSingularSelection<ImageSelectorTabModel, ImageModel>(ImageSelectorTabControl.Items, ImageSelectorTabControl.SelectedItem as ITabModel<ImageModel>);
         }
         #endregion
-
-        private void WallpaperFluxView_OnSizeChanged_UpdateInspectorHeight(object sender, SizeChangedEventArgs e) => WallpaperFluxViewModel.Instance.SetInspectorHeight(ActualHeight - 75);
     }
 }

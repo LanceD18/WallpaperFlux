@@ -288,7 +288,7 @@ namespace WallpaperFlux.Core.Models.Tagging
         {
             tag.UnlinkAllImages();
             bool removed = Tags.Remove(tag);
-            VerifyTagTabs(); // needed to visually update the tag's removal
+            VerifyTagTabs(); //? needed to visually update the tag's removal
             return removed;
         }
 

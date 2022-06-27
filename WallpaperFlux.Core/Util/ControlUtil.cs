@@ -11,6 +11,12 @@ namespace WallpaperFlux.Core.Util
 {
     public static class ControlUtil
     {
+        /// <summary>
+        /// Handles selection status of a list box. Intended to be used with ListBoxes that exist inside of a series of tabs
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="args"></param>
+        /// <param name="collection"></param>
         public static void VerifyListBoxCollectionChange<T>(NotifyCollectionChangedEventArgs args, MvxObservableCollection<T> collection)
         {
             if (args.Action == NotifyCollectionChangedAction.Add)

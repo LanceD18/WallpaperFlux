@@ -98,9 +98,8 @@ namespace WallpaperFlux.Core.Tools
             //! Since we are dealing with active files here and not objects:
             //! targeted images should not be touched until they are ready to be renamed (Using File.Move())
 
-            // no need to group if there's only 1 image
-            bool groupRenamedImages = images.Length > 1 && MessageBoxUtil.PromptYesNo("Would you like to group together images with the same tag combination on renaming?");
-            Debug.WriteLine("Grouping: " + groupRenamedImages);
+            //xbool groupRenamedImages = images.Length > 1 && MessageBoxUtil.PromptYesNo("Would you like to group together images with the same tag combination on renaming?");
+            //xDebug.WriteLine("Grouping: " + groupRenamedImages);
             
             foreach (string directory in desiredNames.Keys)
             {
@@ -135,8 +134,9 @@ namespace WallpaperFlux.Core.Tools
                         Debug.WriteLine("Checkpoint Starting Name: " + nameToStartWith);
 
                         canName = true;
+                        // no need to group if there's only 1 image
                         // Checks for a spacing where the given group can fit to ensure that a group of images can be renamed together
-                        if (groupRenamedImages)
+                        if (WallpaperFluxViewModel.Instance.GroupRenamed && images.Length > 1)
                         {
                             int groupSize = desiredNames[directory][name].Count;
                             for (int i = 0; i < groupSize; i++)

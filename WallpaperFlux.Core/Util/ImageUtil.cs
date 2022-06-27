@@ -46,12 +46,12 @@ namespace WallpaperFlux.Core.Util
             if (images.Length > 1)
             {
                 if (!MessageBoxUtil.PromptYesNo("Are you sure you want to delete ALL " + images.Length + " images?" +
-                                                "\nThis will delete the actual image file itself! (But properly remove it from the theme)")) return;
+                                                "\n\nThis will delete the actual image file itself! (But properly remove it from the theme)")) return;
             }
             else //! should give a warning either way for deletion
             {
                 if (!MessageBoxUtil.PromptYesNo("Are you sure you want to delete " + images[0].Path + "?" +
-                                                "\nThis will delete the image file itself! (But properly remove it from the theme)")) return;
+                                                "\n\nThis will delete the image file itself! (But properly remove it from the theme)")) return;
             }
 
             foreach (ImageModel image in images)

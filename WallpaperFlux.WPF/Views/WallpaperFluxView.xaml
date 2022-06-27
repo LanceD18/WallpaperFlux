@@ -305,12 +305,18 @@
                     <Button Width="60" Height="25" Content="Inspect" Margin="5 0 5 0" Command="{Binding ToggleInspectorCommand}"/>
                     <Button Width="60" Height="25" Content="Clear" Margin="5 0 5 0" Command="{Binding ClearImagesCommand}"/>
                     <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
-                    <Button Width="75" Height="25" Content="Rename" Margin="5 0 5 0"/>
-                    <Button Width="75" Height="25" Content="Move" Margin="5 0 5 0"/>
-                    <Button Width="75" Height="25" Content="Delete" Margin="5 0 5 0"/>
-                    <Button Width="75" Height="25" Content="Rank" Margin="5 0 5 0"/>
+                    <Button Width="75" Height="25" Content="Rename" Margin="5 0 5 0" Command="{Binding RenameImagesCommand}"/>
+                    <Button Width="75" Height="25" Content="Move" Margin="5 0 5 0" Command="{Binding MoveImagesCommand}"/>
+                    <Button Width="75" Height="25" Content="Delete" Margin="5 0 5 0" Command="{Binding DeleteImagesCommand}"/>
+                    <Button Width="75" Height="25" Content="Rank" Margin="5 0 5 0" Command="{Binding RankImagesCommand}"/>
                     <Button Width="115" Height="25" Content="Paste Tagboard" Margin="5 0 5 0" Command="{Binding PasteTagBoardCommand}"/>
-                    <CheckBox Content="Apply to all" Margin="5" ToolTip="Will apply the given modificationt to all images in this selection. Another form of 'Select All'"/>
+                    <CheckBox Content="Group Renamed Images" Margin="5" IsChecked="{Binding GroupRenamed}"
+                              ToolTip="While this is checked, if multiple images with the same tags are renamed simultaneously, their numbering will be grouped together"/>
+                    <!--! Not really much of a point to Apply To All when SelectAllImages() exists -->
+                    <!--x
+                    <CheckBox Content="Apply To All" Margin="5" IsChecked="{Binding ApplyToAll}"
+                              ToolTip="Will apply the given modification to all images in this selection. Like 'Select All' without the selection"/>
+                    -->
                     <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
                     <Button Width="75" Height="25" Content="Select All" Margin="5 0 5 0" Command="{Binding SelectAllImagesCommand}"/>
                     <Button Width="75" Height="25" Content="Deselect" Margin="5 0 5 0" Command="{Binding DeselectImagesCommand}"/>
@@ -328,7 +334,7 @@
                           adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="3">
                     <TabControl x:Name="ImageSelectorTabControl" ItemsSource="{Binding ImageSelectorTabs}"
                                 SizeChanged="ImageSelectorTabControl_OnSizeChanged" SelectionChanged="ImageSelectorTabControl_OnSelectionChanged"
-                                SelectedItem="{Binding SelectedImageSelectorTab, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" >
+                                SelectedItem="{Binding SelectedImageSelectorTab, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
 
                         <!-- Item Template [Header] -->
                         <TabControl.ItemTemplate>
@@ -353,7 +359,7 @@
                             </ControlTemplate>
                         </TabControl.Template>
 
-                        <!-- Content Template [Core Content/ListBox] -->
+                        <!--? Content Template [Core Content/ListBox] -->
                         <TabControl.ContentTemplate>
                             <DataTemplate DataType="controlModels:ImageSelectorTabModel">
                                 <!-- Image List Box -->
@@ -503,9 +509,7 @@
                                                                             <MenuItem Header="Override Max Video Timer"/>
                                                                         </ContextMenu>
                                                                     </GroupBox.ContextMenu>
-
                                                                 </GroupBox>
-                                                                <!--</Border>-->
                                                             </DataTemplate>
                                                         </ContentControl.Resources>
 
@@ -525,9 +529,12 @@
                                                         </ContentControl.ContentTemplate>
                                                     </ContentControl>
 
-                                                    <!-- Edit Button -->
+                                                    <!--! Currently replaced by the Inspect button, not sure if this will have a use in the future -->
+                                                    <!--x Edit Button -->
+                                                    <!--
                                                     <Button Content="Edit" Width="75" Height="{Binding ImageSelectorSettingsHeight}" Margin="3" 
                                                         HorizontalAlignment="Center"/>
+                                                    -->
 
                                                     <!--? Rank Handler Panel -->
                                                     <StackPanel Orientation="Horizontal" Margin="3" Focusable="False" HorizontalAlignment="Center" >

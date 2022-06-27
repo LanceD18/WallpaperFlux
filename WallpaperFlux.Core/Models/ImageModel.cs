@@ -38,7 +38,8 @@ namespace WallpaperFlux.Core.Models
             {
                 if (_path != null) //? this should be called first so that the proper old path is obtainable
                 {
-                    DataUtil.Theme.Images.UpdateImagePath(this, _path, value);
+                    DataUtil.Theme.Images.UpdateImageCollectionPath(this, _path, value);
+                    //? RankController uses the image file itself so it shouldn't need updating
                 } 
 
                 _path = value;
@@ -111,11 +112,11 @@ namespace WallpaperFlux.Core.Models
 
         // Type Checkers
         // TODO Replace the external references to these values (The references in xaml) with the ImageType variable
-        public bool IsStatic => !(new FileInfo(Path).Extension == ".gif" || WallpaperUtil.IsSupportedVideoType(Path));
-        
-        public bool IsGIF => new FileInfo(Path).Extension == ".gif";
+        public bool IsStatic => WallpaperUtil.IsStatic(Path);
 
-        public bool IsVideo => WallpaperUtil.IsSupportedVideoType(Path);
+        public bool IsGIF => WallpaperUtil.IsGif(Path);
+
+        public bool IsVideo => WallpaperUtil.IsVideo(Path);
 
         // Commands
         public IMvxCommand ViewFileCommand { get; set; }
@@ -223,7 +224,6 @@ namespace WallpaperFlux.Core.Models
             MoveImageCommand = new MvxCommand(() => ImageRenamer.AutoMoveImage(this));
             DeleteImageCommand = new MvxCommand(() => ImageUtil.DeleteImage(this));
 
-
             RankImageCommand = new MvxCommand(() => ImageUtil.PromptRankImage(this));
             DecreaseRankCommand = new MvxCommand(() => Rank--);
             IncreaseRankCommand = new MvxCommand(() => Rank++);
@@ -265,7 +265,7 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
-        public void UpdatePath(string newPath) => Path = newPath;
+        public void UpdatePath(string newPath) => Path = newPath; //? UPDATES TO OTHER PROPERTIES DONE IN THE SETTER OF PATH
 
 
         #region Tags

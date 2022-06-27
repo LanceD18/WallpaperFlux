@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using LanceTools;
 using WallpaperFlux.Core.Controllers;
+using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Util;
 
 namespace WallpaperFlux.Core.Tools
@@ -37,23 +38,23 @@ namespace WallpaperFlux.Core.Tools
         };
 
         //? Note: Don't accidentally invalidate frequencies that were intentionally set to 0 when updating from a previously empty type
-        public void VerifyImageTypeExistence(string imageToVerify = "")
+        public void VerifyImageTypeExistence(ImageModel imageToVerify = null)
         {
             bool staticExists = DataUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.Static);
             bool gifExists = DataUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.GIF);
             bool videoExists = DataUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.Video);
 
-            if (imageToVerify != "")
+            if (imageToVerify != null)
             {
                 if (DataUtil.Theme.Images.ContainsImage(imageToVerify))
                 {
                     //? This appears to be the rank of the image before the change
-                    if (DataUtil.Theme.Images.GetImage(imageToVerify).Rank > 1) //! Setting this to be true on a rank of 1 will break the process, do not use > 0 or >= 1
+                    if (imageToVerify.Rank > 1) //! Setting this to be true on a rank of 1 will break the process, do not use > 0 or >= 1
                     {
                         // This indicates that there is in fact an image of the given image type but it is either un-ranked or changing its rank
-                        if ((!staticExists && WallpaperUtil.IsStatic(imageToVerify)) || 
-                            (!gifExists && WallpaperUtil.IsGif(imageToVerify)) || 
-                             (!videoExists && WallpaperUtil.IsSupportedVideoType(imageToVerify)))
+                        if ((!staticExists && imageToVerify.IsStatic /*xWallpaperUtil.IsStatic(imageToVerify)*/) || 
+                            (!gifExists && imageToVerify.IsGIF /*xWallpaperUtil.IsGif(imageToVerify)*/) || 
+                             (!videoExists && imageToVerify.IsVideo /*xWallpaperUtil.IsSupportedVideoType(imageToVerify)*/))
                         {
                             // no need to verify, just updating the singular image of an image type
                             //! This does not fix the scenario where an image of rank 1 is increased to rank 2, but this scenario is not as problematic as impacting all ranks so

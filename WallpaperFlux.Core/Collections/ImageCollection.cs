@@ -7,6 +7,7 @@ using System.Text;
 using MvvmCross;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Util;
+using WallpaperFlux.Core.ViewModels;
 
 namespace WallpaperFlux.Core.Collections
 {
@@ -25,8 +26,7 @@ namespace WallpaperFlux.Core.Collections
 
         //x public delegate void ImageCollectionChanged(object sender, ImageCollectionChangedEventArgs e);
         //x public event ImageCollectionChanged OnListRemoveItem;
-
-        // TODO Optimize Me
+        
         public ImageModel AddImage(string path)
         {
             if (ContainsImage(path)) return null;
@@ -73,8 +73,9 @@ namespace WallpaperFlux.Core.Collections
             return images;
         }
 
-        public void UpdateImagePath(ImageModel image, string oldPath, string newPath)
+        public void UpdateImageCollectionPath(ImageModel image, string oldPath, string newPath)
         {
+            // TODO YOU FORGOT TO UPDATE THE RANK CONTROLLER (Might want to do this in the ImageModel instead)
             ImageContainer[image.ImageType].Remove(oldPath);
             ImageContainer[image.ImageType].Add(newPath, image);
         }
@@ -85,6 +86,7 @@ namespace WallpaperFlux.Core.Collections
             DataUtil.Theme.RankController.RemoveRankedImage(image);
 
             image.RemoveAllTags();
+            WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.RemoveImage(image);
 
             return ImageContainer[image.ImageType].Remove(image.Path);
         }
@@ -126,14 +128,24 @@ namespace WallpaperFlux.Core.Collections
             return failedRemovals.Length == 0;
         }
 
-        public bool ContainsImage(string path, ImageType imageType) => ImageContainer[imageType].ContainsKey(path);
+        public bool ContainsImage(string path, ImageType imageType)
+        {
+            if (string.IsNullOrEmpty(path)) return false;
+            return ImageContainer[imageType].ContainsKey(path);
+        }
 
-        public bool ContainsImage(string path) => GetImage(path) != null;
+        public bool ContainsImage(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return false;
+            return GetImage(path) != null;
+        }
 
         public bool ContainsImage(ImageModel image) => ImageContainer[image.ImageType].ContainsValue(image);
 
         public ImageModel GetImage(string path)
         {
+            if (string.IsNullOrEmpty(path)) return null;
+
             foreach (ImageType imageType in ImageContainer.Keys)
             {
                 if (ContainsImage(path, imageType))
@@ -183,5 +195,8 @@ namespace WallpaperFlux.Core.Collections
 
             return imagePaths.ToArray();
         }
+
+        //? RankController classifies images by images type by default, so performing this action there is much easier
+        public ImageModel[] GetAllImagesOfType(ImageType imageType) => DataUtil.Theme.RankController.GetAllImagesOfType(imageType);
     }
 }

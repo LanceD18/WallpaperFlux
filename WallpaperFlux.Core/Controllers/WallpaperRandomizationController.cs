@@ -113,7 +113,7 @@ namespace WallpaperFlux.Core.Controllers
                 if (randomRank != -1)
                 {
                     Debug.WriteLine("Setting Wallpaper: " + i);
-                    potentialWallpapers[i] =  DataUtil.Theme.RankController.GetRandomImageOfRank(randomRank, ref rand, imageTypeToSearchFor);
+                    potentialWallpapers[i] =  DataUtil.Theme.RankController.GetRandomImageOfRank(randomRank, ref rand, imageTypeToSearchFor).Path;
 
                     if (!DataUtil.Theme.Images.GetImage(potentialWallpapers[i]).Active)
                     {
