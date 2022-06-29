@@ -39,7 +39,7 @@
             <RowDefinition Height="8"/>
         </Grid.RowDefinitions>
 
-        <!-- Tagboard Drawer -->
+        <!--? Tagboard Drawer -->
         <hc:Drawer Dock="Right" ShowMode="Cover" IsOpen="{Binding TagboardToggle}" x:Name="TagBoardDrawer">
                 <GroupBox>
                 <Grid>
@@ -62,7 +62,7 @@
                     <!-- Tags Selected -->
                     <GroupBox Width="{StaticResource TagBoardWith}"
                               Grid.Row="2" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:LayerExtension.Layer="2">
-                        <!-- Header -->
+                        <!--? Header -->
                         <GroupBox.Header>
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -107,7 +107,7 @@
                             -->
                         </GroupBox.Header>
 
-                        <!-- ListBox  -->
+                        <!--? ListBox  -->
                         <ListBox ItemsSource="{Binding TagBoardTags}" SelectionMode="Extended" 
                                  Height="{Binding TagBoardHeight, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                                                  adonisExtensions:ScrollViewerExtension.HideScrollBarsUntilMouseOver="True"
@@ -225,7 +225,7 @@
                         </TextBlock.Style>
                     </TextBlock>
                     <TextBlock Text="{Binding EditingTagsText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Margin="0 5 0 5"
-                               Visibility="{Binding EditingTagsOfAnImage, Converter={StaticResource BooleanToVisibilityConverter}}"
+                               Visibility="{Binding EditingTags, Converter={StaticResource BooleanToVisibilityConverter}}"
                                Foreground="{Binding WindowBorderBrushColor, Converter={StaticResource ColorToBrushConverter}, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
                         <TextBlock.Style>
                             <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
@@ -340,7 +340,7 @@
                                 </TextBlock.Style>
                             </TextBlock> -->
 
-                            <!-- Tag Tab Control -->
+                            <!--? Tag Tab Control -->
                             <!--x<GroupBox>-->
                             <TabControl ItemsSource="{Binding TagTabs, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
                                 SelectedItem="{Binding SelectedTagTab, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
@@ -393,7 +393,7 @@
                                                 </Style>
                                             </ListBox.ItemContainerStyle>
 
-                                            <!-- Tags Item Template -->
+                                            <!--? Tags Item Template -->
                                             <ListBox.ItemTemplate>
                                                 <DataTemplate DataType="tagging:TagModel">
                                                     <!-- The GroupBox adds a fitting adonis background to every tag -->
@@ -406,7 +406,7 @@
                                                             </i:EventTrigger>
                                                         </i:Interaction.Triggers>
 
-                                                        <!-- Tag Text Block -->
+                                                        <!--? Tag Text Block -->
                                                         <TextBlock>
                                                             <Run Text="{Binding Name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                             <Run Text="{Binding ImageCountStringTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
@@ -470,7 +470,7 @@
                                                             </TextBlock.Style>
                                                         </TextBlock>
 
-                                                        <!-- Tag Context Menu -->
+                                                        <!--? Tag Context Menu -->
                                                         <GroupBox.ContextMenu>
                                                             <ContextMenu>
                                                                 <!-- Core -->

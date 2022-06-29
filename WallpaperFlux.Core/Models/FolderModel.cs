@@ -23,10 +23,15 @@ namespace WallpaperFlux.Core.Models
             private set
             {
                 _path = value;
-                _images = new DirectoryInfo(Path).GetFiles().Select((s) => s.FullName).ToList();
+
+                if (Directory.Exists(value)) //? invalid directories will still call this in the constructor
+                {
+                    _images = new DirectoryInfo(Path).GetFiles().Select((s) => s.FullName).ToList();
+                }
             }
         }
 
+        // TODO Rename this to Enabled to match with similar functions across other aspects of the program
         private bool _active;
 
         public bool Active
@@ -36,7 +41,7 @@ namespace WallpaperFlux.Core.Models
             set
             {
                 _active = value;
-                RaisePropertyChanged(() => Active);
+                RaisePropertyChanged(() => Active); // TODO You should probably change this to SetProperty()
                 ValidateImages();
             }
         }
@@ -45,7 +50,12 @@ namespace WallpaperFlux.Core.Models
 
         public FolderModel(string path, bool active)
         {
-            if (!Directory.Exists(path)) throw new DirectoryNotFoundException(); // ! Handle this outside of this constructor!
+            if (!Directory.Exists(path))
+            {
+                path = "INVALID PATH ERROR: " + path;
+                Path = path;
+                return; //! doing anything else could cause errors
+            }
 
             //? internally adds the images to the model (see setter)
             Path = path;

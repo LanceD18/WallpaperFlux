@@ -67,31 +67,58 @@ namespace WallpaperFlux.Core.Collections
 
         public bool Contains(TagModel tag) => _tags.Contains(tag);
 
-        public TagModel[] GetTags() => _tags.ToArray();
+        public HashSet<TagModel> GetTags() => _tags;
 
-        public HashSet<TagModel> GetTags_HashSet() => _tags;
+        public HashSet<TagModel> GetTagNamingExceptions() => _tagNamingExceptions;
+        
+        public Dictionary<string, List<string>> GetConvertTagsToDictionary() => ConvertTagsToDictionary(_tags);
 
-        // for use with the JSON
-        public string[] GetTagsString() => _tags.Select(f => f.Name).ToArray();
+        public Dictionary<string, List<string>> GetConvertTagNamingExceptionsToDictionary()
+        {
+            return ConvertTagsToDictionary(_tagNamingExceptions);
+        }
+
+        //? for use with the JSON
+        private Dictionary<string, List<string>> ConvertTagsToDictionary(HashSet<TagModel> tags)
+        {
+            Dictionary<string, List<string>> tagsDictionary = new Dictionary<string, List<string>>();
+
+            foreach (TagModel tag in tags)
+            {
+                if (!tagsDictionary.ContainsKey(tag.ParentCategory.Name))
+                {
+                    tagsDictionary.Add(tag.ParentCategory.Name, new List<string>());
+                }
+
+                tagsDictionary[tag.ParentCategory.Name].Add(tag.Name);
+            }
+
+            return tagsDictionary;
+        }
 
         public string GetTaggedName()
         {
             string taggedName = "";
 
-            // TODO Order tags by category ; go through categories in order then grabs the tags from said category ; order said group of tags alphabetically ; repeat
+            //? Process: Order tags by category ; go through categories in order then grabs the tags from said category ; order said group of tags alphabetically ; repeat
 
             List<string> orderedTags = new List<string>();
             foreach (CategoryModel category in DataUtil.Theme.Categories)
             {
-                if (!category.UseForNaming) continue; // skipped categories tag have UseForNaming disabled
+                //? skip categories that do not have the UseForNaming tag IF the number of tagNamingExceptions is 0, otherwise, scan every tag
+                if (!category.UseForNaming && _tagNamingExceptions.Count == 0) continue; 
 
                 // gets the active tags within this category group
-                List<string> tagsInThisCategoryGroup = new List<string>();
+                HashSet<string> tagsInThisCategoryGroup = new HashSet<string>(); //? using a HashSet to prevent potential duplication when applying the naming exceptions
                 foreach (TagModel tag in _tags)
                 {
-                    if (category.GetTags().Contains(tag))
+                    // tag must have UseForNaming & it's category's UseForNaming enabled unless it was given an exception
+                    if ((tag.UseForNaming && tag.ParentCategory.UseForNaming) || _tagNamingExceptions.Contains(tag))
                     {
-                        tagsInThisCategoryGroup.Add(tag.Name);
+                        if (category.GetTags().Contains(tag))
+                        {
+                            tagsInThisCategoryGroup.Add(tag.Name);
+                        }
                     }
                 }
 
@@ -111,5 +138,8 @@ namespace WallpaperFlux.Core.Collections
         {
             if (_tags.Contains(tag)) _tagNamingExceptions.Add(tag);
         }
+
+        // not checking if this tag is in the collection will allow us to remove rogue / leftover tags in the naming exceptions
+        public void RemoveNamingException(TagModel tag) => _tagNamingExceptions.Remove(tag);
     }
 }

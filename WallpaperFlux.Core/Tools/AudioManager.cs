@@ -19,7 +19,7 @@ namespace WallpaperFlux.Core.Tools
         public static bool IsWallpapersMuted { get; private set; }
 
         //? remember that the max volume is 1
-        private static readonly float MIN_VOLUME = 0f; // might make this a really small decimal due to the potential of float errors
+        private static readonly double MIN_VOLUME = 0; //? not using a float to minimize errors on low volume
 
         //private static Guid guid = Guid.NewGuid();
 

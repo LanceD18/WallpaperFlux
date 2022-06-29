@@ -42,11 +42,11 @@ namespace WallpaperFlux.WPF
                 Left = display.Bounds.X + DisplayUtil.DisplayXAdjustment;
                 Top = display.Bounds.Y + DisplayUtil.MinDisplayY;
 
-                // TODO Remove me once you've implemented a control for setting the default volume & changing video volume
-                //! temp
-                Debug.WriteLine("Forcing video volume to 0.1 for now");
-                WallpaperMediaElement.Volume = 0.1;
-                //! temp
+                //x // TODO Remove me once you've implemented a control for setting the default volume & changing video volume
+                //x //! temp
+                //x Debug.WriteLine("Forcing video volume to 0.1 for now");
+                //x WallpaperMediaElement.Volume = 0.1;
+                //x //! temp
 
                 //? Default, should match what's stated on the WPF
                 WallpaperImage.Stretch = WallpaperMediaElement.Stretch = Stretch.Fill;
@@ -59,10 +59,10 @@ namespace WallpaperFlux.WPF
         }
 
         //? The index is checked in ExternalWallpaperHandler now as it has access to the array, which allows wallpapers to be changed independently of one another
-        public void OnWallpaperChange(string path)
+        public void OnWallpaperChange(ImageModel image)
         {
             FileInfo wallpaperInfo;
-            string wallpaperPath = path;
+            string wallpaperPath = image.Path;
 
             if (!String.IsNullOrEmpty(wallpaperPath))
             {
@@ -76,6 +76,7 @@ namespace WallpaperFlux.WPF
 
             if (wallpaperInfo.Extension == ".gif" || WallpaperUtil.IsSupportedVideoType(wallpaperInfo)) // gif & video
             {
+                WallpaperMediaElement.Volume = image.Volume;
                 WallpaperMediaElement.Open(new Uri(wallpaperInfo.FullName));
                 WallpaperMediaElement.IsEnabled = true;
                 WallpaperMediaElement.Visibility = Visibility.Visible;

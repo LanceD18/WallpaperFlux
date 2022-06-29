@@ -235,6 +235,8 @@ namespace WallpaperFlux.Core.ViewModels
             {
                 TaggingUtil.PromptAddTagToCategory(SelectedCategory);
 
+                //? If the category's use for naming state is disabled, the tag should reference that when needed instead of changing its own UseForNaming parameter
+
                 if (SelectedCategory != null) { AddDebugTags(SelectedCategory); }
             });
 
@@ -275,7 +277,7 @@ namespace WallpaperFlux.Core.ViewModels
 
             if (TagLinkerToggle) // has priority of if an image is selected
             {
-                tagsToHighlight = new HashSet<TagModel>(TagLinkingSource.ParentChildTagsUnion_IncludeSelf());
+                tagsToHighlight = new HashSet<TagModel>(TagLinkingSource.GetParentChildTagsUnion_IncludeSelf());
             }
             else if (WallpaperFluxViewModel.Instance.SelectedImage != null && WallpaperFluxViewModel.Instance.SelectedImage.IsSelected)
             {
@@ -284,14 +286,14 @@ namespace WallpaperFlux.Core.ViewModels
 
                 if (selectedImages.Length <= 1) // highlight tags of 1 image
                 {
-                    tagsToHighlight = new HashSet<TagModel>(WallpaperFluxViewModel.Instance.SelectedImage.Tags.GetTags_HashSet());
+                    tagsToHighlight = new HashSet<TagModel>(WallpaperFluxViewModel.Instance.SelectedImage.Tags.GetTags());
                 }
                 else // highlight tags of multiple images
                 {
                     tagsToHighlight = new HashSet<TagModel>(); //? duplicate tags will be filtered out by HashSet
                     foreach (ImageModel image in selectedImages)
                     {
-                        tagsToHighlight.UnionWith(image.Tags.GetTags_HashSet());
+                        tagsToHighlight.UnionWith(image.Tags.GetTags());
                     }
 
                     foreach (ImageModel image in selectedImages)

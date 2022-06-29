@@ -24,6 +24,12 @@
                     <converters:EnumToStringConverter x:Key="EnumToStringConverter"/>
                     <converters:ColorToBrushConverter x:Key="ColorToBrushConverter"/>
                     <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+                    <converters:BooleanInverterConverter x:Key="BooleanInverterConverter"/>
+
+                    <converters:ValueConverterGroup x:Key="BooleanToVisibilityInvertedConverter">
+                        <converters:BooleanInverterConverter/>
+                        <converters:BooleanToVisibilityConverter/>
+                    </converters:ValueConverterGroup>
 
                     <!-- Static Values -->
                     <x:Static x:Key="MaxInt32" Member="system:Int32.MaxValue"/>

@@ -179,7 +179,10 @@ namespace WallpaperFlux.Core.Util
 
             Debug.WriteLine("Settings Wallpaper to Display " + index + ": " + wallpaperPath);
             // TODO Want want to use IoC for this at some point
-            WallpaperHandler.OnWallpaperChange(index, wallpaperPath); //? hooked to a call from WallpaperFlux.WPF
+            if (DataUtil.Theme.Images.ContainsImage(wallpaperPath))
+            {
+                WallpaperHandler.OnWallpaperChange(index, DataUtil.Theme.Images.GetImage(wallpaperPath)); //? hooked to a call from WallpaperFlux.WPF
+            }
             return true;
         }
 

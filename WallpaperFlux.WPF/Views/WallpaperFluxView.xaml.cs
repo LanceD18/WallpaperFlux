@@ -58,19 +58,83 @@ namespace WallpaperFlux.WPF.Views
         private void WallpaperFluxView_OnSizeChanged_UpdateInspectorHeight(object sender, SizeChangedEventArgs e) => WallpaperFluxViewModel.Instance.SetInspectorHeight(ActualHeight - 75);
 
         #region MediaElement & Images
-        private void MediaElement_OnLoaded(object sender, RoutedEventArgs e)
-        {
-            MediaElement element = sender as MediaElement;
 
-            if (element?.DataContext is ImageModel elementImage)
+        private void Inspector_OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            LoadImageOrMediaElement(sender);
+        }
+
+        private void LoadImageOrMediaElement(object sender)
+        {
+            if (sender is Image image)
             {
-                element.Open(new Uri(elementImage.Path));
+                LoadImage(image);
+            }
+            else if (sender is MediaElement element)
+            {
+                LoadMediaElement(element);
             }
         }
 
+        private void LoadImage(Image image)
+        {
+            if (image.DataContext is ImageModel imageModel)
+            {
+                BitmapImage bitmap = new BitmapImage();
+                string path = imageModel.Path;
+                FileStream stream = File.OpenRead(path);
+
+                LoadBitmapImage(bitmap, stream, image);
+            }
+        }
+
+        private void LoadMediaElement(MediaElement element)
+        {
+            if (element.DataContext is ImageModel elementImage)
+            {
+                try
+                {
+                    element.Open(new Uri(elementImage.Path));
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("ERROR: Element Loading Failed: " + e);
+                }
+            }
+        }
+
+        //? https://stackoverflow.com/questions/8352787/how-to-free-the-memory-after-the-bitmapimage-is-no-longer-needed
+        //? https://stackoverflow.com/questions/2631604/get-absolute-file-path-from-image-in-wpf
+        //? prevents the application from continuing to 'use' the image after loading it in, which also saves some memory
+        private void LoadBitmapImage(BitmapImage bitmap, FileStream stream, Image image)
+        {
+            // TODO THIS METHOD IS BEING CALLED MULTIPLE TIMES PER INSPECTOR SWITCH, FIX
+            try //? this can accidentally fire off multiple times and cause crashes when trying to load videos (Who still need this for some reason?)
+            {
+                bitmap.BeginInit();
+                bitmap.CreateOptions = BitmapCreateOptions.IgnoreColorProfile; // to help with performance
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.StreamSource = stream;
+                bitmap.EndInit();
+                bitmap.Freeze(); // prevents unnecessary copying: https://stackoverflow.com/questions/799911/in-what-scenarios-does-freezing-wpf-objects-benefit-performance-greatly
+                stream.Close();
+                stream.Dispose();
+
+                image.Source = bitmap;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERROR: Bitmap Creation Failed: " + e);
+                //x throw;
+            }
+
+        }
+
+        private void Image_OnLoaded(object sender, RoutedEventArgs e) => LoadImageOrMediaElement(sender);
+
         //? https://stackoverflow.com/questions/3024169/capture-each-wpf-mediaelement-frame - [Go down below the answer for stuff that doesn't seem to use an extension]
         //? https://stackoverflow.com/questions/35380868/extract-frames-from-video-c-sharp - Media Toolkit [LOTS OF ADDITIONAL SOLUTIONS BENEATH TOP ONE]
-        private void Image_OnLoaded_GenerateVideoThumbnail(object sender, RoutedEventArgs e)
+        private void MediaElement_OnLoaded_GenerateVideoThumbnail(object sender, RoutedEventArgs e)
         {
             if (sender is Image { DataContext: ImageModel imageModel } image)
             {
@@ -88,44 +152,24 @@ namespace WallpaperFlux.WPF.Views
                     BitmapImage bitmap = new BitmapImage();
                     FileStream stream = File.OpenRead(outputFile.Filename);
 
-                    bitmap.BeginInit();
-                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                    bitmap.StreamSource = stream;
-                    bitmap.EndInit();
-                    stream.Close();
-                    stream.Dispose();
-
-                    image.Source = bitmap;
+                    LoadBitmapImage(bitmap, stream, image);
                 }
             }
         }
-        
+
+        private void MediaElement_OnLoaded(object sender, RoutedEventArgs e) => LoadImageOrMediaElement(sender);
+
         private void MediaElement_OnUnloaded(object sender, RoutedEventArgs e)
         {
-            if (sender is MediaElement element) element.Close();
-            //! Dispose() will freeze the program
-            //xelement?.Dispose();
-        }
-
-        //? https://stackoverflow.com/questions/8352787/how-to-free-the-memory-after-the-bitmapimage-is-no-longer-needed
-        //? https://stackoverflow.com/questions/2631604/get-absolute-file-path-from-image-in-wpf
-        //? prevents the application from continuing to 'use' the image after loading it in, which also saves some memory
-        private void Image_OnLoaded(object sender, RoutedEventArgs e)
-        {
-            if (sender is Image { DataContext: ImageModel imageModel } image)
+            try
             {
-                BitmapImage bitmap = new BitmapImage();
-                string path = imageModel.Path;
-                FileStream stream = File.OpenRead(path);
-
-                bitmap.BeginInit();
-                bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                bitmap.StreamSource = stream;
-                bitmap.EndInit();
-                stream.Close();
-                stream.Dispose();
-
-                image.Source = bitmap;
+                if (sender is MediaElement element) element.Close();
+                //! Dispose() will freeze the program
+                //xelement?.Dispose();
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine("ERROR: Element Unload Failed: " + exception);
             }
         }
         #endregion
@@ -138,7 +182,7 @@ namespace WallpaperFlux.WPF.Views
 
             //! Keep in mind that the ViewWindow will be destroyed upon closing the TagView, so yes we need to add the event again
             //? Prevents the TagBoard from causing a crash the next time the tag view is opened if the tag view is closed with the TagBoard open
-            TagPresenter.ViewWindow.Closed += TagPresenter_ViewWindow_Closed_TagBoardFix;
+            TagPresenter.ViewWindow.Closing += TagPresenter_ViewWindow_Closed_TagBoardFix;
         }
 
         private void MenuItem_MoreSettings_Click(object sender, RoutedEventArgs e) => 
@@ -150,6 +194,7 @@ namespace WallpaperFlux.WPF.Views
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
+        //? Prevents the TagBoard from causing a crash the next time the tag view is opened if the tag view is closed with the TagBoard open
         private void TagPresenter_ViewWindow_Closed_TagBoardFix(object sender, EventArgs e) => TagViewModel.Instance.TagboardToggle = false;
         #endregion
 

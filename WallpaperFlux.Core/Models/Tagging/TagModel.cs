@@ -27,7 +27,7 @@ namespace WallpaperFlux.Core.Models.Tagging
 
             set
             {
-                _enabled = value;
+                SetProperty(ref _enabled, value);
                 /*x
 
                 if (_enabled != value)  // prevents unnecessary calls
@@ -46,15 +46,17 @@ namespace WallpaperFlux.Core.Models.Tagging
             }
         }
 
-        private bool _UseForNaming;
+        private bool _useForNaming = true;
 
         public bool UseForNaming
         {
-            get => _UseForNaming;
+            get => _useForNaming;
 
             set
             {
-                _UseForNaming = value;
+                SetProperty(ref _useForNaming, value);
+                RaisePropertyChanged(() => UseForNaming_IncludeCategory);
+                RaisePropertyChanged(() => ExceptionColor); //? depends on the value of UseForNaming_IncludeCategory
                 /*x
                 if (_UseForNaming != value)  // prevents unnecessary calls
                 {
@@ -73,6 +75,8 @@ namespace WallpaperFlux.Core.Models.Tagging
             }
         }
 
+        public bool UseForNaming_IncludeCategory => UseForNaming && ParentCategory.UseForNaming;
+
         //? Just create a TagModelJSON.cs that converts all of these into strings on saving the theme
         //! Using a string will require us to update this on rename, and search for the tag when needed, so lets just save the string portion for when saving
         private HashSet<TagModel> ParentTags = new HashSet<TagModel>(); //? Will be converted to strings in TagModelJson.cs for saving purposes instead of saving the entire object
@@ -82,16 +86,16 @@ namespace WallpaperFlux.Core.Models.Tagging
         //xpublic HashSet<Tuple<string, string>> ChildTags = new HashSet<Tuple<string, string>>();
 
         //! Using a string will require us to update this on rename, and search for the category when needed, and this isn't even being saved so lets just avoid the hassle
-        [JsonIgnore] public CategoryModel ParentCategory;
+        public CategoryModel ParentCategory;
 
         //? We are ignoring this since these should get implemented on loading in the images through their TagCollection
         private HashSet<ImageModel> LinkedImages = new HashSet<ImageModel>(); //? Will be converted to strings in TagModelJson.cs for saving purposes instead of saving the entire object
 
         #region View Variables
 
-        [JsonIgnore] public string ImageCountStringContext => "Found in " + LinkedImages.Count + " image(s)";
+        public string ImageCountStringContext => "Found in " + GetLinkedImageCount() + " image(s)";
 
-        [JsonIgnore] public string ImageCountStringTag => "(" + LinkedImages.Count + ")";
+        public string ImageCountStringTag => "(" + GetLinkedImageCount() + ")";
 
         #region ----- Highlighting -----
         //? Used for determining which tag's font to highlight when an image is selected
@@ -139,6 +143,7 @@ namespace WallpaperFlux.Core.Models.Tagging
 
 
         [JsonIgnore] private TagSearchType _searchType = TaggingUtil.DEFAULT_TAG_SEARCH_TYPE;
+
         public TagSearchType SearchType
         {
             get => _searchType;
@@ -204,18 +209,24 @@ namespace WallpaperFlux.Core.Models.Tagging
             }
         }
         #endregion
+        
+        public string ExceptionText => IsNamingSelectionOfSelectedImage ? "+" : "-";
+
+        public Color ExceptionColor => IsNamingSelectionOfSelectedImage ? Color.LimeGreen : UseForNaming_IncludeCategory ? Color.White :  Color.Red;
+
+        public bool IsNamingSelectionOfSelectedImage => WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.SelectedImage.Tags.GetTagNamingExceptions().Contains(this);
 
         #endregion
 
         #region Commands
 
-        [JsonIgnore] public IMvxCommand SelectImagesWithTag { get; set; } //! There should be a button for selecting all tags in the TagBoard and/or all selected tags
+        public IMvxCommand SelectImagesWithTag { get; set; } //! There should be a button for selecting all tags in the TagBoard and/or all selected tags
 
-        [JsonIgnore] public IMvxCommand RenameTagCommand { get; set; }
+        public IMvxCommand RenameTagCommand { get; set; }
 
-        [JsonIgnore] public IMvxCommand RemoveTagCommand { get; set; }
+        public IMvxCommand RemoveTagCommand { get; set; }
 
-        [JsonIgnore] public IMvxCommand TagInteractCommand { get; set; }  //? Handles functions such as Tag-Adding, Removing, & Linking
+        public IMvxCommand TagInteractCommand { get; set; }  //? Handles functions such as Tag-Adding, Removing, & Linking
 
         #region ----- Image Control -----
         [JsonIgnore] public IMvxCommand AddTagToSelectedImagesCommand { get; set; }
@@ -236,14 +247,16 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         #endregion
 
+        public IMvxCommand ToggleNamingExceptionCommand { get; set; }
+
         #endregion
 
         public TagModel(string name, CategoryModel parentCategory, bool useForNaming = true, bool enabled = true)
         {
             Name = name;
             ParentCategory = parentCategory;
-            UseForNaming = true;
-            Enabled = true;
+            UseForNaming = useForNaming;
+            Enabled = enabled;
 
             SelectImagesWithTag = new MvxCommand(() => WallpaperFluxViewModel.Instance.RebuildImageSelector(LinkedImages.ToArray()));
             RenameTagCommand = new MvxCommand(PromptRename);
@@ -276,6 +289,21 @@ namespace WallpaperFlux.Core.Models.Tagging
                         SearchType = TagSearchType.Mandatory;
                         break;
                 }
+            });
+
+            ToggleNamingExceptionCommand = new MvxCommand(() =>
+            {
+                if (!IsNamingSelectionOfSelectedImage)
+                {
+                    WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.SelectedImage.Tags.AddNamingException(this);
+                }
+                else
+                {
+                    WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.SelectedImage.Tags.RemoveNamingException(this);
+                }
+
+                RaisePropertyChanged(() => ExceptionText);
+                RaisePropertyChanged(() => ExceptionColor);
             });
         }
 
@@ -340,11 +368,40 @@ namespace WallpaperFlux.Core.Models.Tagging
             RaisePropertyChanged(() => ImageCountStringContext); //? Not really needed in current use cases but would ideally still exist here
         }
 
-        public int GetLinkedImageCount() => LinkedImages.Count;
+        public int GetLinkedImageCount() => GetLinkedImages().Count;
 
-        public ImageModel[] GetLinkedImages() => LinkedImages.ToArray();
+        //! Remember that we need to check for child tags too as references to linked child tags are included in references to the parent tag 
+        //! (Prevents saving parent tag to JSON)
+        public HashSet<ImageModel> GetLinkedImages()
+        {
+            HashSet<ImageModel> images = new HashSet<ImageModel>(LinkedImages);
 
-        public bool ContainsLinkedImage(ImageModel image) => LinkedImages.Contains(image);
+            foreach (TagModel tag in ChildTags)
+            {
+                images.UnionWith(tag.GetLinkedImages());
+            }
+
+            return images;
+        }
+
+        //! Remember that we need to check for child tags too as references to linked child tags are included in references to the parent tag
+        //! (Prevents saving parent tag to JSON)
+        /// <summary>
+        /// Checks if the given image is linked to this tag or any of its child tags
+        /// </summary>
+        /// <param name="image"></param>
+        /// <returns></returns>
+        public bool ContainsLinkedImage(ImageModel image)
+        {
+            if (LinkedImages.Contains(image)) return true;
+
+            foreach (TagModel tag in ChildTags)
+            {
+                if (tag.LinkedImages.Contains(image)) return true;
+            }
+
+            return false;
+        }
 
         #endregion
 
@@ -358,8 +415,8 @@ namespace WallpaperFlux.Core.Models.Tagging
             {
                 if (!ParentTags.Contains(tag))
                 {
-                    ParentTags.Add(tag);
-                    tag.ChildTags.Add(this); // when becoming the parent tag of another tag we must also become its child tag
+                    ParentTags.Add(tag); // makes the given tag the parent tag of this tag
+                    tag.ChildTags.Add(this); // makes this tag a child tag of the given tag
                 }
                 
                 TaggingUtil.HighlightTags(/*xParentChildTagsUnion_IncludeSelf()*/);
@@ -372,8 +429,8 @@ namespace WallpaperFlux.Core.Models.Tagging
 
             if (ParentTags.Contains(tag)) // can't unlink a tag that isn't linked
             {
-                ParentTags.Remove(tag);
-                tag.ChildTags.Remove(this);
+                ParentTags.Remove(tag); // stops the given tag from being a parent tag of this tag
+                tag.ChildTags.Remove(this); // stops this tag from being the child tag of the given tag
             }
 
             TaggingUtil.HighlightTags(/*xParentChildTagsUnion_IncludeSelf()*/);
@@ -384,27 +441,44 @@ namespace WallpaperFlux.Core.Models.Tagging
             // toggles the source tag's link status with this tag
             if (!tag.HasParent(this))
             {
-                tag.LinkTag(this);
+                tag.LinkTag(this); // making this tag the parent of the given tag
             }
             else
             {
-                tag.UnlinkTag(this);
+                tag.UnlinkTag(this); // removing this tag from being the parent of the given tag
             }
         }
 
-        public HashSet<TagModel> ParentChildTagsUnion()
+        public void UnlinkAllParentAndChildTags()
+        {
+            foreach (TagModel tag in ParentTags)
+            {
+                UnlinkTag(tag); // removes the given tag from being the parent of this tag
+            }
+
+            foreach (TagModel tag in ChildTags)
+            {
+                tag.UnlinkTag(this); // removing this tag from being the parent of the given tag
+            }
+        }
+
+        public HashSet<TagModel> GetParentChildTagsUnion()
         {
             HashSet<TagModel> parentChildTags = new HashSet<TagModel>(ParentTags);
             parentChildTags.UnionWith(ChildTags);
             return parentChildTags;
         }
 
-        public HashSet<TagModel> ParentChildTagsUnion_IncludeSelf()
+        public HashSet<TagModel> GetParentChildTagsUnion_IncludeSelf()
         {
-            HashSet<TagModel> parentChildTags = ParentChildTagsUnion();
+            HashSet<TagModel> parentChildTags = GetParentChildTagsUnion();
             parentChildTags.Add(this);
             return parentChildTags;
         }
+
+        public HashSet<TagModel> GetParentTags() => ParentTags;
+
+        public HashSet<TagModel> GetChildTags() => ChildTags;
 
         public bool HasParent(TagModel tag) => ParentTags.Contains(tag);
         public bool HasChild(TagModel tag) => ChildTags.Contains(tag);

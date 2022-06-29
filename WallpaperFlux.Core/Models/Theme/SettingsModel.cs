@@ -30,9 +30,11 @@ namespace WallpaperFlux.Core.Models.Theme
         public bool AllowTagBasedRenamingForMovedImages;
 
         // Image Type Settings
+        /*x Might not use this anymore
         public bool ExcludeRenamingStatic;
         public bool ExcludeRenamingGif;
         public bool ExcludeRenamingVideo;
+        */
         public FrequencyCalculator FrequencyCalc;
         public FrequencyModel FrequencyModel { get; set; }
 

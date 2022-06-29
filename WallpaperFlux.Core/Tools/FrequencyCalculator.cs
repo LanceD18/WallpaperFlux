@@ -341,9 +341,9 @@ namespace WallpaperFlux.Core.Tools
             double videoRelativeChance = RelativeFrequency[ImageType.Video] / chanceTotal;
 
             Debug.WriteLine("Relative chanceTotal: " + chanceTotal);
-            Debug.WriteLine("R.Static / chanceTotal: " + staticRelativeChance);
-            Debug.WriteLine("R.GIF / chanceTotal: " + gifRelativeChance);
-            Debug.WriteLine("R.Video / chanceTotal: " + videoRelativeChance);
+            Debug.WriteLine("Relative Static / chanceTotal: " + staticRelativeChance);
+            Debug.WriteLine("Relative GIF / chanceTotal: " + gifRelativeChance);
+            Debug.WriteLine("Relative Video / chanceTotal: " + videoRelativeChance);
 
             // If the frequency isn't weighted, no modifications need to be made
             if (!DataUtil.Theme.Settings.ThemeSettings.WeightedFrequency)

@@ -32,7 +32,7 @@ namespace WallpaperFlux.Core.Collections
             if (ContainsImage(path)) return null;
 
             ImageModel addedImage = new ImageModel(path);
-            ImageContainer[addedImage.ImageType].Add(path, addedImage);
+            AddImage(addedImage);
             return addedImage;
         }
 

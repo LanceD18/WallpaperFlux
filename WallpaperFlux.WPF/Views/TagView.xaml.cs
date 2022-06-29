@@ -16,6 +16,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using HandyControl.Controls;
 using MvvmCross.Presenters;
 using WallpaperFlux.Core.Models.Controls;
 using WallpaperFlux.Core.Models.Tagging;
@@ -24,6 +25,8 @@ using WallpaperFlux.WPF.Util;
 using WallpaperFlux.WPF.Windows;
 using WallpaperFlux.Core.Util;
 using ControlUtil = WallpaperFlux.WPF.Util.ControlUtil;
+using TabItem = System.Windows.Controls.TabItem;
+using TextBox = System.Windows.Controls.TextBox;
 
 namespace WallpaperFlux.WPF.Views
 {

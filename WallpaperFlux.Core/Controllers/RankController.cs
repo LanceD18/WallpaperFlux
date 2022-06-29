@@ -46,9 +46,9 @@ namespace WallpaperFlux.Core.Controllers
         //! this method should only be called by the Setter of the ImageModel Rank property unless otherwise noted
         public void ModifyRank(ImageModel image, int oldRank, ref int newRank)
         {
-            // if the rank is out-of-bounds, auto-adjust it to an accepted rank
+            // clamps the given rank to the rank-range for just in case something out-of-bounds is given
             //xDebug.WriteLine("ModifyRank: " + ContainsRank(newRank, image.ImageType) + " | " + RankData[image.ImageType].Count);
-            if (!ContainsRank(newRank, image.ImageType)) newRank = oldRank;
+            newRank = ClampValueToRankRange(newRank);
 
             RankData[image.ImageType][oldRank].Remove(image);
             RankData[image.ImageType][newRank].Add(image);
@@ -144,19 +144,14 @@ namespace WallpaperFlux.Core.Controllers
 
         public void SetMaxRank(int maxRank)
         {
+            Debug.WriteLine("Setting Max Rank to: " + maxRank);
             if (maxRank > 0) // note that rank 0 is reserved for unranked images
             {
                 SetRankDataSize(maxRank);
             }
             else
             {
-                MessageBoxModel messageBox = new MessageBoxModel
-                {
-                    Text = "The max rank cannot be less than or equal to 0",
-                    Icon = MessageBoxImage.Error,
-                };
-
-                MessageBox.Show(messageBox);
+                MessageBoxUtil.ShowError("The max rank cannot be less than or equal to 0");
             }
         }
 
@@ -180,8 +175,7 @@ namespace WallpaperFlux.Core.Controllers
             }
             else // Update RankData, giving it a new size and adjusting the existing images accordingly
             {
-                if (!JsonUtil.IsLoadingData && 
-                    MessageBoxUtil.PromptYesNo("Are you sure you want to change the max rank? \n(All images will have their ranks adjusted in proportion to this change)"))
+                if (MessageBoxUtil.PromptYesNo("Are you sure you want to change the max rank? \n(All images will have their ranks adjusted in proportion to this change)"))
                 {
                     UpdateMaxRank(maxRank);
                     rankWasUpdated = true;

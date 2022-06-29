@@ -20,6 +20,7 @@ namespace WallpaperFlux.Core.JSON.Temp
 
             set
             {
+                _Enabled = value;
                 /*x
                 if (_Enabled != value)  // prevents unnecessary calls
                 {
@@ -44,6 +45,7 @@ namespace WallpaperFlux.Core.JSON.Temp
 
             set
             {
+                _UseForNaming = value;
                 /*x
                 if (_UseForNaming != value)  // prevents unnecessary calls
                 {
@@ -102,8 +104,8 @@ namespace WallpaperFlux.Core.JSON.Temp
             if (parentCategory != null) // Adding New Tag | New tags will have the default settings of the category
             {
                 ParentCategoryName = parentCategory.Name;
-                Enabled = parentCategory.Enabled;
-                UseForNaming = parentCategory.UseForNaming;
+                Enabled = enabled;
+                UseForNaming = useForNaming;
             }
             else // Loading Tag
             {

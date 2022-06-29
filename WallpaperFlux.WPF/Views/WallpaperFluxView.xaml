@@ -54,10 +54,10 @@
         <Menu Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="10" Padding="2">
             <!-- File -->
             <MenuItem Header="File">
-                <MenuItem Header="Load Theme" mvx:Bi.nd="Command LoadThemeCommand"/>
+                <MenuItem Header="Load Theme" Command="{Binding LoadThemeCommand}"/>
                 <!-- ! Should be disabled when no theme is loaded, saves the current theme to itself -->
                 <MenuItem Header="Save Theme [Not implemented]" IsEnabled="False"/>
-                <MenuItem Header="Save Theme As [Not implemented]"/>
+                <MenuItem Header="Save Theme As" Command="{Binding SaveThemeAsCommand}"/>
             </MenuItem>
 
             <!-- Edit -->
@@ -68,12 +68,12 @@
             <!-- Settings -->
             <MenuItem Header="Settings">
                 <!-- Set Max Rank -->
-                <MenuItem Header="Set Max Rank" mvx:Bi.nd="Command Theme.Settings.UpdateMaxRankCommand">
+                <MenuItem Header="Set Max Rank" mvx:Bi.nd="Command Theme_USE_STATIC_REFERENCE_FIX_LATER.Settings.UpdateMaxRankCommand">
                     <MenuItem.ToolTip>
                         <ToolTip>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="Current Max Rank: "/>
-                                <TextBlock Text="{Binding Theme.Settings.ThemeSettings.MaxRank}"/>
+                                <TextBlock Text="{Binding Theme_USE_STATIC_REFERENCE_FIX_LATER.Settings.ThemeSettings.MaxRank}"/>
                             </StackPanel>
                         </ToolTip>
                     </MenuItem.ToolTip>
@@ -220,7 +220,7 @@
                     </Button.ToolTip>
                 </Button>
 
-                <!-- Display Setting Template List -->
+                <!--? Display Setting Template List -->
                 <GroupBox  Grid.Row="3" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True">
                     <ListBox Width="310" MaxHeight="110"
                              ItemsSource="{Binding DisplaySettings}"  SelectedItem="{Binding SelectedDisplaySetting}"
@@ -302,14 +302,14 @@
                 <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
                     <!-- TODO Standardize the Height, Margin, and maybe the Width here (Give them variables) -->
                     <Button Width="115" Height="25" Content="Select Image(s)" IsEnabled="{Binding CanSelectImages}" Margin="5 0 5 0" Command="{Binding SelectImagesCommand}" />
-                    <Button Width="60" Height="25" Content="Inspect" Margin="5 0 5 0" Command="{Binding ToggleInspectorCommand}"/>
+                    <Button Width="60" Height="25" Content="Inspect" Margin="5 0 5 0" Command="{Binding ToggleInspectorCommand}" IsEnabled="{Binding IsImageSelected}"/>
                     <Button Width="60" Height="25" Content="Clear" Margin="5 0 5 0" Command="{Binding ClearImagesCommand}"/>
                     <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
-                    <Button Width="75" Height="25" Content="Rename" Margin="5 0 5 0" Command="{Binding RenameImagesCommand}"/>
-                    <Button Width="75" Height="25" Content="Move" Margin="5 0 5 0" Command="{Binding MoveImagesCommand}"/>
-                    <Button Width="75" Height="25" Content="Delete" Margin="5 0 5 0" Command="{Binding DeleteImagesCommand}"/>
-                    <Button Width="75" Height="25" Content="Rank" Margin="5 0 5 0" Command="{Binding RankImagesCommand}"/>
-                    <Button Width="115" Height="25" Content="Paste Tagboard" Margin="5 0 5 0" Command="{Binding PasteTagBoardCommand}"/>
+                    <Button Width="75" Height="25" Content="Rename" Margin="5 0 5 0" Command="{Binding RenameImagesCommand}"  IsEnabled="{Binding IsImageSelected}"/>
+                    <Button Width="75" Height="25" Content="Move" Margin="5 0 5 0" Command="{Binding MoveImagesCommand}"  IsEnabled="{Binding IsImageSelected}"/>
+                    <Button Width="75" Height="25" Content="Delete" Margin="5 0 5 0" Command="{Binding DeleteImagesCommand}"  IsEnabled="{Binding IsImageSelected}"/>
+                    <Button Width="75" Height="25" Content="Rank" Margin="5 0 5 0" Command="{Binding RankImagesCommand}"  IsEnabled="{Binding IsImageSelected}"/>
+                    <Button Width="115" Height="25" Content="Paste Tagboard" Margin="5 0 5 0" Command="{Binding PasteTagBoardCommand}"  IsEnabled="{Binding IsImageSelected}"/>
                     <CheckBox Content="Group Renamed Images" Margin="5" IsChecked="{Binding GroupRenamed}"
                               ToolTip="While this is checked, if multiple images with the same tags are renamed simultaneously, their numbering will be grouped together"/>
                     <!--! Not really much of a point to Apply To All when SelectAllImages() exists -->
@@ -408,7 +408,7 @@
                                                                         DecodePixelHeight="{Binding ImageSelectorThumbnailHeight}"
                                                                         RenderOptions.BitmapScalingMode="LowQuality"
                                                                         CacheOption="OnLoad"
-                                                                        UriSource="{Binding Path}">
+                                                                        UriSource="{Binding Path, Mode=OneWay}">
                                                                         </BitmapImage>
                                                                     </Image.Source>
 
@@ -423,7 +423,7 @@
                                                                                         <Image.Source>
                                                                                             <BitmapImage
                                                                                                 CacheOption="OnLoad"
-                                                                                                UriSource="{Binding Path}">
+                                                                                                UriSource="{Binding Path, Mode=OneWay}">
                                                                                             </BitmapImage>
                                                                                         </Image.Source>
                                                                                     </Image>
@@ -480,13 +480,13 @@
 
                                                                     <!--? Thumbnail -->
                                                                     <!-- Displays the first frame/thumbnail of videos due to the Loaded event -->
-                                                                    <Image Loaded="Image_OnLoaded_GenerateVideoThumbnail"/>
+                                                                    <Image Loaded="MediaElement_OnLoaded_GenerateVideoThumbnail"/>
 
                                                                     <!-- The media element will fail to process the Tooltip & Context Menu, so we used a GroupBox -->
                                                                     <!--? Media Element Tooltip-->
                                                                     <GroupBox.ToolTip>
                                                                         <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play" 
-                                                                            Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" />
+                                                                            Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" Volume="{Binding Volume}"/>
                                                                     </GroupBox.ToolTip>
 
                                                                     <!--? Media Element Context Menu-->
@@ -628,7 +628,7 @@
                             <StackPanel Focusable="False">
 
                                 <!-- //// Binding to ImageModel //// -->
-                                <ContentControl Content="{Binding SelectedImage}" HorizontalAlignment="Center">
+                                <ContentControl Content="{Binding SelectedImageSelectorTab.SelectedImage}" HorizontalAlignment="Center">
                                     <!-- Resources -->
                                     <ContentControl.Resources>
                                         <!-- Remember that the Binding context here refers to what's given in the Content of the ContentTemplate, not what ReSharper says -->
@@ -640,7 +640,8 @@
                                                 <ContentControl.Resources>
                                                     <!-- Static -->
                                                     <DataTemplate x:Key="StaticTemplate">
-                                                        <Image  Loaded="Image_OnLoaded"/>
+                                                        <!--? Image_Onloaded IS NEEDED TO ENSURE THAT A SWITCH FROM A GIF (and maybe video?) TO IMAGE IS DONE SUCCESSFULLY!!! -->
+                                                        <Image Loaded="Image_OnLoaded" DataContextChanged="Inspector_OnDataContextChanged"/>
                                                     </DataTemplate>
                                                     <!-- GIF -->
                                                     <DataTemplate x:Key="GIFTemplate">
@@ -670,7 +671,7 @@
                                         <DataTemplate x:Key="VideoTemplate">
                                             <GroupBox adonisExtensions:LayerExtension.IncreaseLayer="False" HorizontalAlignment="Center" VerticalAlignment="Center">
                                                 <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play" 
-                                                               Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded"/>
+                                                               Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" Volume="{Binding Volume}"/>
                                             </GroupBox>
                                             <!--</Border>-->
                                         </DataTemplate>
@@ -740,7 +741,17 @@
                                         <!-- The GroupBox adds a fitting adonis background to every tag -->
                                         <GroupBox  adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:CornerRadiusExtension.CornerRadius="15">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock VerticalAlignment="Center" Text="{Binding Name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <Button VerticalAlignment="Center" Content="{Binding ExceptionText}"
+                                                        Visibility="{Binding UseForNaming_IncludeCategory, Mode=OneWay, UpdateSourceTrigger=PropertyChanged,
+                                                            Converter={StaticResource BooleanToVisibilityInvertedConverter}}"
+                                                        Command="{Binding ToggleNamingExceptionCommand}" FontSize="10" FontWeight="Medium" 
+                                                        Foreground="{Binding ExceptionColor, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, 
+                                                    Converter={StaticResource ColorToBrushConverter}}"
+                                                        Margin="5 0 5 0" ToolTip="Toggles the Naming Exception status of this tag.
+                                                        Naming Exceptions are used in tag-based auto-naming regardless of restrictions"/>
+                                                <TextBlock VerticalAlignment="Center" Text="{Binding Name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                                                           Foreground="{Binding ExceptionColor, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, 
+                                                    Converter={StaticResource ColorToBrushConverter}}"/>
                                                 <Button VerticalAlignment="Center" Content="X"  Command="{Binding RemoveTagFromSelectedImageCommand}" 
                                                     Foreground="Red" FontSize="10" FontWeight="Medium" Margin="5 0 5 0"/>
                                             </StackPanel>

@@ -58,7 +58,7 @@ namespace WallpaperFlux.Core.Models.Tagging
 
             set
             {
-                _enabled = value;
+                SetProperty(ref _enabled, value);
                 // TODO Hopefully you won't need all the extra code below and stuff can be handled more dynamically
                 /*x
                 if (_Enabled != value) // prevents unnecessary calls
@@ -77,7 +77,7 @@ namespace WallpaperFlux.Core.Models.Tagging
             }
         }
 
-        private bool _useForNaming;
+        private bool _useForNaming = true;
 
         public bool UseForNaming
         {
@@ -85,12 +85,17 @@ namespace WallpaperFlux.Core.Models.Tagging
 
             set
             {
-                _useForNaming = value;
-                /*x
-                if (_UseForNaming != value) // prevents unnecessary calls | and yes this can happen
+                if (_useForNaming != value) // no need to run through the entire list of tags again if UseForNaming receives the same value
                 {
-                    _UseForNaming = value;
+                    SetProperty(ref _useForNaming, value);
 
+                    foreach (TagModel tag in Tags)
+                    {
+                        tag.RaisePropertyChanged(() => tag.UseForNaming_IncludeCategory);
+                        tag.RaisePropertyChanged(() => tag.ExceptionColor); //? depends on the value of UseForNaming_IncludeCategory
+                    }
+
+                    /*x
                     HashSet<WallpaperData.ImageData> imagesToRename = new HashSet<WallpaperData.ImageData>();
                     foreach (TagData tag in Tags)
                     {
@@ -99,8 +104,8 @@ namespace WallpaperFlux.Core.Models.Tagging
                             imagesToRename.Add(WallpaperData.GetImageData(imagePath));
                         }
                     }
+                    */
                 }
-                */
             }
         }
 
@@ -287,6 +292,7 @@ namespace WallpaperFlux.Core.Models.Tagging
         public bool RemoveTag(TagModel tag)
         {
             tag.UnlinkAllImages();
+            tag.UnlinkAllParentAndChildTags();
             bool removed = Tags.Remove(tag);
             VerifyTagTabs(); //? needed to visually update the tag's removal
             return removed;

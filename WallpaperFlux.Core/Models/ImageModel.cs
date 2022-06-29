@@ -78,7 +78,9 @@ namespace WallpaperFlux.Core.Models
         }
 
         [JsonIgnore] public Action<int, int> OnRankChange; //! Don't think you'll be using this, remove it at some point
-
+        
+        // TODO This should become a non-saved variable, the saved variable should be 'Enabled' while this Active variables just determines if the image can be used as a wallpaper
+        // TODO Active would factor in more than just the image's Enabled state, but the Enabled state of every tag it uses, the categories of those tags, and the folder it's in
         // Note: A rank 0 image is still active if able, it just has a 0% chance of being selected
         [DataMember(Name = "Active")]
         public bool Active { get; set; }
@@ -119,6 +121,7 @@ namespace WallpaperFlux.Core.Models
         public bool IsVideo => WallpaperUtil.IsVideo(Path);
 
         // Commands
+        #region Commands
         public IMvxCommand ViewFileCommand { get; set; }
 
         public IMvxCommand OpenFileCommand { get; set; }
@@ -138,6 +141,7 @@ namespace WallpaperFlux.Core.Models
         public IMvxCommand DecreaseRankCommand { get; set; }
 
         public IMvxCommand IncreaseRankCommand { get; set; }
+        #endregion
 
         /*x
         // IoC Property
@@ -193,7 +197,7 @@ namespace WallpaperFlux.Core.Models
 
         #endregion
 
-        public ImageModel(string path, int rank = 0, ImageTagCollection tags = null)
+        public ImageModel(string path, int rank = 0, ImageTagCollection tags = null, double volume = 0)
         {
             Path = path;
 
@@ -206,6 +210,8 @@ namespace WallpaperFlux.Core.Models
             Rank = rank;
 
             Tags = tags ?? new ImageTagCollection(this); // create a new tag collection if the given one is null
+
+            Volume = volume;
 
             //? this is only called if there is actually a change, if the same value was sent in then nothing will happen
             // increments or decrements based on the IsSelected state

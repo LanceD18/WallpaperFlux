@@ -1,15 +1,16 @@
 ﻿using WallpaperFlux.Core;
 using WallpaperFlux.Core.IoC;
+using WallpaperFlux.Core.Models;
 
 namespace WallpaperFlux.WPF.IoC
 {
     public class ExternalWallpaperHandler : IExternalWallpaperHandler
     {
-        public void OnWallpaperChange(int index, string path)
+        public void OnWallpaperChange(int index, ImageModel image)
         {
             if (MainWindow.Instance.Wallpapers != null)
             {
-                MainWindow.Instance.Wallpapers[index].OnWallpaperChange(path);
+                MainWindow.Instance.Wallpapers[index].OnWallpaperChange(image);
             }
         }
 

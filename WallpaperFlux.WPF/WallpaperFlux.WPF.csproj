@@ -12,6 +12,7 @@
     <PackageReference Include="FFME.Windows" Version="4.4.350" />
     <PackageReference Include="FFmpeg.AutoGen" Version="4.4.0" />
     <PackageReference Include="MediaToolkit" Version="1.1.0.1" />
+    <PackageReference Include="Mpv.NET" Version="1.2.0" />
     <PackageReference Include="MvvmCross.Platforms.Wpf" Version="8.0.1" />
     <PackageReference Include="PresentationFramework" Version="4.6.0" />
     <PackageReference Include="Serilog" Version="2.10.0" />
