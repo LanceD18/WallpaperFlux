@@ -45,7 +45,7 @@ namespace WallpaperFlux.WPF
             Debug.WriteLine("------------------------------------" +
                             "\nInitializing static MainWindow Instance");
             Instance = this;
-
+            
             InitializeComponent();
             InitializeWallpapers();
 

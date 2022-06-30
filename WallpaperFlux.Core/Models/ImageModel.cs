@@ -120,6 +120,8 @@ namespace WallpaperFlux.Core.Models
 
         public bool IsVideo => WallpaperUtil.IsVideo(Path);
 
+        public bool IsWebmOrGif => new FileInfo(Path).Extension == ".webm";
+
         // Commands
         #region Commands
         public IMvxCommand ViewFileCommand { get; set; }

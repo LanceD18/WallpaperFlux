@@ -7,10 +7,24 @@
         xmlns:ffme="clr-namespace:Unosquare.FFME;assembly=ffme.win"
         xmlns:local="clr-namespace:WallpaperFlux.WPF"
         xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
-        mc:Ignorable="d" Background="Black" ResizeMode="NoResize"
+        xmlns:windowsForms="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms"
+        xmlns:media="https://github.com/mysteryx93/MediaPlayerUI.NET"
+        mc:Ignorable="d" Background="Transparent" ResizeMode="NoResize"
         Title="WallpaperWindow" Height="450" Width="800" WindowStyle="None">
     <Grid>
         <Image x:Name="WallpaperImage" Width="auto" Height="auto"/>
-        <ffme:MediaElement x:Name="WallpaperMediaElement" Width="auto" Height="auto" UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"/>
+
+        <ffme:MediaElement x:Name="WallpaperMediaElementFFME" Width="auto" Height="auto" UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"/>
+        <MediaElement x:Name="WallpaperMediaElement" Width="auto" Height="auto" UnloadedBehavior="Manual" LoadedBehavior="Play" MediaEnded="WallpaperMediaElement_OnMediaEnded"/>
+        <!--
+        <WindowsFormsHost x:Name="WallpaperMediaElement">
+            <windowsForms:Panel x:Name="PlayerHost" />
+        </WindowsFormsHost>
+        -->
+        <!--
+ <media:MediaPlayer x:Name="WallpaperMediaElement">
+    <media:MpvPlayerHost Source="MyVideo.mp4" />
+</media:MediaPlayer>
+        -->
     </Grid>
 </views:MvxWindow>

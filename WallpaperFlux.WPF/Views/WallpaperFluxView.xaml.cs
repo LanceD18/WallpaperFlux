@@ -20,6 +20,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using HanumanInstitute.MediaPlayer.Wpf.Mpv;
 using MediaToolkit.Model;
 using MediaToolkit.Options;
 using MvvmCross.Base;
@@ -35,7 +36,6 @@ using WallpaperFlux.Core.ViewModels;
 using WallpaperFlux.WPF.Util;
 using WallpaperFlux.WPF.Windows;
 using Image = System.Windows.Controls.Image;
-using MediaElement = Unosquare.FFME.MediaElement;
 using Size = System.Windows.Size;
 
 namespace WallpaperFlux.WPF.Views
@@ -61,10 +61,10 @@ namespace WallpaperFlux.WPF.Views
 
         private void Inspector_OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            LoadImageOrMediaElement(sender);
+            LoadImageOrMediaElementOrMpvPlayerHost(sender);
         }
 
-        private void LoadImageOrMediaElement(object sender)
+        private void LoadImageOrMediaElementOrMpvPlayerHost(object sender)
         {
             if (sender is Image image)
             {
@@ -73,6 +73,14 @@ namespace WallpaperFlux.WPF.Views
             else if (sender is MediaElement element)
             {
                 LoadMediaElement(element);
+            }
+            else if (sender is Unosquare.FFME.MediaElement elementFFME)
+            {
+                LoadFFMEMediaElement(elementFFME);
+            }
+            else if (sender is MpvPlayerHost mpvPlayerHost)
+            {
+                LoadMpvPlayerHost(mpvPlayerHost);
             }
         }
 
@@ -94,12 +102,35 @@ namespace WallpaperFlux.WPF.Views
             {
                 try
                 {
+                    element.Source = new Uri(elementImage.Path);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("ERROR: Element Loading Failed: " + e);
+                }
+            }
+        }
+
+        private void LoadFFMEMediaElement(Unosquare.FFME.MediaElement element)
+        {
+            if (element.DataContext is ImageModel elementImage)
+            {
+                try
+                {
                     element.Open(new Uri(elementImage.Path));
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine("ERROR: Element Loading Failed: " + e);
                 }
+            }
+        }
+
+        private void LoadMpvPlayerHost(MpvPlayerHost mpvPlayerHost)
+        {
+            if (mpvPlayerHost.DataContext is ImageModel elementImage)
+            {
+                mpvPlayerHost.Player.Load(elementImage.Path);
             }
         }
 
@@ -130,7 +161,7 @@ namespace WallpaperFlux.WPF.Views
 
         }
 
-        private void Image_OnLoaded(object sender, RoutedEventArgs e) => LoadImageOrMediaElement(sender);
+        private void Image_OnLoaded(object sender, RoutedEventArgs e) => LoadImageOrMediaElementOrMpvPlayerHost(sender);
 
         //? https://stackoverflow.com/questions/3024169/capture-each-wpf-mediaelement-frame - [Go down below the answer for stuff that doesn't seem to use an extension]
         //? https://stackoverflow.com/questions/35380868/extract-frames-from-video-c-sharp - Media Toolkit [LOTS OF ADDITIONAL SOLUTIONS BENEATH TOP ONE]
@@ -157,13 +188,14 @@ namespace WallpaperFlux.WPF.Views
             }
         }
 
-        private void MediaElement_OnLoaded(object sender, RoutedEventArgs e) => LoadImageOrMediaElement(sender);
+        private void MediaElement_OnLoaded(object sender, RoutedEventArgs e) => LoadImageOrMediaElementOrMpvPlayerHost(sender);
 
         private void MediaElement_OnUnloaded(object sender, RoutedEventArgs e)
         {
             try
             {
                 if (sender is MediaElement element) element.Close();
+                if (sender is Unosquare.FFME.MediaElement elementFFME) elementFFME.Close();
                 //! Dispose() will freeze the program
                 //xelement?.Dispose();
             }
@@ -172,8 +204,23 @@ namespace WallpaperFlux.WPF.Views
                 Console.WriteLine("ERROR: Element Unload Failed: " + exception);
             }
         }
+
+        private void MpvPlayerHost_OnLoaded(object sender, RoutedEventArgs e) => LoadImageOrMediaElementOrMpvPlayerHost(sender);
+
+        private void MpvPlayerHost_OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                //! there's also a .Dispose() but i'm sure that'd just delete the player, test at some point
+                if (sender is MpvPlayerHost mpvPlayerHost) mpvPlayerHost.Stop();
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception);
+            }
+        }
         #endregion
-        
+
         #region Child Window Control
         private void MenuItem_OpenTagWindow_Click(object sender, RoutedEventArgs e)
         {
@@ -269,5 +316,14 @@ namespace WallpaperFlux.WPF.Views
             ControlUtil.EnsureSingularSelection<ImageSelectorTabModel, ImageModel>(ImageSelectorTabControl.Items, ImageSelectorTabControl.SelectedItem as ITabModel<ImageModel>);
         }
         #endregion
+
+        private void MediaElement_OnMediaEnded(object sender, RoutedEventArgs e) //? for Window media element only
+        {
+            if (sender is MediaElement element)
+            {
+                element.Position = TimeSpan.FromSeconds(0);
+                element.Play();
+            }
+        }
     }
 }

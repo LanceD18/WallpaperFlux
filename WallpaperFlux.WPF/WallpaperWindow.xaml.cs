@@ -13,7 +13,9 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using HanumanInstitute.MediaPlayer.Wpf.Mpv;
 using LanceTools.WindowsUtil;
+using Mpv.NET.Player;
 using MvvmCross.Platforms.Wpf.Views;
 using Unosquare.FFME.Common;
 using WallpaperFlux.Core.Models;
@@ -30,9 +32,11 @@ namespace WallpaperFlux.WPF
     public partial class WallpaperWindow : MvxWindow
     {
         //? The index is currently gathered by the array utilized in ExternalWallpaperHandler and MainWindow
+
         public WallpaperWindow(Screen display, IntPtr workerw)
         {
             InitializeComponent();
+            
 
             Loaded += (s, e) =>
             {
@@ -49,13 +53,15 @@ namespace WallpaperFlux.WPF
                 //x //! temp
 
                 //? Default, should match what's stated on the WPF
-                WallpaperImage.Stretch = WallpaperMediaElement.Stretch = Stretch.Fill;
+                WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = Stretch.Fill;
+                //xWallpaperImage.Stretch = Stretch.Fill;
 
                 // This line makes the form a child of the WorkerW window, thus putting it behind the desktop icons and out of reach 
                 // of any user input. The form will just be rendered, no keyboard or mouse input will reach it.
                 //? (Would have to use WH_KEYBOARD_LL and WH_MOUSE_LL hooks to capture mouse and keyboard input)
                 Win32.SetParent(new WindowInteropHelper(this).Handle, workerw);
             };
+
         }
 
         //? The index is checked in ExternalWallpaperHandler now as it has access to the array, which allows wallpapers to be changed independently of one another
@@ -76,10 +82,29 @@ namespace WallpaperFlux.WPF
 
             if (wallpaperInfo.Extension == ".gif" || WallpaperUtil.IsSupportedVideoType(wallpaperInfo)) // gif & video
             {
-                WallpaperMediaElement.Volume = image.Volume;
-                WallpaperMediaElement.Open(new Uri(wallpaperInfo.FullName));
-                WallpaperMediaElement.IsEnabled = true;
-                WallpaperMediaElement.Visibility = Visibility.Visible;
+                WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = image.Volume;
+                //xWallpaperMediaElement.PlayerHost.Volume = (int)(image.Volume * 100);
+
+                //? FFME is unstable and likely to crash on larger videos, but Windows Media Player can't load webms | Also, it seems to load Gifs faster
+                if (wallpaperInfo.Extension == ".gif" || wallpaperInfo.Extension == ".webm") 
+                {
+                    WallpaperMediaElement.Close();
+                    WallpaperMediaElementFFME.Open(new Uri(wallpaperInfo.FullName));
+                    WallpaperMediaElement.IsEnabled = false;
+                    WallpaperMediaElement.Visibility = Visibility.Hidden;
+                    WallpaperMediaElementFFME.IsEnabled = true;
+                    WallpaperMediaElementFFME.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    WallpaperMediaElementFFME.Close();
+                    WallpaperMediaElement.Source = new Uri(wallpaperInfo.FullName);
+                    WallpaperMediaElementFFME.IsEnabled = false;
+                    WallpaperMediaElementFFME.Visibility = Visibility.Hidden;
+                    WallpaperMediaElement.IsEnabled = true;
+                    WallpaperMediaElement.Visibility = Visibility.Visible;
+                }
+                
                 WallpaperImage.IsEnabled = false;
                 WallpaperImage.Visibility = Visibility.Hidden;
             }
@@ -92,9 +117,12 @@ namespace WallpaperFlux.WPF
                 // TODO Wallpaper Styling:
                 //! Use me later: WallpaperImage.Stretch
 
-                WallpaperMediaElement.Close(); // ensures that the audio stops playing
-                WallpaperMediaElement.IsEnabled = false;
-                WallpaperMediaElement.Visibility = Visibility.Hidden;
+                //xWallpaperMediaElement.Close(); // ensures that the audio stops playing
+                //xWallpaperMediaElement.PlayerHost.Stop();
+                WallpaperMediaElement.Close();
+                WallpaperMediaElementFFME.Close();
+                WallpaperMediaElement.IsEnabled = WallpaperMediaElementFFME.IsEnabled = false;
+                WallpaperMediaElement.Visibility = WallpaperMediaElementFFME.Visibility = Visibility.Hidden;
                 WallpaperImage.IsEnabled = true;
                 WallpaperImage.Visibility = Visibility.Visible;
             }
@@ -108,22 +136,35 @@ namespace WallpaperFlux.WPF
                 switch (style)
                 {
                     case WallpaperStyle.Fill:
-                        WallpaperImage.Stretch = WallpaperMediaElement.Stretch = Stretch.UniformToFill;
+                        WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = Stretch.UniformToFill;
+                        //xWallpaperImage.Stretch = Stretch.UniformToFill;
                         break;
 
                     case WallpaperStyle.Stretch:
-                        WallpaperImage.Stretch = WallpaperMediaElement.Stretch = Stretch.Fill;
+                        WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = Stretch.Fill;
+                        //xWallpaperImage.Stretch = Stretch.Fill;
                         break;
 
                     case WallpaperStyle.Fit:
-                        WallpaperImage.Stretch = WallpaperMediaElement.Stretch = Stretch.Uniform;
+                        WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = Stretch.Uniform;
+                        //xWallpaperImage.Stretch = Stretch.Uniform;
                         break;
 
                     case WallpaperStyle.Center:
-                        WallpaperImage.Stretch = WallpaperMediaElement.Stretch = Stretch.None;
+                        WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = Stretch.None;
+                        //xWallpaperImage.Stretch = Stretch.None;
                         break;
                 }
             });
+        }
+
+        private void WallpaperMediaElement_OnMediaEnded(object sender, RoutedEventArgs e)
+        {
+            if (sender is MediaElement element)
+            {
+                element.Position = TimeSpan.FromSeconds(0);
+                element.Play();
+            }
         }
     }
 }

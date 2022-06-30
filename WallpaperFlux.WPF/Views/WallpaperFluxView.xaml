@@ -19,6 +19,7 @@
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:hc="https://handyorg.github.io/handycontrol"
     xmlns:tagging="clr-namespace:WallpaperFlux.Core.Models.Tagging;assembly=WallpaperFlux.Core"
+    xmlns:media="https://github.com/mysteryx93/MediaPlayerUI.NET"
     mc:Ignorable="d" FontSize="12" FontFamily="Segoe UI"
     d:DesignHeight="450" d:DesignWidth="800"
     SizeChanged="WallpaperFluxView_OnSizeChanged_UpdateInspectorHeight">
@@ -430,8 +431,8 @@
                                                                                 </DataTemplate>
                                                                                 <!-- GIF -->
                                                                                 <DataTemplate x:Key="GIFTemplate">
-                                                                                    <ffme:MediaElement 
-                                                                                UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play" Loaded="MediaElement_OnLoaded"/>
+                                                                                    <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"
+                                                                                        Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" />
                                                                                 </DataTemplate>
                                                                             </ContentControl.Resources>
                                                                             <!--? Template Control -->
@@ -456,8 +457,8 @@
                                                                     <!-- !Changes made here need to be made to the Media Context Menu as well!!! -->
                                                                     <Image.ContextMenu>
                                                                         <ContextMenu>
-                                                                            <MenuItem Header="Open File Location" mvx:Bi.nd="Command ViewFileCommand"/>
                                                                             <MenuItem Header="Open File" mvx:Bi.nd="Command OpenFileCommand"/>
+                                                                            <MenuItem Header="Open File Location" mvx:Bi.nd="Command ViewFileCommand"/>
                                                                             <MenuItem Header="Set As Wallpaper" mvx:Bi.nd="Command SetWallpaperCommand"/>
                                                                             <Separator/>
                                                                             <MenuItem Header="Rename" Command="{Binding RenameImageCommand}"/>
@@ -485,16 +486,40 @@
                                                                     <!-- The media element will fail to process the Tooltip & Context Menu, so we used a GroupBox -->
                                                                     <!--? Media Element Tooltip-->
                                                                     <GroupBox.ToolTip>
-                                                                        <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play" 
-                                                                            Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" Volume="{Binding Volume}"/>
+                                                                        <ContentControl Content="{Binding }">
+                                                                            <ContentControl.Resources>
+                                                                                <DataTemplate x:Key="FFME">
+                                                                                    <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"
+                                                                                        Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" />
+                                                                                </DataTemplate>
+                                                                                <DataTemplate x:Key="Windows">
+                                                                                    <MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play"
+                                                                                        Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" MediaEnded="MediaElement_OnMediaEnded"/>
+                                                                                </DataTemplate>
+                                                                            </ContentControl.Resources>
+                                                                            <ContentControl.ContentTemplate>
+                                                                                <DataTemplate>
+                                                                                    <!-- Default Template -->
+                                                                                    <ContentControl Name="cc" Content="{Binding }" 
+                                                                                        ContentTemplate="{StaticResource Windows}"/>
+                                                                                    <!-- Triggers -->
+                                                                                    <DataTemplate.Triggers>
+                                                                                        <DataTrigger Binding="{Binding IsWebmOrGif}" Value="True">
+                                                                                            <!-- Sets the ContentTemplate to be GIFTemplate instead of StaticTemplate -->
+                                                                                            <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource FFME}"/>
+                                                                                        </DataTrigger>
+                                                                                    </DataTemplate.Triggers>
+                                                                                </DataTemplate>
+                                                                            </ContentControl.ContentTemplate>
+                                                                        </ContentControl>
                                                                     </GroupBox.ToolTip>
 
                                                                     <!--? Media Element Context Menu-->
                                                                     <!-- !Changes made here need to be made to the Image Context Menu as well!!! -->
                                                                     <GroupBox.ContextMenu>
                                                                         <ContextMenu>
-                                                                            <MenuItem Header="Open File Location" Command="{Binding ViewFileCommand}"/>
                                                                             <MenuItem Header="Open File" Command="{Binding OpenFileCommand}"/>
+                                                                            <MenuItem Header="Open File Location" Command="{Binding ViewFileCommand}"/>
                                                                             <MenuItem Header="Set As Wallpaper" Command="{Binding SetWallpaperCommand}"/>
                                                                             <Separator/>
                                                                             <MenuItem Header="Rename" Command="{Binding RenameImageCommand}"/>
@@ -645,8 +670,8 @@
                                                     </DataTemplate>
                                                     <!-- GIF -->
                                                     <DataTemplate x:Key="GIFTemplate">
-                                                        <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play" 
-                                                                           Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded"/>
+                                                        <MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play"
+                                                                           Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" MediaEnded="MediaElement_OnMediaEnded"/>
                                                     </DataTemplate>
                                                 </ContentControl.Resources>
                                                 <!-- Template Control -->
@@ -670,8 +695,32 @@
                                         <!-- // VideoTemplate // -->
                                         <DataTemplate x:Key="VideoTemplate">
                                             <GroupBox adonisExtensions:LayerExtension.IncreaseLayer="False" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play" 
-                                                               Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" Volume="{Binding Volume}"/>
+                                                <ContentControl Content="{Binding }">
+                                                    <ContentControl.Resources>
+                                                        <DataTemplate x:Key="FFME">
+                                                            <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"
+                                                                                        Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" />
+                                                        </DataTemplate>
+                                                        <DataTemplate x:Key="Windows">
+                                                            <MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play"
+                                                                                        Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" />
+                                                        </DataTemplate>
+                                                    </ContentControl.Resources>
+                                                    <ContentControl.ContentTemplate>
+                                                        <DataTemplate>
+                                                            <!-- Default Template -->
+                                                            <ContentControl Name="cc" Content="{Binding }" 
+                                                                                        ContentTemplate="{StaticResource Windows}"/>
+                                                            <!-- Triggers -->
+                                                            <DataTemplate.Triggers>
+                                                                <DataTrigger Binding="{Binding IsWebmOrGif}" Value="True">
+                                                                    <!-- Sets the ContentTemplate to be GIFTemplate instead of StaticTemplate -->
+                                                                    <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource FFME}"/>
+                                                                </DataTrigger>
+                                                            </DataTemplate.Triggers>
+                                                        </DataTemplate>
+                                                    </ContentControl.ContentTemplate>
+                                                </ContentControl>
                                             </GroupBox>
                                             <!--</Border>-->
                                         </DataTemplate>
