@@ -231,14 +231,8 @@ namespace WallpaperFlux.Core.ViewModels
                 RaisePropertyChanged(() => SelectedCategory);
             });
 
-            AddTagToSelectedCategoryCommand = new MvxCommand(() =>
-            {
-                TaggingUtil.PromptAddTagToCategory(SelectedCategory);
-
-                //? If the category's use for naming state is disabled, the tag should reference that when needed instead of changing its own UseForNaming parameter
-
-                if (SelectedCategory != null) { AddDebugTags(SelectedCategory); }
-            });
+            //? If the category's use for naming state is disabled, the tag should reference that when needed instead of changing its own UseForNaming parameter
+            AddTagToSelectedCategoryCommand = new MvxCommand(() => TaggingUtil.PromptAddTagToCategory(SelectedCategory));
 
             // TagBoard
             CloseTagBoardCommand = new MvxCommand(() => TagboardToggle = false); //? the open/toggle TagBoard is initially called by CategoryModel and sent to a method here

@@ -325,7 +325,7 @@ namespace WallpaperFlux.Core.ViewModels
             SaveThemeAsCommand = new MvxCommand(PromptSaveTheme);
             AddFolderCommand = new MvxCommand(PromptAddFolder);
             RemoveFolderCommand = new MvxCommand(PromptRemoveFolder);
-            SyncCommand = new MvxCommand(Sync);
+            SyncCommand = new MvxCommand(SyncDisplaySettings);
 
             // Image Selector
             ClearImagesCommand = new MvxCommand(ClearImages);
@@ -600,7 +600,7 @@ namespace WallpaperFlux.Core.ViewModels
         #endregion
 
         #region Display Settings
-        public void Sync()
+        public void SyncDisplaySettings()
         {
             if (SelectedDisplaySetting != null)
             {

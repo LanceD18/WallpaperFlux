@@ -40,6 +40,7 @@ using Size = System.Windows.Size;
 
 namespace WallpaperFlux.WPF.Views
 {
+
     /// <summary>
     /// Interaction logic for WallpaperFluxView.xaml
     /// </summary>
@@ -49,6 +50,8 @@ namespace WallpaperFlux.WPF.Views
     {
         public ViewPresenter TagPresenter;
         public ViewPresenter SettingsPresenter;
+
+        private List<Thread> _ActiveThumbnailThreads = new List<Thread>(); //? kills thumbnail threads on page load, intended to stop videos from clogging the task runners
 
         public WallpaperFluxView()
         {
@@ -88,11 +91,14 @@ namespace WallpaperFlux.WPF.Views
         {
             if (image.DataContext is ImageModel imageModel)
             {
-                BitmapImage bitmap = new BitmapImage();
-                string path = imageModel.Path;
-                FileStream stream = File.OpenRead(path);
+                Task.Run(() =>
+                {
+                    BitmapImage bitmap = new BitmapImage();
+                    string path = imageModel.Path;
+                    FileStream stream = File.OpenRead(path);
 
-                LoadBitmapImage(bitmap, stream, image);
+                    LoadBitmapImage(bitmap, stream, image);
+                });
             }
         }
 
@@ -151,17 +157,58 @@ namespace WallpaperFlux.WPF.Views
                 stream.Close();
                 stream.Dispose();
 
-                image.Source = bitmap;
+                //! Task.Run() will be used outside of this method to capture the Bitmap within the 'calling thread'
+                Dispatcher.Invoke(() => image.Source = bitmap); // the image must be called on the UI thread which the dispatcher helps us do under this other thread
             }
             catch (Exception e)
             {
                 Console.WriteLine("ERROR: Bitmap Creation Failed: " + e);
                 //x throw;
             }
-
         }
 
         private void Image_OnLoaded(object sender, RoutedEventArgs e) => LoadImageOrMediaElementOrMpvPlayerHost(sender);
+        
+        private void Image_OnLoaded_LowQuality(object sender, RoutedEventArgs e)
+        {
+            if (sender is Image { DataContext: ImageModel imageModel } image)
+            {
+                Thread thread = new Thread(() => //? this cannot thread over the if statement while the Image object is present
+                {
+                    Debug.WriteLine("IMEPLEMENT THE ACTIVETHUMBNAILTHREADS");
+                    try //? this can accidentally fire off multiple times and cause crashes when trying to load videos (Who still need this for some reason?)
+                    {
+                        BitmapImage bitmap = new BitmapImage();
+                        string path = imageModel.Path;
+                        FileStream stream = File.OpenRead(path);
+
+                        RenderOptions.SetBitmapScalingMode(bitmap, BitmapScalingMode.LowQuality);
+
+                        bitmap.BeginInit();
+                        bitmap.DecodePixelHeight = imageModel.ImageSelectorThumbnailHeight; //! Only set either Height or Width (preferably the larger variant?) to prevent awful stretching!
+                        //x bitmap.DecodePixelWidth = imageModel.ImageSelectorThumbnailWidth;
+                        bitmap.CreateOptions = BitmapCreateOptions.IgnoreColorProfile; // to help with performance
+                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                        bitmap.StreamSource = stream;
+                        bitmap.EndInit();
+                        bitmap.Freeze(); // prevents unnecessary copying: https://stackoverflow.com/questions/799911/in-what-scenarios-does-freezing-wpf-objects-benefit-performance-greatly
+                        stream.Close();
+                        stream.Dispose();
+
+                        Dispatcher.Invoke(() => image.Source = bitmap); // the image must be called on the UI thread which the dispatcher helps us do under this other thread
+                    }
+                    catch (Exception exception)
+                    {
+                        Console.WriteLine("ERROR: Bitmap Creation Failed: " + exception);
+                        //x throw;
+                    }
+                });
+
+                thread.IsBackground = true; // stops the thread from continuing to run on closing the application
+                thread.Start();
+                _ActiveThumbnailThreads.Add(thread);
+            }
+        }
 
         //? https://stackoverflow.com/questions/3024169/capture-each-wpf-mediaelement-frame - [Go down below the answer for stuff that doesn't seem to use an extension]
         //? https://stackoverflow.com/questions/35380868/extract-frames-from-video-c-sharp - Media Toolkit [LOTS OF ADDITIONAL SOLUTIONS BENEATH TOP ONE]
@@ -169,22 +216,30 @@ namespace WallpaperFlux.WPF.Views
         {
             if (sender is Image { DataContext: ImageModel imageModel } image)
             {
-                using (var engine = new MediaToolkit.Engine())
+
+                Thread thread = new Thread(() =>
                 {
-                    var video = new MediaFile(imageModel.Path);
+                    using (var engine = new MediaToolkit.Engine())
+                    {
+                        MediaFile video = new MediaFile(imageModel.Path);
 
-                    engine.GetMetadata(video);
+                        engine.GetMetadata(video);
+                        
+                        ConversionOptions options = new ConversionOptions { Seek = TimeSpan.FromSeconds(0) };
+                        MediaFile outputFile = new MediaFile(AppDomain.CurrentDomain.BaseDirectory + "vidThumbnail.jpeg");
 
-                    var options = new ConversionOptions { Seek = TimeSpan.FromSeconds(0) };
-                    var outputFile = new MediaFile(AppDomain.CurrentDomain.BaseDirectory + "vidThumbnail.jpeg");
+                        engine.GetThumbnail(video, outputFile, options);
 
-                    engine.GetThumbnail(video, outputFile, options);
+                        BitmapImage bitmap = new BitmapImage();
+                        FileStream stream = File.OpenRead(outputFile.Filename);
+                        
+                        LoadBitmapImage(bitmap, stream, image);
+                    }
+                });
 
-                    BitmapImage bitmap = new BitmapImage();
-                    FileStream stream = File.OpenRead(outputFile.Filename);
-
-                    LoadBitmapImage(bitmap, stream, image);
-                }
+                thread.IsBackground = true; // stops the thread from continuing to run on closing the application
+                thread.Start();
+                _ActiveThumbnailThreads.Add(thread);
             }
         }
 
@@ -249,6 +304,7 @@ namespace WallpaperFlux.WPF.Views
         //? Now that the window scales dynamically you probably won't need font scaling but keep this consideration in mind
         private void ImageSelectorTabListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            Debug.WriteLine("Selection changed");
             return;
             // Font Scaling
             if (e.AddedItems.Count > 0)
@@ -299,6 +355,20 @@ namespace WallpaperFlux.WPF.Views
             }
 
             UpdateImageSelectorTabWrapperWidth();
+
+            // close all active thumbnail threads
+            while (_ActiveThumbnailThreads.Count > 0)
+            {
+                Thread thread = _ActiveThumbnailThreads[0];
+                _ActiveThumbnailThreads.Remove(thread);
+                if (thread.IsAlive)
+                {
+                    //? create an empty thread to force the thread to stop on restart | works better than Abort() or Interrupt()
+                    //? this prevents large thumbnails, or primarily videos generating their thumbnails, to hang up the thumbnail generation of the image selector
+                    thread = new Thread(() => { });
+                    thread.Start();
+                }
+            }
         }
 
         private void UpdateImageSelectorTabWrapperWidth()
@@ -324,6 +394,16 @@ namespace WallpaperFlux.WPF.Views
                 element.Position = TimeSpan.FromSeconds(0);
                 element.Play();
             }
+        }
+
+        private void UIElement_OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            Debug.WriteLine("Preview");
+        }
+
+        private void UIElement_OnMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            Debug.WriteLine("Mouse Down");
         }
     }
 }

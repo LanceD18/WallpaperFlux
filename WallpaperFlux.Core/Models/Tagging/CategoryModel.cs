@@ -318,8 +318,9 @@ namespace WallpaperFlux.Core.Models.Tagging
         /// <param name="tagName"></param>
         /// <param name="useForNaming"></param>
         /// <param name="enabled"></param>
+        /// <param name="applyActualData"></param>
         /// <returns></returns>
-        public TagModel VerifyTag(string tagName, bool useForNaming = true, bool enabled = true)
+        public TagModel VerifyTag(string tagName, bool useForNaming = true, bool enabled = true, bool applyActualData = false)
         {
             if (!ContainsTag(tagName))
             {
@@ -333,12 +334,18 @@ namespace WallpaperFlux.Core.Models.Tagging
 
                 //? In the context that this method is being used, in some cases the category will be added before these values are
                 //? set (A tag is found as a parent to another tag first), but it will eventually reach this point
-                tag.UseForNaming = useForNaming;
-                tag.Enabled = enabled;
+                if (applyActualData) // don't want to override these with defaults if this is called again in the wrong context
+                {
+                    tag.UseForNaming = useForNaming;
+                    tag.Enabled = enabled;
+                }
 
                 return tag;
             }
         }
+
+        // just a version with mandatory arguments
+        public TagModel VerifyTagWithData(string tagName, bool useForNaming, bool enabled, bool applyActualData) => VerifyTag(tagName, useForNaming, enabled, applyActualData);
 
         #endregion
 

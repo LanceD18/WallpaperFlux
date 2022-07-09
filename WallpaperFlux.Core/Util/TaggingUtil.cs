@@ -147,7 +147,7 @@ namespace WallpaperFlux.Core.Util
         /// <param name="useForNaming"></param>
         /// <param name="enabled"></param>
         /// <returns></returns>
-        public static CategoryModel VerifyCategory(string categoryName, bool useForNaming = true, bool enabled = true)
+        public static CategoryModel VerifyCategory(string categoryName, bool useForNaming = true, bool enabled = true, bool applyActualData = false)
         {
             if (!ContainsCategory(categoryName))
             {
@@ -161,18 +161,26 @@ namespace WallpaperFlux.Core.Util
 
                 //? In the context that this method is being used, in some cases the category will be added before these values are
                 //? set (A parent tag present in the category is found first), but it will eventually reach this point
-                category.UseForNaming = useForNaming;
-                category.Enabled = enabled;
+                if (applyActualData) // don't want to override these with defaults if this is called again in the wrong context
+                {
+                    category.UseForNaming = useForNaming;
+                    category.Enabled = enabled;
+                }
 
                 return category;
             }
         }
+
+        // just a version with mandatory arguments
+        public static CategoryModel VerifyCategoryWithData(string tagName, bool useForNaming, bool enabled, bool applyActualData) => VerifyCategory(tagName, useForNaming, enabled, applyActualData);
 
         /// <summary>
         /// Moves a category to the selected position via insertion & removal, shifting the categories in-between accordingly
         /// </summary>
         public static void ShiftCategories(CategoryModel sourceCategory, CategoryModel targetCategory)
         {
+            // TODO You should probably delete first then insert at +/- 1
+
             int sourceIndex = DataUtil.Theme.Categories.IndexOf(sourceCategory);
             int targetIndex = DataUtil.Theme.Categories.IndexOf(targetCategory);
 

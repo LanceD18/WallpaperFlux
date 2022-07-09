@@ -217,7 +217,7 @@
                 <TextBlock Text="Display Settings" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" HorizontalAlignment="Center"  Margin="5" FontWeight="Bold"/>
                 <Button  Content="Sync" IsEnabled="{Binding CanSync}" mvx:Bi.nd="Command SyncCommand" Grid.Row="2" Grid.Column="1" Margin="5">
                     <Button.ToolTip>
-                        'Syncing' display settings allows wallpapers to change simultaneously across multiple monitors
+                        'Syncing' display settings allows wallpapers to change simultaneously across multiple monitors and applies the same configuration across the sync
                     </Button.ToolTip>
                 </Button>
 
@@ -366,7 +366,9 @@
                                 <!-- Image List Box -->
                                 <ListBox ItemsSource="{Binding Items}" 
                                          SelectedItem="{Binding SelectedImage}"
-                                         SelectionMode="Extended" SelectionChanged="ImageSelectorTabListBox_SelectionChanged">
+                                         SelectionMode="Extended" SelectionChanged="ImageSelectorTabListBox_SelectionChanged"
+                                         PreviewMouseDown="UIElement_OnPreviewMouseDown"
+                                         MouseDown="UIElement_OnMouseDown">
 
                                     <!-- Wrap Setup -->
                                     <ListBox.ItemsPanel>
@@ -401,18 +403,8 @@
                                                                Width="{Binding ImageSelectorThumbnailWidth}"
                                                                Height="{Binding ImageSelectorThumbnailHeight}"
                                                                Margin="3"
-                                                               HorizontalAlignment="Center">
-                                                                    <!-- TODO Turn this segment into an event that loads all image sources on one separate thread one by one -->
-                                                                    <Image.Source>
-                                                                        <!-- I'm sure that you only need to decode either Pixel Height or Width -->
-                                                                        <BitmapImage
-                                                                        DecodePixelHeight="{Binding ImageSelectorThumbnailHeight}"
-                                                                        RenderOptions.BitmapScalingMode="LowQuality"
-                                                                        CacheOption="OnLoad"
-                                                                        UriSource="{Binding Path, Mode=OneWay}">
-                                                                        </BitmapImage>
-                                                                    </Image.Source>
-
+                                                               HorizontalAlignment="Center"
+                                                               Loaded="Image_OnLoaded_LowQuality">
                                                                     <!--? ///// Image Tooltip /////-->
                                                                     <Image.ToolTip>
                                                                         <ContentControl Content="{Binding}">
@@ -422,6 +414,9 @@
                                                                                 <DataTemplate x:Key="StaticTemplate">
                                                                                     <Image>
                                                                                         <Image.Source>
+                                                                                            <!-- TODO Create another image loading method for this but use high quality or fant -->
+                                                                                            <!-- TODO Using an image loading method will give you further error-control to prevent potential crashes -->
+                                                                                            <!-- TODO Do note that the drawer version loses some quality with the IgnoreColorProfile, we want to keep quality here -->
                                                                                             <BitmapImage
                                                                                                 CacheOption="OnLoad"
                                                                                                 UriSource="{Binding Path, Mode=OneWay}">

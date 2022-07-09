@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Threading;
@@ -28,8 +29,17 @@ namespace WallpaperFlux.WPF.IoC
                 {
                     if (File.Exists(imagePath) && !WallpaperUtil.IsSupportedVideoType(imagePath))
                     {
-                        _internalImage = Image.FromFile(imagePath);
-                        success = true;
+                        try
+                        {
+                            _internalImage = Image.FromFile(imagePath);
+                            success = true;
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                            success = false;
+                        }
+
                     }
                 }
                 else // no need to do anything if the image already exists

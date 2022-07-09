@@ -324,6 +324,7 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         public void ToggleTagWithImages(ImageModel[] images)
         {
+            bool highlightedInSomeImages = IsHighlightedInSomeImages; //! this can change mid-process so we want to make sure that doesn't happen for this for-loop, otherwise only 1 image can be removed
             // toggles tags for the given group of images
             foreach (ImageModel image in images)
             {
@@ -333,7 +334,7 @@ namespace WallpaperFlux.Core.Models.Tagging
                 }
                 else
                 {
-                    if (!IsHighlightedInSomeImages) //? in this case we will only add the tag to ensure that it is added to all corresponding images before allowing removal
+                    if (!highlightedInSomeImages) //? in this case we will only add the tag to ensure that it is added to all corresponding images before allowing removal
                     {
                         image.RemoveTag(this);
                     }

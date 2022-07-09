@@ -414,13 +414,13 @@ namespace WallpaperFlux.Core.Util
             {
                 // verify category before adding tags
                 // TODO Consider converting the data held up by the TagViewModel Instance into another subset of ThemeModel
-                CategoryModel instanceCategory = TaggingUtil.VerifyCategory(simpleCategory.Name, simpleCategory.UseForNaming, simpleCategory.Enabled);
+                CategoryModel instanceCategory = TaggingUtil.VerifyCategoryWithData(simpleCategory.Name, simpleCategory.UseForNaming, simpleCategory.Enabled, true);
 
                 //? ----- Add Tags (of this Category) -----
                 foreach (SimplifiedTag simpleTag in simpleCategory.Tags)
                 {
                     // verify tag before adding
-                    TagModel instanceTag = instanceCategory.VerifyTag(simpleTag.Name, simpleTag.UseForNaming, simpleTag.Enabled);
+                    TagModel instanceTag = instanceCategory.VerifyTagWithData(simpleTag.Name, simpleTag.UseForNaming, simpleTag.Enabled, true);
                     instanceTag.ParentCategory = instanceCategory; // not saved into the tag's JSON as it would be unnecessary bloat since the category has this
 
                     // ----- Add Parent Tags (of this Tag) -----
@@ -549,13 +549,13 @@ namespace WallpaperFlux.Core.Util
             {
                 // verify category before adding tags
                 // TODO Consider converting the data held up by the TagViewModel Instance into another subset of ThemeModel
-                CategoryModel instanceCategory = TaggingUtil.VerifyCategory(tempCat.Name, tempCat.UseForNaming, tempCat.Enabled);
+                CategoryModel instanceCategory = TaggingUtil.VerifyCategoryWithData(tempCat.Name, tempCat.UseForNaming, tempCat.Enabled, true);
 
                 // ----- Add Tags (of this Category) -----
                 foreach (TempTagData tempTag in tempCat.Tags)
                 {
                     // verify tag before adding
-                    TagModel instanceTag = instanceCategory.VerifyTag(tempTag.Name, tempTag.UseForNaming, tempTag.Enabled); // TODO Redundant at the moment but may not be so in the actual conversion
+                    TagModel instanceTag = instanceCategory.VerifyTagWithData(tempTag.Name, tempTag.UseForNaming, tempTag.Enabled, true);
                     instanceTag.ParentCategory = instanceCategory; // not saved into the tag's JSON as it would be unnecessary bloat since the category has this
 
                     // ----- Add Parent Tags (of this Tag) -----

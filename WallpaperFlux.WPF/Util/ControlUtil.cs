@@ -26,7 +26,7 @@ namespace WallpaperFlux.WPF.Util
             {
                 if (tab != selectedItem) // the WPF will handle deselecting the selected item itself (without deselecting the singular selection)
                 {
-                    Debug.WriteLine("Tab Deselected");
+                    //x Debug.WriteLine("Tab Deselected");
                     tab.DeselectAllItems();
                 }
             }
