@@ -183,6 +183,11 @@
                 </MenuItem>
             </MenuItem>
 
+            <MenuItem Header="Options">
+                <MenuItem Header="Randomize Selection" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding RandomizeSelection, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                <MenuItem Header="Reverse Selection" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding ReverseSelection, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+            </MenuItem>
+
             <!-- Settings -->
             <!-- TODO Remember that each CATEGORY has their own default settings -->
             <!-- ! This seems to have been moved to the context menus now (and is handled better there anyways since each category has their own options) -->
@@ -214,7 +219,7 @@
         <TextBlock Grid.Row="3" Grid.Column="1" Text="Categories" FontSize="16" FontWeight="Bold" Margin="0 5 0 0"/>
         -->
 
-        <!-- Categories & Tags -->
+        <!--? Categories & Tags -->
         <GroupBox Grid.Row="3" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:LayerExtension.Layer="2">
             <!-- Header -->
             <GroupBox.Header>
@@ -234,11 +239,11 @@
                 </StackPanel>
             </GroupBox.Header>
 
-            <!-- Category TabControl -->
+            <!--? Category TabControl -->
             <TabControl x:Name="CategoryTabControl" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                         adonisExtensions:LayerExtension.IncreaseLayer="True" SizeChanged="CategoryTabControl_OnSizeChanged" SelectionChanged="CategoryTabControl_OnSelectionChanged">
 
-                <!-- Drag n' Drog Control -->
+                <!-- Drag n' Drop Control -->
                 <TabControl.Resources>
                     <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
                         <Setter Property="AllowDrop" Value="True"/>
@@ -285,6 +290,7 @@
                 </TabControl.Template>
 
                 <!-- Content Template [Core Content/ListBox] -->
+                <!--? Category Header -->
                 <TabControl.ContentTemplate>
                     <DataTemplate DataType="tagging:CategoryModel">
                         <StackPanel Orientation="Vertical">
@@ -345,7 +351,8 @@
                             <TabControl ItemsSource="{Binding TagTabs, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
                                 SelectedItem="{Binding SelectedTagTab, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
 
-                                <!-- Item Template [Header] -->
+                                <!-- Item Template [Index] -->
+                                <!--? Page Index -->
                                 <TabControl.ItemTemplate>
                                     <DataTemplate DataType="controls:TagTabModel">
                                         <TextBlock Text="{Binding TabIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
@@ -377,7 +384,8 @@
                                                  adonisExtensions:ScrollViewerExtension.HideScrollBarsUntilMouseOver="True"
                                                  adonisExtensions:ScrollViewerExtension.VerticalScrollBarPlacement="Overlay"
                                                  adonisExtensions:ScrollViewerExtension.VerticalScrollBarExpansionMode="ExpandOnHover"
-                                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                 PreviewMouseDown="TagTabControl_ListBoxItem_OnPreviewMouseDown">
 
                                             <!-- Wrap Setup -->
                                             <ListBox.ItemsPanel>
@@ -397,8 +405,7 @@
                                             <ListBox.ItemTemplate>
                                                 <DataTemplate DataType="tagging:TagModel">
                                                     <!-- The GroupBox adds a fitting adonis background to every tag -->
-                                                    <GroupBox  adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:CornerRadiusExtension.CornerRadius="15"
-                                                               MouseDown="TagTabControl_ListBoxItem_OnMouseDown">
+                                                    <GroupBox  adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:CornerRadiusExtension.CornerRadius="15">
                                                         <!-- This interaction trigger allows us to highlight images used by a given tag when the tag is clicked on -->
                                                         <i:Interaction.Triggers>
                                                             <i:EventTrigger EventName="MouseUp">
@@ -475,7 +482,7 @@
                                                             <ContextMenu>
                                                                 <!-- Core -->
                                                                 <MenuItem Header="{Binding Name}" IsEnabled="False"/>
-                                                                <MenuItem Header="{Binding ImageCountStringContext}" IsEnabled="False"/>
+                                                                <MenuItem Header="{Binding ImageCountStringContextMenu}" IsEnabled="False"/>
                                                                 <Separator/>
                                                                 <MenuItem Header="Rename" Command="{Binding RenameTagCommand}"/>
                                                                 <MenuItem Header="Delete" Command="{Binding RemoveTagCommand}"/>
@@ -511,6 +518,10 @@
                                                                               IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                                 <MenuItem Header="Use For Naming" IsCheckable="True" StaysOpenOnClick="True" 
                                                                               IsChecked="{Binding UseForNaming, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                                                <Separator/>
+
+                                                                <MenuItem Header="Show Rank Distribution Graph"/>
                                                             </ContextMenu>
                                                         </GroupBox.ContextMenu>
                                                     </GroupBox>

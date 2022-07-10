@@ -82,9 +82,7 @@ namespace WallpaperFlux.Core.ViewModels
 
         private void RebuildImageSelectorWithOptions(ImageModel[] images)
         {
-            if (Randomize) images = images.Randomize().ToArray();
-            
-            WallpaperFluxViewModel.Instance.RebuildImageSelector(images, Reverse);
+            WallpaperFluxViewModel.Instance.RebuildImageSelector(images, Randomize, Reverse);
 
             Mvx.IoCProvider.Resolve<IExternalViewPresenter>().CloseImageSelectionOptions();
         }

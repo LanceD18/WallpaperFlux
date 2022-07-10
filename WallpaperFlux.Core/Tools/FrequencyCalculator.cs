@@ -153,8 +153,6 @@ namespace WallpaperFlux.Core.Tools
 
             if (frequencyType == FrequencyType.Relative) // set the relative chance & recalculate exact chances to represent said change
             {
-                Debug.WriteLine("Changing a Relative frequency");
-
                 // Relative Frequency Clamp
                 double input = Math.Max(0, value);
 
@@ -167,7 +165,7 @@ namespace WallpaperFlux.Core.Tools
 
                     if (zeroCount >= 2) // attempted to make all frequencies 0%, cancel this change
                     {
-                        MessageBoxUtil.ShowError("Change aborted, cannot have 0% probability across all entries");
+                        MessageBoxUtil.ShowError("Relative Frequency change aborted, cannot have 0% probability across all entries");
                         return;
                     }
                 }
@@ -180,8 +178,6 @@ namespace WallpaperFlux.Core.Tools
             }
             else if (frequencyType == FrequencyType.Exact) // set a new exact chance, recalculating the remaining exact chances & also the relative chances to represent this change
             {
-                Debug.WriteLine("Changing an Exact frequency");
-
                 // Exact Frequency Clamp
                 double input = MathE.Clamp(value, 0, 1);
 
@@ -340,10 +336,10 @@ namespace WallpaperFlux.Core.Tools
             double gifRelativeChance = RelativeFrequency[ImageType.GIF] / chanceTotal;
             double videoRelativeChance = RelativeFrequency[ImageType.Video] / chanceTotal;
 
-            Debug.WriteLine("Relative chanceTotal: " + chanceTotal);
-            Debug.WriteLine("Relative Static / chanceTotal: " + staticRelativeChance);
-            Debug.WriteLine("Relative GIF / chanceTotal: " + gifRelativeChance);
-            Debug.WriteLine("Relative Video / chanceTotal: " + videoRelativeChance);
+            Debug.WriteLine("Relative chanceTotal: " + chanceTotal +
+                            "\nRelative Static / chanceTotal: " + staticRelativeChance +
+                            "\nRelative GIF / chanceTotal: " + gifRelativeChance +
+                            "\nRelative Video / chanceTotal: " + videoRelativeChance);
 
             // If the frequency isn't weighted, no modifications need to be made
             if (!DataUtil.Theme.Settings.ThemeSettings.WeightedFrequency)
@@ -469,11 +465,11 @@ namespace WallpaperFlux.Core.Tools
                 chanceTotal += ExactFrequency[imageType];
             }
 
-            if (ExactFrequency[ImageType.Static] != 0) ExactFrequency[ImageType.Static] = ExactFrequency[ImageType.Static] / chanceTotal;
+            if (ExactFrequency[ImageType.Static] != 0) ExactFrequency[ImageType.Static] /= chanceTotal;
 
-            if (ExactFrequency[ImageType.GIF] != 0) ExactFrequency[ImageType.GIF] = ExactFrequency[ImageType.GIF] / chanceTotal;
+            if (ExactFrequency[ImageType.GIF] != 0) ExactFrequency[ImageType.GIF] /= chanceTotal;
 
-            if (ExactFrequency[ImageType.Video] != 0) ExactFrequency[ImageType.Video] = ExactFrequency[ImageType.Video] / chanceTotal;
+            if (ExactFrequency[ImageType.Video] != 0) ExactFrequency[ImageType.Video] /= chanceTotal;
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using LanceTools;
+using LanceTools.Collections.Reactive;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Models.Theme;
 using WallpaperFlux.Core.Util;
@@ -16,12 +17,12 @@ namespace WallpaperFlux.Core.Controllers
         // int = rank, double = percentile
         private Dictionary<int, double> ModifiedRankPercentiles = new Dictionary<int, double>();
 
-        private VariableRef<Dictionary<ImageType, ReactiveList<ReactiveList<ImageModel>>>> RankData;
+        private VariableRef<Dictionary<ImageType, ReactiveList<ReactiveHashSet<ImageModel>>>> RankData;
 
         public bool PotentialWeightedRankUpdate;
         public bool PotentialRegularRankUpdate;
 
-        public PercentileController(VariableRef<Dictionary<ImageType, ReactiveList<ReactiveList<ImageModel>>>> rankData)
+        public PercentileController(VariableRef<Dictionary<ImageType, ReactiveList<ReactiveHashSet<ImageModel>>>> rankData)
         {
             RankData = rankData;
         }

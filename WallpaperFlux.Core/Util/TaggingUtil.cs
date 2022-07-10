@@ -21,10 +21,11 @@ namespace WallpaperFlux.Core.Util
         Excluded
     }
 
+    //? This was supposed to remove the static references to Instance all together but a complication with the view creation has made this into an issue I'll look into later
+    // TODO I'd imagine that this can be handled nicely with WallpaperFluxViewModel, however
     public static class TaggingUtil
     {
-        //? This was supposed to remove the static references to Instance all together but a complication with the view creation has made this into an issue I'll look into later
-        // TODO I'd imagine that this can be handled nicely with WallpaperFluxViewModel, however
+        public static bool InstanceExists => TagViewModel.Instance != null;
         //x private static TagViewModel Instance;
 
         public const float TAGGING_WINDOW_WIDTH = 950;
@@ -41,25 +42,31 @@ namespace WallpaperFlux.Core.Util
         }
         */
 
+        // Tag Sorting & Searching
         public const TagSearchType DEFAULT_TAG_SEARCH_TYPE = TagSearchType.Mandatory;
+        
+        private static TagSortType _activeSortType = TagSortType.Name;
 
-        public static bool InstanceExists() => TagViewModel.Instance != null;
+        private static bool _sortByNameDirection = true; // default ascending option
 
-        public static bool GetTagAdderToggle() => InstanceExists() && TagViewModel.Instance.TagAdderToggle;
+        private static bool _sortByCountDirection;
 
-        public static bool GetTagLinkerToggle() => InstanceExists() && TagViewModel.Instance.TagLinkerToggle;
+        // Tag Highlights & Toggles
+        public static bool GetTagAdderToggle() => InstanceExists && TagViewModel.Instance.TagAdderToggle;
+
+        public static bool GetTagLinkerToggle() => InstanceExists && TagViewModel.Instance.TagLinkerToggle;
 
         //xpublic static void HighlightTags(ImageTagCollection tags) => HighlightTags(tags.GetTags_HashSet());
 
         public static void HighlightTags(/*xHashSet<TagModel> tags*/)
         {
-            if (InstanceExists()) TagViewModel.Instance.HighlightTags(/*xtags*/);
+            if (InstanceExists) TagViewModel.Instance.HighlightTags(/*xtags*/);
         }
 
         #region Category Control
         public static void UpdateCategoryView()
         {
-            if (InstanceExists())
+            if (InstanceExists)
             {
                 if (TagViewModel.Instance.Categories != null)
                 {
@@ -170,7 +177,7 @@ namespace WallpaperFlux.Core.Util
                 return category;
             }
         }
-
+        
         // just a version with mandatory arguments
         public static CategoryModel VerifyCategoryWithData(string tagName, bool useForNaming, bool enabled, bool applyActualData) => VerifyCategory(tagName, useForNaming, enabled, applyActualData);
 
@@ -179,16 +186,15 @@ namespace WallpaperFlux.Core.Util
         /// </summary>
         public static void ShiftCategories(CategoryModel sourceCategory, CategoryModel targetCategory)
         {
-            // TODO You should probably delete first then insert at +/- 1
-
+            // gather the required indexes to shift the source category
             int sourceIndex = DataUtil.Theme.Categories.IndexOf(sourceCategory);
             int targetIndex = DataUtil.Theme.Categories.IndexOf(targetCategory);
 
-            int insertOffset = sourceIndex < targetIndex ? 1 : 0; // only need to shift insert index if the insertion target is above the source, as otherwise it will push it behind the target
-            InsertCategory(targetIndex + insertOffset, sourceCategory);
-
-            int removeOffset = sourceIndex < targetIndex ? 0 : 1; // only need to shift remove index if the insert pushes the location of the source
-            DataUtil.Theme.Categories.RemoveAt(sourceIndex + removeOffset);
+            // remove the original instance of the category from its source position
+            DataUtil.Theme.Categories.RemoveAt(sourceIndex);
+            
+            // re-insert the category at the target position, the insertion will handle the shifting on its own
+            InsertCategory(targetIndex, sourceCategory);
 
             UpdateCategoryView();
         }
@@ -229,6 +235,22 @@ namespace WallpaperFlux.Core.Util
 
         #region Tag Control
         public static bool RemoveTag(TagModel tag) => tag.ParentCategory.RemoveTag(tag);
+        #endregion
+
+        #region Tag Sorting
+
+        public static TagSortType GetActiveSortType() => _activeSortType;
+
+        public static void SetActiveSortType(TagSortType sortType) => _activeSortType = sortType;
+
+        public static bool GetSortByNameDirection() => _sortByNameDirection;
+
+        public static void SetSortByNameDirection(bool sortByNameDirection) => _sortByNameDirection = sortByNameDirection;
+
+        public static bool GetSortByCountDirection() => _sortByCountDirection;
+
+        public static void SetSortByCountDirection(bool sortByCountDirection) => _sortByCountDirection = sortByCountDirection;
+
         #endregion
     }
 }

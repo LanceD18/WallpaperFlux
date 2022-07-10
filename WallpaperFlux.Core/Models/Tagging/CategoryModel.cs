@@ -128,13 +128,7 @@ namespace WallpaperFlux.Core.Models.Tagging
             }
         }
 
-        // Sorting
-        public TagSortType ActiveSortType = TagSortType.Name;
-
-        public bool SortByNameDirection { get; set; } = true; // default ascending option
-
-        public bool SortByCountDirection { get; set; }
-
+        // Tabs
         private MvxObservableCollection<TagTabModel> _tagTabs = new MvxObservableCollection<TagTabModel>();
 
         public MvxObservableCollection<TagTabModel> TagTabs
@@ -208,10 +202,10 @@ namespace WallpaperFlux.Core.Models.Tagging
 
             RenameCategoryCommand = new MvxCommand(PromptRename);
             RemoveCategoryCommand = new MvxCommand(PromptRemoveCategory);
-
-            SelectImagesWithEverySelTag = new MvxCommand(() => WallpaperFluxViewModel.Instance.RebuildImageSelector(SelectValidImages(TagSearchType.Mandatory, GetSelectedTags())));
-            SelectImagesWithAnySelTag = new MvxCommand(() => WallpaperFluxViewModel.Instance.RebuildImageSelector(SelectValidImages(TagSearchType.Optional, GetSelectedTags())));
-            SelectImagesWithAnyCategoryTag = new MvxCommand(() => WallpaperFluxViewModel.Instance.RebuildImageSelector(SelectValidImages(TagSearchType.Optional, Tags.ToArray())));
+            
+            SelectImagesWithEverySelTag = new MvxCommand(() => TagViewModel.Instance.RebuildImageSelector(SelectValidImages(TagSearchType.Mandatory, GetSelectedTags())));
+            SelectImagesWithAnySelTag = new MvxCommand(() => TagViewModel.Instance.RebuildImageSelector(SelectValidImages(TagSearchType.Optional, GetSelectedTags())));
+            SelectImagesWithAnyCategoryTag = new MvxCommand(() => TagViewModel.Instance.RebuildImageSelector(SelectValidImages(TagSearchType.Optional, Tags.ToArray())));
         }
 
         public void PromptRename()
@@ -324,7 +318,7 @@ namespace WallpaperFlux.Core.Models.Tagging
         {
             if (!ContainsTag(tagName))
             {
-                Debug.WriteLine("Tag " + tagName + " is missing, adding");
+                //xDebug.WriteLine("Tag " + tagName + " is missing, adding");
                 // tag is missing, add it
                 return AddTag(tagName, useForNaming, enabled);
             }
@@ -358,6 +352,9 @@ namespace WallpaperFlux.Core.Models.Tagging
         /// </summary>
         public void VerifyTagTabs()
         {
+            //? this also covers the case where the theme is being loaded
+            if (!TaggingUtil.InstanceExists) return; // no need to do this if the instance does not exist
+
             SortTags();
 
             if (string.IsNullOrEmpty(SearchFilter))
@@ -448,16 +445,16 @@ namespace WallpaperFlux.Core.Models.Tagging
                 ? Tags.ToArray()
                 : _filteredTags.ToArray();
 
-            switch (ActiveSortType)
+            switch (TaggingUtil.GetActiveSortType())
             {
                 case TagSortType.Name:
-                    sortedItems = SortByNameDirection
+                    sortedItems = TaggingUtil.GetSortByNameDirection()
                         ? (from f in Tags orderby f.Name select f) // ascending
                         : (from f in Tags orderby f.Name descending select f);
                     break;
 
                 case TagSortType.Count:
-                    sortedItems = SortByCountDirection
+                    sortedItems = TaggingUtil.GetSortByCountDirection()
                         ? (from f in Tags orderby f.GetLinkedImageCount() descending select f) // with descending as the default we'll start from the highest number
                         : (from f in Tags orderby f.GetLinkedImageCount() select f); // ascending
                     break;
@@ -475,19 +472,19 @@ namespace WallpaperFlux.Core.Models.Tagging
             switch (sortType)
             {
                 case TagSortType.Name:
-                    ActiveSortType = TagSortType.Name;
-                    SortByNameDirection = !SortByNameDirection;
+                    TaggingUtil.SetActiveSortType(TagSortType.Name);
+                    TaggingUtil.SetSortByNameDirection(!TaggingUtil.GetSortByNameDirection());
 
                     // the next time the following option is selected it'll default to one direction
-                    SortByCountDirection = false;
+                    TaggingUtil.SetSortByCountDirection(false);
                     break;
 
                 case TagSortType.Count:
-                    ActiveSortType = TagSortType.Count;
-                    SortByCountDirection = !SortByCountDirection;
+                    TaggingUtil.SetActiveSortType(TagSortType.Count);
+                    TaggingUtil.SetSortByCountDirection(!TaggingUtil.GetSortByCountDirection());
 
                     // the next time the following option is selected it'll default to one direction
-                    SortByNameDirection = false;
+                    TaggingUtil.SetSortByNameDirection(false);
                     break;
             }
 

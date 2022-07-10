@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using WallpaperFlux.Core.Collections;
 using WallpaperFlux.Core.JSON;
@@ -110,14 +113,28 @@ namespace WallpaperFlux.Core.Util
 
         public bool ReverseSelection;
 
+        public bool RandomizeSelectionViaTags;
+
+        public bool ReverseSelectionViaTags;
+
+        public TagSortType TagSortType;
+
+        public bool SortTagsByNameDirection;
+
+        public bool SortTagsByCountDirection;
+
         // TODO Display Settings
 
-        // TODO Tag Sort Options
-
-        public MiscData(bool randomizeSelection, bool reverseSelection)
+        public MiscData(bool randomizeSelection, bool reverseSelection, bool randomizeSelectionViaTags, bool reverseSelectionViaTags,
+            TagSortType tagSortType, bool sortTagsByNameDirection, bool sortTagsByCountDirection)
         {
             RandomizeSelection = randomizeSelection;
             ReverseSelection = reverseSelection;
+            RandomizeSelectionViaTags = randomizeSelectionViaTags;
+            ReverseSelectionViaTags = reverseSelectionViaTags;
+            TagSortType = tagSortType;
+            SortTagsByNameDirection = sortTagsByNameDirection;
+            SortTagsByCountDirection = sortTagsByCountDirection;
         }
     }
 
@@ -153,7 +170,9 @@ namespace WallpaperFlux.Core.Util
 
             ThemeOptions themeOptions = new ThemeOptions(DataUtil.Theme.RankController.GetMaxRank());
 
-            MiscData miscData = new MiscData(false, false);
+            MiscData miscData = new MiscData(ImageSelectionViewModel.Instance.Randomize, ImageSelectionViewModel.Instance.Reverse, 
+                TagViewModel.Instance.RandomizeSelection, TagViewModel.Instance.ReverseSelection, 
+                TaggingUtil.GetActiveSortType(), TaggingUtil.GetSortByNameDirection(), TaggingUtil.GetSortByCountDirection());
 
             JsonWallpaperData jsonWallpaperData = new JsonWallpaperData(
                 themeOptions,
@@ -402,7 +421,20 @@ namespace WallpaperFlux.Core.Util
 
         private static void ConvertMiscData(JsonWallpaperData wallpaperData)
         {
+            TaggingUtil.SetActiveSortType(wallpaperData.MiscData.TagSortType);
 
+            switch (wallpaperData.MiscData.TagSortType)
+            {
+                case TagSortType.Name:
+                    TaggingUtil.SetSortByNameDirection(wallpaperData.MiscData.SortTagsByNameDirection);
+                    TaggingUtil.SetSortByCountDirection(false);
+                    break;
+
+                case TagSortType.Count:
+                    TaggingUtil.SetSortByNameDirection(false);
+                    TaggingUtil.SetSortByCountDirection(wallpaperData.MiscData.SortTagsByCountDirection);
+                    break;
+            }
         }
 
         private static void ConvertTags(JsonWallpaperData wallpaperData)
@@ -445,6 +477,18 @@ namespace WallpaperFlux.Core.Util
             TaggingUtil.UpdateCategoryView(); // don't forget to update the view
         }
 
+        // TODO Move this to LanceTools
+        [DllImport("Shlwapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        private extern static bool PathFileExists(StringBuilder path);
+
+        static bool Exists(string path)
+        {
+            // A StringBuilder is required for interops calls that use strings
+            StringBuilder builder = new StringBuilder();
+            builder.Append(path);
+            return PathFileExists(builder);
+        }
+
         private static void ConvertImagesAndFolders(JsonWallpaperData wallpaperData)
         {
             Debug.WriteLine("Converting Images...");
@@ -455,10 +499,13 @@ namespace WallpaperFlux.Core.Util
             int invalidImageCount = 0;
             string invalidImageString = "The following image(s) no longer exist and have been removed from the theme: ";
 
+            int imagesLoaded = 0;
             //? ----- Converting Images -----
-            foreach (SimplifiedImage simpleImage in wallpaperData.Images)
+            for (int i = 0; i < wallpaperData.Images.Length; i++)
             {
-                if (!File.Exists(simpleImage.Path))
+                SimplifiedImage simpleImage = wallpaperData.Images[i];
+
+                if (!Exists(simpleImage.Path))
                 {
                     invalidImageCount++;
                     invalidImageString += "\n" + simpleImage.Path;
@@ -468,20 +515,32 @@ namespace WallpaperFlux.Core.Util
                 ImageModel image = new ImageModel(simpleImage.Path, simpleImage.Rank, volume: simpleImage.Volume);
                 ImageTagCollection tags = new ImageTagCollection(image);
 
-                //? Need two iterations of this, one for regular tags & one for naming exceptions
+                //? We need two iterations of this, one for regular tags & one for naming exceptions
                 ConvertSimpleImageTagsToTagCollection(simpleImage, tags, false);
                 ConvertSimpleImageTagsToTagCollection(simpleImage, tags, true);
 
                 DataUtil.Theme.Images.AddImage(image);
-            }
+                
+                /*x
+                //! Debug ; used to test image load times
+                imagesLoaded++;
 
-            if (invalidImageCount > 0) MessageBoxUtil.ShowError(invalidImageString);
+                if (imagesLoaded % 1000 == 0)
+                {
+                    Debug.WriteLine("Loaded Images: " + imagesLoaded);
+                }
+                //! Debug ; used to test image load times
+                */
+            }
 
             //? ----- Converting Folders -----
             //! FOLDERS NEED TO BE ADDED AFTER!!!! images are added so that they don't have to be verified twice
             //! (The folders will add all images as their default if added first, if added second they'll just find that the image already exists)
             Debug.WriteLine("Adding folders...");
             WallpaperFluxViewModel.Instance.AddFolderRange(wallpaperData.ImageFolders);
+
+            //? placing this at the end of the loading process just because it's a simple warning message which would be annoying to have interrupt the loading process
+            if (invalidImageCount > 0) MessageBoxUtil.ShowError(invalidImageString);
         }
 
         private static void ConvertSimpleImageTagsToTagCollection(SimplifiedImage simpleImage, ImageTagCollection tagCollection, bool namingExceptions)

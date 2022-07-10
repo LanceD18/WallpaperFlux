@@ -36,7 +36,8 @@ namespace WallpaperFlux.Core.Models
             get => _path;
             set
             {
-                if (_path != null) //? this should be called first so that the proper old path is obtainable
+                //? this should be called before setting the value so that the proper old path is obtainable, and also so that this isn't called while first setting up the image
+                if (_path != null)
                 {
                     DataUtil.Theme.Images.UpdateImageCollectionPath(this, _path, value);
                     //? RankController uses the image file itself so it shouldn't need updating
@@ -50,8 +51,8 @@ namespace WallpaperFlux.Core.Models
 
         [JsonIgnore] public string PathFolder => new FileInfo(Path).DirectoryName;
 
-        [DataMember(Name = "Rank")]
         private int _rank;
+        [DataMember(Name = "Rank")]
         public int Rank
         {
             get => _rank;
@@ -72,8 +73,7 @@ namespace WallpaperFlux.Core.Models
                 */
 
                 DataUtil.Theme.RankController.ModifyRank(this, _rank, ref value); //? this should be called first to allow the old rank to be identified
-                _rank = value;
-                RaisePropertyChanged(() => Rank);
+                SetProperty(ref _rank, value);
             }
         }
 
@@ -124,7 +124,7 @@ namespace WallpaperFlux.Core.Models
         {
             get
             {
-                string extension = new FileInfo(Path).Extension;
+                string extension = System.IO.Path.GetExtension(Path);
                 return extension == ".gif" || extension == ".webm";
             }
         }
@@ -227,6 +227,30 @@ namespace WallpaperFlux.Core.Models
             OnIsSelectedChanged += (value) => WallpaperFluxViewModel.Instance.SelectedImageCount += value ? 1 : -1;
 
             InitCommands();
+        }
+
+        protected bool Equals(ImageModel other)
+        {
+            return _path == other._path && _rank == other._rank;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((ImageModel)obj);
+        }
+
+        //? remember that these can be generated under Resharper with Resharper -> Edit -> Generate Code -> Equality Members
+        //? https://stackoverflow.com/questions/14652567/is-there-a-way-to-auto-generate-gethashcode-and-equals-with-resharper
+        // for use with dictionary addition
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ((_path != null ? _path.GetHashCode() : 0) * 397) ^ _rank;
+            }
         }
 
         private void InitCommands()

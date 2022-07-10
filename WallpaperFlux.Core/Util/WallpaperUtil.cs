@@ -34,35 +34,35 @@ namespace WallpaperFlux.Core.Util
             dialog.Filters.Add(new CommonFileDialogFilter(ALL_FILES_DISPLAY_NAME, ALL_FILES_EXTENSION_LIST));
         }
 
-        public static bool IsStatic(string filePath) => IsStatic(new FileInfo(filePath));
+        public static bool IsStatic(string filePath) => IsStatic_GivenExtension(Path.GetExtension(filePath));
 
-        public static bool IsStatic(FileInfo fileInfo) => !(fileInfo.Extension == ".gif" || WallpaperUtil.IsSupportedVideoType(fileInfo));
+        private static bool IsStatic_GivenExtension(string extension) => !(extension == ".gif" || WallpaperUtil.IsSupportedVideoType_GivenExtension(extension));
 
-        public static bool IsGif(string filePath) => IsGif(new FileInfo(filePath));
+        public static bool IsGif(string filePath) => IsGif_GivenExtension(Path.GetExtension(filePath));
 
-        public static bool IsGif(FileInfo fileInfo) => fileInfo.Extension == ".gif";
+        public static bool IsGif_GivenExtension(string extension) => extension == ".gif";
 
-        public static bool IsVideo(string filePath) => IsSupportedVideoType(filePath);
+        public static bool IsVideo(string filePath) => IsVideo_GivenExtension(Path.GetExtension(filePath));
 
-        public static bool IsVideo(FileInfo fileInfo) => IsSupportedVideoType(fileInfo);
+        public static bool IsVideo_GivenExtension(string extension) => IsSupportedVideoType_GivenExtension(extension);
 
         public static bool IsSupportedVideoType(string filePath)
         {
+            return IsSupportedVideoType_GivenExtension(filePath);
+
+            /*x
             if (File.Exists(filePath))
             {
-                return IsSupportedVideoType(new FileInfo(filePath));
+                return IsSupportedVideoType_GivenExtension(filePath);
             }
             else
             {
                 return false;
             }
+            */
         }
 
-        public static bool IsSupportedVideoType(FileInfo fileInfo)
-        {
-            string extension = fileInfo.Extension;
-            return extension == ".mp4" || extension == ".webm" || extension == ".avi";
-        }
+        private static bool IsSupportedVideoType_GivenExtension(string extension) => extension == ".mp4" || extension == ".webm" || extension == ".avi";
 
         // Derived from: https://www.codeproject.com/Articles/856020/Draw-Behind-Desktop-Icons-in-Windows-plus
         // Gets the IntPtr value that will allow us to draw the wallpaper behind the desktop icons

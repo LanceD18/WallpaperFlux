@@ -130,6 +130,7 @@ namespace WallpaperFlux.Core.JSON.Temp
             */
         }
 
+        /*x
         private void InitializeImageType(FileInfo file)
         {
             if (ImageType == ImageType.None)
@@ -154,5 +155,6 @@ namespace WallpaperFlux.Core.JSON.Temp
             //x This (below??) has been moved to AddImage() alongside FileData, without doing this you'll end up accidentally adding the same object twice, causing a crash
             //x ImagesOfType[imageType].Add(path, this);
         }
+        */
     }
 }

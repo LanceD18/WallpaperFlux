@@ -53,7 +53,7 @@ namespace WallpaperFlux.Core.ViewModels
 
         private List<TagModel> previouslyHighlightedTags = new List<TagModel>();
 
-        #region ----- Filters -----
+        #region ----- Filters [Tag-Adder & Tag-Linker] -----
         //? utilizes the TagInteractCommand from TagModel to function
         private bool _tagAdderToggle;
         public bool TagAdderToggle
@@ -175,7 +175,7 @@ namespace WallpaperFlux.Core.ViewModels
 
         #endregion
 
-        #region Enablers
+        #region Enablers & Toggles
 
         public bool CategoryIsSelected => SelectedCategory != null;
 
@@ -191,6 +191,30 @@ namespace WallpaperFlux.Core.ViewModels
 
         // need to also check if the tag-linking source is null for just in case the selected tag is deselected
         public bool CanUseTagLinker => SelectedCategory?.SelectedTagTab?.SelectedTag != null || TagLinkingSource != null;
+
+        private bool _randomizeSelection;
+        public bool RandomizeSelection
+        {
+            get => _randomizeSelection;
+            set
+            {
+                SetProperty(ref _randomizeSelection, value);
+
+                if (value) ReverseSelection = false; //? you cannot randomize and reverse the selection at the same time
+            }
+        }
+
+        private bool _reverseSelection;
+        public bool ReverseSelection
+        {
+            get => _reverseSelection;
+            set
+            {
+                SetProperty(ref _reverseSelection, value);
+
+                if (value) RandomizeSelection = false; //? you cannot randomize and reverse the selection at the same time
+            }
+        }
 
         #endregion
 
@@ -232,11 +256,15 @@ namespace WallpaperFlux.Core.ViewModels
             });
 
             //? If the category's use for naming state is disabled, the tag should reference that when needed instead of changing its own UseForNaming parameter
-            AddTagToSelectedCategoryCommand = new MvxCommand(() => TaggingUtil.PromptAddTagToCategory(SelectedCategory));
+            AddTagToSelectedCategoryCommand = new MvxCommand(() =>
+            {
+                TaggingUtil.PromptAddTagToCategory(SelectedCategory);
+                AddDebugTags(SelectedCategory);
+            });
 
             // TagBoard
             CloseTagBoardCommand = new MvxCommand(() => TagboardToggle = false); //? the open/toggle TagBoard is initially called by CategoryModel and sent to a method here
-            SelectImagesFromTagBoardCommand = new MvxCommand(() => WallpaperFluxViewModel.Instance.RebuildImageSelector(SearchValidImagesWithTagBoard()));
+            SelectImagesFromTagBoardCommand = new MvxCommand(() => RebuildImageSelector(SearchValidImagesWithTagBoard()));
             SetMandatoryTagBoardSelectionCommand = new MvxCommand(() => SetAllTagBoardTagsSearchType(TagSearchType.Mandatory));
             SetOptionalTagBoardSelectionCommand = new MvxCommand(() => SetAllTagBoardTagsSearchType(TagSearchType.Optional));
             SetExcludedTagBoardSelectionCommand = new MvxCommand(() => SetAllTagBoardTagsSearchType(TagSearchType.Excluded));
@@ -244,17 +272,11 @@ namespace WallpaperFlux.Core.ViewModels
             TagBoardTags.CollectionChanged += TagBoardTagsOnCollectionChanged;
         }
 
-        private void TagBoardTagsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.NewItems != null && e.NewItems.Count > 0)
-            {
-                // reset search type to default on re-adding tag
-                foreach (TagModel tag in e.NewItems)
-                {
-                    tag.SearchType = TaggingUtil.DEFAULT_TAG_SEARCH_TYPE;
-                }
-            }
-        }
+        /// <summary>
+        /// Rebuilds the image selector using the randomization and reversal options of the TagView
+        /// </summary>
+        /// <param name="images">The images to rebuild the image selector with</param>
+        public void RebuildImageSelector(ImageModel[] images) => WallpaperFluxViewModel.Instance.RebuildImageSelector(images, RandomizeSelection, ReverseSelection);
 
         #region Tag Highlighting
 
@@ -390,6 +412,18 @@ namespace WallpaperFlux.Core.ViewModels
         public void SetAllTagBoardTagsSearchType(TagSearchType searchType)
         {
             foreach (TagModel tag in TagBoardTags) tag.SearchType = searchType;
+        }
+
+        private void TagBoardTagsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null && e.NewItems.Count > 0)
+            {
+                // reset search type to default on re-adding tag
+                foreach (TagModel tag in e.NewItems)
+                {
+                    tag.SearchType = TaggingUtil.DEFAULT_TAG_SEARCH_TYPE;
+                }
+            }
         }
 
         #endregion

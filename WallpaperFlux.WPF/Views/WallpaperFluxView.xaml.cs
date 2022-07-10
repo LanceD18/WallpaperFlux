@@ -175,7 +175,6 @@ namespace WallpaperFlux.WPF.Views
             {
                 Thread thread = new Thread(() => //? this cannot thread over the if statement while the Image object is present
                 {
-                    Debug.WriteLine("IMEPLEMENT THE ACTIVETHUMBNAILTHREADS");
                     try //? this can accidentally fire off multiple times and cause crashes when trying to load videos (Who still need this for some reason?)
                     {
                         BitmapImage bitmap = new BitmapImage();
@@ -380,11 +379,6 @@ namespace WallpaperFlux.WPF.Views
                 viewModel.SelectedImageSelectorTab.RaisePropertyChanged(() => viewModel.SelectedImageSelectorTab.ImageSelectorTabWrapWidth);
             }
         }
-
-        private void ImageSelector_ListBoxItem_OnMouseDown(object sender, MouseButtonEventArgs e)
-        {
-            ControlUtil.EnsureSingularSelection<ImageSelectorTabModel, ImageModel>(ImageSelectorTabControl.Items, ImageSelectorTabControl.SelectedItem as ITabModel<ImageModel>);
-        }
         #endregion
 
         private void MediaElement_OnMediaEnded(object sender, RoutedEventArgs e) //? for Window media element only
@@ -396,14 +390,10 @@ namespace WallpaperFlux.WPF.Views
             }
         }
 
-        private void UIElement_OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
+        // this captures the selection range of the entire listbox item
+        private void ImageSelector_ListBoxItem_OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
-            Debug.WriteLine("Preview");
-        }
-
-        private void UIElement_OnMouseDown(object sender, MouseButtonEventArgs e)
-        {
-            Debug.WriteLine("Mouse Down");
+            ControlUtil.EnsureSingularSelection<ImageSelectorTabModel, ImageModel>(ImageSelectorTabControl.Items, ImageSelectorTabControl.SelectedItem as ITabModel<ImageModel>);
         }
     }
 }

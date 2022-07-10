@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using AdonisUI.Controls;
 using LanceTools;
+using LanceTools.Collections.Reactive;
 using WallpaperFlux.Core.Collections;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Models.Theme;
@@ -16,11 +17,11 @@ namespace WallpaperFlux.Core.Controllers
     public class RankController
     {
         // Structure: [ImageType (Key)][Rank (Index)][Image Path (Value of Index)]
-        private Dictionary<ImageType, ReactiveList<ReactiveList<ImageModel>>> RankData = new Dictionary<ImageType, ReactiveList<ReactiveList<ImageModel>>>()
+        private Dictionary<ImageType, ReactiveList<ReactiveHashSet<ImageModel>>> RankData = new Dictionary<ImageType, ReactiveList<ReactiveHashSet<ImageModel>>>()
         {
-            {ImageType.Static, new ReactiveList<ReactiveList<ImageModel>>()},
-            {ImageType.GIF, new ReactiveList<ReactiveList<ImageModel>>()},
-            {ImageType.Video, new ReactiveList<ReactiveList<ImageModel>>()}
+            {ImageType.Static, new ReactiveList<ReactiveHashSet<ImageModel>>()},
+            {ImageType.GIF, new ReactiveList<ReactiveHashSet<ImageModel>>()},
+            {ImageType.Video, new ReactiveList<ReactiveHashSet<ImageModel>>()}
         };
 
         private Dictionary<ImageType, double> ImageTypeWeights = new Dictionary<ImageType, double>()
@@ -48,6 +49,7 @@ namespace WallpaperFlux.Core.Controllers
         {
             // clamps the given rank to the rank-range for just in case something out-of-bounds is given
             //xDebug.WriteLine("ModifyRank: " + ContainsRank(newRank, image.ImageType) + " | " + RankData[image.ImageType].Count);
+
             newRank = ClampValueToRankRange(newRank);
 
             RankData[image.ImageType][oldRank].Remove(image);
@@ -57,14 +59,11 @@ namespace WallpaperFlux.Core.Controllers
         //! the only purpose for ImageCollection to be here is to serve as a reminder that this should only be accessed after calling an image removal from ImageCollection
         //! find a better solution to limit this procedure's access in the future
         //? in makes collection readonly, not really needed but considering its already vague purpose it felt appropriate to add
-        public void RemoveRankedImage(ImageModel image, params object[] args)
-        {
-            RankData[image.ImageType][image.Rank].Remove(image);
-        }
+        public void RemoveRankedImage(ImageModel image, params object[] args) => RankData[image.ImageType][image.Rank].Remove(image);
 
-        public VariableRef<Dictionary<ImageType, ReactiveList<ReactiveList<ImageModel>>>> CreateRankDataRef()
+        public VariableRef<Dictionary<ImageType, ReactiveList<ReactiveHashSet<ImageModel>>>> CreateRankDataRef()
         {
-            return new VariableRef<Dictionary<ImageType, ReactiveList<ReactiveList<ImageModel>>>>(
+            return new VariableRef<Dictionary<ImageType, ReactiveList<ReactiveHashSet<ImageModel>>>>(
                 () => RankData, 
                 dictionary => throw new Exception("Cannot set RankData"));
         }
@@ -131,7 +130,7 @@ namespace WallpaperFlux.Core.Controllers
         public ImageModel GetRandomImageOfRank(int rank, ref Random rand, ImageType imageType)
         {
             int randomImage = rand.Next(0, RankData[imageType][rank].Count);
-            return RankData[imageType][rank][randomImage];
+            return RankData[imageType][rank].ElementAt(randomImage);
         }
 
         public int ClampValueToRankRange(int value)
@@ -140,7 +139,10 @@ namespace WallpaperFlux.Core.Controllers
         }
 
         #region Rank Size Modifier
-        public int GetMaxRank() => RankData[ImageType.Static].Count - 1; //? should be the same across image types ; the - 1 accounts for Rank 0 adding an extra rank count
+        //? should be the same across image types! [Counts the Ranks from 0 - x] ; the - 1 accounts for Rank 0 adding an extra rank count
+        //? should be the same across image types! [Counts the Ranks from 0 - x] ; the - 1 accounts for Rank 0 adding an extra rank count
+        //? should be the same across image types! [Counts the Ranks from 0 - x] ; the - 1 accounts for Rank 0 adding an extra rank count
+        public int GetMaxRank() => RankData[ImageType.Static].Count - 1; 
 
         public void SetMaxRank(int maxRank)
         {
@@ -197,13 +199,13 @@ namespace WallpaperFlux.Core.Controllers
         {
             foreach (ImageType imageType in RankData.Keys)
             {
-                RankData[imageType].Add(new ReactiveList<ImageModel>()); // this will be rank 0
+                RankData[imageType].Add(new ReactiveHashSet<ImageModel>()); // this will be rank 0
 
                 for (int i = 0; i < maxRank; i++)
                 {
                     // adds rank 1 at a time to the max, there will be 1 additional slot to account for rank 0 (added above)
                     // due to this, you can directly reference an index by its rank
-                    RankData[imageType].Add(new ReactiveList<ImageModel>());
+                    RankData[imageType].Add(new ReactiveHashSet<ImageModel>());
                 }
             }
         }
@@ -225,7 +227,7 @@ namespace WallpaperFlux.Core.Controllers
                     {
                         if (JsonUtil.IsLoadingData) Debug.WriteLine("ERROR: This is unnecessary processing that should be avoided, especially for larger themes, under UpdateMaxRank()");
 
-                        RankData[imageType].Add(new ReactiveList<ImageModel>());
+                        RankData[imageType].Add(new ReactiveHashSet<ImageModel>());
                         Debug.WriteLine(i + " | " + imageType);
                     }
                 }
@@ -265,24 +267,24 @@ namespace WallpaperFlux.Core.Controllers
         #endregion
 
         #region Events
-        private void RankData_OnParentListAddItem(object sender, ListChangedEventArgs<ReactiveList<ImageModel>> e)
+        private void RankData_OnParentListAddItem(object sender, ListChangedEventArgs<ReactiveHashSet<ImageModel>> e)
         {
-            e.Item.OnListAddItem += RankData_OnListAddItem;
-            e.Item.OnListRemoveItem += RankData_OnListRemoveItem;
+            e.Item.OnHashSetAddItem += RankData_OnListAddItem;
+            e.Item.OnHashSetRemoveItem += RankData_OnListRemoveItem;
         }
 
-        private void RankData_OnParentListRemoveItem(object sender, ListChangedEventArgs<ReactiveList<ImageModel>> e)
+        private void RankData_OnParentListRemoveItem(object sender, ListChangedEventArgs<ReactiveHashSet<ImageModel>> e)
         {
-            e.Item.OnListAddItem -= RankData_OnListAddItem;
-            e.Item.OnListRemoveItem -= RankData_OnListRemoveItem;
+            e.Item.OnHashSetAddItem -= RankData_OnListAddItem;
+            e.Item.OnHashSetRemoveItem -= RankData_OnListRemoveItem;
         }
 
-        private void RankData_OnListAddItem(object sender, ListChangedEventArgs<ImageModel> e)
+        private void RankData_OnListAddItem(object sender, HashSetChangedEventArgs<ImageModel> e)
         {
             //xif (!IsLoadingData) // UpdateRankPercentiles will be called once the loading ends
             //x{
             PercentileController.PotentialWeightedRankUpdate = true;
-            if ((sender as ReactiveList<ImageModel>).Count == 1) // allows the now unempty rank to be selected
+            if ((sender as ReactiveHashSet<ImageModel>).Count == 1) // allows the now unempty rank to be selected
             {
                 Debug.WriteLine("A recently adjusted rank now has one image");
                 PercentileController.PotentialRegularRankUpdate = true;
@@ -293,12 +295,12 @@ namespace WallpaperFlux.Core.Controllers
             //x}
         }
 
-        private void RankData_OnListRemoveItem(object sender, ListChangedEventArgs<ImageModel> e)
+        private void RankData_OnListRemoveItem(object sender, HashSetChangedEventArgs<ImageModel> e)
         {
             //xif (!IsLoadingData) // UpdateRankPercentiles will be called once the loading ends
             //x{
             PercentileController.PotentialWeightedRankUpdate = true;
-            if ((sender as ReactiveList<ImageModel>).Count == 0) // prevents the empty rank from being selected
+            if ((sender as ReactiveHashSet<ImageModel>).Count == 0) // prevents the empty rank from being selected
             {
                 Debug.WriteLine("A recently adjusted rank is now empty");
                 PercentileController.PotentialRegularRankUpdate = true;

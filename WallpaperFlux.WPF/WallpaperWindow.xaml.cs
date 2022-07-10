@@ -80,7 +80,7 @@ namespace WallpaperFlux.WPF
                 return;
             }
 
-            if (wallpaperInfo.Extension == ".gif" || WallpaperUtil.IsSupportedVideoType(wallpaperInfo)) // gif & video
+            if (wallpaperInfo.Extension == ".gif" || WallpaperUtil.IsSupportedVideoType(wallpaperInfo.FullName)) // gif & video
             {
                 WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = image.Volume;
                 //xWallpaperMediaElement.PlayerHost.Volume = (int)(image.Volume * 100);

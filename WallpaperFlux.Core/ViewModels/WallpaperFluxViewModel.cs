@@ -16,6 +16,7 @@ using System.Windows.Input;
 using System.Xml;
 using AdonisUI.Controls;
 using HandyControl.Controls;
+using LanceTools;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Microsoft.WindowsAPICodePack.Shell.PropertySystem;
 using MvvmCross;
@@ -525,6 +526,7 @@ namespace WallpaperFlux.Core.ViewModels
             {
                 folders.Add(new FolderModel(folder.Path, folder.Enabled));
             }
+            Debug.WriteLine("Folders Created");
 
             AddFolderRange(folders.ToArray());
         }
@@ -666,7 +668,7 @@ namespace WallpaperFlux.Core.ViewModels
         //? ----- Rebuild Image Selector (String) -----
         private readonly string INVALID_IMAGE_STRING_DEFAULT = "The following selected images do not exist in your theme:\n(Please add the folder that they reside in to include them)";
         private readonly string INVALID_IMAGE_STRING_ALL_INVALID = "None of the selected images exist in your theme. Please add the folder that they reside in to include them.";
-        public void RebuildImageSelector(string[] selectedImages, bool reverseOrder = false)
+        public void RebuildImageSelector(string[] selectedImages, bool randomize = false, bool reverseOrder = false)
         {
             List<ImageModel> selectedImageModels = new List<ImageModel>();
 
@@ -697,13 +699,13 @@ namespace WallpaperFlux.Core.ViewModels
                 MessageBoxUtil.ShowError(invalidImageString);
             }
 
-            RebuildImageSelector(selectedImageModels.ToArray(), reverseOrder);
+            RebuildImageSelector(selectedImageModels.ToArray(), randomize, reverseOrder);
         }
 
         //? ----- Rebuild Image Selector (ImageModel) -----
-        public void RebuildImageSelector(ImageModel[] selectedImages, bool reverseOrder = false)
+        public void RebuildImageSelector(ImageModel[] selectedImages, bool randomize = false, bool reverseOrder = false)
         {
-            //-----Checking Conditions-----
+            //-----Checking Validation Conditions-----
             if (selectedImages == null || selectedImages.Length == 0)
             {
                 MessageBoxUtil.ShowError("No images were selected");
@@ -734,8 +736,16 @@ namespace WallpaperFlux.Core.ViewModels
                 return;
             }
 
-            // Apply Reverse
-            if (reverseOrder) selectedImages = selectedImages.Reverse().ToArray();
+            //----- Apply Optional Modification Conditions -----
+            //? should come after checking conditions, no need to process this if something is wrong
+            if (randomize)
+            {
+                selectedImages = selectedImages.Randomize().ToArray();
+            }
+            else if (reverseOrder) //? it is redundant to randomize and reverse the order at the same time as the randomization will end up being the only factor
+            {
+                selectedImages = selectedImages.Reverse().ToArray();
+            }
 
             //-----Rebuild-----
             ImageSelectorTabs.Clear();

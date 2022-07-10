@@ -93,7 +93,7 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         #region View Variables
 
-        public string ImageCountStringContext => "Found in " + GetLinkedImageCount() + " image(s)";
+        public string ImageCountStringContextMenu => "Found in " + GetLinkedImageCount() + " image(s)";
 
         public string ImageCountStringTag => "(" + GetLinkedImageCount() + ")";
 
@@ -258,17 +258,17 @@ namespace WallpaperFlux.Core.Models.Tagging
             UseForNaming = useForNaming;
             Enabled = enabled;
 
-            SelectImagesWithTag = new MvxCommand(() => WallpaperFluxViewModel.Instance.RebuildImageSelector(LinkedImages.ToArray()));
+            SelectImagesWithTag = new MvxCommand(() => TagViewModel.Instance.RebuildImageSelector(GetLinkedImages().ToArray()));
             RenameTagCommand = new MvxCommand(PromptRename);
             RemoveTagCommand = new MvxCommand(PromptRemoveTag);
             TagInteractCommand = new MvxCommand(InteractTag);
 
             // Image Control
-            AddTagToSelectedImagesCommand = new MvxCommand(() => AddTagToImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems(), false));
-            AddTagToEntireImageGroupCommand = new MvxCommand(() => AddTagToImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllItems(), true));
+            AddTagToSelectedImagesCommand = new MvxCommand(() => AddTagToImages(WallpaperFluxViewModel.Instance.GetAllHighlightedImages(), false));
+            AddTagToEntireImageGroupCommand = new MvxCommand(() => AddTagToImages(WallpaperFluxViewModel.Instance.GetImagesInAllTabs(), true));
             RemoveTagFromSelectedImageCommand = new MvxCommand(() => RemoveTagFromImages(new[] { WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.SelectedImage }, false));
-            RemoveTagFromSelectedImagesCommand = new MvxCommand(() => RemoveTagFromImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems(), false));
-            RemoveTagFromEntireImageGroupCommand = new MvxCommand(() => RemoveTagFromImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetAllItems(), true));
+            RemoveTagFromSelectedImagesCommand = new MvxCommand(() => RemoveTagFromImages(WallpaperFluxViewModel.Instance.GetAllHighlightedImages(), false));
+            RemoveTagFromEntireImageGroupCommand = new MvxCommand(() => RemoveTagFromImages(WallpaperFluxViewModel.Instance.GetImagesInAllTabs(), true));
 
             // TagBoard
             RemoveTagFromTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.RemoveTagFromTagBoard(this));
@@ -310,16 +310,24 @@ namespace WallpaperFlux.Core.Models.Tagging
         #region Image Addition / Removal
         public void AddTagToImages(ImageModel[] images, bool promptUser)
         {
-            if (promptUser) MessageBoxUtil.PromptYesNo("Are you sure you want to add the tag [" + Name + "] to " + images.Length + " image(s)?");
+            bool canAdd = true;
+            if (promptUser) canAdd = MessageBoxUtil.PromptYesNo("Are you sure you want to add the tag [" + Name + "] to " + images.Length + " image(s)?");
 
-            foreach (ImageModel image in images) image.AddTag(this);
+            if (canAdd)
+            {
+                foreach (ImageModel image in images) image.AddTag(this);
+            }
         }
 
         public void RemoveTagFromImages(ImageModel[] images, bool promptUser)
         {
-            if (promptUser) MessageBoxUtil.PromptYesNo("Are you sure you want to remove the tag [" + Name + "] from " + images.Length + " image(s)?");
+            bool canRemove = true;
+            if (promptUser) canRemove = MessageBoxUtil.PromptYesNo("Are you sure you want to remove the tag [" + Name + "] from " + images.Length + " image(s)?");
 
-            foreach (ImageModel image in images) image.RemoveTag(this);
+            if (canRemove)
+            {
+                foreach(ImageModel image in images) image.RemoveTag(this);
+            }
         }
 
         public void ToggleTagWithImages(ImageModel[] images)
@@ -347,15 +355,15 @@ namespace WallpaperFlux.Core.Models.Tagging
         public void LinkImage(ImageTagCollection imageTags)
         {
             LinkedImages.Add(imageTags.ParentImage);
-            RaisePropertyChanged(() => ImageCountStringTag);
-            RaisePropertyChanged(() => ImageCountStringContext);
+
+            RaisePropertyChangedImageCount();
         }
 
         public void UnlinkImage(ImageTagCollection imageTags)
         {
             LinkedImages.Remove(imageTags.ParentImage);
-            RaisePropertyChanged(() => ImageCountStringTag);
-            RaisePropertyChanged(() => ImageCountStringContext);
+
+            RaisePropertyChangedImageCount();
         }
 
         public void UnlinkAllImages() // for removing/resetting a tag
@@ -365,14 +373,30 @@ namespace WallpaperFlux.Core.Models.Tagging
                 image.RemoveTag(this); // will call UnlinkImage()
             }
 
-            RaisePropertyChanged(() => ImageCountStringTag); //? Not really needed in current use cases but would ideally still exist here
-            RaisePropertyChanged(() => ImageCountStringContext); //? Not really needed in current use cases but would ideally still exist here
+            RaisePropertyChangedImageCount(); //? Not really needed for THIS tag but would ideally still exist here and IS NEEDED for the parent tags
+        }
+
+        private void RaisePropertyChangedImageCount()
+        {
+            RaisePropertyChanged(() => ImageCountStringTag);
+            RaisePropertyChanged(() => ImageCountStringContextMenu);
+
+            // we need to update the image count of parent tags too
+            foreach (TagModel parentTag in ParentTags)
+            {
+                parentTag.RaisePropertyChanged(() => parentTag.ImageCountStringTag);
+                parentTag.RaisePropertyChanged(() => parentTag.ImageCountStringContextMenu);
+            }
         }
 
         public int GetLinkedImageCount() => GetLinkedImages().Count;
 
         //! Remember that we need to check for child tags too as references to linked child tags are included in references to the parent tag 
         //! (Prevents saving parent tag to JSON)
+        /// <summary>
+        /// Gets all linked images of this tag and its child tags
+        /// </summary>
+        /// <returns></returns>
         public HashSet<ImageModel> GetLinkedImages()
         {
             HashSet<ImageModel> images = new HashSet<ImageModel>(LinkedImages);

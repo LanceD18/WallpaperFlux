@@ -22,6 +22,7 @@ namespace WallpaperFlux.Core.Collections
             {ImageType.Video, new Dictionary<string, ImageModel>()}
         };
 
+        // TODO Consider removing this Action
         public Action<ImageModel> OnRemove; //? If you need multiple OnRemove events, use/re-purpose the delegate format used by ReactiveList
 
         //x public delegate void ImageCollectionChanged(object sender, ImageCollectionChangedEventArgs e);
@@ -51,7 +52,7 @@ namespace WallpaperFlux.Core.Collections
 
         public void AddImage(ImageModel image)
         {
-            if (ContainsImage(image)) return;
+            //xif (ContainsImage(image)) return;
             if (ImageContainer[image.ImageType].ContainsKey(image.Path)) return; //? an image with the same path may not necessarily have the same object, can occur on re-load
 
             ImageContainer[image.ImageType].Add(image.Path, image);

@@ -367,8 +367,7 @@
                                 <ListBox ItemsSource="{Binding Items}" 
                                          SelectedItem="{Binding SelectedImage}"
                                          SelectionMode="Extended" SelectionChanged="ImageSelectorTabListBox_SelectionChanged"
-                                         PreviewMouseDown="UIElement_OnPreviewMouseDown"
-                                         MouseDown="UIElement_OnMouseDown">
+                                         PreviewMouseDown="ImageSelector_ListBoxItem_OnPreviewMouseDown">
 
                                     <!-- Wrap Setup -->
                                     <ListBox.ItemsPanel>
@@ -388,7 +387,7 @@
                                     <!--? // Image Info Item Template // -->
                                     <ListBox.ItemTemplate>
                                         <DataTemplate DataType="models:ImageModel">
-                                            <GroupBox HorizontalAlignment="Center" MouseDown="ImageSelector_ListBoxItem_OnMouseDown">
+                                            <GroupBox HorizontalAlignment="Center">
                                                 <StackPanel Focusable="False">
 
                                                     <!-- /// Binding to ImageModel /// -->

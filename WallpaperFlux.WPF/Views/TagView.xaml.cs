@@ -44,11 +44,20 @@ namespace WallpaperFlux.WPF.Views
             ViewModel = TagViewModel.Instance = WindowUtil.InitializeViewModel(TagViewModel.Instance);
             //? The below may be re-implemented in the future is the bug associated with it is fixed
             //x TaggingUtil.SetInstance(TagViewModel.Instance);
+            Debug.WriteLine("Opened"); //? this constructor essentially acts an an on-open event, so we'll use it to select the first category on opening
         }
 
         private void CategoryTabControl_OnSizeChanged(object sender, SizeChangedEventArgs e) => UpdateTagSelectorWrapperSize();
 
-        private void CategoryTabControl_OnSelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateTagSelectorWrapperSize();
+        private void CategoryTabControl_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateTagSelectorWrapperSize();
+            
+            if (CategoryTabControl.SelectedItem is CategoryModel selectedCategory)
+            {
+                selectedCategory.VerifyTagTabs(); //? need to verify on load to see the tags at all and to apply sorting
+            }
+        }
 
         private void UpdateTagSelectorWrapperSize()
         {
@@ -73,14 +82,10 @@ namespace WallpaperFlux.WPF.Views
             }
         }
 
-        private void GroupBox_Tag_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            // TODO Remove me
-        }
-
         private void TagView_OnSizeChanged_UpdateTagBoardHeight(object sender, SizeChangedEventArgs e) => ((TagViewModel)this.DataContext).SetTagBoardHeight(ActualHeight - 75);
 
-        private void TagTabControl_ListBoxItem_OnMouseDown(object sender, MouseButtonEventArgs e)
+        // this captures the selection range of the entire listbox item
+        private void TagTabControl_ListBoxItem_OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
             if (ControlUtil.UsingSingularSelection()) //? Placing this check ahead of time to avoid the additional processing time
             {
