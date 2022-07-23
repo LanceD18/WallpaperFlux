@@ -46,6 +46,9 @@ namespace WallpaperFlux.Core.ViewModels
 
                 SetProperty(ref _selectedCategory, value);
 
+                //? needed to ensure that we can see the tags on swapping to a category
+                SelectedCategory.VerifyTagTabs(); //! Do NOT call this from TagView.xaml.cs, after a few attempts an error will be thrown complaining about modifications during generation!
+
                 HighlightTags();
                 RaisePropertyChanged(() => CategoryIsSelected);
             }
@@ -259,7 +262,7 @@ namespace WallpaperFlux.Core.ViewModels
             AddTagToSelectedCategoryCommand = new MvxCommand(() =>
             {
                 TaggingUtil.PromptAddTagToCategory(SelectedCategory);
-                AddDebugTags(SelectedCategory);
+                //x AddDebugTags(SelectedCategory);
             });
 
             // TagBoard

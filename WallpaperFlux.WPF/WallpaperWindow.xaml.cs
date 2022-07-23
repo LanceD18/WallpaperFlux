@@ -22,6 +22,7 @@ using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core;
 using WallpaperFlux.Core.Util;
 using WallpaperFlux.WPF.Util;
+using WpfAnimatedGif;
 using WpfScreenHelper;
 
 namespace WallpaperFlux.WPF
@@ -36,7 +37,6 @@ namespace WallpaperFlux.WPF
         public WallpaperWindow(Screen display, IntPtr workerw)
         {
             InitializeComponent();
-            
 
             Loaded += (s, e) =>
             {
@@ -46,22 +46,14 @@ namespace WallpaperFlux.WPF
                 Left = display.Bounds.X + DisplayUtil.DisplayXAdjustment;
                 Top = display.Bounds.Y + DisplayUtil.MinDisplayY;
 
-                //x // TODO Remove me once you've implemented a control for setting the default volume & changing video volume
-                //x //! temp
-                //x Debug.WriteLine("Forcing video volume to 0.1 for now");
-                //x WallpaperMediaElement.Volume = 0.1;
-                //x //! temp
-
                 //? Default, should match what's stated on the WPF
-                WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = Stretch.Fill;
-                //xWallpaperImage.Stretch = Stretch.Fill;
+                WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = Stretch.Fill; // this is actually stretch
 
                 // This line makes the form a child of the WorkerW window, thus putting it behind the desktop icons and out of reach 
                 // of any user input. The form will just be rendered, no keyboard or mouse input will reach it.
                 //? (Would have to use WH_KEYBOARD_LL and WH_MOUSE_LL hooks to capture mouse and keyboard input)
                 Win32.SetParent(new WindowInteropHelper(this).Handle, workerw);
             };
-
         }
 
         //? The index is checked in ExternalWallpaperHandler now as it has access to the array, which allows wallpapers to be changed independently of one another
@@ -70,7 +62,7 @@ namespace WallpaperFlux.WPF
             FileInfo wallpaperInfo;
             string wallpaperPath = image.Path;
 
-            if (!String.IsNullOrEmpty(wallpaperPath))
+            if (!string.IsNullOrEmpty(wallpaperPath))
             {
                 wallpaperInfo = new FileInfo(wallpaperPath);
             }
@@ -80,18 +72,25 @@ namespace WallpaperFlux.WPF
                 return;
             }
 
-            if (wallpaperInfo.Extension == ".gif" || WallpaperUtil.IsSupportedVideoType(wallpaperInfo.FullName)) // gif & video
+            WallpaperImage.BeginInit();
+            WallpaperMediaElement.BeginInit();
+            WallpaperMediaElementFFME.BeginInit();
+
+            if (WallpaperUtil.IsSupportedVideoType(wallpaperInfo.FullName)) // ---- video ----
             {
-                WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = image.Volume;
-                //xWallpaperMediaElement.PlayerHost.Volume = (int)(image.Volume * 100);
+                WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = image.Volume / 100;
 
                 //? FFME is unstable and likely to crash on larger videos, but Windows Media Player can't load webms | Also, it seems to load Gifs faster
-                if (wallpaperInfo.Extension == ".gif" || wallpaperInfo.Extension == ".webm") 
+                //? HOWEVER, the regular MediaElement (Windows Media Player) will randomly fail to load gifs (seems to be if loading more than one), loading a blank screen instead
+                if (wallpaperInfo.Extension == ".webm") 
                 {
                     WallpaperMediaElement.Close();
+                    WallpaperMediaElement.Source = null; //! .Close() won't actually stop the video for MediaElements, see if you should just remove it
                     WallpaperMediaElementFFME.Open(new Uri(wallpaperInfo.FullName));
+
                     WallpaperMediaElement.IsEnabled = false;
                     WallpaperMediaElement.Visibility = Visibility.Hidden;
+
                     WallpaperMediaElementFFME.IsEnabled = true;
                     WallpaperMediaElementFFME.Visibility = Visibility.Visible;
                 }
@@ -99,23 +98,38 @@ namespace WallpaperFlux.WPF
                 {
                     WallpaperMediaElementFFME.Close();
                     WallpaperMediaElement.Source = new Uri(wallpaperInfo.FullName);
+
                     WallpaperMediaElementFFME.IsEnabled = false;
                     WallpaperMediaElementFFME.Visibility = Visibility.Hidden;
+
                     WallpaperMediaElement.IsEnabled = true;
                     WallpaperMediaElement.Visibility = Visibility.Visible;
                 }
-                
+
                 WallpaperImage.IsEnabled = false;
                 WallpaperImage.Visibility = Visibility.Hidden;
             }
-            else // static image
+            else // ---- static or gif ----
             {
                 // TODO Consider adding a check for the static image type as well, as random file types can still be detected and cause a crash
                 // TODO Granted, they would have to be manually ranked by the user first, so you should probably instead just ban them from the ImageInspector
-                WallpaperImage.Source = new BitmapImage(new Uri(wallpaperInfo.FullName));
 
-                // TODO Wallpaper Styling:
-                //! Use me later: WallpaperImage.Stretch
+
+                BitmapImage bitmap = new BitmapImage();
+
+                bitmap.BeginInit();
+                bitmap.UriSource = new Uri(image.Path);
+                bitmap.EndInit();
+                bitmap.Freeze();
+
+                if (wallpaperInfo.Extension != ".gif") // static
+                {
+                    WallpaperImage.Source = bitmap;
+                }
+                else // gif
+                {
+                    ImageBehavior.SetAnimatedSource(WallpaperImage, bitmap);
+                }
 
                 //xWallpaperMediaElement.Close(); // ensures that the audio stops playing
                 //xWallpaperMediaElement.PlayerHost.Stop();
@@ -123,9 +137,14 @@ namespace WallpaperFlux.WPF
                 WallpaperMediaElementFFME.Close();
                 WallpaperMediaElement.IsEnabled = WallpaperMediaElementFFME.IsEnabled = false;
                 WallpaperMediaElement.Visibility = WallpaperMediaElementFFME.Visibility = Visibility.Hidden;
+
                 WallpaperImage.IsEnabled = true;
                 WallpaperImage.Visibility = Visibility.Visible;
             }
+
+            WallpaperImage.EndInit();
+            WallpaperMediaElement.EndInit();
+            WallpaperMediaElementFFME.EndInit();
         }
 
         //? The index is checked in ExternalWallpaperHandler now as it has access to the array, which allows wallpapers to be changed independently of one another
@@ -162,8 +181,17 @@ namespace WallpaperFlux.WPF
         {
             if (sender is MediaElement element)
             {
-                element.Position = TimeSpan.FromSeconds(0);
+                element.Position = TimeSpan.Zero;
                 element.Play();
+            }
+        }
+
+        private async void WallpaperMediaElementFFME_OnMediaEnded(object? sender, EventArgs e)
+        {
+            if (sender is Unosquare.FFME.MediaElement ffmeElement)
+            {
+                ffmeElement.Position = TimeSpan.Zero;
+                await ffmeElement.Play();
             }
         }
     }

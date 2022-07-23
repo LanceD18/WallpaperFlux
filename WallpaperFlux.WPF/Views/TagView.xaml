@@ -309,9 +309,15 @@
                                         <RowDefinition Height="4"/>
                                     </Grid.RowDefinitions>
 
+                                    <!-- Search Text -->
                                     <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SearchFilter, Mode=TwoWay, UpdateSourceTrigger=Explicit}" 
                                              adonisExtensions:WatermarkExtension.Watermark="Search Tag... (Press Enter to Confirm)" Margin="5 0 5 5"
                                              ToolTip="Press Enter to Confirm" KeyDown="SearchBar_OnKeyDown"/>
+
+                                    <!-- Clears the Search Text -->
+                                    <Button Grid.Row="1" Grid.Column="1"  Content="X" Foreground="Red" Width="25" Height="24" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                            Command="{Binding ClearSearchCommand}"/>
+
                                     <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="5 5 5 0">
                                         <!-- Sorting -->
                                         <TextBlock Text="Sort By: " VerticalAlignment="Center"/>

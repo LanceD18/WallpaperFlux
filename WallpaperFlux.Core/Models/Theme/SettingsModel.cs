@@ -28,27 +28,26 @@ namespace WallpaperFlux.Core.Models.Theme
         public bool WeightedRanks;
         public bool WeightedFrequency;
         public bool AllowTagBasedRenamingForMovedImages;
-
-        // Image Type Settings
-        /*x Might not use this anymore
-        public bool ExcludeRenamingStatic;
-        public bool ExcludeRenamingGif;
-        public bool ExcludeRenamingVideo;
-        */
+        
         public FrequencyCalculator FrequencyCalc;
         public FrequencyModel FrequencyModel { get; set; }
 
         // Video Settings
         public VideoSettings VideoSettings;
+
+        // Monitor Options
+        //! DO NOT USE YET ; This still needs to be set up, will re-purpose MOST of ThemeSettings so that Monitors can have their own options
+        public DisplaySettings[] DisplaySettings { get; set; }
     }
 
     public class VideoSettings
     {
-        public bool MuteIfAudioPlaying;
-        public bool MuteIfApplicationMaximized;
-        public bool MuteIfApplicationFocused;
         public int MinimumVideoLoops;
-        public float MaximumVideoTime;
+        public int MaximumVideoTime;
+
+        public bool MuteIfAudioPlaying;
+        public bool MuteIfApplicationFocused;
+        public bool MuteIfApplicationMaximized;
     }
 
     // TODO Set me up later, this will be used to diverge displays into independent sets of options
@@ -57,7 +56,7 @@ namespace WallpaperFlux.Core.Models.Theme
     {
         //? This will only modify settings that can independently alter a monitor
 
-        // TODO These duplicate settings are intended as they are not yet implemented. Will be setup eventually, replacing the duplicates ub ThemeSettings
+        // TODO These duplicate settings are intended as they are not yet implemented. Will be setup eventually, replacing the duplicates in ThemeSettings
 
         // General Settings
         public bool WeightedRanks;
@@ -68,10 +67,6 @@ namespace WallpaperFlux.Core.Models.Theme
     {
         // Theme Settings
         public ThemeSettings ThemeSettings { get; set; } = new ThemeSettings();
-
-        // Monitor Options
-        //! DO NOT USE YET ; This still needs to be set up, will re-purpose MOST of ThemeSettings so that Monitors can have their own options
-        public DisplaySettings[] DisplaySettings { get; set; }
 
         // Global Settings
         public string DefaultTheme { get; set; }

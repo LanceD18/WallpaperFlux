@@ -30,7 +30,7 @@ namespace WallpaperFlux.Core.Collections
             if (relinkTagCollection) parentImage.Tags = this;
         }
 
-        public void Add(TagModel tag)
+        public void Add(TagModel tag, bool highlightTags)
         {
             _tags.Add(tag); // we're using a hashset, no need to worry about duplicate tags
             tag.LinkImage(this);
@@ -39,11 +39,11 @@ namespace WallpaperFlux.Core.Collections
             WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.InspectedImageTags);
         }
 
-        public void Remove(TagModel tag)
+        public void Remove(TagModel tag, bool highlightTags)
         {
             _tags.Remove(tag);
             tag.UnlinkImage(this);
-            TaggingUtil.HighlightTags();
+            if (highlightTags) TaggingUtil.HighlightTags();
             _tagNamingExceptions.Remove(tag); // the naming exception status will be reset on re-add, also, this reduces potential JSON bloat
 
             WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.InspectedImageTags);

@@ -48,7 +48,7 @@ namespace WallpaperFlux.Core.Util
 
         public static bool IsSupportedVideoType(string filePath)
         {
-            return IsSupportedVideoType_GivenExtension(filePath);
+            return IsSupportedVideoType_GivenExtension(Path.GetExtension(filePath));
 
             /*x
             if (File.Exists(filePath))
@@ -152,7 +152,6 @@ namespace WallpaperFlux.Core.Util
                 {
                     wallpaperPath = DataUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index];
                 }
-
             }
             else
             {
@@ -182,6 +181,7 @@ namespace WallpaperFlux.Core.Util
             if (DataUtil.Theme.Images.ContainsImage(wallpaperPath))
             {
                 WallpaperHandler.OnWallpaperChange(index, DataUtil.Theme.Images.GetImage(wallpaperPath)); //? hooked to a call from WallpaperFlux.WPF
+                WallpaperFluxViewModel.Instance.DisplaySettings[index].ResetTimer(true);
             }
             return true;
         }

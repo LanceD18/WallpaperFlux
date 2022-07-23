@@ -35,6 +35,7 @@ using WallpaperFlux.Core.Models.Theme;
 using WallpaperFlux.Core.ViewModels;
 using WallpaperFlux.WPF.Util;
 using WallpaperFlux.WPF.Windows;
+using WpfAnimatedGif;
 using Image = System.Windows.Controls.Image;
 using Size = System.Windows.Size;
 
@@ -62,10 +63,7 @@ namespace WallpaperFlux.WPF.Views
 
         #region MediaElement & Images
 
-        private void Inspector_OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            LoadImageOrMediaElementOrMpvPlayerHost(sender);
-        }
+        private void Inspector_OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e) => LoadImageOrMediaElementOrMpvPlayerHost(sender);
 
         private void LoadImageOrMediaElementOrMpvPlayerHost(object sender)
         {
@@ -97,7 +95,9 @@ namespace WallpaperFlux.WPF.Views
                     string path = imageModel.Path;
                     FileStream stream = File.OpenRead(path);
 
-                    LoadBitmapImage(bitmap, stream, image);
+                    bool isGif = new FileInfo(path).Extension == ".gif";
+
+                    LoadBitmapImage(bitmap, stream, image, isGif);
                 });
             }
         }
@@ -143,7 +143,7 @@ namespace WallpaperFlux.WPF.Views
         //? https://stackoverflow.com/questions/8352787/how-to-free-the-memory-after-the-bitmapimage-is-no-longer-needed
         //? https://stackoverflow.com/questions/2631604/get-absolute-file-path-from-image-in-wpf
         //? prevents the application from continuing to 'use' the image after loading it in, which also saves some memory
-        private void LoadBitmapImage(BitmapImage bitmap, FileStream stream, Image image)
+        private void LoadBitmapImage(BitmapImage bitmap, FileStream stream, Image image, bool isGif)
         {
             // TODO THIS METHOD IS BEING CALLED MULTIPLE TIMES PER INSPECTOR SWITCH, FIX
             try //? this can accidentally fire off multiple times and cause crashes when trying to load videos (Who still need this for some reason?)
@@ -154,16 +154,26 @@ namespace WallpaperFlux.WPF.Views
                 bitmap.StreamSource = stream;
                 bitmap.EndInit();
                 bitmap.Freeze(); // prevents unnecessary copying: https://stackoverflow.com/questions/799911/in-what-scenarios-does-freezing-wpf-objects-benefit-performance-greatly
-                stream.Close();
-                stream.Dispose();
 
                 //! Task.Run() will be used outside of this method to capture the Bitmap within the 'calling thread'
-                Dispatcher.Invoke(() => image.Source = bitmap); // the image must be called on the UI thread which the dispatcher helps us do under this other thread
+                Dispatcher.Invoke(() => // the image must be called on the UI thread which the dispatcher helps us do under this other thread
+                {
+                    if (isGif)
+                    {
+                        ImageBehavior.SetAnimatedSource(image, bitmap);
+                    }
+                    else
+                    {
+                        image.Source = bitmap;
+                    }
+
+                    stream.Close();
+                    stream.Dispose();
+                });
             }
             catch (Exception e)
             {
-                Console.WriteLine("ERROR: Bitmap Creation Failed: " + e);
-                //x throw;
+                Debug.WriteLine("ERROR: Bitmap Loading Failed: " + e);
             }
         }
 
@@ -232,7 +242,7 @@ namespace WallpaperFlux.WPF.Views
                         BitmapImage bitmap = new BitmapImage();
                         FileStream stream = File.OpenRead(outputFile.Filename);
                         
-                        LoadBitmapImage(bitmap, stream, image);
+                        LoadBitmapImage(bitmap, stream, image, false);
                     }
                 });
 

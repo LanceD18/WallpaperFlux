@@ -66,7 +66,7 @@ namespace WallpaperFlux.Core.Models
 
                 if (DisplayTimerCurrent <= 0 && DisplayTimerMax != 0)
                 {
-                    ResetTimer();
+                    ResetTimer(false);
                 }
             }
         }
@@ -124,12 +124,12 @@ namespace WallpaperFlux.Core.Models
             DisplayTimerMax = DisplayTimerCurrent = DisplayInterval * (int) DisplayIntervalType;
         }
 
-        private void ResetTimer()
+        public void ResetTimer(bool ignoreResetEvent)
         {
             if (parentSyncedModel == null)
             {
                 DisplayTimerCurrent = DisplayTimerMax;
-                OnTimerReset?.Invoke(_displayIndex, true);
+                if (!ignoreResetEvent) OnTimerReset?.Invoke(_displayIndex, true);
                 //_displayIndex uses the value appropriate for arrays while DisplayIndex uses the value appropriate for WPF/visual information
 
                 foreach (DisplayModel model in childSyncedModels)
@@ -139,7 +139,7 @@ namespace WallpaperFlux.Core.Models
             }
             else
             {
-                Debug.WriteLine("Parent: " + parentSyncedModel.DisplayIndex);
+                Debug.WriteLine("Timer Reset Prevented Due to Parent: " + parentSyncedModel.DisplayIndex);
             }
         }
 

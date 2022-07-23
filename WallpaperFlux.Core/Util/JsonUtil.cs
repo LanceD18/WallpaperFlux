@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using LanceTools.IO;
 using Newtonsoft.Json;
 using WallpaperFlux.Core.Collections;
 using WallpaperFlux.Core.JSON;
@@ -143,14 +144,32 @@ namespace WallpaperFlux.Core.Util
         public static readonly string JSON_FILE_DISPLAY_NAME = "JSON Files (*.json)";
         public static readonly string JSON_FILE_EXTENSION = "*.json";
 
-        public static bool IsLoadingData { get; set; } // used to speed up the loading process by preventing unnecessary calls
+        private static string _loadedThemePath;
+        public static string LoadedThemePath
+        {
+            get => _loadedThemePath;
+            private set
+            {
+                _loadedThemePath = value;
+                WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.IsThemeLoaded);
+            }
+        }
+
+        public static bool IsLoadingData { get; private set; } // used to speed up the loading process by preventing unnecessary calls
+
+        public static void SetIsLoadingData(bool isLoadingData) => IsLoadingData = isLoadingData;
 
         #region Data Saving
+
+        public static void QuickSave() => SaveData(LoadedThemePath);
+
         public static void SaveData(string path)
         {
             //! Implementing a saving thread may cause issues if changes are made while saving or if you accidentally allow to saves to occur at once, so it'll be best to just keep that option off
 
             if (string.IsNullOrEmpty(path)) return;
+
+            if (!File.Exists(LoadedThemePath)) return;
 
             //? ----- Backup -----
             // Create a temporary backup in the save file's directory for just in case something goes wrong during the saving process
@@ -170,8 +189,8 @@ namespace WallpaperFlux.Core.Util
 
             ThemeOptions themeOptions = new ThemeOptions(DataUtil.Theme.RankController.GetMaxRank());
 
-            MiscData miscData = new MiscData(ImageSelectionViewModel.Instance.Randomize, ImageSelectionViewModel.Instance.Reverse, 
-                TagViewModel.Instance.RandomizeSelection, TagViewModel.Instance.ReverseSelection, 
+            //! the instance itself will be NULL if you DON'T OPEN it before saving, so don't use ViewModel.Instance here!
+            MiscData miscData = new MiscData(false, false, false, false, 
                 TaggingUtil.GetActiveSortType(), TaggingUtil.GetSortByNameDirection(), TaggingUtil.GetSortByCountDirection());
 
             JsonWallpaperData jsonWallpaperData = new JsonWallpaperData(
@@ -332,6 +351,7 @@ namespace WallpaperFlux.Core.Util
                 }
 
                 Debug.WriteLine("Finished Loading");
+                LoadedThemePath = path;
                 return jsonWallpaperData;
             }
             else
@@ -411,6 +431,9 @@ namespace WallpaperFlux.Core.Util
             ConvertTags(wallpaperData);
             ConvertImagesAndFolders(wallpaperData);
 
+            TaggingUtil.HighlightTags();
+
+
             Debug.WriteLine("Conversion Finished");
         }
 
@@ -460,7 +483,7 @@ namespace WallpaperFlux.Core.Util
                     {
                         //! Keep in mind that this tackles both Parent and Child tags, no need to loop through the Child Tag list as well
                         //! (There's no way to directly add child tags anyways, it will always occur when a parent tag is linked)
-                        instanceTag.LinkTag(TaggingUtil.VerifyCategory(parentTag.ParentCategoryName).VerifyTag(parentTag.Name));
+                        instanceTag.LinkTag(TaggingUtil.VerifyCategory(parentTag.ParentCategoryName).VerifyTag(parentTag.Name), false);
                     }
 
                     instanceCategory.AddTag(instanceTag);
@@ -475,18 +498,6 @@ namespace WallpaperFlux.Core.Util
             //? we need the official category list ahead of time for data handling but this gives them the wrong order, so we used this to fix it
             DataUtil.Theme.Categories = new List<CategoryModel>(orderedCategories);
             TaggingUtil.UpdateCategoryView(); // don't forget to update the view
-        }
-
-        // TODO Move this to LanceTools
-        [DllImport("Shlwapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        private extern static bool PathFileExists(StringBuilder path);
-
-        static bool Exists(string path)
-        {
-            // A StringBuilder is required for interops calls that use strings
-            StringBuilder builder = new StringBuilder();
-            builder.Append(path);
-            return PathFileExists(builder);
         }
 
         private static void ConvertImagesAndFolders(JsonWallpaperData wallpaperData)
@@ -505,7 +516,7 @@ namespace WallpaperFlux.Core.Util
             {
                 SimplifiedImage simpleImage = wallpaperData.Images[i];
 
-                if (!Exists(simpleImage.Path))
+                if (!FileUtil.Exists(simpleImage.Path))
                 {
                     invalidImageCount++;
                     invalidImageString += "\n" + simpleImage.Path;
@@ -575,7 +586,7 @@ namespace WallpaperFlux.Core.Util
                     }
                     else
                     {
-                        tagCollection.Add(tag);
+                        tagCollection.Add(tag, false);
                     }
                 }
             }
@@ -626,7 +637,7 @@ namespace WallpaperFlux.Core.Util
 
                         //! Keep in mind that this tackles both Parent and Child tags, no need to loop through the Child Tag list as well
                         //! (There's no way to directly add child tags anyways)
-                        instanceTag.LinkTag(TaggingUtil.VerifyCategory(parentCategoryName).VerifyTag(parentName));
+                        instanceTag.LinkTag(TaggingUtil.VerifyCategory(parentCategoryName).VerifyTag(parentName), false);
                     }
 
                     //x Debug.WriteLine("Adding Tag: " + instanceTag.Name);
@@ -694,11 +705,11 @@ namespace WallpaperFlux.Core.Util
                         {
                             if (tags.Contains(parentTag))
                             {
-                                tags.Remove(parentTag);
+                                tags.Remove(parentTag, false);
                             }
                         }
 
-                        tags.Add(tag);
+                        tags.Add(tag, false);
 
                         //! Specific to this, purely for conversion from the old theme, we need to nuke all references to parent tags in images to move over to the new paradigm
                         //! Will check if this tag is the parent of another tag in this collection, if so, remove it
@@ -706,7 +717,7 @@ namespace WallpaperFlux.Core.Util
                         {
                             if (tags.Contains(childTag))
                             {
-                                tags.Remove(tag);
+                                tags.Remove(tag, false);
                                 break;
                             }
                         }
@@ -743,7 +754,7 @@ namespace WallpaperFlux.Core.Util
                     else
                     {
                         //? parent tags with naming exceptions can now just be added directly since they are no longer automatically added to the image when adding a child, this forces them in on conversion
-                        tags.Add(tag);
+                        tags.Add(tag, false);
                     }
                 }
 

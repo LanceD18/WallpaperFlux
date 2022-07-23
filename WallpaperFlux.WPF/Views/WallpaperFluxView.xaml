@@ -20,6 +20,7 @@
     xmlns:hc="https://handyorg.github.io/handycontrol"
     xmlns:tagging="clr-namespace:WallpaperFlux.Core.Models.Tagging;assembly=WallpaperFlux.Core"
     xmlns:media="https://github.com/mysteryx93/MediaPlayerUI.NET"
+    xmlns:gif="http://wpfanimatedgif.codeplex.com"
     mc:Ignorable="d" FontSize="12" FontFamily="Segoe UI"
     d:DesignHeight="450" d:DesignWidth="800"
     SizeChanged="WallpaperFluxView_OnSizeChanged_UpdateInspectorHeight">
@@ -57,7 +58,7 @@
             <MenuItem Header="File">
                 <MenuItem Header="Load Theme" Command="{Binding LoadThemeCommand}"/>
                 <!-- ! Should be disabled when no theme is loaded, saves the current theme to itself -->
-                <MenuItem Header="Save Theme [Not implemented]" IsEnabled="False"/>
+                <MenuItem Header="Save Theme" IsEnabled="{Binding IsThemeLoaded}" Command="{Binding SaveThemeCommand}"/>
                 <MenuItem Header="Save Theme As" Command="{Binding SaveThemeAsCommand}"/>
             </MenuItem>
 
@@ -664,8 +665,8 @@
                                                     </DataTemplate>
                                                     <!-- GIF -->
                                                     <DataTemplate x:Key="GIFTemplate">
-                                                        <MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play"
-                                                                           Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" MediaEnded="MediaElement_OnMediaEnded"/>
+                                                        <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"
+                                                                           Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" />
                                                     </DataTemplate>
                                                 </ContentControl.Resources>
                                                 <!-- Template Control -->
@@ -686,7 +687,7 @@
                                             </ContentControl>
                                         </DataTemplate>
 
-                                        <!-- // VideoTemplate // -->
+                                        <!--? // VideoTemplate // -->
                                         <DataTemplate x:Key="VideoTemplate">
                                             <GroupBox adonisExtensions:LayerExtension.IncreaseLayer="False" HorizontalAlignment="Center" VerticalAlignment="Center">
                                                 <ContentControl Content="{Binding }">
@@ -697,7 +698,7 @@
                                                         </DataTemplate>
                                                         <DataTemplate x:Key="Windows">
                                                             <MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play"
-                                                                                        Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" />
+                                                                          Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" />
                                                         </DataTemplate>
                                                     </ContentControl.Resources>
                                                     <ContentControl.ContentTemplate>

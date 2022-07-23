@@ -202,7 +202,19 @@ namespace WallpaperFlux.Core.ViewModels
         #region Enablers & Toggles
         public bool CanNextWallpaper => ImageFolders.Count > 0;
 
-        public bool CanPreviousWallpaper => false;
+        public bool CanPreviousWallpaper
+        {
+            get
+            {
+                foreach (Stack<string> previousWallpaperSet in DataUtil.Theme.WallpaperRandomizer.PreviousWallpapers)
+                {
+                    //? depending on the setup of the timers different wallpapers can have different count of previous wallpapers so we only need one to be true
+                    if (previousWallpaperSet.Count > 0) return true;
+                }
+
+                return false;
+            }
+        }
 
         public bool CanRemoveWallpaper => SelectedImageFolder != null;
 
@@ -216,6 +228,7 @@ namespace WallpaperFlux.Core.ViewModels
 
         public bool GroupRenamed { get; set; }
 
+        public bool IsThemeLoaded => !string.IsNullOrEmpty(JsonUtil.LoadedThemePath);
 
         #endregion
 
@@ -227,6 +240,8 @@ namespace WallpaperFlux.Core.ViewModels
         public IMvxCommand PreviousWallpaperCommand { get; set; }
 
         public IMvxCommand LoadThemeCommand { get; set; }
+
+        public IMvxCommand SaveThemeCommand { get; set; }
 
         public IMvxCommand SaveThemeAsCommand { get; set; }
 
@@ -321,8 +336,9 @@ namespace WallpaperFlux.Core.ViewModels
         {
             // TODO Consider using models to hold command information (Including needed data)
             NextWallpaperCommand = new MvxCommand(NextWallpaper);
-            PreviousWallpaperCommand = new MvxCommand(() => { MessageBox.Show("Not implemented"); });
+            PreviousWallpaperCommand = new MvxCommand(PreviousWallpaper);
             LoadThemeCommand = new MvxCommand(PromptLoadTheme);
+            SaveThemeCommand = new MvxCommand(JsonUtil.QuickSave);
             SaveThemeAsCommand = new MvxCommand(PromptSaveTheme);
             AddFolderCommand = new MvxCommand(PromptAddFolder);
             RemoveFolderCommand = new MvxCommand(PromptRemoveFolder);
@@ -348,27 +364,12 @@ namespace WallpaperFlux.Core.ViewModels
         // TODO Create subclasses for the commands with excess methods (Like Theme Data)
         //  -----Command Methods-----
         #region Wallpaper Setters
+
         public void NextWallpaper()
         {
-            // TODO Turn this into a general method, refer to WallpaperManager.Pathing
-            if (DataUtil.Theme.Images.GetAllImages().Length > 0)
+            for (int i = 0; i < WallpaperUtil.DisplayUtil.GetDisplayCount(); i++)
             {
-                for (int i = 0; i < WallpaperUtil.DisplayUtil.GetDisplayCount(); i++)
-                {
-                    NextWallpaper(i, false);
-                }
-            }
-            else //TODO Consider just turning this into a tooltip & disabling the button if the conditional tooltip is possible
-            {
-                MessageBoxModel messageBox = new MessageBoxModel
-                {
-                    Text = "Cannot change wallpaper, there are no active images in your theme",
-                    Caption = "Error",
-                    Icon = MessageBoxImage.Error,
-                    Buttons = new[] { MessageBoxButtons.Ok() }
-                };
-
-                MessageBox.Show(messageBox);
+                NextWallpaper(i, false);
             }
         }
 
@@ -381,12 +382,23 @@ namespace WallpaperFlux.Core.ViewModels
                 // Note that RandomizeWallpaper() will check if it even should randomize the wallpapers first (Varied timers and extended videos can undo this requirement)
                 WallpaperUtil.SetWallpaper(displayIndex, false);
             }
-        }
+            else
+            {
+                MessageBoxModel messageBox = new MessageBoxModel
+                {
+                    Text = "Cannot change wallpaper, there are no active images in your theme (Some may need to be given a rank greater than 0)",
+                    Caption = "Error",
+                    Icon = MessageBoxImage.Error,
+                    Buttons = new[] { MessageBoxButtons.Ok() }
+                };
 
-        /* TODO
+                MessageBox.Show(messageBox);
+            }
+        }
+        
         public void PreviousWallpaper()
         {
-            for (int i = 0; i < WallpaperPathSetter.PreviousWallpapers.Length; i++)
+            for (int i = 0; i < DataUtil.Theme.WallpaperRandomizer.PreviousWallpapers.Length; i++)
             {
                 PreviousWallpaper(i);
             }
@@ -395,13 +407,12 @@ namespace WallpaperFlux.Core.ViewModels
         // sets all wallpapers to their previous wallpaper, if one existed
         public void PreviousWallpaper(int index)
         {
-            if (WallpaperPathSetter.PreviousWallpapers[index].Count > 0)
+            if (DataUtil.Theme.WallpaperRandomizer.PreviousWallpapers[index].Count > 0)
             {
-                WallpaperPathSetter.NextWallpapers[index] = WallpaperPathSetter.PreviousWallpapers[index].Pop();
+                DataUtil.Theme.WallpaperRandomizer.NextWallpapers[index] = DataUtil.Theme.WallpaperRandomizer.PreviousWallpapers[index].Pop();
 
-                if (File.Exists(WallpaperPathSetter.NextWallpapers[index]))
+                if (File.Exists(DataUtil.Theme.WallpaperRandomizer.NextWallpapers[index]))
                 {
-                    ResetTimer(index);
                     WallpaperUtil.SetWallpaper(index, true); // ignoreRandomization = true since there is no need to randomize wallpapers that have previously existed
                 }
             }
@@ -411,7 +422,6 @@ namespace WallpaperFlux.Core.ViewModels
             //x    MessageBox.Show("There are no more previous wallpapers");
             //x}
         }
-        */
         #endregion
 
         #region Theme Data
@@ -429,7 +439,7 @@ namespace WallpaperFlux.Core.ViewModels
 
                 if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
                 {
-                    JsonUtil.IsLoadingData = true;
+                    JsonUtil.SetIsLoadingData(true);
 
                     if (loadingOld)
                     {
@@ -440,26 +450,18 @@ namespace WallpaperFlux.Core.ViewModels
                         JsonUtil.ConvertTheme(JsonUtil.LoadData(dialog.FileName));
                     }
 
-                    JsonUtil.IsLoadingData = false;
+                    JsonUtil.SetIsLoadingData(false);
                 }
             }
         }
 
         // updates some properties that may change during runtime but shouldn't be processed constantly
-        // TODO This should be attached to the eventual Update Theme/Quick Save Button
-        // TODO This should be attached to the eventual Update Theme/Quick Save Button
-        // TODO This should be attached to the eventual Update Theme/Quick Save Button
-        // TODO This should be attached to the eventual Update Theme/Quick Save Button
-        // TODO This should be attached to the eventual Update Theme/Quick Save Button
-        // TODO This should be attached to the eventual Update Theme/Quick Save Button
-        // TODO This should be attached to the eventual Update Theme/Quick Save Button
-        // TODO This should be attached to the eventual Update Theme/Quick Save Button
-        // TODO This should be attached to the eventual Update Theme/Quick Save Button
-        // TODO This should be attached to the eventual Update Theme/Quick Save Button
         public void UpdateTheme()
         {
             Debug.WriteLine("Updating theme...");
-            DataUtil.Theme.Settings.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence();
+            // TODO This check will only matter once you use 'Update Theme' to check for the existence of new images
+            //x DataUtil.Theme.Settings.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence();
+            JsonUtil.QuickSave();
         }
 
         public void PromptSaveTheme()
@@ -861,9 +863,11 @@ namespace WallpaperFlux.Core.ViewModels
             {
                 foreach (TagModel tag in TagViewModel.Instance.TagBoardTags)
                 {
-                    image.AddTag(tag);
+                    image.AddTag(tag, false);
                 }
             }
+
+            TaggingUtil.HighlightTags();
         }
 
         /// <summary>

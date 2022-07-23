@@ -27,6 +27,7 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="8"/>
         </Grid.RowDefinitions>
@@ -34,20 +35,23 @@
         <!-- Settings Title -->
         <TextBlock Grid.Row="1" Grid.Column="1" Text="Settings" FontSize="16" FontWeight="Bold" Margin="10"/>
 
-        <!-- Rank Modifier -->
-        <GroupBox  Grid.Row="2" Grid.Column="1" Margin="3">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Margin="5" VerticalAlignment="Center" DataContext="{Binding Settings.ThemeSettings}">
-                            <Run Text="Max Rank: "/>
-                            <Run Text="{Binding MaxRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
-                </TextBlock>
-                <Button Content="Set Max Rank" Margin="3" mvx:Bi.nd="Command Settings.UpdateMaxRankCommand"/>
+        <!--? Rank Settings -->
+        <GroupBox  Grid.Row="2" Grid.Column="1" Margin="3" DataContext="{Binding Settings.ThemeSettings}">
+            <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Margin="5" VerticalAlignment="Center">
+                        <Run Text="Max Rank: "/>
+                        <Run Text="{Binding MaxRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    </TextBlock>
+                    <Button Content="Set Max Rank" Margin="3" mvx:Bi.nd="Command Settings.UpdateMaxRankCommand"/>
+                </StackPanel>
+                <CheckBox Content="Weighted Ranks" IsChecked="{Binding WeightedRanks}" adonisExtensions:LayerExtension.Layer="3"/>
             </StackPanel>
         </GroupBox>
 
-        <!-- Image Frequency -->
-        <GroupBox Grid.Row="3" Grid.Column="1" Margin="3">
-            <Grid Focusable="True"  DataContext="{Binding Settings.ThemeSettings.FrequencyModel}">
+        <!--? Image Frequency -->
+        <GroupBox Grid.Row="3" Grid.Column="1" Margin="3" DataContext="{Binding Settings.ThemeSettings.FrequencyModel}">
+            <Grid Focusable="True">
 
                 <Grid.Resources>
                     <system:Double x:Key="ImageFrequencyTextBoxWidth">50</system:Double>
@@ -68,11 +72,13 @@
                     <RowDefinition Height="auto"/>
                     <RowDefinition Height="auto"/>
                     <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
                 <!-- Frequency Title -->
-                <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="5" Text="Frequency" Margin="5" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="5" Text="Frequency" Margin="5" FontWeight="Bold" FontStyle="Italic" HorizontalAlignment="Center"
+                           ToolTip="Frequency changes the rate at which the given file types are selected on wallpaper randomization. Press Enter to save your changes"/>
 
                 <!-- Image Type Title Row -->
                 <TextBlock Grid.Row="2" Grid.Column="2" Text="Static" HorizontalAlignment="Center" Margin="10, 0, 10, 0"/>
@@ -127,8 +133,86 @@
                     </TextBox.Style>
                 </TextBox>
 
+                <!-- Frequency Settings -->
+                <CheckBox Content="Weighted Frequency" Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="4" adonisExtensions:LayerExtension.Layer="3"/>
             </Grid>
         </GroupBox>
+
+        <!--? Monitor Based Randomization -->
+        <GroupBox Grid.Row="4" Grid.Column="1"  Margin="3">
+            <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Vertical" Margin="0 0 0 5">
+                    <TextBlock Text="On Larger Monitors Prefer: " FontWeight="Medium"/>
+                    <CheckBox Content="Higher Ranked Wallpapers" adonisExtensions:LayerExtension.Layer="3" Margin="5 3 5 3"/>
+                    <CheckBox Content="Higher Resolution Wallpapers" adonisExtensions:LayerExtension.Layer="3" Margin="5 3 5 3"/>
+                </StackPanel>
+
+            </StackPanel>
+        </GroupBox>
+
+        <!-- ? Video Settings -->
+        <GroupBox Grid.Row="2" Grid.Column="2" Grid.RowSpan="3" Margin="3" DataContext="{Binding Settings.ThemeSettings.VideoSettings}">
+            <StackPanel Orientation="Vertical">
+                <TextBlock Text="Video Settings" Margin="5" FontWeight="Bold" FontStyle="Italic" HorizontalAlignment="Center"/>
+
+                <StackPanel Orientation="Vertical" adonisExtensions:LayerExtension.IncreaseLayer="True">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2"/>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="2"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock  Grid.Row="1" Grid.Column="1" Text="Minimum Video Loops: " VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1"  Text="Maximum Video Time: " VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="1" Grid.Column="2" adonisExtensions:WatermarkExtension.Watermark="Loops..." Margin="5 5 3 0"
+                                 Text="{Binding MinimumVideoLoops, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                            <TextBox.Style>
+                                <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                            </TextBox.Style>
+                        </TextBox>
+                        <TextBox Grid.Row="2" Grid.Column="2" adonisExtensions:WatermarkExtension.Watermark="Seconds..." Margin="5 5 3 0"
+                                 Text="{Binding MaximumVideoTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                            <TextBox.Style>
+                                <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                            </TextBox.Style>
+                        </TextBox>
+                    </Grid>
+                </StackPanel>
+
+                <StackPanel Orientation="Vertical" Margin="0 5 0 5">
+                    <TextBlock Text="Mute Audio If: " FontWeight="Medium"/>
+                    <CheckBox Content="Audio is Playing" adonisExtensions:LayerExtension.Layer="3" Margin="5 3 5 3"/>
+                    <CheckBox Content="Application is Focused" adonisExtensions:LayerExtension.Layer="3" Margin="5 3 5 3"/>
+                    <CheckBox Content="Application is Maximized" adonisExtensions:LayerExtension.Layer="3" Margin="5 3 5 3"/>
+                </StackPanel>
+                <StackPanel Orientation="Vertical" Margin="0 5 0 5">
+                    <TextBlock Text="Pause Video If (Per Monitor): " FontWeight="Medium"/>
+                    <CheckBox Content="Application is Open" adonisExtensions:LayerExtension.Layer="3" Margin="5 3 5 3"/>
+                    <CheckBox Content="Application is Focused" adonisExtensions:LayerExtension.Layer="3" Margin="5 3 5 3"/>
+                    <CheckBox Content="Application is Maximized" adonisExtensions:LayerExtension.Layer="3" Margin="5 3 5 3"/>
+                </StackPanel>
+                <StackPanel Orientation="Vertical" Margin="0 5 0 5">
+                    <TextBlock Text="Pause Video If (All Monitors): " FontWeight="Medium"/>
+                    <CheckBox Content="Application is Open" adonisExtensions:LayerExtension.Layer="3" Margin="5 3 5 3"/>
+                    <CheckBox Content="Application is Focused" adonisExtensions:LayerExtension.Layer="3" Margin="5 3 5 3"/>
+                    <CheckBox Content="Application is Maximized" adonisExtensions:LayerExtension.Layer="3" Margin="5 3 5 3"/>
+                </StackPanel>
+            </StackPanel>
+        </GroupBox>
+
+        <StackPanel Grid.Row="5" Grid.Column="1">
+            <CheckBox Content="Enable Detection of Inactive Images" ToolTip="This allows inactive images to appear in the image selector" Margin="3"
+                      IsChecked="{Binding Settings.ThemeSettings.EnableDetectionOfInactiveImages}"/>
+            <Button Width="175" Content="Rank Distribution Graph" Margin="3" Command="{Binding OpenRankDistributionGraphCommand}" HorizontalAlignment="Left"/>
+        </StackPanel>
 
     </Grid>
 </views:MvxWpfView>

@@ -49,15 +49,7 @@ namespace WallpaperFlux.WPF.Views
 
         private void CategoryTabControl_OnSizeChanged(object sender, SizeChangedEventArgs e) => UpdateTagSelectorWrapperSize();
 
-        private void CategoryTabControl_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            UpdateTagSelectorWrapperSize();
-            
-            if (CategoryTabControl.SelectedItem is CategoryModel selectedCategory)
-            {
-                selectedCategory.VerifyTagTabs(); //? need to verify on load to see the tags at all and to apply sorting
-            }
-        }
+        private void CategoryTabControl_OnSelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateTagSelectorWrapperSize();
 
         private void UpdateTagSelectorWrapperSize()
         {

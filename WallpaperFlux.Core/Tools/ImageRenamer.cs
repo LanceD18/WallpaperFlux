@@ -191,6 +191,9 @@ namespace WallpaperFlux.Core.Tools
             WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.SelectedImagePathText);
 
             if (renamingErrorFound) MessageBoxUtil.ShowError(renamingErrors);
+
+            //! It's important to save after renaming as if the user forgets all of the renamed images will lose their ranking when the user next loads back into the theme
+            JsonUtil.QuickSave();
         }
 
         private static Dictionary<string, Dictionary<string, HashSet<ImageModel>>> GetDesiredNames(ImageModel[] images, DirectoryInfo moveDirectory)
@@ -288,6 +291,8 @@ namespace WallpaperFlux.Core.Tools
                 if (!MessageBoxUtil.PromptYesNo("Are you sure you want to rename ALL " + images.Length + " images?")) return;
             }
 
+            //! It's important to save after renaming as if the user forgets all of the renamed images will lose their ranking when the user next loads back into the theme
+            JsonUtil.QuickSave();
         }
         #endregion
 

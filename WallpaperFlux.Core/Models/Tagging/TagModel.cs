@@ -315,8 +315,10 @@ namespace WallpaperFlux.Core.Models.Tagging
 
             if (canAdd)
             {
-                foreach (ImageModel image in images) image.AddTag(this);
+                foreach (ImageModel image in images) image.AddTag(this, false);
             }
+
+            TaggingUtil.HighlightTags();
         }
 
         public void RemoveTagFromImages(ImageModel[] images, bool promptUser)
@@ -326,8 +328,10 @@ namespace WallpaperFlux.Core.Models.Tagging
 
             if (canRemove)
             {
-                foreach(ImageModel image in images) image.RemoveTag(this);
+                foreach(ImageModel image in images) image.RemoveTag(this, false);
             }
+
+            TaggingUtil.HighlightTags();
         }
 
         public void ToggleTagWithImages(ImageModel[] images)
@@ -338,16 +342,18 @@ namespace WallpaperFlux.Core.Models.Tagging
             {
                 if (!image.ContainsTag(this))
                 {
-                    image.AddTag(this);
+                    image.AddTag(this, false);
                 }
                 else
                 {
                     if (!highlightedInSomeImages) //? in this case we will only add the tag to ensure that it is added to all corresponding images before allowing removal
                     {
-                        image.RemoveTag(this);
+                        image.RemoveTag(this, false);
                     }
                 }
             }
+
+            TaggingUtil.HighlightTags();
         }
         #endregion
 
@@ -366,11 +372,11 @@ namespace WallpaperFlux.Core.Models.Tagging
             RaisePropertyChangedImageCount();
         }
 
-        public void UnlinkAllImages() // for removing/resetting a tag
+        public void UnlinkAllImages(bool highlightTags) // for removing/resetting a tag
         {
-            foreach(ImageModel image in LinkedImages.ToArray()) //? We have to redirect the collection type to prevent the collection modified error
+            foreach(ImageModel image in LinkedImages) //? We have to redirect the collection type to prevent the collection modified error
             {
-                image.RemoveTag(this); // will call UnlinkImage()
+                image.RemoveTag(this, highlightTags); // will call UnlinkImage()
             }
 
             RaisePropertyChangedImageCount(); //? Not really needed for THIS tag but would ideally still exist here and IS NEEDED for the parent tags
@@ -431,8 +437,8 @@ namespace WallpaperFlux.Core.Models.Tagging
         #endregion
 
         #region Parent / Child Tag Linking
-
-        public void LinkTag(TagModel tag)
+        
+        public void LinkTag(TagModel tag, bool highlightTags)
         {
             if (tag == this) return; // can't link a tag to itself
 
@@ -444,11 +450,12 @@ namespace WallpaperFlux.Core.Models.Tagging
                     tag.ChildTags.Add(this); // makes this tag a child tag of the given tag
                 }
                 
-                TaggingUtil.HighlightTags(/*xParentChildTagsUnion_IncludeSelf()*/);
+                // the highlightTags bool is a nice way to avoid bulk highlights of tags which can bog down the system
+                if (highlightTags) TaggingUtil.HighlightTags(/*xParentChildTagsUnion_IncludeSelf()*/);
             }
         }
 
-        public void UnlinkTag(TagModel tag)
+        public void UnlinkTag(TagModel tag, bool highlightTags)
         {
             if (tag == this) return; // can't link a tag to itself
 
@@ -458,7 +465,8 @@ namespace WallpaperFlux.Core.Models.Tagging
                 tag.ChildTags.Remove(this); // stops this tag from being the child tag of the given tag
             }
 
-            TaggingUtil.HighlightTags(/*xParentChildTagsUnion_IncludeSelf()*/);
+            // the highlightTags bool is a nice way to avoid bulk highlights of tags which can bog down the system
+            if (highlightTags) TaggingUtil.HighlightTags(/*xParentChildTagsUnion_IncludeSelf()*/);
         }
 
         public void ToggleTagLink(TagModel tag)
@@ -466,25 +474,27 @@ namespace WallpaperFlux.Core.Models.Tagging
             // toggles the source tag's link status with this tag
             if (!tag.HasParent(this))
             {
-                tag.LinkTag(this); // making this tag the parent of the given tag
+                tag.LinkTag(this, true); // making this tag the parent of the given tag
             }
             else
             {
-                tag.UnlinkTag(this); // removing this tag from being the parent of the given tag
+                tag.UnlinkTag(this, true); // removing this tag from being the parent of the given tag
             }
         }
 
-        public void UnlinkAllParentAndChildTags()
+        public void UnlinkAllParentAndChildTags(bool highlightTags)
         {
-            foreach (TagModel tag in ParentTags)
+            while (ParentTags.Count > 0)
             {
-                UnlinkTag(tag); // removes the given tag from being the parent of this tag
+                UnlinkTag(ParentTags.First(), false); // removes the given tag from being the parent of this tag
             }
 
-            foreach (TagModel tag in ChildTags)
+            while (ChildTags.Count > 0)
             {
-                tag.UnlinkTag(this); // removing this tag from being the parent of the given tag
+                ChildTags.First().UnlinkTag(this, false); // removing this tag from being the parent of the given tag
             }
+
+            if (highlightTags) TaggingUtil.HighlightTags(/*xParentChildTagsUnion_IncludeSelf()*/);
         }
 
         public HashSet<TagModel> GetParentChildTagsUnion()

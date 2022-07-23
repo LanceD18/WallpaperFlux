@@ -123,6 +123,7 @@ namespace WallpaperFlux.Core.Models.Tagging
             set
             {
                 SetProperty(ref _searchFilter, value);
+                RaisePropertyChanged(() => IsSearching);
 
                 VerifyTagTabs();
             }
@@ -161,6 +162,8 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         [JsonIgnore] public string TagCountString => "Contains " + Tags.Count + " tag(s)";
 
+        public bool IsSearching => string.IsNullOrEmpty(SearchFilter);
+
         #endregion
 
         #region Commands
@@ -185,6 +188,8 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         [JsonIgnore] public IMvxCommand SelectImagesWithAnyCategoryTag { get; set; }
 
+        public IMvxCommand ClearSearchCommand { get; set; }
+
         #endregion
 
         public CategoryModel(string name, bool useForNaming = true, bool enabled = true)
@@ -206,6 +211,8 @@ namespace WallpaperFlux.Core.Models.Tagging
             SelectImagesWithEverySelTag = new MvxCommand(() => TagViewModel.Instance.RebuildImageSelector(SelectValidImages(TagSearchType.Mandatory, GetSelectedTags())));
             SelectImagesWithAnySelTag = new MvxCommand(() => TagViewModel.Instance.RebuildImageSelector(SelectValidImages(TagSearchType.Optional, GetSelectedTags())));
             SelectImagesWithAnyCategoryTag = new MvxCommand(() => TagViewModel.Instance.RebuildImageSelector(SelectValidImages(TagSearchType.Optional, Tags.ToArray())));
+
+            ClearSearchCommand = new MvxCommand(ClearSearchFilter);
         }
 
         public void PromptRename()
@@ -229,6 +236,8 @@ namespace WallpaperFlux.Core.Models.Tagging
             //x    MessageBoxUtil.ShowError("Selected category does not exist");
             //x}
         }
+
+        public void ClearSearchFilter() => SearchFilter = "";
 
         #region Tag Control
 
@@ -285,10 +294,13 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         public bool RemoveTag(TagModel tag)
         {
-            tag.UnlinkAllImages();
-            tag.UnlinkAllParentAndChildTags();
+            tag.UnlinkAllImages(false);
+            tag.UnlinkAllParentAndChildTags(false);
             bool removed = Tags.Remove(tag);
             VerifyTagTabs(); //? needed to visually update the tag's removal
+
+            TaggingUtil.HighlightTags(/*xParentChildTagsUnion_IncludeSelf()*/);
+
             return removed;
         }
 

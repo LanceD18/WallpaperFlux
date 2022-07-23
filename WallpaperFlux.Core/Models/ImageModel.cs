@@ -28,6 +28,10 @@ namespace WallpaperFlux.Core.Models
     //TODO You should verify if the extension is valid (Look into the methods you used for this in WallpaperManager to determine said extensions)
     public class ImageModel : ListBoxItemModel
     {
+        //? without making these readonly the hashcode could possibly be modified and the image's reference in various Dictionaries or HashSets would be lost
+        private readonly string _hashPath;
+        private readonly int _hashRank;
+
         // Properties
         private string _path;
         [DataMember(Name = "Path")]
@@ -208,7 +212,7 @@ namespace WallpaperFlux.Core.Models
 
         public ImageModel(string path, int rank = 0, ImageTagCollection tags = null, double volume = 0)
         {
-            Path = path;
+            Path = _hashPath = path;
 
             ImageType = IsStatic 
                 ? ImageType.Static 
@@ -216,7 +220,10 @@ namespace WallpaperFlux.Core.Models
                     ? ImageType.GIF 
                     : ImageType.Video;
 
-            Rank = rank;
+            //! Must be set *AFTER* the ImageType is set !!!!!!!!!!
+            //! Must be set *AFTER* the ImageType is set !!!!!!!!!!
+            //! Must be set *AFTER* the ImageType is set !!!!!!!!!!
+            Rank = _hashRank = rank;
 
             Tags = tags ?? new ImageTagCollection(this); // create a new tag collection if the given one is null
 
@@ -228,7 +235,7 @@ namespace WallpaperFlux.Core.Models
 
             InitCommands();
         }
-
+        
         protected bool Equals(ImageModel other)
         {
             return _path == other._path && _rank == other._rank;
@@ -247,9 +254,10 @@ namespace WallpaperFlux.Core.Models
         // for use with dictionary addition
         public override int GetHashCode()
         {
+            //? we need to use readonly variables here to ensure that the hashcode is not lost, hence the hashPath & hashRank
             unchecked
             {
-                return ((_path != null ? _path.GetHashCode() : 0) * 397) ^ _rank;
+                return ((_hashPath != null ? _hashPath.GetHashCode() : 0) * 397) ^ _hashRank;
             }
         }
 
@@ -308,9 +316,9 @@ namespace WallpaperFlux.Core.Models
 
 
         #region Tags
-        public void AddTag(TagModel tag) => Tags.Add(tag);
+        public void AddTag(TagModel tag, bool highlightTags) => Tags.Add(tag, highlightTags);
 
-        public void RemoveTag(TagModel tag) => Tags.Remove(tag);
+        public void RemoveTag(TagModel tag, bool highlightTags) => Tags.Remove(tag, highlightTags);
 
         public void RemoveAllTags() => Tags.RemoveAllTags();
 
@@ -318,8 +326,10 @@ namespace WallpaperFlux.Core.Models
         {
             foreach (TagModel tag in TagViewModel.Instance.TagBoardTags)
             {
-                AddTag(tag);
+                AddTag(tag, false);
             }
+
+            TaggingUtil.HighlightTags();
         }
 
         public string GetTaggedName() => Tags.GetTaggedName();
