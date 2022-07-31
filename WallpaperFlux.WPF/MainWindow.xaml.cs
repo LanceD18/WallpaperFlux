@@ -17,6 +17,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using MvvmCross.Platforms.Wpf.Views;
+using WallpaperFlux.Core.Tools;
 using WallpaperFlux.Core.Util;
 using WallpaperFlux.WPF.Util;
 using WallpaperFlux.WPF.Views;
@@ -63,6 +64,9 @@ namespace WallpaperFlux.WPF
             {
                 Wallpapers[i] = new WallpaperWindow(DisplayUtil.Displays.ElementAt(i), workerw);
                 Wallpapers[i].Show();
+
+                AudioManager.OnMute += Wallpapers[i].Mute;
+                AudioManager.OnUnmute += Wallpapers[i].Unmute;
             }
         }
 

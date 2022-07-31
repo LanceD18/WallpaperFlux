@@ -287,6 +287,8 @@ namespace WallpaperFlux.Core.ViewModels
         {
             Instance = this;
 
+            AudioManager.StartAudioManagerTimer();
+
             //x_navigationService = navigationService;
 
             //xFolderUtil.LinkThemeImageFolders(ImageFolders);

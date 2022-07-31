@@ -167,6 +167,7 @@
                             <RowDefinition Height="2"/>
                             <RowDefinition Height="auto"/>
                             <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
@@ -184,14 +185,24 @@
                                 <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
                             </TextBox.Style>
                         </TextBox>
+                        <TextBlock Grid.Row="3" Grid.Column="1"  Text="Default Video Volume: " VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="3" Grid.Column="2"  adonisExtensions:WatermarkExtension.Watermark="Volume..." Margin="5 5 3 0" adonisExtensions:LayerExtension.Layer="3"
+                                 Text="{Binding DefaultVideoVolume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                            <TextBox.Style>
+                                <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                            </TextBox.Style>
+                        </TextBox>
                     </Grid>
                 </StackPanel>
 
                 <StackPanel Orientation="Vertical" Margin="0 5 0 5">
                     <TextBlock Text="Mute Audio If: " FontWeight="Medium"/>
-                    <CheckBox Content="Audio is Playing" adonisExtensions:LayerExtension.Layer="3" Margin="5 3 5 3"/>
-                    <CheckBox Content="Application is Focused" adonisExtensions:LayerExtension.Layer="3" Margin="5 3 5 3"/>
-                    <CheckBox Content="Application is Maximized" adonisExtensions:LayerExtension.Layer="3" Margin="5 3 5 3"/>
+                    <CheckBox Content="Audio is Playing" adonisExtensions:LayerExtension.Layer="3" Margin="5 3 5 3"
+                              IsChecked="{Binding MuteIfAudioPlaying, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <CheckBox Content="Application is Focused" adonisExtensions:LayerExtension.Layer="3" Margin="5 3 5 3"
+                              IsChecked="{Binding MuteIfApplicationFocused, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <CheckBox Content="Application is Maximized" adonisExtensions:LayerExtension.Layer="3" Margin="5 3 5 3"
+                              IsChecked="{Binding MuteIfApplicationMaximized, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
                 <StackPanel Orientation="Vertical" Margin="0 5 0 5">
                     <TextBlock Text="Pause Video If (Per Monitor): " FontWeight="Medium"/>

@@ -33,6 +33,9 @@ namespace WallpaperFlux.WPF
     public partial class WallpaperWindow : MvxWindow
     {
         //? The index is currently gathered by the array utilized in ExternalWallpaperHandler and MainWindow
+        public ImageModel ActiveImage;
+
+        private bool muted;
 
         public WallpaperWindow(Screen display, IntPtr workerw)
         {
@@ -59,6 +62,8 @@ namespace WallpaperFlux.WPF
         //? The index is checked in ExternalWallpaperHandler now as it has access to the array, which allows wallpapers to be changed independently of one another
         public void OnWallpaperChange(ImageModel image)
         {
+            ActiveImage = image;
+
             FileInfo wallpaperInfo;
             string wallpaperPath = image.Path;
 
@@ -78,36 +83,28 @@ namespace WallpaperFlux.WPF
 
             if (WallpaperUtil.IsSupportedVideoType(wallpaperInfo.FullName)) // ---- video ----
             {
-                WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = image.Volume / 100;
+                UpdateVolume();
 
                 //? FFME is unstable and likely to crash on larger videos, but Windows Media Player can't load webms | Also, it seems to load Gifs faster
                 //? HOWEVER, the regular MediaElement (Windows Media Player) will randomly fail to load gifs (seems to be if loading more than one), loading a blank screen instead
                 if (wallpaperInfo.Extension == ".webm") 
                 {
-                    WallpaperMediaElement.Close();
-                    WallpaperMediaElement.Source = null; //! .Close() won't actually stop the video for MediaElements, see if you should just remove it
+                    DisableMediaElement();
+
                     WallpaperMediaElementFFME.Open(new Uri(wallpaperInfo.FullName));
-
-                    WallpaperMediaElement.IsEnabled = false;
-                    WallpaperMediaElement.Visibility = Visibility.Hidden;
-
                     WallpaperMediaElementFFME.IsEnabled = true;
                     WallpaperMediaElementFFME.Visibility = Visibility.Visible;
                 }
                 else
                 {
-                    WallpaperMediaElementFFME.Close();
+                    DisableMediaElementFFME();
+                    
                     WallpaperMediaElement.Source = new Uri(wallpaperInfo.FullName);
-
-                    WallpaperMediaElementFFME.IsEnabled = false;
-                    WallpaperMediaElementFFME.Visibility = Visibility.Hidden;
-
                     WallpaperMediaElement.IsEnabled = true;
                     WallpaperMediaElement.Visibility = Visibility.Visible;
                 }
 
-                WallpaperImage.IsEnabled = false;
-                WallpaperImage.Visibility = Visibility.Hidden;
+                DisableImage();
             }
             else // ---- static or gif ----
             {
@@ -130,13 +127,9 @@ namespace WallpaperFlux.WPF
                 {
                     ImageBehavior.SetAnimatedSource(WallpaperImage, bitmap);
                 }
-
-                //xWallpaperMediaElement.Close(); // ensures that the audio stops playing
-                //xWallpaperMediaElement.PlayerHost.Stop();
-                WallpaperMediaElement.Close();
-                WallpaperMediaElementFFME.Close();
-                WallpaperMediaElement.IsEnabled = WallpaperMediaElementFFME.IsEnabled = false;
-                WallpaperMediaElement.Visibility = WallpaperMediaElementFFME.Visibility = Visibility.Hidden;
+                
+                DisableMediaElement();
+                DisableMediaElementFFME();
 
                 WallpaperImage.IsEnabled = true;
                 WallpaperImage.Visibility = Visibility.Visible;
@@ -145,6 +138,27 @@ namespace WallpaperFlux.WPF
             WallpaperImage.EndInit();
             WallpaperMediaElement.EndInit();
             WallpaperMediaElementFFME.EndInit();
+        }
+        
+        private void DisableImage()
+        {
+            WallpaperImage.IsEnabled = false;
+            WallpaperImage.Visibility = Visibility.Hidden;
+        }
+
+        private void DisableMediaElement()
+        {
+            WallpaperMediaElement.Close();
+            WallpaperMediaElement.Source = null; //! .Close() won't actually stop the video for MediaElements, see if you should just remove it
+            WallpaperMediaElement.IsEnabled = false;
+            WallpaperMediaElement.Visibility = Visibility.Hidden;
+        }
+
+        private void DisableMediaElementFFME()
+        {
+            WallpaperMediaElementFFME.Close();
+            WallpaperMediaElementFFME.IsEnabled = false;
+            WallpaperMediaElementFFME.Visibility = Visibility.Hidden;
         }
 
         //? The index is checked in ExternalWallpaperHandler now as it has access to the array, which allows wallpapers to be changed independently of one another
@@ -193,6 +207,36 @@ namespace WallpaperFlux.WPF
                 ffmeElement.Position = TimeSpan.Zero;
                 await ffmeElement.Play();
             }
+        }
+
+        public void Mute()
+        {
+            muted = true;
+            UpdateVolume();
+        }
+
+        public void Unmute()
+        {
+            muted = false;
+            UpdateVolume();
+        }
+
+        public void UpdateVolume()
+        {
+            Dispatcher.Invoke(() =>
+            {
+                if (!muted)
+                {
+                    if (ActiveImage != null) //? it's okay to set the volume to 0 ahead of time, but sometimes the ActiveImage may not be initialized
+                    {
+                        WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = ActiveImage.Volume / 100;
+                    }
+                }
+                else
+                {
+                    WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = 0;
+                }
+            });
         }
     }
 }

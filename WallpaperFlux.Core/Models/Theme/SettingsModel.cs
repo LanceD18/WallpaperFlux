@@ -11,11 +11,11 @@ namespace WallpaperFlux.Core.Models.Theme
     public class ThemeSettings : MvxNotifyPropertyChanged
     {
         // Randomization Modifications
-        public bool LargerImagesOnLargerDisplays;
-        public bool HigherRankedImagesOnLargerDisplays;
+        public bool LargerImagesOnLargerDisplays { get; set; }
+        public bool HigherRankedImagesOnLargerDisplays { get; set; }
 
         // this just means that you can find these images in the image selector or other tools, they won't be a possible choice for a wallpaper however
-        public bool EnableDetectionOfInactiveImages;
+        public bool EnableDetectionOfInactiveImages { get; set; }
 
         // Ranking Settings
         private int _maxRank;
@@ -25,15 +25,15 @@ namespace WallpaperFlux.Core.Models.Theme
             set => SetProperty(ref _maxRank, value);
         }
 
-        public bool WeightedRanks;
-        public bool WeightedFrequency;
-        public bool AllowTagBasedRenamingForMovedImages;
+        public bool WeightedRanks { get; set; }
+        public bool WeightedFrequency { get; set; }
+        public bool AllowTagBasedRenamingForMovedImages { get; set; }
         
-        public FrequencyCalculator FrequencyCalc;
+        public FrequencyCalculator FrequencyCalc { get; set; }
         public FrequencyModel FrequencyModel { get; set; }
 
         // Video Settings
-        public VideoSettings VideoSettings;
+        public VideoSettings VideoSettings { get; set; }
 
         // Monitor Options
         //! DO NOT USE YET ; This still needs to be set up, will re-purpose MOST of ThemeSettings so that Monitors can have their own options
@@ -42,12 +42,13 @@ namespace WallpaperFlux.Core.Models.Theme
 
     public class VideoSettings
     {
-        public int MinimumVideoLoops;
-        public int MaximumVideoTime;
+        public int MinimumVideoLoops { get; set; }
+        public int MaximumVideoTime { get; set; }
 
-        public bool MuteIfAudioPlaying;
-        public bool MuteIfApplicationFocused;
-        public bool MuteIfApplicationMaximized;
+        public int DefaultVideoVolume { get; set; } = 50;
+        public bool MuteIfAudioPlaying { get; set; }
+        public bool MuteIfApplicationFocused { get; set; }
+        public bool MuteIfApplicationMaximized { get; set; }
     }
 
     // TODO Set me up later, this will be used to diverge displays into independent sets of options
@@ -81,6 +82,7 @@ namespace WallpaperFlux.Core.Models.Theme
             ThemeSettings.FrequencyCalc = new FrequencyCalculator(); //? this must come before FrequencyModel
             ThemeSettings.FrequencyModel = new FrequencyModel(ThemeSettings.FrequencyCalc);
             ThemeSettings.MaxRank = maxRank;
+            ThemeSettings.VideoSettings = new VideoSettings();
 
             UpdateMaxRankCommand = new MvxCommand(UpdateMaxRank);
         }

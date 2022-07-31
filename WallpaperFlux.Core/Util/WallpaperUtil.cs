@@ -156,6 +156,7 @@ namespace WallpaperFlux.Core.Util
             else
             {
                 wallpaperPath = presetWallpaperPath;
+                DataUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index] = presetWallpaperPath; // need to update the active wallpaper to reflect this preset change
             }
 
             // Check for errors and update the notify icon

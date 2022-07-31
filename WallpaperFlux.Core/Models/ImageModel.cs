@@ -235,7 +235,24 @@ namespace WallpaperFlux.Core.Models
 
             InitCommands();
         }
-        
+
+        private void InitCommands()
+        {
+            ViewFileCommand = new MvxCommand(ViewFile);
+            OpenFileCommand = new MvxCommand(OpenFile);
+            SetWallpaperCommand = new MvxCommand(SetWallpaper);
+
+            RenameImageCommand = new MvxCommand(() => ImageRenamer.AutoRenameImage(this));
+            MoveImageCommand = new MvxCommand(() => ImageRenamer.AutoMoveImage(this));
+            DeleteImageCommand = new MvxCommand(() => ImageUtil.DeleteImage(this));
+
+            RankImageCommand = new MvxCommand(() => ImageUtil.PromptRankImage(this));
+            DecreaseRankCommand = new MvxCommand(() => Rank--);
+            IncreaseRankCommand = new MvxCommand(() => Rank++);
+
+            PasteTagBoardCommand = new MvxCommand(PasteTagBoard);
+        }
+
         protected bool Equals(ImageModel other)
         {
             return _path == other._path && _rank == other._rank;
@@ -259,23 +276,6 @@ namespace WallpaperFlux.Core.Models
             {
                 return ((_hashPath != null ? _hashPath.GetHashCode() : 0) * 397) ^ _hashRank;
             }
-        }
-
-        private void InitCommands()
-        {
-            ViewFileCommand = new MvxCommand(ViewFile);
-            OpenFileCommand = new MvxCommand(OpenFile);
-            SetWallpaperCommand = new MvxCommand(SetWallpaper);
-
-            RenameImageCommand = new MvxCommand(() => ImageRenamer.AutoRenameImage(this));
-            MoveImageCommand = new MvxCommand(() => ImageRenamer.AutoMoveImage(this));
-            DeleteImageCommand = new MvxCommand(() => ImageUtil.DeleteImage(this));
-
-            RankImageCommand = new MvxCommand(() => ImageUtil.PromptRankImage(this));
-            DecreaseRankCommand = new MvxCommand(() => Rank--);
-            IncreaseRankCommand = new MvxCommand(() => Rank++);
-
-            PasteTagBoardCommand = new MvxCommand(PasteTagBoard);
         }
 
         public Size GetSize()

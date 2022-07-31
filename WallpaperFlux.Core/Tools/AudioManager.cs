@@ -1,9 +1,10 @@
-﻿/*
+﻿
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Mime;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -11,6 +12,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using CSCore.CoreAudioAPI;
 using LanceTools.WindowsUtil;
+using MvvmCross;
+using WallpaperFlux.Core.IoC;
+using WallpaperFlux.Core.Util;
 
 namespace WallpaperFlux.Core.Tools
 {
@@ -18,34 +22,63 @@ namespace WallpaperFlux.Core.Tools
     {
         public static bool IsWallpapersMuted { get; private set; }
 
+        public delegate void MuteEvent();
+
+        public static event MuteEvent OnMute;
+        public static event MuteEvent OnUnmute;
+
         //? remember that the max volume is 1
         private static readonly double MIN_VOLUME = 0; //? not using a float to minimize errors on low volume
 
-        //private static Guid guid = Guid.NewGuid();
+        private static IExternalTimer _audioTimer;
+
+        private static Thread _audioThread = new Thread(() => {});
+        // used to check if the thread is alive so that we don't have multiple checks running at the same time
+
+        public static void StartAudioManagerTimer()
+        {
+            _audioTimer = Mvx.IoCProvider.Resolve<IExternalTimer>();
+            _audioTimer.Interval = TimeSpan.FromSeconds(1);
+            _audioTimer.Tick += AudioManagerOnTick;
+            _audioTimer.Start();
+        }
+
+        private static void AudioManagerOnTick(object sender, EventArgs e)
+        {
+            if (!_audioThread.IsAlive) // we don't want a lagged thread to overwrite and/or conflict with an upcoming thread, nor do we want so many running at the same time
+            {
+                CheckForMuteConditions();
+            }
+        }
 
         public static async void CheckForMuteConditions()
         {
-            await Task.Run(() =>
+            //xawait Task.Run(() =>
+            _audioThread = new Thread(() =>
             {
+                Debug.WriteLine("Checking for mute conditions");
                 int potentialAudioCount = 0;
-                foreach (string wallpaper in WallpaperPathSetter.ActiveWallpapers)
+                foreach (string wallpaper in DataUtil.Theme.WallpaperRandomizer.ActiveWallpapers)
                 {
-                    if (WallpaperManagerTools.IsSupportedVideoType(wallpaper))
+                    if (WallpaperUtil.IsSupportedVideoType(wallpaper))
                     {
                         potentialAudioCount++;
                     }
                 }
-                //?if (potentialAudioCount == 0) return; // there's no need to check for muting if no wallpapers that can be muted exist
+
+                Debug.WriteLine("Potential Audio Count: " + potentialAudioCount);
+
+                if (potentialAudioCount == 0) return; // there's no need to check for muting if no wallpapers that can be muted exist
 
                 bool muted = false;
 
-                void ProcessMute()
+                void Mute()
                 {
                     MuteWallpapers();
                     muted = true;
                 }
 
-                if (OptionsData.ThemeOptions.VideoOptions.MuteIfApplicationFocused && !muted)
+                if (DataUtil.Theme.Settings.ThemeSettings.VideoSettings.MuteIfApplicationFocused && !muted)
                 {
                     Process activeWindow = Win32.GetActiveWindowProcess();
                     string windowName = activeWindow.ProcessName;
@@ -54,12 +87,12 @@ namespace WallpaperFlux.Core.Tools
                         WindowPlacementStyle windowStyle = WindowInfo.GetWindowStyle(activeWindow);
                         if (windowStyle == WindowPlacementStyle.Normal || windowStyle == WindowPlacementStyle.Maximized)
                         {
-                            ProcessMute();
+                            Mute();
                         }
                     }
                 }
 
-                if (OptionsData.ThemeOptions.VideoOptions.MuteIfApplicationMaximized && !muted) // every window needs to be checked for maximization
+                if (DataUtil.Theme.Settings.ThemeSettings.VideoSettings.MuteIfApplicationMaximized && !muted) // every window needs to be checked for maximization
                 {
                     //xStopwatch test = new Stopwatch();
                     //xtest.Start();
@@ -69,7 +102,7 @@ namespace WallpaperFlux.Core.Tools
 
                         if (windowStyle == WindowPlacementStyle.Maximized)
                         {
-                            ProcessMute();
+                            Mute();
                             break;
                         }
                     }
@@ -77,44 +110,46 @@ namespace WallpaperFlux.Core.Tools
                     //xDebug.WriteLine("Ms taken to check for maximized app: " + test.ElapsedMilliseconds);
                 }
 
-                if ((OptionsData.ThemeOptions.VideoOptions.MuteIfAudioPlaying || WallpaperData.WallpaperManagerForm.IsViewingInspector) && !muted)
+                if (DataUtil.Theme.Settings.ThemeSettings.VideoSettings.MuteIfAudioPlaying && !muted)
                 {
                     if (CheckForExternalAudio()) //? CheckForExternalAudio cannot be done on the UI thread | async doesn't fix this
                     {
-                        ProcessMute();
+                        Mute();
                     }
                 }
 
                 if (IsWallpapersMuted && !muted) UnmuteWallpapers();
-            }).ConfigureAwait(false);
+            }); //x.ConfigureAwait(false);
+
+            _audioThread.Start();
 
             //x while (thread.IsAlive) { ( do nothing | Thread.Join() will just freeze the application ) } << this is only needed if you're returning something
         }
 
         private static bool CheckForExternalAudio()
         {
-            WallpaperManagerForm wallpaperManagerForm = WallpaperData.WallpaperManagerForm;
-
-            using (var sessionManager = GetDefaultAudioSessionManager2(DataFlow.Render))
+            using (AudioSessionManager2 sessionManager = GetDefaultAudioSessionManager2(DataFlow.Render))
             {
-                using (var sessionEnumerator = sessionManager.GetSessionEnumerator())
+                using (AudioSessionEnumerator sessionEnumerator = sessionManager.GetSessionEnumerator())
                 {
+                    /*x
                     if (wallpaperManagerForm.IsViewingInspector)
                     {
                         // if a video is playing in the inspector, mute the background
                         // Trying to figure out the source would be difficult as all audio links to the app
-                        if (WallpaperManagerTools.IsSupportedVideoType(wallpaperManagerForm.InspectedImage))
+                        if (WallpaperUtil.IsSupportedVideoType(wallpaperManagerForm.InspectedImage))
                         {
                             return true;
                         }
                     }
+                    */
 
                     List<string> potentialNames = new List<string>();
-                    foreach (string wallpaper in WallpaperPathSetter.ActiveWallpapers)
+                    foreach (string wallpaper in DataUtil.Theme.WallpaperRandomizer.ActiveWallpapers)
                     {
                         if (File.Exists(wallpaper))
                         {
-                            if (WallpaperManagerTools.IsSupportedVideoType(wallpaper)) // only videos should be checked
+                            if (WallpaperUtil.IsSupportedVideoType(wallpaper)) // only videos should be checked
                             {
                                 //xDebug.WriteLine("Active: " + new FileInfo(wallpaper).Name);
                                 potentialNames.Add(new FileInfo(wallpaper).Name);
@@ -125,23 +160,24 @@ namespace WallpaperFlux.Core.Tools
 
                     //? The name of the video playing on the WallpaperForm will definitely be given, so check if
                     //? anything BUT those are playing and if so mute the wallpaper
-                    foreach (var session in sessionEnumerator)
+                    foreach (AudioSessionControl session in sessionEnumerator)
                     {
                         // format of session.DisplayName for videos: videoName.extension - extension | We only want videoName.extension, cut off the first space
                         string sessionName = session.DisplayName;
                         string sessionVideoName = !sessionName.Contains(' ') ? sessionName : sessionName.Substring(0, sessionName.IndexOf(' '));
 
-                        if (session.IconPath.Contains(Path.GetDirectoryName(MediaTypeNames.Application.ExecutablePath)))
+                        //xif (session.IconPath.Contains(Path.GetDirectoryName(Application.ExecutablePath)))
+                        if (session.IconPath.Contains(AppDomain.CurrentDomain.BaseDirectory)) // if the detected audio if the application itself, skip
                         {
                             Debug.WriteLine("Encountered Audio of Application");
                             continue;
                         }
 
-                        if (OptionsData.ThemeOptions.VideoOptions.MuteIfAudioPlaying) // this is checked again since in some cases this code was only called due to the inspector
+                        if (DataUtil.Theme.Settings.ThemeSettings.VideoSettings.MuteIfAudioPlaying) // this is checked again since in some cases this code was only called due to the inspector
                         {
                             if (!potentialNames.Contains(sessionVideoName)) // checking an audio source that doesn't match up with to the active wallpapers
                             {
-                                using (var audioMeterInformation = session.QueryInterface<AudioMeterInformation>())
+                                using (AudioMeterInformation audioMeterInformation = session.QueryInterface<AudioMeterInformation>())
                                 {
                                     if (audioMeterInformation.GetPeakValue() > MIN_VOLUME) // if the volume of this application is greater than MIN_VOLUME, mute all wallpapers
                                     {
@@ -175,17 +211,17 @@ namespace WallpaperFlux.Core.Tools
         private static void MuteWallpapers()
         {
             Debug.WriteLine("Mute");
-            foreach (var wallpaper in WallpaperData.WallpaperManagerForm.GetWallpapers()) wallpaper.Mute();
+            OnMute?.Invoke();
+            //xforeach (var wallpaper in WallpaperData.WallpaperManagerForm.GetWallpapers()) wallpaper.Mute();
             IsWallpapersMuted = true;
         }
 
         private static void UnmuteWallpapers()
         {
             Debug.WriteLine("Unmute");
-            foreach (var wallpaper in WallpaperData.WallpaperManagerForm.GetWallpapers()) wallpaper.Unmute();
+            OnUnmute?.Invoke();
+            //xforeach (var wallpaper in WallpaperData.WallpaperManagerForm.GetWallpapers()) wallpaper.Unmute();
             IsWallpapersMuted = false;
         }
     }
-
 }
-*/
