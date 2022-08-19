@@ -45,7 +45,6 @@ namespace WallpaperFlux.Core.Controllers
             }
         }
 
-
         /// <summary>
         /// Modifies rank percentiles to represent the actual percentage chance of the rank appearing
         /// (The percentages of each rank will be modified to exclude images with a rank of 0)
@@ -95,6 +94,7 @@ namespace WallpaperFlux.Core.Controllers
         // in prevents reassignment https://stackoverflow.com/questions/2339074/can-parameters-be-constant/48068110#48068110
         private Dictionary<int, double> GetWeightedRankPercentiles(ImageType imageType)
         {
+            Debug.WriteLine("Getting Weighted Rank Percentiles");
             if (imageType == ImageType.None) return null;
 
             Dictionary<int, double> modifiedRankPercentiles = GetModifiedRankPercentiles(imageType);
@@ -137,7 +137,7 @@ namespace WallpaperFlux.Core.Controllers
         // TODO Async this at some point, but remember that this has to be done before the wallpaper is set (So the await key must be in the SetWallpaper method)
         public void UpdateRankPercentiles(ImageType imageType)
         {
-            Debug.WriteLine("Updating Weight Percentiles");
+            Debug.WriteLine("Updating Rank Percentiles");
             PotentialWeightedRankUpdate = false; //? Prevents this from being called often due to the potential performance costs
             PotentialRegularRankUpdate = false; //? Prevents this from being called often due to the potential performance costs
 
@@ -146,7 +146,7 @@ namespace WallpaperFlux.Core.Controllers
             ModifiedRankPercentiles = DataUtil.Theme.Settings.ThemeSettings.WeightedRanks ? GetWeightedRankPercentiles(imageType) : GetModifiedRankPercentiles(imageType);
 
             // Update Image Type Weights if the Weighted Frequency option is checked
-            if (DataUtil.Theme.Settings.ThemeSettings.WeightedFrequency)
+            if (DataUtil.Theme.Settings.ThemeSettings.FrequencyModel.WeightedFrequency)
             {
                 DataUtil.Theme.RankController.UpdateImageTypeWeights();
             }

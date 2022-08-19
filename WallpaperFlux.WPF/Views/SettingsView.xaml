@@ -45,7 +45,7 @@
                     </TextBlock>
                     <Button Content="Set Max Rank" Margin="3" mvx:Bi.nd="Command Settings.UpdateMaxRankCommand"/>
                 </StackPanel>
-                <CheckBox Content="Weighted Ranks" IsChecked="{Binding WeightedRanks}" adonisExtensions:LayerExtension.Layer="3"/>
+                <CheckBox Content="Weighted Ranks" IsChecked="{Binding WeightedRanks, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" adonisExtensions:LayerExtension.Layer="3"/>
             </StackPanel>
         </GroupBox>
 
@@ -134,7 +134,8 @@
                 </TextBox>
 
                 <!-- Frequency Settings -->
-                <CheckBox Content="Weighted Frequency" Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="4" adonisExtensions:LayerExtension.Layer="3"/>
+                <CheckBox Content="Weighted Frequency" Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="4" adonisExtensions:LayerExtension.Layer="3"
+                          IsChecked="{Binding WeightedFrequency, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
             </Grid>
         </GroupBox>
 

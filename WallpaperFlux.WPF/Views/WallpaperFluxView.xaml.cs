@@ -21,6 +21,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using HanumanInstitute.MediaPlayer.Wpf.Mpv;
+using LanceTools.IO;
 using MediaToolkit.Model;
 using MediaToolkit.Options;
 using MvvmCross.Base;
@@ -91,13 +92,22 @@ namespace WallpaperFlux.WPF.Views
             {
                 Task.Run(() =>
                 {
-                    BitmapImage bitmap = new BitmapImage();
-                    string path = imageModel.Path;
-                    FileStream stream = File.OpenRead(path);
+                    if (!FileUtil.Exists(imageModel.Path)) return;
 
-                    bool isGif = new FileInfo(path).Extension == ".gif";
+                    try
+                    {
+                        BitmapImage bitmap = new BitmapImage();
+                        string path = imageModel.Path;
+                        FileStream stream = File.OpenRead(path);
 
-                    LoadBitmapImage(bitmap, stream, image, isGif);
+                        bool isGif = new FileInfo(path).Extension == ".gif";
+
+                        LoadBitmapImage(bitmap, stream, image, isGif);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.WriteLine("ERROR: Image Loading Failed: " + e);
+                    }
                 });
             }
         }
@@ -112,7 +122,7 @@ namespace WallpaperFlux.WPF.Views
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("ERROR: Element Loading Failed: " + e);
+                    Debug.WriteLine("ERROR: Element Loading Failed: " + e);
                 }
             }
         }
@@ -127,7 +137,7 @@ namespace WallpaperFlux.WPF.Views
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("ERROR: Element Loading Failed: " + e);
+                    Debug.WriteLine("ERROR: Element Loading Failed: " + e);
                 }
             }
         }

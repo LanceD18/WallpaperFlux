@@ -527,8 +527,12 @@ namespace WallpaperFlux.Core.Models.Tagging
         {
             if (TaggingUtil.GetTagAdderToggle()) // no need to grab the images if we aren't adding/removing tags from one
             {
-                ToggleTagWithImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems());
-                IsHighlightedInSomeImages = false; // after calling this there's no way for the tag to still be highlighted in only some images
+                if (WallpaperFluxViewModel.Instance.SelectedImageSelectorTab != null)
+                {
+                    ToggleTagWithImages(WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.GetSelectedItems());
+                    IsHighlightedInSomeImages = false; // after calling this there's no way for the tag to still be highlighted in only some images
+                }
+
                 return; // we should only be doing one of these at a time
             }
 

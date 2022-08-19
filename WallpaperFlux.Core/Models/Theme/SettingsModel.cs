@@ -26,7 +26,6 @@ namespace WallpaperFlux.Core.Models.Theme
         }
 
         public bool WeightedRanks { get; set; }
-        public bool WeightedFrequency { get; set; }
         public bool AllowTagBasedRenamingForMovedImages { get; set; }
         
         public FrequencyCalculator FrequencyCalc { get; set; }

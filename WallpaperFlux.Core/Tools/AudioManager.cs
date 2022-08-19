@@ -56,7 +56,7 @@ namespace WallpaperFlux.Core.Tools
             //xawait Task.Run(() =>
             _audioThread = new Thread(() =>
             {
-                Debug.WriteLine("Checking for mute conditions");
+                //x Debug.WriteLine("Checking for mute conditions");
                 int potentialAudioCount = 0;
                 foreach (string wallpaper in DataUtil.Theme.WallpaperRandomizer.ActiveWallpapers)
                 {
@@ -66,7 +66,7 @@ namespace WallpaperFlux.Core.Tools
                     }
                 }
 
-                Debug.WriteLine("Potential Audio Count: " + potentialAudioCount);
+                //x Debug.WriteLine("Potential Audio Count: " + potentialAudioCount);
 
                 if (potentialAudioCount == 0) return; // there's no need to check for muting if no wallpapers that can be muted exist
 

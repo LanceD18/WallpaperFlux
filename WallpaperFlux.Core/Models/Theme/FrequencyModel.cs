@@ -6,6 +6,7 @@ using System.Windows.Input;
 using MvvmCross.Commands;
 using MvvmCross.ViewModels;
 using WallpaperFlux.Core.Tools;
+using WallpaperFlux.Core.Util;
 
 namespace WallpaperFlux.Core.Models.Theme
 {
@@ -16,10 +17,16 @@ namespace WallpaperFlux.Core.Models.Theme
         // TODO Find a cleaner way to do this, maybe just give every TextBox an event to trigger on-change
         // TODO It would be better, however, if the 'event' was still connected to the variable somehow
         #region Value References
+
+        //! Remember!
+        //? The parent calculator holds the actual values
+        //? This model is just used to transfer those values to the UI
+        //! Remember!
+
         private double _relativeFrequencyStatic;
         public double RelativeFrequencyStatic
         {
-            get { return _relativeFrequencyStatic; }
+            get => _relativeFrequencyStatic;
             set
             {
                 SetProperty(ref _relativeFrequencyStatic, value);
@@ -30,7 +37,7 @@ namespace WallpaperFlux.Core.Models.Theme
         private double _relativeFrequencyGIF;
         public double RelativeFrequencyGIF
         {
-            get { return _relativeFrequencyGIF; }
+            get => _relativeFrequencyGIF;
             set
             {
                 SetProperty(ref _relativeFrequencyGIF, value);
@@ -41,7 +48,7 @@ namespace WallpaperFlux.Core.Models.Theme
         private double _relativeFrequencyVideo;
         public double RelativeFrequencyVideo
         {
-            get { return _relativeFrequencyVideo; }
+            get => _relativeFrequencyVideo;
             set
             {
                 SetProperty(ref _relativeFrequencyVideo, value);
@@ -52,7 +59,7 @@ namespace WallpaperFlux.Core.Models.Theme
         private double _exactFrequencyStatic;
         public double ExactFrequencyStatic
         {
-            get { return _exactFrequencyStatic; }
+            get => _exactFrequencyStatic;
             set
             {
                 SetProperty(ref _exactFrequencyStatic, value);
@@ -63,7 +70,7 @@ namespace WallpaperFlux.Core.Models.Theme
         private double _exactFrequencyGIF;
         public double ExactFrequencyGIF
         {
-            get { return _exactFrequencyGIF; }
+            get => _exactFrequencyGIF;
             set
             {
                 SetProperty(ref _exactFrequencyGIF, value);
@@ -74,7 +81,7 @@ namespace WallpaperFlux.Core.Models.Theme
         private double _exactFrequencyVideo;
         public double ExactFrequencyVideo
         {
-            get { return _exactFrequencyVideo; }
+            get => _exactFrequencyVideo;
             set
             {
                 SetProperty(ref _exactFrequencyVideo, value);
@@ -83,9 +90,17 @@ namespace WallpaperFlux.Core.Models.Theme
         }
         #endregion
 
-        public bool CanStatic { get; set; }
-        public bool CanGIF { get; set; }
-        public bool CanVideo { get; set; }
+        private bool _weightedFrequency;
+        public bool WeightedFrequency
+        {
+            get => _weightedFrequency;
+            set
+            {
+                SetProperty(ref _weightedFrequency, value); // must be called first before the below updates are handled
+
+                DataUtil.Theme.RankController.UpdateImageTypeWeights();
+            }
+        }
 
         private bool _frequenciesUpdated = true; // assume that frequencies are updated by default
 
@@ -105,7 +120,7 @@ namespace WallpaperFlux.Core.Models.Theme
 
         public void UpdateFrequency(ImageType imageType, FrequencyType frequencyType, double value)
         {
-            // this boolean accounts for the fact that this method will be called again when all of the below statements re-run the set method
+            // this boolean accounts for the fact that this method will be called again when all of the below statements re-run the set method (when updating the UI)
             if (_frequenciesUpdated)
             {
                 _parentCalculator.UpdateFrequency(imageType, frequencyType, value / 100); // the visual value is 100 times larger than the actual value which goes from 0-1
@@ -116,26 +131,25 @@ namespace WallpaperFlux.Core.Models.Theme
             }
         }
 
+        //? The parent calculator holds the actual values
+        //? This model is just used to transfer those values to the UI
         public void UpdateModelFrequency()
         {
-            // this boolean accounts for the fact that this method will be called again when all of the below statements re-run the set method
-            if (_frequenciesUpdated)
-            {
-                _frequenciesUpdated = false;
+            //! Updating the private variable instead would not update the UI without calling RaisePropertyChanged()
+            if (!_frequenciesUpdated) return;  //? this boolean accounts for the fact that this method will be called again when all of the below statements re-run the set method
+            _frequenciesUpdated = false;
 
-                RelativeFrequencyStatic = _parentCalculator.GetRelativeFrequency(ImageType.Static) * 100;
-                RelativeFrequencyGIF = _parentCalculator.GetRelativeFrequency(ImageType.GIF) * 100;
-                RelativeFrequencyVideo = _parentCalculator.GetRelativeFrequency(ImageType.Video) * 100;
-                ExactFrequencyStatic = _parentCalculator.GetExactFrequency(ImageType.Static) * 100;
-                ExactFrequencyGIF = _parentCalculator.GetExactFrequency(ImageType.GIF) * 100;
-                ExactFrequencyVideo = _parentCalculator.GetExactFrequency(ImageType.Video) * 100;
-                Debug.WriteLine(RelativeFrequencyGIF);
+            RelativeFrequencyStatic = _parentCalculator.GetRelativeFrequency(ImageType.Static) * 100;
+            RelativeFrequencyGIF = _parentCalculator.GetRelativeFrequency(ImageType.GIF) * 100;
+            RelativeFrequencyVideo = _parentCalculator.GetRelativeFrequency(ImageType.Video) * 100;
+            ExactFrequencyStatic = _parentCalculator.GetExactFrequency(ImageType.Static) * 100;
+            ExactFrequencyGIF = _parentCalculator.GetExactFrequency(ImageType.GIF) * 100;
+            ExactFrequencyVideo = _parentCalculator.GetExactFrequency(ImageType.Video) * 100;
 
-                _frequenciesUpdated = true;
-            }
-
-            Debug.WriteLine("Raising all properties changed"); //? Not sure how severe the impact of this is so keep the debug statement for now
+            Debug.WriteLine("Raising all properties changed for the FrequencyModel"); //? Not sure how severe the impact of this is so keep the debug statement for now
             RaiseAllPropertiesChanged();
+
+            _frequenciesUpdated = true;
         }
     }
 }

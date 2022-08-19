@@ -358,7 +358,14 @@ namespace WallpaperFlux.Core.Controllers
             foreach (ImageType imageType in imageTypeRankSum.Keys)
             {
                 ImageTypeWeights[imageType] = (double)imageTypeRankSum[imageType] / totalSum;
+                Debug.WriteLine("New Weight [" + imageType + "]: " + ImageTypeWeights[imageType]);
             }
+
+            //? the image type doesn't matter here, only calling this so that the exact frequencies can be updated
+            //? what DOES matter is that we need to choose to ""update"" the relative frequency so that the exact frequencies can be recalculated
+            //? this is because there's no need to change the relative frequencies here, they are always relative, only the exact frequencies should be touched
+            DataUtil.Theme.Settings.ThemeSettings.FrequencyCalc.UpdateFrequency(ImageType.Static, FrequencyType.Relative,
+                DataUtil.Theme.Settings.ThemeSettings.FrequencyModel.RelativeFrequencyStatic);
         }
 
         public double GetImageOfTypeWeight(ImageType imageType) => ImageTypeWeights[imageType];
