@@ -374,7 +374,13 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         public void UnlinkAllImages(bool highlightTags) // for removing/resetting a tag
         {
+            List<ImageModel> imagesToRemove = new List<ImageModel>();
             foreach(ImageModel image in LinkedImages) //? We have to redirect the collection type to prevent the collection modified error
+            {
+                imagesToRemove.Add(image);
+            }
+
+            foreach (ImageModel image in imagesToRemove) //! this will refer back to LinkedImages, which can cause a modified collection error
             {
                 image.RemoveTag(this, highlightTags); // will call UnlinkImage()
             }
