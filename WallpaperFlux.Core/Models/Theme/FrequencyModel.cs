@@ -136,20 +136,20 @@ namespace WallpaperFlux.Core.Models.Theme
         public void UpdateModelFrequency()
         {
             //! Updating the private variable instead would not update the UI without calling RaisePropertyChanged()
-            if (!_frequenciesUpdated) return;  //? this boolean accounts for the fact that this method will be called again when all of the below statements re-run the set method
-            _frequenciesUpdated = false;
+            //xif (!_frequenciesUpdated) return;  //? this boolean accounts for the fact that this method will be called again when all of the below statements re-run the set method
+            //x_frequenciesUpdated = false;
 
-            RelativeFrequencyStatic = _parentCalculator.GetRelativeFrequency(ImageType.Static) * 100;
-            RelativeFrequencyGIF = _parentCalculator.GetRelativeFrequency(ImageType.GIF) * 100;
-            RelativeFrequencyVideo = _parentCalculator.GetRelativeFrequency(ImageType.Video) * 100;
-            ExactFrequencyStatic = _parentCalculator.GetExactFrequency(ImageType.Static) * 100;
-            ExactFrequencyGIF = _parentCalculator.GetExactFrequency(ImageType.GIF) * 100;
-            ExactFrequencyVideo = _parentCalculator.GetExactFrequency(ImageType.Video) * 100;
+            _relativeFrequencyStatic = _parentCalculator.GetRelativeFrequency(ImageType.Static) * 100;
+            _relativeFrequencyGIF = _parentCalculator.GetRelativeFrequency(ImageType.GIF) * 100;
+            _relativeFrequencyVideo = _parentCalculator.GetRelativeFrequency(ImageType.Video) * 100;
+            _exactFrequencyStatic = _parentCalculator.GetExactFrequency(ImageType.Static) * 100;
+            _exactFrequencyGIF = _parentCalculator.GetExactFrequency(ImageType.GIF) * 100;
+            _exactFrequencyVideo = _parentCalculator.GetExactFrequency(ImageType.Video) * 100;
 
-            Debug.WriteLine("Raising all properties changed for the FrequencyModel"); //? Not sure how severe the impact of this is so keep the debug statement for now
-            RaiseAllPropertiesChanged();
+            Debug.WriteLine("Raising all properties changed for the FrequencyModel"); //? Not sure how severe the impact of this is so keep the Debug statement for now
+            RaiseAllPropertiesChanged(); //? directly changing the private variables skips over SetProperty()
 
-            _frequenciesUpdated = true;
+            //x_frequenciesUpdated = true;
         }
     }
 }

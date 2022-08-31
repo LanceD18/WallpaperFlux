@@ -161,15 +161,18 @@ namespace WallpaperFlux.Core.Util
 
         #region Data Saving
 
-        public static void QuickSave() => SaveData(LoadedThemePath);
+        public static void QuickSave()
+        {
+            if (!File.Exists(LoadedThemePath)) return;
+
+            SaveData(LoadedThemePath);
+        }
 
         public static void SaveData(string path)
         {
             //! Implementing a saving thread may cause issues if changes are made while saving or if you accidentally allow to saves to occur at once, so it'll be best to just keep that option off
 
             if (string.IsNullOrEmpty(path)) return;
-
-            if (!File.Exists(LoadedThemePath)) return;
 
             //? ----- Backup -----
             // Create a temporary backup in the save file's directory for just in case something goes wrong during the saving process
