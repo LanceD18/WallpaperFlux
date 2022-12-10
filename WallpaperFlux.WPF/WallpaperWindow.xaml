@@ -13,8 +13,9 @@
         Title="WallpaperWindow" Height="450" Width="800" WindowStyle="None">
     <Grid>
         <Image x:Name="WallpaperImage" Width="auto" Height="auto" gif:ImageBehavior.RepeatBehavior="Forever"/>
+        <Image x:Name="WallpaperImageGif" Width="auto" Height="auto" gif:ImageBehavior.RepeatBehavior="Forever"/>
 
-        <ffme:MediaElement x:Name="WallpaperMediaElementFFME" Width="auto" Height="auto" UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play" 
+        <ffme:MediaElement x:Name="WallpaperMediaElementFFME" Width="auto" Height="auto" UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Manual"
                            MediaEnded="WallpaperMediaElementFFME_OnMediaEnded"/>
         <MediaElement x:Name="WallpaperMediaElement" Width="auto" Height="auto" UnloadedBehavior="Manual" LoadedBehavior="Play" MediaEnded="WallpaperMediaElement_OnMediaEnded"/>
         <!--
@@ -23,9 +24,9 @@
         </WindowsFormsHost>
         -->
         <!--
- <media:MediaPlayer x:Name="WallpaperMediaElement">
-    <media:MpvPlayerHost Source="MyVideo.mp4" />
-</media:MediaPlayer>
+         <media:MediaPlayer x:Name="WallpaperMediaElement">
+            <media:MpvPlayerHost Source="MyVideo.mp4" />
+        </media:MediaPlayer>
         -->
     </Grid>
 </views:MvxWindow>

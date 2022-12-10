@@ -99,9 +99,9 @@ namespace WallpaperFlux.WPF
                 {
                     DisableMediaElementFFME();
                     
-                    WallpaperMediaElement.Source = new Uri(wallpaperInfo.FullName);
-                    WallpaperMediaElement.IsEnabled = true;
-                    WallpaperMediaElement.Visibility = Visibility.Visible;
+                    //xWallpaperMediaElement.Source = new Uri(wallpaperInfo.FullName);
+                    //xWallpaperMediaElement.IsEnabled = true;
+                    //xWallpaperMediaElement.Visibility = Visibility.Visible;
                 }
 
                 DisableImage();
@@ -110,7 +110,6 @@ namespace WallpaperFlux.WPF
             {
                 // TODO Consider adding a check for the static image type as well, as random file types can still be detected and cause a crash
                 // TODO Granted, they would have to be manually ranked by the user first, so you should probably instead just ban them from the ImageInspector
-
 
                 BitmapImage bitmap = new BitmapImage();
 
@@ -142,6 +141,7 @@ namespace WallpaperFlux.WPF
         
         private void DisableImage()
         {
+            WallpaperImage.Source = null;
             WallpaperImage.IsEnabled = false;
             WallpaperImage.Visibility = Visibility.Hidden;
         }
@@ -202,11 +202,18 @@ namespace WallpaperFlux.WPF
 
         private async void WallpaperMediaElementFFME_OnMediaEnded(object? sender, EventArgs e)
         {
+            Debug.WriteLine("(FFME) A");
             if (sender is Unosquare.FFME.MediaElement ffmeElement)
             {
+                Debug.WriteLine(ffmeElement.Source.AbsoluteUri);
+                Debug.WriteLine("B");
+                await ffmeElement.Pause();
                 ffmeElement.Position = TimeSpan.Zero;
                 await ffmeElement.Play();
+                Debug.WriteLine("C");
             }
+
+            Debug.WriteLine("D");
         }
 
         public void Mute()
