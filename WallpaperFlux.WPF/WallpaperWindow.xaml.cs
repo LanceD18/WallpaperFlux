@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection.Metadata;
 using System.Text;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -21,6 +22,7 @@ using Unosquare.FFME.Common;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core;
 using WallpaperFlux.Core.Util;
+using WallpaperFlux.WPF.Controllers;
 using WallpaperFlux.WPF.Util;
 using WpfAnimatedGif;
 using WpfScreenHelper;
@@ -32,6 +34,13 @@ namespace WallpaperFlux.WPF
     /// </summary>
     public partial class WallpaperWindow : MvxWindow
     {
+        private enum UsedElement
+        {
+            Image,
+            MediaElement,
+            FFME
+        }
+
         //? The index is currently gathered by the array utilized in ExternalWallpaperHandler and MainWindow
         public ImageModel ActiveImage;
 
@@ -60,7 +69,7 @@ namespace WallpaperFlux.WPF
         }
 
         //? The index is checked in ExternalWallpaperHandler now as it has access to the array, which allows wallpapers to be changed independently of one another
-        public void OnWallpaperChange(ImageModel image)
+        public async void OnWallpaperChange(ImageModel image)
         {
             ActiveImage = image;
 
@@ -81,32 +90,40 @@ namespace WallpaperFlux.WPF
             WallpaperMediaElement.BeginInit();
             WallpaperMediaElementFFME.BeginInit();
 
-            if (WallpaperUtil.IsSupportedVideoType(wallpaperInfo.FullName)) // ---- video ----
+            if (WallpaperUtil.IsSupportedVideoType(wallpaperInfo.FullName) || wallpaperInfo.Extension == ".gif") // ---- video or gif ----
             {
                 UpdateVolume();
 
+                //xawait WallpaperMediaElementFFME.Close();
+                //xawait WallpaperMediaElementFFME.Open(new Uri(wallpaperInfo.FullName));
+                MediaController.SendRequest(WallpaperMediaElementFFME, wallpaperPath);
+                WallpaperMediaElementFFME.IsEnabled = true;
+                WallpaperMediaElementFFME.Visibility = Visibility.Visible;
+
+                /*x
                 //? FFME is unstable and likely to crash on larger videos, but Windows Media Player can't load webms | Also, it seems to load Gifs faster
-                //? HOWEVER, the regular MediaElement (Windows Media Player) will randomly fail to load gifs (seems to be if loading more than one), loading a blank screen instead
-                if (wallpaperInfo.Extension == ".webm") 
+                if (wallpaperInfo.Extension == ".webm" || wallpaperInfo.Extension == ".gif") 
                 {
                     DisableMediaElement();
 
-                    WallpaperMediaElementFFME.Open(new Uri(wallpaperInfo.FullName));
+                    await WallpaperMediaElementFFME.Close();
+                    await WallpaperMediaElementFFME.Open(new Uri(wallpaperInfo.FullName));
                     WallpaperMediaElementFFME.IsEnabled = true;
                     WallpaperMediaElementFFME.Visibility = Visibility.Visible;
                 }
-                else
+                else //? The regular MediaElement (Windows Media Player) will randomly fail to load gifs (seems to be if loading more than one), loading a blank screen instead
                 {
                     DisableMediaElementFFME();
                     
-                    //xWallpaperMediaElement.Source = new Uri(wallpaperInfo.FullName);
-                    //xWallpaperMediaElement.IsEnabled = true;
-                    //xWallpaperMediaElement.Visibility = Visibility.Visible;
+                    WallpaperMediaElement.Source = new Uri(wallpaperInfo.FullName); 
+                    WallpaperMediaElement.IsEnabled = true;
+                    WallpaperMediaElement.Visibility = Visibility.Visible;
                 }
+                */
 
                 DisableImage();
             }
-            else // ---- static or gif ----
+            else // ---- static ----
             {
                 // TODO Consider adding a check for the static image type as well, as random file types can still be detected and cause a crash
                 // TODO Granted, they would have to be manually ranked by the user first, so you should probably instead just ban them from the ImageInspector
@@ -116,29 +133,22 @@ namespace WallpaperFlux.WPF
                 bitmap.BeginInit();
                 bitmap.UriSource = new Uri(image.Path);
                 bitmap.EndInit();
-                bitmap.Freeze();
-
-                if (wallpaperInfo.Extension != ".gif") // static
-                {
-                    WallpaperImage.Source = bitmap;
-                }
-                else // gif
-                {
-                    ImageBehavior.SetAnimatedSource(WallpaperImage, bitmap);
-                }
                 
-                DisableMediaElement();
-                DisableMediaElementFFME();
+                WallpaperImage.Source = bitmap;
 
                 WallpaperImage.IsEnabled = true;
                 WallpaperImage.Visibility = Visibility.Visible;
+
+                DisableUnusedElements(UsedElement.Image);
+
+                bitmap.Close();
             }
 
             WallpaperImage.EndInit();
             WallpaperMediaElement.EndInit();
             WallpaperMediaElementFFME.EndInit();
         }
-        
+
         private void DisableImage()
         {
             WallpaperImage.Source = null;
@@ -154,11 +164,32 @@ namespace WallpaperFlux.WPF
             WallpaperMediaElement.Visibility = Visibility.Hidden;
         }
 
-        private void DisableMediaElementFFME()
+        private async void DisableMediaElementFFME()
         {
-            WallpaperMediaElementFFME.Close();
+            await WallpaperMediaElementFFME.Close();
             WallpaperMediaElementFFME.IsEnabled = false;
             WallpaperMediaElementFFME.Visibility = Visibility.Hidden;
+        }
+
+        private void DisableUnusedElements(UsedElement usedElement)
+        {
+            switch (usedElement)
+            {
+                case UsedElement.Image:
+                    DisableMediaElement();
+                    DisableMediaElementFFME();
+                    break;
+
+                case UsedElement.MediaElement:
+                    DisableImage();
+                    DisableMediaElementFFME();
+                    break;
+
+                case UsedElement.FFME:
+                    DisableImage();
+                    DisableMediaElement();
+                    break;
+            }
         }
 
         //? The index is checked in ExternalWallpaperHandler now as it has access to the array, which allows wallpapers to be changed independently of one another
@@ -199,23 +230,27 @@ namespace WallpaperFlux.WPF
                 element.Play();
             }
         }
-
-        private async void WallpaperMediaElementFFME_OnMediaEnded(object? sender, EventArgs e)
+        
+        /*x
+        private void WallpaperMediaElementFFME_OnMediaEnded(object? sender, EventArgs e)
         {
             Debug.WriteLine("(FFME) A");
             if (sender is Unosquare.FFME.MediaElement ffmeElement)
             {
                 Debug.WriteLine(ffmeElement.Source.AbsoluteUri);
                 Debug.WriteLine("B");
-                await ffmeElement.Pause();
-                ffmeElement.Position = TimeSpan.Zero;
-                await ffmeElement.Play();
+                //xffmeElement.Pause();
+                //xffmeElement.Stop();
+                //xffmeElement.Position = TimeSpan.Zero;
+                //xffmeElement.Play();
+                //xWallpaperMediaElementFFME.Open(new Uri(ffmeElement.Source.AbsoluteUri));
                 Debug.WriteLine("C");
             }
 
             Debug.WriteLine("D");
         }
 
+        */
         public void Mute()
         {
             muted = true;

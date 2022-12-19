@@ -469,6 +469,7 @@ namespace WallpaperFlux.Core.ViewModels
         public void PromptSaveTheme()
         {
             //! Do NOT save Child Tags! Those are handled on their own whenever the Parent Tag is linked!
+            //! In general just do not save Tag Linking logic
 
             using (CommonSaveFileDialog dialog = new CommonSaveFileDialog())
             {

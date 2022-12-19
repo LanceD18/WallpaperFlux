@@ -12,12 +12,10 @@
         mc:Ignorable="d" Background="Transparent" ResizeMode="NoResize"
         Title="WallpaperWindow" Height="450" Width="800" WindowStyle="None">
     <Grid>
-        <Image x:Name="WallpaperImage" Width="auto" Height="auto" gif:ImageBehavior.RepeatBehavior="Forever"/>
-        <Image x:Name="WallpaperImageGif" Width="auto" Height="auto" gif:ImageBehavior.RepeatBehavior="Forever"/>
-
-        <ffme:MediaElement x:Name="WallpaperMediaElementFFME" Width="auto" Height="auto" UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Manual"
-                           MediaEnded="WallpaperMediaElementFFME_OnMediaEnded"/>
+        <Image x:Name="WallpaperImage" Width="auto" Height="auto"/>
+        <ffme:MediaElement x:Name="WallpaperMediaElementFFME" Width="auto" Height="auto" UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"/>
         <MediaElement x:Name="WallpaperMediaElement" Width="auto" Height="auto" UnloadedBehavior="Manual" LoadedBehavior="Play" MediaEnded="WallpaperMediaElement_OnMediaEnded"/>
+
         <!--
         <WindowsFormsHost x:Name="WallpaperMediaElement">
             <windowsForms:Panel x:Name="PlayerHost" />
