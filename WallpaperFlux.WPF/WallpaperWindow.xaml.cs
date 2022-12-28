@@ -86,9 +86,9 @@ namespace WallpaperFlux.WPF
                 return;
             }
 
-            WallpaperImage.BeginInit();
-            WallpaperMediaElement.BeginInit();
-            WallpaperMediaElementFFME.BeginInit();
+            //xWallpaperImage.BeginInit();
+            //xWallpaperMediaElement.BeginInit();
+            //xWallpaperMediaElementFFME.BeginInit();
 
             if (WallpaperUtil.IsSupportedVideoType(wallpaperInfo.FullName) || wallpaperInfo.Extension == ".gif") // ---- video or gif ----
             {
@@ -135,9 +135,9 @@ namespace WallpaperFlux.WPF
                 DisableUnusedElements(UsedElement.Image);
             }
 
-            WallpaperImage.EndInit();
-            WallpaperMediaElement.EndInit();
-            WallpaperMediaElementFFME.EndInit();
+            //xWallpaperImage.EndInit();
+            //xWallpaperMediaElement.EndInit();
+            //xWallpaperMediaElementFFME.EndInit();
         }
 
         private void DisableImage()
