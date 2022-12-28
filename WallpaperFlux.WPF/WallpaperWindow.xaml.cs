@@ -22,10 +22,10 @@ using Unosquare.FFME.Common;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core;
 using WallpaperFlux.Core.Util;
-using WallpaperFlux.WPF.Controllers;
 using WallpaperFlux.WPF.Util;
 using WpfAnimatedGif;
 using WpfScreenHelper;
+using System.Threading.Tasks;
 
 namespace WallpaperFlux.WPF
 {
@@ -44,7 +44,7 @@ namespace WallpaperFlux.WPF
         //? The index is currently gathered by the array utilized in ExternalWallpaperHandler and MainWindow
         public ImageModel ActiveImage;
 
-        private bool muted;
+        private bool Muted;
 
         public WallpaperWindow(Screen display, IntPtr workerw)
         {
@@ -93,20 +93,12 @@ namespace WallpaperFlux.WPF
             if (WallpaperUtil.IsSupportedVideoType(wallpaperInfo.FullName) || wallpaperInfo.Extension == ".gif") // ---- video or gif ----
             {
                 UpdateVolume();
-
-                //xawait WallpaperMediaElementFFME.Close();
-                //xawait WallpaperMediaElementFFME.Open(new Uri(wallpaperInfo.FullName));
-                MediaController.SendRequest(WallpaperMediaElementFFME, wallpaperPath);
-                WallpaperMediaElementFFME.IsEnabled = true;
-                WallpaperMediaElementFFME.Visibility = Visibility.Visible;
-
-                /*x
-                //? FFME is unstable and likely to crash on larger videos, but Windows Media Player can't load webms | Also, it seems to load Gifs faster
+                
+                //? FFME is unstable and likely to crash on larger videos, but Windows Media Player can't load webms | Also, it seems to load gifs faster
                 if (wallpaperInfo.Extension == ".webm" || wallpaperInfo.Extension == ".gif") 
                 {
                     DisableMediaElement();
-
-                    await WallpaperMediaElementFFME.Close();
+                    
                     await WallpaperMediaElementFFME.Open(new Uri(wallpaperInfo.FullName));
                     WallpaperMediaElementFFME.IsEnabled = true;
                     WallpaperMediaElementFFME.Visibility = Visibility.Visible;
@@ -114,12 +106,11 @@ namespace WallpaperFlux.WPF
                 else //? The regular MediaElement (Windows Media Player) will randomly fail to load gifs (seems to be if loading more than one), loading a blank screen instead
                 {
                     DisableMediaElementFFME();
-                    
-                    WallpaperMediaElement.Source = new Uri(wallpaperInfo.FullName); 
+
+                    WallpaperMediaElement.Source = new Uri(wallpaperInfo.FullName);
                     WallpaperMediaElement.IsEnabled = true;
                     WallpaperMediaElement.Visibility = Visibility.Visible;
                 }
-                */
 
                 DisableImage();
             }
@@ -131,17 +122,17 @@ namespace WallpaperFlux.WPF
                 BitmapImage bitmap = new BitmapImage();
 
                 bitmap.BeginInit();
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
                 bitmap.UriSource = new Uri(image.Path);
                 bitmap.EndInit();
-                
-                WallpaperImage.Source = bitmap;
+                //? this should also allow the bitmap to be picked up by the automatic garbage collection (so don't GC manually)
+                bitmap.Freeze(); // this needs to be frozen before the bitmap is used in the UI thread, call this right after bitmap.EndInit() | https://stackoverflow.com/questions/46709382/async-load-bitmapimage-in-c-sharp
 
+                WallpaperImage.Source = bitmap;
                 WallpaperImage.IsEnabled = true;
                 WallpaperImage.Visibility = Visibility.Visible;
 
                 DisableUnusedElements(UsedElement.Image);
-
-                bitmap.Close();
             }
 
             WallpaperImage.EndInit();
@@ -253,13 +244,13 @@ namespace WallpaperFlux.WPF
         */
         public void Mute()
         {
-            muted = true;
+            Muted = true;
             UpdateVolume();
         }
 
         public void Unmute()
         {
-            muted = false;
+            Muted = false;
             UpdateVolume();
         }
 
@@ -267,7 +258,7 @@ namespace WallpaperFlux.WPF
         {
             Dispatcher.Invoke(() =>
             {
-                if (!muted)
+                if (!Muted)
                 {
                     if (ActiveImage != null) //? it's okay to set the volume to 0 ahead of time, but sometimes the ActiveImage may not be initialized
                     {
