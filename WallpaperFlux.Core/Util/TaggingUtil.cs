@@ -72,7 +72,7 @@ namespace WallpaperFlux.Core.Util
                 {
                     //xTagViewModel.Instance.Categories = new MvvmCross.ViewModels.MvxObservableCollection<CategoryModel>(DataUtil.Theme.Categories);
                     //! each switch increases the minimum number of required events (CHECK THIS), could maybe use a 'new' statement instead (see above commented code)
-                    TagViewModel.Instance.Categories.SwitchTo(DataUtil.Theme.Categories);
+                    TagViewModel.Instance.Categories.SwitchTo(ThemeUtil.Theme.Categories);
 
                     /*x
                     List<CategoryModel> categories = new List<CategoryModel>(DataUtil.Theme.Categories);
@@ -93,11 +93,11 @@ namespace WallpaperFlux.Core.Util
 
         public static bool ContainsCategory(string categoryName) => GetCategory(categoryName) != null;
 
-        public static bool ContainsCategory(CategoryModel category) => DataUtil.Theme.Categories.Contains(category);
+        public static bool ContainsCategory(CategoryModel category) => ThemeUtil.Theme.Categories.Contains(category);
 
         public static CategoryModel GetCategory(string categoryName)
         {
-            foreach (CategoryModel category in DataUtil.Theme.Categories)
+            foreach (CategoryModel category in ThemeUtil.Theme.Categories)
             {
                 if (categoryName == category.Name) return category;
             }
@@ -120,7 +120,7 @@ namespace WallpaperFlux.Core.Util
             {
                 if (!ContainsCategory(category))
                 {
-                    DataUtil.Theme.Categories.Add(category);
+                    ThemeUtil.Theme.Categories.Add(category);
                 }
             }
 
@@ -129,20 +129,20 @@ namespace WallpaperFlux.Core.Util
 
         public static bool RemoveCategory(CategoryModel category)
         {
-            bool removed = DataUtil.Theme.Categories.Remove(category);
+            bool removed = ThemeUtil.Theme.Categories.Remove(category);
             UpdateCategoryView();
             return removed;
         }
 
         public static void RemoveCategoryAt(int index)
         {
-            DataUtil.Theme.Categories.RemoveAt(index);
+            ThemeUtil.Theme.Categories.RemoveAt(index);
             UpdateCategoryView();
         }
 
         public static void InsertCategory(int index, CategoryModel category)
         {
-            DataUtil.Theme.Categories.Insert(index, category);
+            ThemeUtil.Theme.Categories.Insert(index, category);
             UpdateCategoryView();
 
         }
@@ -187,11 +187,11 @@ namespace WallpaperFlux.Core.Util
         public static void ShiftCategories(CategoryModel sourceCategory, CategoryModel targetCategory)
         {
             // gather the required indexes to shift the source category
-            int sourceIndex = DataUtil.Theme.Categories.IndexOf(sourceCategory);
-            int targetIndex = DataUtil.Theme.Categories.IndexOf(targetCategory);
+            int sourceIndex = ThemeUtil.Theme.Categories.IndexOf(sourceCategory);
+            int targetIndex = ThemeUtil.Theme.Categories.IndexOf(targetCategory);
 
             // remove the original instance of the category from its source position
-            DataUtil.Theme.Categories.RemoveAt(sourceIndex);
+            ThemeUtil.Theme.Categories.RemoveAt(sourceIndex);
             
             // re-insert the category at the target position, the insertion will handle the shifting on its own
             InsertCategory(targetIndex, sourceCategory);

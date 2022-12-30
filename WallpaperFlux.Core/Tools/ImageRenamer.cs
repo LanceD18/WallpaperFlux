@@ -346,7 +346,7 @@ namespace WallpaperFlux.Core.Tools
                     File.Move(oldPath, newPath);
                 }
 
-                DataUtil.Theme.Images.GetImage(oldPath).UpdatePath(newPath); //? we rename the image object after moving for just in case an error prevents the move from happening
+                ThemeUtil.Theme.Images.GetImage(oldPath).UpdatePath(newPath); //? we rename the image object after moving for just in case an error prevents the move from happening
 
                 errorMessage = ""; // no errors found
 

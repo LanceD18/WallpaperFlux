@@ -10,7 +10,7 @@ using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Models.Theme;
 using WallpaperFlux.Core.Util;
 
-//!using WallpaperFlux.Core.Util; Avoid using the DataUtil value from this
+//!using WallpaperFlux.Core.Util; Avoid using the ThemeUtil value from this
 
 namespace WallpaperFlux.Core.Controllers
 {
@@ -187,9 +187,9 @@ namespace WallpaperFlux.Core.Controllers
             if (rankWasUpdated) //! Must come after the Max Rank is Updated/Initialized in the RankController
             {
                 PercentileController.SetRankPercentiles(maxRank);
-                if (DataUtil.Theme != null)
+                if (ThemeUtil.Theme != null)
                 {
-                    DataUtil.Theme.Settings.ThemeSettings.MaxRank = maxRank;
+                    ThemeUtil.Theme.Settings.ThemeSettings.MaxRank = maxRank;
                 }
 
             }
@@ -237,10 +237,10 @@ namespace WallpaperFlux.Core.Controllers
             //x{
             //! Do not loop this segment by ImageType, you will modify the rank of all images 3 times
             // Re-rank existing images
-            string[] images = DataUtil.Theme.Images.GetAllImagePaths();//xFileData.Keys.ToArray();
+            string[] images = ThemeUtil.Theme.Images.GetAllImagePaths();//xFileData.Keys.ToArray();
             foreach (string image in images)
             {
-                ImageModel imageModel = DataUtil.Theme.Images.GetImage(image);
+                ImageModel imageModel = ThemeUtil.Theme.Images.GetImage(image);
                 if (imageModel.Rank != 0) // no need to modify the rank of any rank 0 images
                 {
                     int newRank = Math.Max((int)Math.Round((double)imageModel.Rank * rankChangeRatio), 1); // the Math.Max is used to ensure that no images are set to 0 (unranked)
@@ -290,7 +290,7 @@ namespace WallpaperFlux.Core.Controllers
                 PercentileController.PotentialRegularRankUpdate = true;
 
                 // e.Item represents the added image
-                DataUtil.Theme.Settings.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence(e.Item);
+                ThemeUtil.Theme.Settings.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence(e.Item);
             }
             //x}
         }
@@ -306,7 +306,7 @@ namespace WallpaperFlux.Core.Controllers
                 PercentileController.PotentialRegularRankUpdate = true;
 
                 // e.Item represents the removed image
-                DataUtil.Theme.Settings.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence(e.Item);
+                ThemeUtil.Theme.Settings.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence(e.Item);
             }
             //x}
         }
@@ -364,8 +364,8 @@ namespace WallpaperFlux.Core.Controllers
             //? the image type doesn't matter here, only calling this so that the exact frequencies can be updated
             //? what DOES matter is that we need to choose to ""update"" the relative frequency so that the exact frequencies can be recalculated
             //? this is because there's no need to change the relative frequencies here, they are always relative, only the exact frequencies should be touched
-            DataUtil.Theme.Settings.ThemeSettings.FrequencyCalc.UpdateFrequency(ImageType.Static, FrequencyType.Relative,
-                DataUtil.Theme.Settings.ThemeSettings.FrequencyModel.RelativeFrequencyStatic);
+            ThemeUtil.Theme.Settings.ThemeSettings.FrequencyCalc.UpdateFrequency(ImageType.Static, FrequencyType.Relative,
+                ThemeUtil.Theme.Settings.ThemeSettings.FrequencyModel.RelativeFrequencyStatic);
         }
 
         public double GetImageOfTypeWeight(ImageType imageType) => ImageTypeWeights[imageType];

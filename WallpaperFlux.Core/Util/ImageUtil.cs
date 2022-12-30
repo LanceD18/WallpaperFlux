@@ -56,7 +56,7 @@ namespace WallpaperFlux.Core.Util
 
             foreach (ImageModel image in images)
             {
-                DataUtil.Theme.Images.RemoveImage(image);
+                ThemeUtil.Theme.Images.RemoveImage(image);
                 Mvx.IoCProvider.Resolve<IExternalFileSystemUtil>().RecycleFile(image.Path);
             }
         }

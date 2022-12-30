@@ -103,7 +103,7 @@ namespace WallpaperFlux.Core.Collections
             //? Process: Order tags by category ; go through categories in order then grabs the tags from said category ; order said group of tags alphabetically ; repeat
 
             List<string> orderedTags = new List<string>();
-            foreach (CategoryModel category in DataUtil.Theme.Categories)
+            foreach (CategoryModel category in ThemeUtil.Theme.Categories)
             {
                 //? skip categories that do not have the UseForNaming tag IF the number of tagNamingExceptions is 0, otherwise, scan every tag
                 if (!category.UseForNaming && _tagNamingExceptions.Count == 0) continue; 

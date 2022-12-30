@@ -100,7 +100,7 @@ namespace WallpaperFlux.Core.Controllers
             Dictionary<int, double> modifiedRankPercentiles = GetModifiedRankPercentiles(imageType);
             int[] validRanks = modifiedRankPercentiles.Keys.ToArray();
 
-            int rankedImageCount = DataUtil.Theme.RankController.GetAllRankedImages().Length;
+            int rankedImageCount = ThemeUtil.Theme.RankController.GetAllRankedImages().Length;
             double newRankPercentageTotal = 0;
 
             // sets the individual weighted percentage of each rank
@@ -143,12 +143,12 @@ namespace WallpaperFlux.Core.Controllers
 
             ModifiedRankPercentiles = GetModifiedRankPercentiles(imageType);
             
-            ModifiedRankPercentiles = DataUtil.Theme.Settings.ThemeSettings.WeightedRanks ? GetWeightedRankPercentiles(imageType) : GetModifiedRankPercentiles(imageType);
+            ModifiedRankPercentiles = ThemeUtil.Theme.Settings.ThemeSettings.WeightedRanks ? GetWeightedRankPercentiles(imageType) : GetModifiedRankPercentiles(imageType);
 
             // Update Image Type Weights if the Weighted Frequency option is checked
-            if (DataUtil.Theme.Settings.ThemeSettings.FrequencyModel.WeightedFrequency)
+            if (ThemeUtil.Theme.Settings.ThemeSettings.FrequencyModel.WeightedFrequency)
             {
-                DataUtil.Theme.RankController.UpdateImageTypeWeights();
+                ThemeUtil.Theme.RankController.UpdateImageTypeWeights();
             }
         }
     }

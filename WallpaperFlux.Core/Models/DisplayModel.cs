@@ -98,13 +98,13 @@ namespace WallpaperFlux.Core.Models
 
         private readonly IExternalTimer timer;
 
-        private Action<int, bool> OnTimerReset;
+        private Action<int, bool, bool> OnTimerReset;
 
         private DisplayModel parentSyncedModel;
         private List<DisplayModel> childSyncedModels = new List<DisplayModel>();
 
         //?-----Constructor-----
-        public DisplayModel(IExternalTimer timer, Action<int, bool> OnTimerReset)
+        public DisplayModel(IExternalTimer timer, Action<int, bool, bool> OnTimerReset)
         {
             timer.Interval = TimeSpan.FromSeconds(1);
             timer.Tick += TimerOnTick;
@@ -138,7 +138,7 @@ namespace WallpaperFlux.Core.Models
                 DisplayTimerCurrent = DisplayTimerMax;
                 if (!ignoreResetEvent) //? this means that we just want to reset the timer but we do not want to change the wallpaper
                 {
-                    OnTimerReset?.Invoke(_displayIndex, true);
+                    OnTimerReset?.Invoke(_displayIndex, true, false);
 
                     //? _displayIndex uses the value appropriate for arrays while DisplayIndex uses the value appropriate for WPF/visual information
 
@@ -146,7 +146,7 @@ namespace WallpaperFlux.Core.Models
                     {
                         if (model != this)
                         {
-                            model.OnTimerReset?.Invoke(model._displayIndex, true);
+                            model.OnTimerReset?.Invoke(model._displayIndex, true, false);
                         }
                     }
                 }

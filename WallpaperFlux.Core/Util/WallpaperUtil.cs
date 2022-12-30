@@ -46,23 +46,9 @@ namespace WallpaperFlux.Core.Util
 
         public static bool IsVideo_GivenExtension(string extension) => IsSupportedVideoType_GivenExtension(extension);
 
-        public static bool IsSupportedVideoType(string filePath)
-        {
-            return IsSupportedVideoType_GivenExtension(Path.GetExtension(filePath));
+        public static bool IsSupportedVideoType(string filePath) => IsSupportedVideoType_GivenExtension(Path.GetExtension(filePath));
 
-            /*x
-            if (File.Exists(filePath))
-            {
-                return IsSupportedVideoType_GivenExtension(filePath);
-            }
-            else
-            {
-                return false;
-            }
-            */
-        }
-
-        private static bool IsSupportedVideoType_GivenExtension(string extension) => extension == ".mp4" || extension == ".webm" || extension == ".avi";
+        public static bool IsSupportedVideoType_GivenExtension(string extension) => extension == ".mp4" || extension == ".webm" || extension == ".avi";
 
         // Derived from: https://www.codeproject.com/Articles/856020/Draw-Behind-Desktop-Icons-in-Windows-plus
         // Gets the IntPtr value that will allow us to draw the wallpaper behind the desktop icons
@@ -121,14 +107,14 @@ namespace WallpaperFlux.Core.Util
             return workerw;
         }
 
-        public static void SetWallpaper(int index, bool ignoreRandomization)
+        public static void SetWallpaper(int index, bool ignoreRandomization, bool forceChange)
         {
-            SetWallpaper(index, String.Empty, ignoreRandomization);
+            SetWallpaper(index, string.Empty, ignoreRandomization, forceChange);
         }
 
         // TODO With the presetWallpaperPath I don't think you need ignoreRandomization anymore
         // TODO Both use cases, setting the PreviousWallpaper and directly setting an image as the Wallpaper can use presetWallpaperPath
-        public static bool SetWallpaper(int index, string presetWallpaperPath, bool ignoreRandomization)
+        public static bool SetWallpaper(int index, string presetWallpaperPath, bool ignoreRandomization, bool forceChange)
         {
             string wallpaperPath;
 
@@ -138,9 +124,9 @@ namespace WallpaperFlux.Core.Util
                 // if ignoring randomization then we will just use the current ActiveWallpaper path (Likely means that a wallpaper on one monitor changed before/after the others)
                 if (!ignoreRandomization)
                 {
-                    if (DataUtil.Theme.WallpaperRandomizer.SetNextWallpaperOrder(index))
+                    if (ThemeUtil.Theme.WallpaperRandomizer.SetNextWallpaperOrder(index))
                     {
-                        wallpaperPath = DataUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index];
+                        wallpaperPath = ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index];
                     }
                     else
                     {
@@ -150,17 +136,17 @@ namespace WallpaperFlux.Core.Util
                 }
                 else
                 {
-                    wallpaperPath = DataUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index];
+                    wallpaperPath = ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index];
                 }
             }
             else
             {
                 wallpaperPath = presetWallpaperPath;
-                DataUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index] = presetWallpaperPath; // need to update the active wallpaper to reflect this preset change
+                ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index] = presetWallpaperPath; // need to update the active wallpaper to reflect this preset change
             }
 
             // Check for errors and update the notify icon
-            if (DataUtil.Theme.Images.ContainsImage(wallpaperPath))
+            if (ThemeUtil.Theme.Images.ContainsImage(wallpaperPath))
             {
                 /* TODO Update notify icon
                 string wallpaperName = new FileInfo(wallpaperPath).Name; // pathless string of file name
@@ -179,9 +165,9 @@ namespace WallpaperFlux.Core.Util
 
             Debug.WriteLine("Setting Wallpaper to Display " + index + ": " + wallpaperPath);
             // TODO Want want to use IoC for this at some point
-            if (DataUtil.Theme.Images.ContainsImage(wallpaperPath))
+            if (ThemeUtil.Theme.Images.ContainsImage(wallpaperPath))
             {
-                WallpaperHandler.OnWallpaperChange(index, DataUtil.Theme.Images.GetImage(wallpaperPath)); //? hooked to a call from WallpaperFlux.WPF
+                WallpaperHandler.OnWallpaperChange(index, ThemeUtil.Theme.Images.GetImage(wallpaperPath), forceChange); //? hooked to a call from WallpaperFlux.WPF
                 WallpaperFluxViewModel.Instance.DisplaySettings[index].ResetTimer(true);
             }
             return true;

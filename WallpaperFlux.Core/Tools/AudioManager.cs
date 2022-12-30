@@ -58,7 +58,7 @@ namespace WallpaperFlux.Core.Tools
             {
                 //x Debug.WriteLine("Checking for mute conditions");
                 int potentialAudioCount = 0;
-                foreach (string wallpaper in DataUtil.Theme.WallpaperRandomizer.ActiveWallpapers)
+                foreach (string wallpaper in ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers)
                 {
                     if (WallpaperUtil.IsSupportedVideoType(wallpaper))
                     {
@@ -78,7 +78,7 @@ namespace WallpaperFlux.Core.Tools
                     muted = true;
                 }
 
-                if (DataUtil.Theme.Settings.ThemeSettings.VideoSettings.MuteIfApplicationFocused && !muted)
+                if (ThemeUtil.Theme.Settings.ThemeSettings.VideoSettings.MuteIfApplicationFocused && !muted)
                 {
                     Process activeWindow = Win32.GetActiveWindowProcess();
                     string windowName = activeWindow.ProcessName;
@@ -92,7 +92,7 @@ namespace WallpaperFlux.Core.Tools
                     }
                 }
 
-                if (DataUtil.Theme.Settings.ThemeSettings.VideoSettings.MuteIfApplicationMaximized && !muted) // every window needs to be checked for maximization
+                if (ThemeUtil.Theme.Settings.ThemeSettings.VideoSettings.MuteIfApplicationMaximized && !muted) // every window needs to be checked for maximization
                 {
                     //xStopwatch test = new Stopwatch();
                     //xtest.Start();
@@ -110,7 +110,7 @@ namespace WallpaperFlux.Core.Tools
                     //xDebug.WriteLine("Ms taken to check for maximized app: " + test.ElapsedMilliseconds);
                 }
 
-                if (DataUtil.Theme.Settings.ThemeSettings.VideoSettings.MuteIfAudioPlaying && !muted)
+                if (ThemeUtil.Theme.Settings.ThemeSettings.VideoSettings.MuteIfAudioPlaying && !muted)
                 {
                     if (CheckForExternalAudio()) //? CheckForExternalAudio cannot be done on the UI thread | async doesn't fix this
                     {
@@ -145,7 +145,7 @@ namespace WallpaperFlux.Core.Tools
                     */
 
                     List<string> potentialNames = new List<string>();
-                    foreach (string wallpaper in DataUtil.Theme.WallpaperRandomizer.ActiveWallpapers)
+                    foreach (string wallpaper in ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers)
                     {
                         if (File.Exists(wallpaper))
                         {
@@ -173,7 +173,7 @@ namespace WallpaperFlux.Core.Tools
                             continue;
                         }
 
-                        if (DataUtil.Theme.Settings.ThemeSettings.VideoSettings.MuteIfAudioPlaying) // this is checked again since in some cases this code was only called due to the inspector
+                        if (ThemeUtil.Theme.Settings.ThemeSettings.VideoSettings.MuteIfAudioPlaying) // this is checked again since in some cases this code was only called due to the inspector
                         {
                             if (!potentialNames.Contains(sessionVideoName)) // checking an audio source that doesn't match up with to the active wallpapers
                             {

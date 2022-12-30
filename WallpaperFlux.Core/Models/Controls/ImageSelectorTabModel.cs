@@ -92,7 +92,7 @@ namespace WallpaperFlux.Core.Models.Controls
             for (var i = 0; i < Items.Count; i++)
             {
                 ImageModel image = Items[i];
-                if (!DataUtil.Theme.Images.ContainsImage(image))
+                if (!ThemeUtil.Theme.Images.ContainsImage(image))
                 {
                     Items.RemoveAt(i);
                     i--;

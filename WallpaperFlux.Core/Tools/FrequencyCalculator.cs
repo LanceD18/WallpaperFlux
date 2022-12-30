@@ -38,22 +38,23 @@ namespace WallpaperFlux.Core.Tools
         };
 
         //? Note: Don't accidentally invalidate frequencies that were intentionally set to 0 when updating from a previously empty type
+        // TODO This shouldn't be called so frequently while loading a theme, shouldn't be called until the final step
         public void VerifyImageTypeExistence(ImageModel imageToVerify = null)
         {
-            bool staticExists = DataUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.Static);
-            bool gifExists = DataUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.GIF);
-            bool videoExists = DataUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.Video);
+            bool staticExists = ThemeUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.Static);
+            bool gifExists = ThemeUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.GIF);
+            bool videoExists = ThemeUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.Video);
 
             if (imageToVerify != null)
             {
-                if (DataUtil.Theme.Images.ContainsImage(imageToVerify))
+                if (ThemeUtil.Theme.Images.ContainsImage(imageToVerify))
                 {
                     //? This appears to be the rank of the image before the change
                     if (imageToVerify.Rank > 1) //! Setting this to be true on a rank of 1 will break the process, do not use > 0 or >= 1
                     {
                         // This indicates that there is in fact an image of the given image type but it is either un-ranked or changing its rank and is also the only image of this image type
                         if ((!staticExists && imageToVerify.IsStatic /*xWallpaperUtil.IsStatic(imageToVerify)*/) || 
-                            (!gifExists && imageToVerify.IsGIF /*xWallpaperUtil.IsGif(imageToVerify)*/) || 
+                            (!gifExists && imageToVerify.IsGif /*xWallpaperUtil.IsGif(imageToVerify)*/) || 
                             (!videoExists && imageToVerify.IsVideo /*xWallpaperUtil.IsSupportedVideoType(imageToVerify)*/))
                         {
                             // no need to verify, just updating the only existing image of an image type
@@ -97,25 +98,25 @@ namespace WallpaperFlux.Core.Tools
 
             // TODO Rewrite the exact frequency portion of the original calculation instead of re-introducing BalanceExactFrequencies()
             //BalanceExactFrequencies();
-            DataUtil.Theme.Settings.ThemeSettings.FrequencyModel.UpdateModelFrequency(); // updates the UI to the potentially adjusted frequency
+            ThemeUtil.Theme.Settings.ThemeSettings.FrequencyModel.UpdateModelFrequency(); // updates the UI to the potentially adjusted frequency
         }
 
         public void HandleEmptyImageTypes(ImageModel imageToVerify = null)
         {
-            bool staticExists = DataUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.Static);
-            bool gifExists = DataUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.GIF);
-            bool videoExists = DataUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.Video);
+            bool staticExists = ThemeUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.Static);
+            bool gifExists = ThemeUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.GIF);
+            bool videoExists = ThemeUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.Video);
 
             if (imageToVerify != null)
             {
-                if (DataUtil.Theme.Images.ContainsImage(imageToVerify))
+                if (ThemeUtil.Theme.Images.ContainsImage(imageToVerify))
                 {
                     //? This appears to be the rank of the image before the change
                     if (imageToVerify.Rank > 1) //! Setting this to be true on a rank of 1 will break the process, do not use > 0 or >= 1
                     {
                         // This indicates that there is in fact an image of the given image type but it is either un-ranked or changing its rank and is also the only image of this image type
                         if ((!staticExists && imageToVerify.IsStatic /*xWallpaperUtil.IsStatic(imageToVerify)*/) ||
-                            (!gifExists && imageToVerify.IsGIF /*xWallpaperUtil.IsGif(imageToVerify)*/) ||
+                            (!gifExists && imageToVerify.IsGif /*xWallpaperUtil.IsGif(imageToVerify)*/) ||
                             (!videoExists && imageToVerify.IsVideo /*xWallpaperUtil.IsSupportedVideoType(imageToVerify)*/))
                         {
                             // no need to verify, just updating the only existing image of an image type
@@ -148,7 +149,7 @@ namespace WallpaperFlux.Core.Tools
 
             // TODO Rewrite the exact frequency portion of the original calculation instead of re-introducing BalanceExactFrequencies()
             //BalanceExactFrequencies();
-            DataUtil.Theme.Settings.ThemeSettings.FrequencyModel.UpdateModelFrequency(); // updates the UI to the potentially adjusted frequency
+            ThemeUtil.Theme.Settings.ThemeSettings.FrequencyModel.UpdateModelFrequency(); // updates the UI to the potentially adjusted frequency
         }
 
         public double GetRelativeFrequency(ImageType imageType) => RelativeFrequency[imageType];
@@ -158,7 +159,7 @@ namespace WallpaperFlux.Core.Tools
         public void UpdateFrequency(ImageType imageType, FrequencyType frequencyType, double value)
         {
             // Display an error message if the image type is empty and abort the method
-            if (!DataUtil.Theme.RankController.IsAnyImagesOfTypeRanked(imageType))
+            if (!ThemeUtil.Theme.RankController.IsAnyImagesOfTypeRanked(imageType) && !JsonUtil.IsLoadingData)
             {
                 string imageTypeString = "";
 
@@ -252,7 +253,7 @@ namespace WallpaperFlux.Core.Tools
             if (double.IsNaN(RelativeFrequency[ImageType.Static]) || double.IsNaN(RelativeFrequency[ImageType.GIF]) || double.IsNaN(RelativeFrequency[ImageType.Video])
                 || double.IsNaN(ExactFrequency[ImageType.Static]) || double.IsNaN(ExactFrequency[ImageType.GIF]) || double.IsNaN(ExactFrequency[ImageType.Video]))
             {
-                DataUtil.Theme.Settings.ThemeSettings.FrequencyModel.UpdateModelFrequency(); // updates the UI to the potentially adjusted frequency
+                ThemeUtil.Theme.Settings.ThemeSettings.FrequencyModel.UpdateModelFrequency(); // updates the UI to the potentially adjusted frequency
             }
         }
         
@@ -373,9 +374,9 @@ namespace WallpaperFlux.Core.Tools
 
             //? This boolean prevents an unused image type from being counted in frequency calculations
             //! Do not include canModify in these calculations, it serves a different purpose!
-            double staticRelativeFrequency = DataUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.Static) ? RelativeFrequency[ImageType.Static] : 0;
-            double gifRelativeFrequency = DataUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.GIF) ? RelativeFrequency[ImageType.GIF] : 0;
-            double videoRelativeFrequency = DataUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.Video) ? RelativeFrequency[ImageType.Video] : 0;
+            double staticRelativeFrequency = ThemeUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.Static) ? RelativeFrequency[ImageType.Static] : 0;
+            double gifRelativeFrequency = ThemeUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.GIF) ? RelativeFrequency[ImageType.GIF] : 0;
+            double videoRelativeFrequency = ThemeUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.Video) ? RelativeFrequency[ImageType.Video] : 0;
 
             double chanceTotal = staticRelativeFrequency + gifRelativeFrequency + videoRelativeFrequency;
 
@@ -389,7 +390,7 @@ namespace WallpaperFlux.Core.Tools
                             "\nRelative Video / chanceTotal: " + videoRelativeChance);
 
             // If the frequency isn't weighted, no modifications need to be made
-            if (!DataUtil.Theme.Settings.ThemeSettings.FrequencyModel.WeightedFrequency)
+            if (!ThemeUtil.Theme.Settings.ThemeSettings.FrequencyModel.WeightedFrequency)
             {
                 /*x
                 ExactFrequency[ImageType.Static] = canModifyStatic ? staticRelativeChance : ExactFrequency[ImageType.Static];
@@ -404,9 +405,9 @@ namespace WallpaperFlux.Core.Tools
             else // Weighted Frequency, frequency will be adjusted by the number of images in each image type
             {
                 // Gets the average of both the weighted frequency and the original exact frequency, allowing relative frequency to have an impact on the weight
-                double staticWeightedChance = DataUtil.Theme.RankController.GetImageOfTypeWeight(ImageType.Static);
-                double gifWeightedChance = DataUtil.Theme.RankController.GetImageOfTypeWeight(ImageType.GIF);
-                double videoWeightedChance = DataUtil.Theme.RankController.GetImageOfTypeWeight(ImageType.Video);
+                double staticWeightedChance = ThemeUtil.Theme.RankController.GetImageOfTypeWeight(ImageType.Static);
+                double gifWeightedChance = ThemeUtil.Theme.RankController.GetImageOfTypeWeight(ImageType.GIF);
+                double videoWeightedChance = ThemeUtil.Theme.RankController.GetImageOfTypeWeight(ImageType.Video);
 
                 Debug.WriteLine("Static Weight: " + staticWeightedChance + 
                                 "\nGIF Weight: " + gifWeightedChance +
@@ -447,7 +448,7 @@ namespace WallpaperFlux.Core.Tools
                 ExactFrequency[ImageType.GIF] = gifWeightedRelativeChance / weightedChanceTotal;
                 ExactFrequency[ImageType.Video] = videoWeightedRelativeChance / weightedChanceTotal;
 
-                DataUtil.Theme.Settings.ThemeSettings.FrequencyModel.UpdateModelFrequency(); // updates the UI to the potentially adjusted frequency
+                ThemeUtil.Theme.Settings.ThemeSettings.FrequencyModel.UpdateModelFrequency(); // updates the UI to the potentially adjusted frequency
             }
         }
 

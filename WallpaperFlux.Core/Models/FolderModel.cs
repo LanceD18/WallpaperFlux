@@ -84,16 +84,16 @@ namespace WallpaperFlux.Core.Models
 
             foreach (string image in _images)
             {
-                if (DataUtil.Theme.Images.ContainsImage(image))
+                if (ThemeUtil.Theme.Images.ContainsImage(image))
                 {
-                    DataUtil.Theme.Images.GetImage(image).Active = Active;
+                    ThemeUtil.Theme.Images.GetImage(image).Active = Active;
                 }
                 else
                 {
                     if (File.Exists(image))
                     {
-                        DataUtil.Theme.Images.AddImage(image);
-                        DataUtil.Theme.Images.GetImage(image).Active = Active;
+                        ThemeUtil.Theme.Images.AddImage(image);
+                        ThemeUtil.Theme.Images.GetImage(image).Active = Active;
                     }
                     else //? this image was removed, delete it
                     {
@@ -107,7 +107,7 @@ namespace WallpaperFlux.Core.Models
         {
             foreach (string image in _images)
             {
-                DataUtil.Theme.Images.RemoveImage(image);
+                ThemeUtil.Theme.Images.RemoveImage(image);
             }
         }
 
@@ -118,6 +118,6 @@ namespace WallpaperFlux.Core.Models
             return _images.ToArray();
         }
 
-        public ImageModel[] GetImageModels() => DataUtil.Theme.Images.GetImageRange(GetImagePaths());
+        public ImageModel[] GetImageModels() => ThemeUtil.Theme.Images.GetImageRange(GetImagePaths());
     }
 }

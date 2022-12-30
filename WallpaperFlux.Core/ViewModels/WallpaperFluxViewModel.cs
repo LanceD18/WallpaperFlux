@@ -47,7 +47,7 @@ namespace WallpaperFlux.Core.ViewModels
 
         //? this variable exists for use with the xaml despite the Static Reference
         // allows the data of settings to be accessed by the xaml code
-        public ThemeModel Theme_USE_STATIC_REFERENCE_FIX_LATER { get; set; } = DataUtil.Theme; //! don't forget to update WallpaperFluxView.xaml when you changed this
+        public ThemeModel Theme_USE_STATIC_REFERENCE_FIX_LATER { get; set; } = ThemeUtil.Theme; //! don't forget to update WallpaperFluxView.xaml when you changed this
 
         #region View Variables
         //-----View Variables-----
@@ -206,7 +206,7 @@ namespace WallpaperFlux.Core.ViewModels
         {
             get
             {
-                foreach (Stack<string> previousWallpaperSet in DataUtil.Theme.WallpaperRandomizer.PreviousWallpapers)
+                foreach (Stack<string> previousWallpaperSet in ThemeUtil.Theme.WallpaperRandomizer.PreviousWallpapers)
                 {
                     //? depending on the setup of the timers different wallpapers can have different count of previous wallpapers so we only need one to be true
                     if (previousWallpaperSet.Count > 0) return true;
@@ -337,7 +337,7 @@ namespace WallpaperFlux.Core.ViewModels
         public void InitializeCommands()
         {
             // TODO Consider using models to hold command information (Including needed data)
-            NextWallpaperCommand = new MvxCommand(NextWallpaper);
+            NextWallpaperCommand = new MvxCommand(NextWallpaper_ForceChange);
             PreviousWallpaperCommand = new MvxCommand(PreviousWallpaper);
             LoadThemeCommand = new MvxCommand(PromptLoadTheme);
             SaveThemeCommand = new MvxCommand(JsonUtil.QuickSave);
@@ -371,18 +371,26 @@ namespace WallpaperFlux.Core.ViewModels
         {
             for (int i = 0; i < WallpaperUtil.DisplayUtil.GetDisplayCount(); i++)
             {
-                NextWallpaper(i, false);
+                NextWallpaper(i, false, false);
+            }
+        }
+
+        public void NextWallpaper_ForceChange()
+        {
+            for (int i = 0; i < WallpaperUtil.DisplayUtil.GetDisplayCount(); i++)
+            {
+                NextWallpaper(i, false, true);
             }
         }
 
         // TODO Check if the theme is finished loading before activating, check if any images are active
-        public void NextWallpaper(int displayIndex, bool isCallerTimer)
+        public void NextWallpaper(int displayIndex, bool isCallerTimer, bool forceChange)
         {
-            if (DataUtil.Theme.Images.GetAllImages().Length > 0 && DataUtil.Theme.RankController.GetAllRankedImages().Length > 0)
+            if (ThemeUtil.Theme.Images.GetAllImages().Length > 0 && ThemeUtil.Theme.RankController.GetAllRankedImages().Length > 0)
             {
                 // ignoreRandomization = false here since we need to randomize the new set
                 // Note that RandomizeWallpaper() will check if it even should randomize the wallpapers first (Varied timers and extended videos can undo this requirement)
-                WallpaperUtil.SetWallpaper(displayIndex, false);
+                WallpaperUtil.SetWallpaper(displayIndex, false, forceChange);
             }
             else
             {
@@ -400,7 +408,7 @@ namespace WallpaperFlux.Core.ViewModels
         
         public void PreviousWallpaper()
         {
-            for (int i = 0; i < DataUtil.Theme.WallpaperRandomizer.PreviousWallpapers.Length; i++)
+            for (int i = 0; i < ThemeUtil.Theme.WallpaperRandomizer.PreviousWallpapers.Length; i++)
             {
                 PreviousWallpaper(i);
             }
@@ -409,13 +417,13 @@ namespace WallpaperFlux.Core.ViewModels
         // sets all wallpapers to their previous wallpaper, if one existed
         public void PreviousWallpaper(int index)
         {
-            if (DataUtil.Theme.WallpaperRandomizer.PreviousWallpapers[index].Count > 0)
+            if (ThemeUtil.Theme.WallpaperRandomizer.PreviousWallpapers[index].Count > 0)
             {
-                DataUtil.Theme.WallpaperRandomizer.NextWallpapers[index] = DataUtil.Theme.WallpaperRandomizer.PreviousWallpapers[index].Pop();
+                ThemeUtil.Theme.WallpaperRandomizer.NextWallpapers[index] = ThemeUtil.Theme.WallpaperRandomizer.PreviousWallpapers[index].Pop();
 
-                if (File.Exists(DataUtil.Theme.WallpaperRandomizer.NextWallpapers[index]))
+                if (File.Exists(ThemeUtil.Theme.WallpaperRandomizer.NextWallpapers[index]))
                 {
-                    WallpaperUtil.SetWallpaper(index, true); // ignoreRandomization = true since there is no need to randomize wallpapers that have previously existed
+                    WallpaperUtil.SetWallpaper(index, true, true); // ignoreRandomization = true since there is no need to randomize wallpapers that have previously existed
                 }
             }
             // Not needed here, we can just disable the button
@@ -682,9 +690,9 @@ namespace WallpaperFlux.Core.ViewModels
 
             foreach (string imagePath in selectedImages)
             {
-                if (DataUtil.Theme.Images.ContainsImage(imagePath))
+                if (ThemeUtil.Theme.Images.ContainsImage(imagePath))
                 {
-                    selectedImageModels.Add(DataUtil.Theme.Images.GetImage(imagePath));
+                    selectedImageModels.Add(ThemeUtil.Theme.Images.GetImage(imagePath));
                 }
                 else
                 {
@@ -773,7 +781,7 @@ namespace WallpaperFlux.Core.ViewModels
                     if (j + imageIndex < selectedImages.Length)
                     {
                         ImageModel image = selectedImages[j + imageIndex];
-                        if (DataUtil.Theme.Images.ContainsImage(image.Path, image.ImageType))
+                        if (ThemeUtil.Theme.Images.ContainsImage(image.Path, image.ImageType))
                         {
                             tabModel.Items.Add(image);
                         }

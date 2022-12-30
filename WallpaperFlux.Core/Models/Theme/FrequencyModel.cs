@@ -5,6 +5,7 @@ using System.Text;
 using System.Windows.Input;
 using MvvmCross.Commands;
 using MvvmCross.ViewModels;
+using Newtonsoft.Json;
 using WallpaperFlux.Core.Tools;
 using WallpaperFlux.Core.Util;
 
@@ -12,7 +13,7 @@ namespace WallpaperFlux.Core.Models.Theme
 {
     public class FrequencyModel : MvxNotifyPropertyChanged
     {
-        private FrequencyCalculator _parentCalculator;
+        private FrequencyCalculator ParentCalculator => ThemeUtil.Theme.Settings.ThemeSettings.FrequencyCalc;
 
         // TODO Find a cleaner way to do this, maybe just give every TextBox an event to trigger on-change
         // TODO It would be better, however, if the 'event' was still connected to the variable somehow
@@ -24,7 +25,7 @@ namespace WallpaperFlux.Core.Models.Theme
         //! Remember!
 
         private double _relativeFrequencyStatic;
-        public double RelativeFrequencyStatic
+        [JsonIgnore] public double RelativeFrequencyStatic
         {
             get => _relativeFrequencyStatic;
             set
@@ -35,7 +36,7 @@ namespace WallpaperFlux.Core.Models.Theme
         }
 
         private double _relativeFrequencyGIF;
-        public double RelativeFrequencyGIF
+        [JsonIgnore] public double RelativeFrequencyGIF
         {
             get => _relativeFrequencyGIF;
             set
@@ -46,7 +47,7 @@ namespace WallpaperFlux.Core.Models.Theme
         }
 
         private double _relativeFrequencyVideo;
-        public double RelativeFrequencyVideo
+        [JsonIgnore] public double RelativeFrequencyVideo
         {
             get => _relativeFrequencyVideo;
             set
@@ -57,7 +58,7 @@ namespace WallpaperFlux.Core.Models.Theme
         }
 
         private double _exactFrequencyStatic;
-        public double ExactFrequencyStatic
+        [JsonIgnore] public double ExactFrequencyStatic
         {
             get => _exactFrequencyStatic;
             set
@@ -68,7 +69,7 @@ namespace WallpaperFlux.Core.Models.Theme
         }
 
         private double _exactFrequencyGIF;
-        public double ExactFrequencyGIF
+        [JsonIgnore] public double ExactFrequencyGIF
         {
             get => _exactFrequencyGIF;
             set
@@ -79,7 +80,7 @@ namespace WallpaperFlux.Core.Models.Theme
         }
 
         private double _exactFrequencyVideo;
-        public double ExactFrequencyVideo
+        [JsonIgnore] public double ExactFrequencyVideo
         {
             get => _exactFrequencyVideo;
             set
@@ -98,18 +99,13 @@ namespace WallpaperFlux.Core.Models.Theme
             {
                 SetProperty(ref _weightedFrequency, value); // must be called first before the below updates are handled
 
-                DataUtil.Theme.RankController.UpdateImageTypeWeights();
+                ThemeUtil.Theme.RankController.UpdateImageTypeWeights();
             }
         }
 
         private bool _frequenciesUpdated = true; // assume that frequencies are updated by default
 
-        public IMvxCommand ConfirmFrequencyCommand { get; set; }
-
-        public FrequencyModel(FrequencyCalculator parentCalculator)
-        {
-            _parentCalculator = parentCalculator;
-        }
+        [JsonIgnore] public IMvxCommand ConfirmFrequencyCommand { get; set; }
 
         // Without this the UI won't represent the default FrequencyModel settings on launch
         public void Init() //x //? should always be done AFTER the Init() in FrequencyCalculator
@@ -123,7 +119,7 @@ namespace WallpaperFlux.Core.Models.Theme
             // this boolean accounts for the fact that this method will be called again when all of the below statements re-run the set method (when updating the UI)
             if (_frequenciesUpdated)
             {
-                _parentCalculator.UpdateFrequency(imageType, frequencyType, value / 100); // the visual value is 100 times larger than the actual value which goes from 0-1
+                ParentCalculator.UpdateFrequency(imageType, frequencyType, value / 100); // the visual value is 100 times larger than the actual value which goes from 0-1
                 UpdateModelFrequency(); // updates the UI to the potentially adjusted frequency
 
                 //? The below is now handled by the FrequencyCalculator since every time the frequencies are verified this should be called
@@ -139,12 +135,12 @@ namespace WallpaperFlux.Core.Models.Theme
             //xif (!_frequenciesUpdated) return;  //? this boolean accounts for the fact that this method will be called again when all of the below statements re-run the set method
             //x_frequenciesUpdated = false;
 
-            _relativeFrequencyStatic = _parentCalculator.GetRelativeFrequency(ImageType.Static) * 100;
-            _relativeFrequencyGIF = _parentCalculator.GetRelativeFrequency(ImageType.GIF) * 100;
-            _relativeFrequencyVideo = _parentCalculator.GetRelativeFrequency(ImageType.Video) * 100;
-            _exactFrequencyStatic = _parentCalculator.GetExactFrequency(ImageType.Static) * 100;
-            _exactFrequencyGIF = _parentCalculator.GetExactFrequency(ImageType.GIF) * 100;
-            _exactFrequencyVideo = _parentCalculator.GetExactFrequency(ImageType.Video) * 100;
+            _relativeFrequencyStatic = ParentCalculator.GetRelativeFrequency(ImageType.Static) * 100;
+            _relativeFrequencyGIF = ParentCalculator.GetRelativeFrequency(ImageType.GIF) * 100;
+            _relativeFrequencyVideo = ParentCalculator.GetRelativeFrequency(ImageType.Video) * 100;
+            _exactFrequencyStatic = ParentCalculator.GetExactFrequency(ImageType.Static) * 100;
+            _exactFrequencyGIF = ParentCalculator.GetExactFrequency(ImageType.GIF) * 100;
+            _exactFrequencyVideo = ParentCalculator.GetExactFrequency(ImageType.Video) * 100;
 
             Debug.WriteLine("Raising all properties changed for the FrequencyModel"); //? Not sure how severe the impact of this is so keep the Debug statement for now
             RaiseAllPropertiesChanged(); //? directly changing the private variables skips over SetProperty()

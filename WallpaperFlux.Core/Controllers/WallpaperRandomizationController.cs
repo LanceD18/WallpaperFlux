@@ -36,7 +36,7 @@ namespace WallpaperFlux.Core.Controllers
             foreach (string wallpaperPath in wallpapers)
             {
                 //xif (!File.Exists(wallpaperPath))
-                if (!DataUtil.Theme.Images.ContainsImage(wallpaperPath) || !File.Exists(wallpaperPath))
+                if (!ThemeUtil.Theme.Images.ContainsImage(wallpaperPath) || !File.Exists(wallpaperPath))
                 {
                     Debug.WriteLine("Invalid Wallpaper Found: " + wallpaperPath);
                     return false;
@@ -81,9 +81,9 @@ namespace WallpaperFlux.Core.Controllers
                 // Determine random image type
                 ImageType imageTypeToSearchFor = ImageType.None;
 
-                double staticChance = DataUtil.Theme.Settings.ThemeSettings.FrequencyCalc.GetExactFrequency(ImageType.Static);
-                double gifChance = DataUtil.Theme.Settings.ThemeSettings.FrequencyCalc.GetExactFrequency(ImageType.GIF);
-                double videoChance = DataUtil.Theme.Settings.ThemeSettings.FrequencyCalc.GetExactFrequency(ImageType.Video);
+                double staticChance = ThemeUtil.Theme.Settings.ThemeSettings.FrequencyCalc.GetExactFrequency(ImageType.Static);
+                double gifChance = ThemeUtil.Theme.Settings.ThemeSettings.FrequencyCalc.GetExactFrequency(ImageType.GIF);
+                double videoChance = ThemeUtil.Theme.Settings.ThemeSettings.FrequencyCalc.GetExactFrequency(ImageType.Video);
 
                 if ((staticChance + gifChance + videoChance) == 0)
                 {
@@ -98,7 +98,7 @@ namespace WallpaperFlux.Core.Controllers
 
                 imageTypeToSearchFor = rand.NextInWeightedArray(imageTypeIndexes, imageTypePercentages);
 
-                if (DataUtil.Theme.RankController.IsAllImagesOfTypeUnranked(imageTypeToSearchFor))
+                if (ThemeUtil.Theme.RankController.IsAllImagesOfTypeUnranked(imageTypeToSearchFor))
                 {
                     MessageBoxUtil.ShowError("Attempted to set a wallpaper to an image type with no valid/ranked images." +
                                              "\nWallpaper Change Cancelled [IMAGE TYPE: " + imageTypeToSearchFor + "]" +
@@ -113,9 +113,9 @@ namespace WallpaperFlux.Core.Controllers
                 if (randomRank != -1)
                 {
                     Debug.WriteLine("Setting Wallpaper: " + i);
-                    potentialWallpapers[i] =  DataUtil.Theme.RankController.GetRandomImageOfRank(randomRank, ref rand, imageTypeToSearchFor).Path;
+                    potentialWallpapers[i] =  ThemeUtil.Theme.RankController.GetRandomImageOfRank(randomRank, ref rand, imageTypeToSearchFor).Path;
 
-                    if (!DataUtil.Theme.Images.GetImage(potentialWallpapers[i]).Active)
+                    if (!ThemeUtil.Theme.Images.GetImage(potentialWallpapers[i]).Active)
                     {
                         //! This shouldn't happen, if this does you have a bug to fix
                         MessageBoxUtil.ShowError("Attempted to set display " + i + " to an inactive wallpaper | A new wallpaper has been chosen");
@@ -139,14 +139,14 @@ namespace WallpaperFlux.Core.Controllers
         {
             Debug.WriteLine("Searching for: " + imageType);
             // the percentiles for weighted ranks change everytime an image's rank is altered or if the image type is not none
-            if ((DataUtil.Theme.RankController.PercentileController.PotentialWeightedRankUpdate && DataUtil.Theme.Settings.ThemeSettings.WeightedRanks)
-                || DataUtil.Theme.RankController.PercentileController.PotentialRegularRankUpdate
+            if ((ThemeUtil.Theme.RankController.PercentileController.PotentialWeightedRankUpdate && ThemeUtil.Theme.Settings.ThemeSettings.WeightedRanks)
+                || ThemeUtil.Theme.RankController.PercentileController.PotentialRegularRankUpdate
                 || imageType != ImageType.None)
             {
-                DataUtil.Theme.RankController.PercentileController.UpdateRankPercentiles(imageType); //? this method sets the above booleans to false
+                ThemeUtil.Theme.RankController.PercentileController.UpdateRankPercentiles(imageType); //? this method sets the above booleans to false
             }
 
-            Dictionary<int, double> modifiedRankPercentiles = DataUtil.Theme.RankController.PercentileController.GetRankPercentiles(imageType);
+            Dictionary<int, double> modifiedRankPercentiles = ThemeUtil.Theme.RankController.PercentileController.GetRankPercentiles(imageType);
 
             return rand.NextInWeightedArray(modifiedRankPercentiles.Keys.ToArray(), modifiedRankPercentiles.Values.ToArray());
         }
@@ -169,22 +169,22 @@ namespace WallpaperFlux.Core.Controllers
             {
                 string[] reorderedWallpapers = new string[0];
                 // if looking for HigherRankedImage
-                if (DataUtil.Theme.Settings.ThemeSettings.HigherRankedImagesOnLargerDisplays || DataUtil.Theme.Settings.ThemeSettings.LargerImagesOnLargerDisplays)
+                if (ThemeUtil.Theme.Settings.ThemeSettings.HigherRankedImagesOnLargerDisplays || ThemeUtil.Theme.Settings.ThemeSettings.LargerImagesOnLargerDisplays)
                 {
                     int[] largestMonitorIndexOrder = Mvx.IoCProvider.Resolve<IExternalDisplayUtil>().GetLargestDisplayIndexOrder().ToArray();
 
-                    if (DataUtil.Theme.Settings.ThemeSettings.HigherRankedImagesOnLargerDisplays)
+                    if (ThemeUtil.Theme.Settings.ThemeSettings.HigherRankedImagesOnLargerDisplays)
                     {
-                        reorderedWallpapers = (from f in wallpapersToModify orderby DataUtil.Theme.Images.GetImage(f).Rank descending select f).ToArray();
+                        reorderedWallpapers = (from f in wallpapersToModify orderby ThemeUtil.Theme.Images.GetImage(f).Rank descending select f).ToArray();
 
                         // both ranking and size are now a factor so first an image's rank will determine their index and then afterwards
                         // any ranking conflicts have their indexes determined by size rather than being random
-                        if (DataUtil.Theme.Settings.ThemeSettings.LargerImagesOnLargerDisplays)
+                        if (ThemeUtil.Theme.Settings.ThemeSettings.LargerImagesOnLargerDisplays)
                         {
                             ConflictResolveIdenticalRanks(ref reorderedWallpapers);
                         }
                     }
-                    else if (DataUtil.Theme.Settings.ThemeSettings.LargerImagesOnLargerDisplays)
+                    else if (ThemeUtil.Theme.Settings.ThemeSettings.LargerImagesOnLargerDisplays)
                     {
                         reorderedWallpapers = LargestImagesWithCustomFilePath(wallpapersToModify);
                     }
@@ -201,7 +201,7 @@ namespace WallpaperFlux.Core.Controllers
             Dictionary<int, List<string>> rankConflicts = new Dictionary<int, List<string>>();
             foreach (string wallpaper in reorderedWallpapers)
             {
-                int wallpaperRank = DataUtil.Theme.Images.GetImage(wallpaper).Rank;
+                int wallpaperRank = ThemeUtil.Theme.Images.GetImage(wallpaper).Rank;
                 if (!rankConflicts.ContainsKey(wallpaperRank))
                 {
                     rankConflicts.Add(wallpaperRank, new List<string> { wallpaper });
@@ -267,7 +267,7 @@ namespace WallpaperFlux.Core.Controllers
 
             for (var i = 0; i < customFilePath.Length; i++)
             {
-                images[i] = DataUtil.Theme.Images.GetImage(customFilePath[i]);
+                images[i] = ThemeUtil.Theme.Images.GetImage(customFilePath[i]);
             }
 
             customFilePath = (

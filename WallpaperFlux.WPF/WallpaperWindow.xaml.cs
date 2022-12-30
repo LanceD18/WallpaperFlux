@@ -44,6 +44,8 @@ namespace WallpaperFlux.WPF
         //? The index is currently gathered by the array utilized in ExternalWallpaperHandler and MainWindow
         public ImageModel ActiveImage;
 
+        private int VideoLoopCount;
+
         private bool Muted;
 
         public WallpaperWindow(Screen display, IntPtr workerw)
@@ -69,9 +71,26 @@ namespace WallpaperFlux.WPF
         }
 
         //? The index is checked in ExternalWallpaperHandler now as it has access to the array, which allows wallpapers to be changed independently of one another
-        public async void OnWallpaperChange(ImageModel image)
+        public async void OnWallpaperChange(ImageModel image, bool forceChange)
         {
-            ActiveImage = image;
+            if (!forceChange && ActiveImage is { IsVideoOrGif: true }) // we can only make these checks if the previous wallpaper was a video or gif
+            {
+                Debug.WriteLine("VideoLoopCount: " + VideoLoopCount + " | MinimumVideoLoops: " + ThemeUtil.VideoSettings.MinimumVideoLoops);
+                if (VideoLoopCount < ThemeUtil.VideoSettings.MinimumVideoLoops)
+                {
+                    //? we will only check for the video time condition if we have not yet gone beyond the Minimum Loop count
+                    //? essentially, changes are only allowed if we are bosed abobe the minimum loop count AND the max video time
+                    Debug.WriteLine("Nax Video Time: " + ThemeUtil.VideoSettings.MaximumVideoTime);
+                    Debug.WriteLine("Media: " + WallpaperMediaElement.Position.Seconds + " | FFME: " + WallpaperMediaElementFFME.Position.Seconds);
+                    if (WallpaperMediaElement.Position.Seconds <= ThemeUtil.VideoSettings.MaximumVideoTime ||
+                        WallpaperMediaElementFFME.Position.Seconds <= ThemeUtil.VideoSettings.MaximumVideoTime)
+                    {
+                        return;
+                    }
+                }
+
+                VideoLoopCount = 0; // if we are allowed to make a change, reset the loop count
+            }
 
             FileInfo wallpaperInfo;
             string wallpaperPath = image.Path;
@@ -90,9 +109,9 @@ namespace WallpaperFlux.WPF
             //xWallpaperMediaElement.BeginInit();
             //xWallpaperMediaElementFFME.BeginInit();
 
-            if (WallpaperUtil.IsSupportedVideoType(wallpaperInfo.FullName) || wallpaperInfo.Extension == ".gif") // ---- video or gif ----
+            if (WallpaperUtil.IsSupportedVideoType_GivenExtension(wallpaperInfo.Extension) || wallpaperInfo.Extension == ".gif") // ---- video or gif ----
             {
-                UpdateVolume();
+                UpdateVolume(image);
                 
                 //? FFME is unstable and likely to crash on larger videos, but Windows Media Player can't load webms | Also, it seems to load gifs faster
                 if (wallpaperInfo.Extension == ".webm" || wallpaperInfo.Extension == ".gif") 
@@ -134,6 +153,8 @@ namespace WallpaperFlux.WPF
 
                 DisableUnusedElements(UsedElement.Image);
             }
+
+            ActiveImage = image; //? this change implies that the wallpaper was SUCCESSFULLY changed | Errors, video loop control, etc. can stop this
 
             //xWallpaperImage.EndInit();
             //xWallpaperMediaElement.EndInit();
@@ -215,13 +236,20 @@ namespace WallpaperFlux.WPF
 
         private void WallpaperMediaElement_OnMediaEnded(object sender, RoutedEventArgs e)
         {
+            VideoLoopCount++;
+
             if (sender is MediaElement element)
             {
                 element.Position = TimeSpan.Zero;
                 element.Play();
             }
         }
-        
+
+        private void WallpaperMediaElementFFME_OnMediaEnded(object? sender, EventArgs e)
+        {
+            VideoLoopCount++;
+        }
+
         /*x
         private void WallpaperMediaElementFFME_OnMediaEnded(object? sender, EventArgs e)
         {
@@ -245,24 +273,24 @@ namespace WallpaperFlux.WPF
         public void Mute()
         {
             Muted = true;
-            UpdateVolume();
+            UpdateVolume(ActiveImage);
         }
 
         public void Unmute()
         {
             Muted = false;
-            UpdateVolume();
+            UpdateVolume(ActiveImage);
         }
 
-        public void UpdateVolume()
+        public void UpdateVolume(ImageModel image)
         {
             Dispatcher.Invoke(() =>
             {
                 if (!Muted)
                 {
-                    if (ActiveImage != null) //? it's okay to set the volume to 0 ahead of time, but sometimes the ActiveImage may not be initialized
+                    if (image != null) //? it's okay to set the volume to 0 ahead of time, but sometimes the given image may not be initialized
                     {
-                        WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = ActiveImage.Volume / 100;
+                        WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = image.Volume / 100;
                     }
                 }
                 else

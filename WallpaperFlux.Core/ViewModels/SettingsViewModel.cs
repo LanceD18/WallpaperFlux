@@ -13,7 +13,7 @@ namespace WallpaperFlux.Core.ViewModels
     {
         public static SettingsViewModel Instance; // allows the data to remain persistent without having to reload everything once the view is closed
 
-        public SettingsModel Settings { get; set; } = DataUtil.Theme.Settings; //? most of the data handling is managed through here
+        public SettingsModel Settings { get; set; } = ThemeUtil.Theme.Settings; //? most of the data handling is managed through here
 
         #region Commands
 

@@ -78,7 +78,7 @@ namespace WallpaperFlux.Core.Util
 
     public class JsonWallpaperData
     {
-        [JsonProperty("ThemeOptions")] public ThemeOptions ThemeOptions;
+        [JsonProperty("Settings")] public SettingsModel Settings;
 
         [JsonProperty("MiscData")] public MiscData MiscData;
 
@@ -88,9 +88,9 @@ namespace WallpaperFlux.Core.Util
 
         [JsonProperty("ImageData")] public SimplifiedImage[] Images;
 
-        public JsonWallpaperData(ThemeOptions themeOptions, MiscData miscData, SimplifiedFolder[] imageFolders, SimplifiedCategory[] categories, SimplifiedImage[] images)
+        public JsonWallpaperData(SettingsModel settings, MiscData miscData, SimplifiedFolder[] imageFolders, SimplifiedCategory[] categories, SimplifiedImage[] images)
         {
-            ThemeOptions = themeOptions;
+            Settings = settings;
             MiscData = miscData;
             ImageFolders = imageFolders;
             Categories = categories;
@@ -98,15 +98,17 @@ namespace WallpaperFlux.Core.Util
         }
     }
 
-    public struct ThemeOptions
+    /*x
+    public struct Settings
     {
         public int MaxRank;
 
-        public ThemeOptions(int maxRank)
+        public Settings(int maxRank)
         {
             MaxRank = maxRank;
         }
     }
+    */
     
     public struct MiscData
     {
@@ -189,19 +191,17 @@ namespace WallpaperFlux.Core.Util
             //! Threading this could potentially cause errors with saving to the Default Theme if you're not careful
 
             Debug.WriteLine("Saving to: " + path);
-
-            ThemeOptions themeOptions = new ThemeOptions(DataUtil.Theme.RankController.GetMaxRank());
-
+            
             //! the instance itself will be NULL if you DON'T OPEN it before saving, so don't use ViewModel.Instance here!
             MiscData miscData = new MiscData(false, false, false, false, 
                 TaggingUtil.GetActiveSortType(), TaggingUtil.GetSortByNameDirection(), TaggingUtil.GetSortByCountDirection());
 
             JsonWallpaperData jsonWallpaperData = new JsonWallpaperData(
-                themeOptions,
+                ThemeUtil.Theme.Settings,
                 miscData,
                 ConvertToSimplifiedFolders(WallpaperFluxViewModel.Instance.ImageFolders.ToArray()),
-                ConvertToSimplifiedCategories(DataUtil.Theme.Categories.ToArray()),
-                ConvertToSimplifiedImages(DataUtil.Theme.Images.GetAllImages().ToArray()));
+                ConvertToSimplifiedCategories(ThemeUtil.Theme.Categories.ToArray()),
+                ConvertToSimplifiedImages(ThemeUtil.Theme.Images.GetAllImages().ToArray()));
 
             Debug.WriteLine("Writing to JSON file");
             using (StreamWriter file = File.CreateText(path))
@@ -442,7 +442,7 @@ namespace WallpaperFlux.Core.Util
 
         private static void ConvertThemeOptions(JsonWallpaperData wallpaperData)
         {
-            DataUtil.Theme = new ThemeModel(wallpaperData.ThemeOptions.MaxRank);  //! This needs to be done before any images are added otherwise their ranks will be changed!
+            ThemeUtil.ReconstructTheme(wallpaperData.Settings);  //! This needs to be done before any images are added otherwise their ranks will be changed!
         }
 
         private static void ConvertMiscData(JsonWallpaperData wallpaperData)
@@ -499,7 +499,7 @@ namespace WallpaperFlux.Core.Util
             }
 
             //? we need the official category list ahead of time for data handling but this gives them the wrong order, so we used this to fix it
-            DataUtil.Theme.Categories = new List<CategoryModel>(orderedCategories);
+            ThemeUtil.Theme.Categories = new List<CategoryModel>(orderedCategories);
             TaggingUtil.UpdateCategoryView(); // don't forget to update the view
         }
 
@@ -533,7 +533,7 @@ namespace WallpaperFlux.Core.Util
                 ConvertSimpleImageTagsToTagCollection(simpleImage, tags, false);
                 ConvertSimpleImageTagsToTagCollection(simpleImage, tags, true);
 
-                DataUtil.Theme.Images.AddImage(image);
+                ThemeUtil.Theme.Images.AddImage(image);
                 
                 /*x
                 //! Debug ; used to test image load times
@@ -605,7 +605,7 @@ namespace WallpaperFlux.Core.Util
 
             #region Convert Theme Options
             Debug.WriteLine("Converting Theme Options...");
-            DataUtil.Theme = new ThemeModel(wallpaperData.miscData.maxRank); //! This needs to be done before any images are added
+            ThemeUtil.ReconstructTheme(wallpaperData.miscData.maxRank); //! This needs to be done before any images are added
             // TODO wallpaperData.themeOptions;
             #endregion
 
@@ -655,7 +655,7 @@ namespace WallpaperFlux.Core.Util
             }
 
             //? we need the official category list ahead of time for data handling but this gives them the wrong order, so we used this to fix it
-            DataUtil.Theme.Categories = new List<CategoryModel>(orderedCategories);
+            ThemeUtil.Theme.Categories = new List<CategoryModel>(orderedCategories);
             TaggingUtil.UpdateCategoryView(); // don't forget to update the view
             #endregion
 
@@ -762,7 +762,7 @@ namespace WallpaperFlux.Core.Util
                 }
 
                 //x Debug.WriteLine("Adding Image: " + image.PathName);
-                DataUtil.Theme.Images.AddImage(image);
+                ThemeUtil.Theme.Images.AddImage(image);
             }
 
             if (invalidImageCount > 0) MessageBoxUtil.ShowError(invalidImageString);
@@ -776,6 +776,5 @@ namespace WallpaperFlux.Core.Util
             Debug.WriteLine("Conversion Finished");
         }
         #endregion
-
     }
 }

@@ -24,21 +24,21 @@ namespace WallpaperFlux.Core.ViewModels
         public int SpecifiedRank
         {
             get => _specifiedRank;
-            set => SetProperty(ref _specifiedRank, DataUtil.Theme.RankController.ClampValueToRankRange(value));
+            set => SetProperty(ref _specifiedRank, ThemeUtil.Theme.RankController.ClampValueToRankRange(value));
         }
 
         private int _minSpecifiedRank;
         public int MinSpecifiedRank
         {
             get => _minSpecifiedRank;
-            set => SetProperty(ref _minSpecifiedRank, DataUtil.Theme.RankController.ClampValueToRankRange(value));
+            set => SetProperty(ref _minSpecifiedRank, ThemeUtil.Theme.RankController.ClampValueToRankRange(value));
         }
 
         private int _maxSpecifiedRank;
         public int MaxSpecifiedRank
         {
             get => _maxSpecifiedRank;
-            set => SetProperty(ref _maxSpecifiedRank, DataUtil.Theme.RankController.ClampValueToRankRange(value));
+            set => SetProperty(ref _maxSpecifiedRank, ThemeUtil.Theme.RankController.ClampValueToRankRange(value));
         }
 
         #region Checkboxes & Radio Buttons
@@ -74,7 +74,7 @@ namespace WallpaperFlux.Core.ViewModels
 
         public ImageSelectionViewModel()
         {
-            SelectImagesCommand = new MvxCommand( () => RebuildImageSelectorWithOptions(FilterImages(DataUtil.Theme.Images.GetAllImages())));
+            SelectImagesCommand = new MvxCommand( () => RebuildImageSelectorWithOptions(FilterImages(ThemeUtil.Theme.Images.GetAllImages())));
             SelectImagesOfTypeCommand = new MvxCommand(PromptImageType);
             SelectImagesInFolderCommand = new MvxCommand(PromptFolder);
             SelectActiveWallpapersCommand = new MvxCommand(SelectActiveWallpapers);
@@ -150,15 +150,15 @@ namespace WallpaperFlux.Core.ViewModels
             // ----- Evaluate Button Result -----
             if ((string)messageBox.ButtonPressed.Id == STATIC_BUTTON_ID)
             {
-                RebuildImageSelectorWithOptions(FilterImages(DataUtil.Theme.RankController.GetAllImagesOfType(ImageType.Static)));
+                RebuildImageSelectorWithOptions(FilterImages(ThemeUtil.Theme.RankController.GetAllImagesOfType(ImageType.Static)));
             }
             else if ((string)messageBox.ButtonPressed.Id == GIF_BUTTON_ID)
             {
-                RebuildImageSelectorWithOptions(FilterImages(DataUtil.Theme.RankController.GetAllImagesOfType(ImageType.GIF)));
+                RebuildImageSelectorWithOptions(FilterImages(ThemeUtil.Theme.RankController.GetAllImagesOfType(ImageType.GIF)));
             }
             else if ((string)messageBox.ButtonPressed.Id == VIDEO_BUTTON_ID)
             {
-                RebuildImageSelectorWithOptions(FilterImages(DataUtil.Theme.RankController.GetAllImagesOfType(ImageType.Video)));
+                RebuildImageSelectorWithOptions(FilterImages(ThemeUtil.Theme.RankController.GetAllImagesOfType(ImageType.Video)));
             }
         }
 
@@ -169,7 +169,7 @@ namespace WallpaperFlux.Core.ViewModels
 
         private void SelectActiveWallpapers()
         {
-            ImageModel[] activeImages = DataUtil.Theme.Images.GetImageRange(DataUtil.Theme.WallpaperRandomizer.ActiveWallpapers);
+            ImageModel[] activeImages = ThemeUtil.Theme.Images.GetImageRange(ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers);
 
             RebuildImageSelectorWithOptions(activeImages);
         }

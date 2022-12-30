@@ -43,7 +43,7 @@ namespace WallpaperFlux.Core.Models
                 //? this should be called before setting the value so that the proper old path is obtainable, and also so that this isn't called while first setting up the image
                 if (_path != null)
                 {
-                    DataUtil.Theme.Images.UpdateImageCollectionPath(this, _path, value);
+                    ThemeUtil.Theme.Images.UpdateImageCollectionPath(this, _path, value);
                     //? RankController uses the image file itself so it shouldn't need updating
                 } 
 
@@ -76,7 +76,7 @@ namespace WallpaperFlux.Core.Models
                 }
                 */
 
-                DataUtil.Theme.RankController.ModifyRank(this, _rank, ref value); //? this should be called first to allow the old rank to be identified
+                ThemeUtil.Theme.RankController.ModifyRank(this, _rank, ref value); //? this should be called first to allow the old rank to be identified
                 SetProperty(ref _rank, value);
             }
         }
@@ -120,7 +120,7 @@ namespace WallpaperFlux.Core.Models
         // TODO Replace the external references to these values (The references in xaml) with the ImageType variable
         public bool IsStatic => WallpaperUtil.IsStatic(Path);
 
-        public bool IsGIF => WallpaperUtil.IsGif(Path);
+        public bool IsGif => WallpaperUtil.IsGif(Path);
 
         public bool IsVideo => WallpaperUtil.IsVideo(Path);
 
@@ -132,6 +132,8 @@ namespace WallpaperFlux.Core.Models
                 return extension == ".gif" || extension == ".webm";
             }
         }
+
+        public bool IsVideoOrGif => IsVideo || IsGif;
 
         // Commands
         #region Commands
@@ -216,7 +218,7 @@ namespace WallpaperFlux.Core.Models
 
             ImageType = IsStatic 
                 ? ImageType.Static 
-                : IsGIF 
+                : IsGif 
                     ? ImageType.GIF 
                     : ImageType.Video;
 
@@ -389,7 +391,7 @@ namespace WallpaperFlux.Core.Models
                 }
             }
 
-            WallpaperUtil.SetWallpaper(displayIndex, Path, true); // no randomization required here
+            WallpaperUtil.SetWallpaper(displayIndex, Path, true, true); // no randomization required here
         }
         #endregion
     }

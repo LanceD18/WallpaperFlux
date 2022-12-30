@@ -248,7 +248,7 @@ namespace WallpaperFlux.Core.ViewModels
         {
             //? We will use this theme reference for categories so that tags and categories can be referenced outside of this control
             //! So do NOT add Category functionality here, give it to TaggingUtil
-            Categories.SwitchTo(DataUtil.Theme.Categories);
+            Categories.SwitchTo(ThemeUtil.Theme.Categories);
 
             AddCategoryCommand = new MvxCommand(() =>
             {

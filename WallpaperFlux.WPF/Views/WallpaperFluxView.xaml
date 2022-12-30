@@ -438,7 +438,7 @@
                                                                                 ContentTemplate="{StaticResource StaticTemplate}"/>
                                                                                     <!-- Triggers -->
                                                                                     <DataTemplate.Triggers>
-                                                                                        <DataTrigger Binding="{Binding IsGIF}" Value="True">
+                                                                                        <DataTrigger Binding="{Binding IsGif}" Value="True">
                                                                                             <!-- Sets the ContentTemplate to be GIFTemplate instead of StaticTemplate -->
                                                                                             <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource GIFTemplate}"/>
                                                                                         </DataTrigger>
@@ -677,7 +677,7 @@
                                                                                 ContentTemplate="{StaticResource StaticTemplate}"/>
                                                         <!-- Triggers -->
                                                         <DataTemplate.Triggers>
-                                                            <DataTrigger Binding="{Binding IsGIF}" Value="True">
+                                                            <DataTrigger Binding="{Binding IsGif}" Value="True">
                                                                 <!-- Sets the ContentTemplate to be GIFTemplate instead of StaticTemplate -->
                                                                 <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource GIFTemplate}"/>
                                                             </DataTrigger>

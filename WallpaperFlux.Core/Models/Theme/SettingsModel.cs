@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using MvvmCross.Commands;
 using MvvmCross.ViewModels;
+using Newtonsoft.Json;
 using WallpaperFlux.Core.Tools;
 using WallpaperFlux.Core.Util;
 
@@ -27,16 +28,16 @@ namespace WallpaperFlux.Core.Models.Theme
 
         public bool WeightedRanks { get; set; }
         public bool AllowTagBasedRenamingForMovedImages { get; set; }
-        
-        public FrequencyCalculator FrequencyCalc { get; set; }
-        public FrequencyModel FrequencyModel { get; set; }
+
+        [JsonIgnore] public FrequencyCalculator FrequencyCalc { get; set; } = new FrequencyCalculator();
+        public FrequencyModel FrequencyModel { get; set; } = new FrequencyModel();
 
         // Video Settings
-        public VideoSettings VideoSettings { get; set; }
+        public VideoSettings VideoSettings { get; set; } = new VideoSettings();
 
         // Monitor Options
         //! DO NOT USE YET ; This still needs to be set up, will re-purpose MOST of ThemeSettings so that Monitors can have their own options
-        public DisplaySettings[] DisplaySettings { get; set; }
+        [JsonIgnore] public DisplaySettings[] DisplaySettings { get; set; }
     }
 
     public class VideoSettings
@@ -60,7 +61,7 @@ namespace WallpaperFlux.Core.Models.Theme
 
         // General Settings
         public bool WeightedRanks;
-        public FrequencyCalculator FrequencyCalc = new FrequencyCalculator();
+        [JsonIgnore] public FrequencyCalculator FrequencyCalc = new FrequencyCalculator();
     }
 
     public class SettingsModel : MvxNotifyPropertyChanged
@@ -74,15 +75,16 @@ namespace WallpaperFlux.Core.Models.Theme
 
         // ----- WPF -----
         // Commands
-        public IMvxCommand UpdateMaxRankCommand { get; set; }
+        [JsonIgnore] public IMvxCommand UpdateMaxRankCommand { get; set; }
 
         public SettingsModel(int maxRank)
         {
-            ThemeSettings.FrequencyCalc = new FrequencyCalculator(); //? this must come before FrequencyModel
-            ThemeSettings.FrequencyModel = new FrequencyModel(ThemeSettings.FrequencyCalc);
             ThemeSettings.MaxRank = maxRank;
-            ThemeSettings.VideoSettings = new VideoSettings();
+            InitCommands();
+        }
 
+        public void InitCommands()
+        {
             UpdateMaxRankCommand = new MvxCommand(UpdateMaxRank);
         }
 
@@ -95,7 +97,7 @@ namespace WallpaperFlux.Core.Models.Theme
         {
             if (MessageBoxUtil.GetPositiveInteger("Set Max Rank", "Enter a new max rank", out int maxRank, "Max Rank..."))
             {
-                DataUtil.Theme.RankController.SetMaxRank(maxRank);
+                ThemeUtil.Theme.RankController.SetMaxRank(maxRank);
             }
         }
         #endregion

@@ -23,7 +23,7 @@ namespace WallpaperFlux.Core.Models.Theme
 
         public WallpaperRandomizationController WallpaperRandomizer;
 
-        public ThemeModel(int maxRank)
+        public void Init(int maxRank)
         {
             Settings = new SettingsModel(maxRank);
             Images = new ImageCollection();
@@ -31,11 +31,9 @@ namespace WallpaperFlux.Core.Models.Theme
             WallpaperRandomizer = new WallpaperRandomizationController();
 
             RankController.SetMaxRank(maxRank); //! don't call this in the constructor of RankController to prevent potential initialization mishaps
-        }
 
-        // this code cannot be referenced within the constructor as the ThemeModel is not yet initialized
-        public void Init()
-        {
+            //? the following code cannot be referenced until various components are initialized
+
             // Without this the UI won't represent the default FrequencyModel settings on launch, everything would be 0
             Settings.ThemeSettings.FrequencyModel.Init();
         }

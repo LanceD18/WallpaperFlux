@@ -84,7 +84,7 @@ namespace WallpaperFlux.Core.Collections
         //? Keep in mind that all Remove methods trace back to this method, so sweeping changes that should apply to all of them should be placed here
         public bool RemoveImage(ImageModel image)
         {
-            DataUtil.Theme.RankController.RemoveRankedImage(image);
+            ThemeUtil.Theme.RankController.RemoveRankedImage(image);
 
             image.RemoveAllTags();
             WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.RemoveImage(image);
@@ -198,6 +198,6 @@ namespace WallpaperFlux.Core.Collections
         }
 
         //? RankController classifies images by images type by default, so performing this action there is much easier
-        public ImageModel[] GetAllImagesOfType(ImageType imageType) => DataUtil.Theme.RankController.GetAllImagesOfType(imageType);
+        public ImageModel[] GetAllImagesOfType(ImageType imageType) => ThemeUtil.Theme.RankController.GetAllImagesOfType(imageType);
     }
 }
