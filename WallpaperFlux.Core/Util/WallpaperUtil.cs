@@ -177,7 +177,7 @@ namespace WallpaperFlux.Core.Util
                 //xDataUtil.Theme.WallpaperRandomizer.SetNextWallpaperOrder(index, ignoreRandomization);
             }
 
-            Debug.WriteLine("Settings Wallpaper to Display " + index + ": " + wallpaperPath);
+            Debug.WriteLine("Setting Wallpaper to Display " + index + ": " + wallpaperPath);
             // TODO Want want to use IoC for this at some point
             if (DataUtil.Theme.Images.ContainsImage(wallpaperPath))
             {

@@ -35,6 +35,7 @@ namespace WallpaperFlux.Core.Models
         }
 
         public bool CanSetInterval => DisplayIntervalType != IntervalType.None;
+        public bool NotSyncedToParent => parentSyncedModel == null;
 
         //-----DisplayIntervalType-----
         // TODO This should reset the timer on changing the interval type
@@ -64,9 +65,20 @@ namespace WallpaperFlux.Core.Models
             {
                 SetProperty(ref _displayTimerCurrent, Math.Max(value, 0));
 
-                if (DisplayTimerCurrent <= 0 && DisplayTimerMax != 0)
+                if (NotSyncedToParent)
                 {
-                    ResetTimer(false);
+                    foreach (DisplayModel model in childSyncedModels)
+                    {
+                        if (model != this)
+                        {
+                            model.DisplayTimerCurrent = DisplayTimerCurrent;
+                        }
+                    }
+
+                    if (DisplayTimerCurrent <= 0 && DisplayTimerMax != 0)
+                    {
+                        ResetTimer(false);
+                    }
                 }
             }
         }
@@ -104,16 +116,11 @@ namespace WallpaperFlux.Core.Models
         //-----Methods-----
         private void TimerOnTick(object sender, EventArgs e)
         {
-            if (parentSyncedModel == null)
+            if (NotSyncedToParent)
             {
                 if (DisplayIntervalType != IntervalType.None)
                 {
                     DisplayTimerCurrent -= 1;
-                }
-
-                foreach (DisplayModel model in childSyncedModels)
-                {
-                    model.DisplayTimerCurrent = DisplayTimerCurrent;
                 }
             }
         }
@@ -126,16 +133,24 @@ namespace WallpaperFlux.Core.Models
 
         public void ResetTimer(bool ignoreResetEvent)
         {
-            if (parentSyncedModel == null)
+            if (NotSyncedToParent)
             {
                 DisplayTimerCurrent = DisplayTimerMax;
-                if (!ignoreResetEvent) OnTimerReset?.Invoke(_displayIndex, true);
-                //_displayIndex uses the value appropriate for arrays while DisplayIndex uses the value appropriate for WPF/visual information
-
-                foreach (DisplayModel model in childSyncedModels)
+                if (!ignoreResetEvent) //? this means that we just want to reset the timer but we do not want to change the wallpaper
                 {
-                    model.OnTimerReset?.Invoke(model._displayIndex, true);
+                    OnTimerReset?.Invoke(_displayIndex, true);
+
+                    //? _displayIndex uses the value appropriate for arrays while DisplayIndex uses the value appropriate for WPF/visual information
+
+                    foreach (DisplayModel model in childSyncedModels)
+                    {
+                        if (model != this)
+                        {
+                            model.OnTimerReset?.Invoke(model._displayIndex, true);
+                        }
+                    }
                 }
+
             }
             else
             {

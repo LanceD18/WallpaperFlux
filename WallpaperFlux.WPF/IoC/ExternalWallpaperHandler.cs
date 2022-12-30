@@ -1,4 +1,5 @@
-﻿using WallpaperFlux.Core;
+﻿using System.Diagnostics;
+using WallpaperFlux.Core;
 using WallpaperFlux.Core.IoC;
 using WallpaperFlux.Core.Models;
 
