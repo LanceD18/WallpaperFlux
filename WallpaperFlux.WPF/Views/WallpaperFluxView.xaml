@@ -483,13 +483,17 @@
                                                                     <GroupBox.ToolTip>
                                                                         <ContentControl Content="{Binding }">
                                                                             <ContentControl.Resources>
+                                                                                <!--? FFME -->
                                                                                 <DataTemplate x:Key="FFME">
                                                                                     <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"
-                                                                                        Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" />
+                                                                                        Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" 
+                                                                                        Volume="{Binding ActualVolume, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                                                 </DataTemplate>
+                                                                                <!--? Windows -->
                                                                                 <DataTemplate x:Key="Windows">
                                                                                     <MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play"
-                                                                                        Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" MediaEnded="MediaElement_OnMediaEnded"/>
+                                                                                        Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" MediaEnded="MediaElement_OnMediaEnded"
+                                                                                        Volume="{Binding ActualVolume, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                                                 </DataTemplate>
                                                                             </ContentControl.Resources>
                                                                             <ContentControl.ContentTemplate>
@@ -629,7 +633,7 @@
                             <RowDefinition Height="0"/>
                             <RowDefinition Height="auto"/>
                             <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="175"/>
                             <RowDefinition Height="auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
@@ -692,13 +696,17 @@
                                             <GroupBox adonisExtensions:LayerExtension.IncreaseLayer="False" HorizontalAlignment="Center" VerticalAlignment="Center">
                                                 <ContentControl Content="{Binding }">
                                                     <ContentControl.Resources>
+                                                        <!-- ? FFME -->
                                                         <DataTemplate x:Key="FFME">
                                                             <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"
-                                                                                        Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" />
+                                                                               Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded"
+                                                                               Volume="{Binding ActualVolume, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                         </DataTemplate>
+                                                        <!-- ? Windows -->
                                                         <DataTemplate x:Key="Windows">
                                                             <MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play"
-                                                                          Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" />
+                                                                          Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" 
+                                                                          Volume="{Binding ActualVolume, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                         </DataTemplate>
                                                     </ContentControl.Resources>
                                                     <ContentControl.ContentTemplate>
@@ -739,8 +747,158 @@
                             </StackPanel>
                         </GroupBox>
 
+                        <!--? Settings -->
+                        <GroupBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" Height="{StaticResource InspectorCategoryHeight}"
+                                  adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:LayerExtension.Layer="2">
+                            <!-- Header -->
+                            <GroupBox.Header>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="0"/>
+                                        <ColumnDefinition Width="auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="0"/>
+                                        <RowDefinition Height="auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" Text="Settings" FontWeight="Medium" Margin="0 0 0 5">
+                                        <TextBlock.Style>
+                                            <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </GroupBox.Header>
+
+                            <StackPanel>
+
+                                <!-- ! Any universal settings go here -->
+
+                                <!-- //// Binding to ImageModel //// -->
+                                <ContentControl Content="{Binding SelectedImageSelectorTab.SelectedImage}" HorizontalAlignment="Center">
+                                    <!-- Resources -->
+                                    <ContentControl.Resources>
+                                        <!-- Remember that the Binding context here refers to what's given in the Content of the ContentTemplate, not what ReSharper says -->
+
+                                        <!--? // StaticTemplate // -->
+                                        <DataTemplate x:Key="StaticTemplate">
+                                            <!-- Placeholder for future static-specific settings -->
+                                        </DataTemplate>
+
+                                        <!--? // VideoOrGifTemplate // -->
+                                        <DataTemplate x:Key="VideoOrGifTemplate">
+                                            <StackPanel>
+
+                                                <!-- Minimum Loops -->
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="Minimum Loops " VerticalAlignment="Center"
+                                                               IsEnabled="{Binding OverrideMinimumLoops, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                    <TextBox adonisExtensions:WatermarkExtension.Watermark="Loops..." Margin="5 5 5 0"
+                                                         Text="{Binding MinimumLoops, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                         IsEnabled="{Binding OverrideMinimumLoops, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
+                                                        <TextBox.Style>
+                                                            <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                                                        </TextBox.Style>
+                                                    </TextBox>
+                                                    <CheckBox Content="Override" IsChecked="{Binding OverrideMinimumLoops, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                </StackPanel>
+
+                                                <!-- Maximum Time -->
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="Maximum Time " VerticalAlignment="Center" 
+                                                               IsEnabled="{Binding OverrideMaximumTime, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                    <TextBox adonisExtensions:WatermarkExtension.Watermark="Seconds..." Margin="5 5 5 0"
+                                                         Text="{Binding MaximumTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                         IsEnabled="{Binding OverrideMaximumTime, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
+                                                        <TextBox.Style>
+                                                            <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                                                        </TextBox.Style>
+                                                    </TextBox>
+                                                    <CheckBox Content="Override" IsChecked="{Binding OverrideMaximumTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                </StackPanel>
+
+                                                <!-- Speed -->
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="Speed " VerticalAlignment="Center"/>
+                                                    <TextBox adonisExtensions:WatermarkExtension.Watermark="Mult..." Margin="5 5 3 0"
+                                                         Text="{Binding Speed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                                        <TextBox.Style>
+                                                            <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                                                        </TextBox.Style>
+                                                    </TextBox>
+                                                </StackPanel>
+
+                                                <ContentControl Content="{Binding }">
+                                                    <ContentControl.Resources>
+                                                        <!-- ? VideoSettingsTemplate -->
+                                                        <DataTemplate x:Key="VideoSettingsTemplate">
+                                                            <StackPanel>
+
+                                                                <!-- Volume -->
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock Text="Volume: " VerticalAlignment="Center"/>
+                                                                    <Slider Value="{Binding Volume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="100" Maximum="100"
+                                                                            TickFrequency="1" IsSnapToTickEnabled="True" Margin="5 5 3 0"/>
+                                                                    <TextBox adonisExtensions:WatermarkExtension.Watermark="Volume..." Margin="5 5 3 0" 
+                                                                             adonisExtensions:LayerExtension.Layer="3"
+                                                                             Text="{Binding Volume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                                                        <TextBox.Style>
+                                                                            <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                                                                        </TextBox.Style>
+                                                                    </TextBox>
+                                                                </StackPanel>
+
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                        <!-- ? GifSettingsTemplate -->
+                                                        <DataTemplate x:Key="GifSettingsTemplate">
+                                                            <!-- Placeholder for future gif-specific settings -->
+                                                        </DataTemplate>
+                                                    </ContentControl.Resources>
+                                                    <ContentControl.ContentTemplate>
+                                                        <DataTemplate>
+                                                            <!-- Default Template -->
+                                                            <ContentControl Name="cc" Content="{Binding }" 
+                                                                                        ContentTemplate="{StaticResource VideoSettingsTemplate}"/>
+                                                            <!-- Triggers -->
+                                                            <DataTemplate.Triggers>
+                                                                <DataTrigger Binding="{Binding IsGif}" Value="True">
+                                                                    <!-- Sets the ContentTemplate to be GIFTemplate instead of StaticTemplate -->
+                                                                    <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource GifSettingsTemplate}"/>
+                                                                </DataTrigger>
+                                                            </DataTemplate.Triggers>
+                                                        </DataTemplate>
+                                                    </ContentControl.ContentTemplate>
+                                                </ContentControl>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ContentControl.Resources>
+
+                                    <!-- // Template Control // -->
+                                    <ContentControl.ContentTemplate>
+                                        <DataTemplate>
+                                            <!-- Default Control -->
+                                            <ContentControl Name="cc" Content="{Binding }" ContentTemplate="{StaticResource StaticTemplate}"/>
+                                            <!-- Triggers -->
+                                            <DataTemplate.Triggers>
+                                                <!-- If IsVideo, use the VideoTemplate instead -->
+                                                <DataTrigger Binding="{Binding IsVideoOrGif}" Value="True">
+                                                    <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource VideoOrGifTemplate}"/>
+                                                </DataTrigger>
+                                            </DataTemplate.Triggers>
+                                        </DataTemplate>
+                                    </ContentControl.ContentTemplate>
+                                </ContentControl>
+                            </StackPanel>
+
+                        </GroupBox>
+
+
                         <!--? Tags -->
-                        <GroupBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3"
+                        <GroupBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3"
                               adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:LayerExtension.Layer="2">
                             <!-- Header -->
                             <GroupBox.Header>
@@ -803,38 +961,6 @@
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
-                        </GroupBox>
-
-                        <!--? Settings -->
-                        <GroupBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3" Height="{StaticResource InspectorCategoryHeight}"
-                                  adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:LayerExtension.Layer="2">
-                            <!-- Header -->
-                            <GroupBox.Header>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="0"/>
-                                        <ColumnDefinition Width="auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="0"/>
-                                        <RowDefinition Height="auto"/>
-                                        <RowDefinition Height="*"/>
-                                    </Grid.RowDefinitions>
-
-                                    <TextBlock Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" Text="Settings" FontWeight="Medium" Margin="0 0 0 5">
-                                        <TextBlock.Style>
-                                            <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                </Grid>
-                            </GroupBox.Header>
-
-                            <StackPanel>
-
-                            </StackPanel>
-
                         </GroupBox>
 
                     </Grid>

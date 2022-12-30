@@ -75,15 +75,18 @@ namespace WallpaperFlux.WPF
         {
             if (!forceChange && ActiveImage is { IsVideoOrGif: true }) // we can only make these checks if the previous wallpaper was a video or gif
             {
-                Debug.WriteLine("VideoLoopCount: " + VideoLoopCount + " | MinimumVideoLoops: " + ThemeUtil.VideoSettings.MinimumVideoLoops);
-                if (VideoLoopCount < ThemeUtil.VideoSettings.MinimumVideoLoops)
+                int minLoops = ActiveImage.OverrideMinimumLoops ? ActiveImage.MinimumLoops : ThemeUtil.VideoSettings.MinimumLoops; 
+                int maxTime = ActiveImage.OverrideMaximumTime ? ActiveImage.MaximumTime : ThemeUtil.VideoSettings.MaximumTime;
+
+                //xDebug.WriteLine("VideoLoopCount: " + VideoLoopCount + " | MinimumVideoLoops: " + minLoops);
+                if (VideoLoopCount < minLoops)
                 {
                     //? we will only check for the video time condition if we have not yet gone beyond the Minimum Loop count
                     //? essentially, changes are only allowed if we are bosed abobe the minimum loop count AND the max video time
-                    Debug.WriteLine("Nax Video Time: " + ThemeUtil.VideoSettings.MaximumVideoTime);
-                    Debug.WriteLine("Media: " + WallpaperMediaElement.Position.Seconds + " | FFME: " + WallpaperMediaElementFFME.Position.Seconds);
-                    if (WallpaperMediaElement.Position.Seconds <= ThemeUtil.VideoSettings.MaximumVideoTime ||
-                        WallpaperMediaElementFFME.Position.Seconds <= ThemeUtil.VideoSettings.MaximumVideoTime)
+                    //xDebug.WriteLine("Nax Video Time: " + maxTime);
+                    //xDebug.WriteLine("Media: " + WallpaperMediaElement.Position.Seconds + " | FFME: " + WallpaperMediaElementFFME.Position.Seconds);
+                    if (WallpaperMediaElement.Position.Seconds <= maxTime ||
+                        WallpaperMediaElementFFME.Position.Seconds <= maxTime)
                     {
                         return;
                     }

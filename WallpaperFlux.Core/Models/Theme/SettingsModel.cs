@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using LanceTools;
 using MvvmCross.Commands;
 using MvvmCross.ViewModels;
 using Newtonsoft.Json;
@@ -42,10 +43,16 @@ namespace WallpaperFlux.Core.Models.Theme
 
     public class VideoSettings
     {
-        public int MinimumVideoLoops { get; set; }
-        public int MaximumVideoTime { get; set; }
+        public int MinimumLoops { get; set; }
+        public int MaximumTime { get; set; }
 
-        public int DefaultVideoVolume { get; set; } = 50;
+        private double _defaultVideoVolume = 50;
+        public double DefaultVideoVolume
+        {
+            get => _defaultVideoVolume;
+            set => _defaultVideoVolume = MathE.Clamp(value, 0, 100);
+        }
+
         public bool MuteIfAudioPlaying { get; set; }
         public bool MuteIfApplicationFocused { get; set; }
         public bool MuteIfApplicationMaximized { get; set; }

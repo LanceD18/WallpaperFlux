@@ -32,7 +32,7 @@ namespace WallpaperFlux.Core.Collections
         {
             if (ContainsImage(path)) return null;
 
-            ImageModel addedImage = new ImageModel(path);
+            ImageModel addedImage = new ImageModel(path, volume: ThemeUtil.VideoSettings.DefaultVideoVolume);
             AddImage(addedImage);
             return addedImage;
         }
@@ -69,7 +69,7 @@ namespace WallpaperFlux.Core.Collections
         public ImageModel[] AddImagesOfDirectory(string directory)
         {
             ImageModel[] images = new DirectoryInfo(directory).GetFiles().Select((s) =>
-                new ImageModel(s.FullName)).ToArray();
+                new ImageModel(s.FullName, volume: ThemeUtil.VideoSettings.DefaultVideoVolume)).ToArray();
 
             return images;
         }

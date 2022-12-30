@@ -9,6 +9,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using AdonisUI.Controls;
+using LanceTools;
 using LanceTools.DiagnosticsUtil;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using MvvmCross;
@@ -112,9 +113,39 @@ namespace WallpaperFlux.Core.Models
         [DataMember(Name = "Image Type")] public ImageType ImageType { get; set; }
 
         // Video Properties
-        public double Volume { get; set; } = 0.5;
+        private double _volume = 50;
+        public double Volume
+        {
+            get => _volume;
+            set
+            {
+                SetProperty(ref _volume, MathE.Clamp(value, 0, 100));
+                RaisePropertyChanged(() => ActualVolume);
+            }
+        }
 
-        public double Speed { get; set; }
+        [JsonIgnore] public double ActualVolume => Volume / 100; // for use with inspector & tooltip audio sources and other related occurrences
+
+        // Video & Gif Properties
+        public double Speed { get; set; } = 1;
+
+        public int MinimumLoops { get; set; }
+
+        private bool _overrideMinimumLoops;
+        public bool OverrideMinimumLoops
+        {
+            get => _overrideMinimumLoops;
+            set => SetProperty(ref _overrideMinimumLoops, value);
+        }
+
+        public int MaximumTime { get; set; }
+
+        private bool _overrideMaximumTime;
+        public bool OverrideMaximumTime
+        {
+            get => _overrideMaximumTime;
+            set => SetProperty(ref _overrideMaximumTime, value);
+        }
 
         // Type Checkers
         // TODO Replace the external references to these values (The references in xaml) with the ImageType variable
@@ -212,7 +243,8 @@ namespace WallpaperFlux.Core.Models
 
         #endregion
 
-        public ImageModel(string path, int rank = 0, ImageTagCollection tags = null, double volume = 0)
+        public ImageModel(string path, int rank = 0, ImageTagCollection tags = null, double volume = 50,
+            int minimumLoops = 0, bool overrideMinimumLoops = false, int maximumTime = 0, bool overrideMaximumTime = false)
         {
             Path = _hashPath = path;
 
@@ -230,6 +262,11 @@ namespace WallpaperFlux.Core.Models
             Tags = tags ?? new ImageTagCollection(this); // create a new tag collection if the given one is null
 
             Volume = volume;
+
+            MinimumLoops = minimumLoops;
+            OverrideMinimumLoops = overrideMinimumLoops;
+            MaximumTime = maximumTime;
+            OverrideMaximumTime = overrideMaximumTime;
 
             //? this is only called if there is actually a change, if the same value was sent in then nothing will happen
             // increments or decrements based on the IsSelected state

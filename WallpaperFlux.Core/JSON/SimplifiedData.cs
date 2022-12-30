@@ -86,13 +86,26 @@ namespace WallpaperFlux.Core.JSON
 
         public double Volume;
 
-        public SimplifiedImage(string path, int rank, Dictionary<string, List<string>> tags, Dictionary<string, List<string>> tagNamingExceptions, double volume)
+        public int MinLoops;
+
+        public int MaxTime;
+
+        public bool OverrideMinLoops;
+
+        public bool OverrideMaxTime;
+
+        public SimplifiedImage(string path, int rank, Dictionary<string, List<string>> tags, Dictionary<string, List<string>> tagNamingExceptions,
+            double volume, int minLoops, int maxTime, bool overrideMinLoops, bool overrideMaxTime)
         {
             Path = path;
             Rank = rank;
             Tags = tags;
             TagNamingExceptions = tagNamingExceptions;
             Volume = volume;
+            MinLoops = minLoops;
+            MaxTime = maxTime;
+            OverrideMinLoops = overrideMinLoops;
+            OverrideMaxTime = overrideMaxTime;
         }
     }
 }

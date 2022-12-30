@@ -154,7 +154,7 @@
         <!-- ? Video Settings -->
         <GroupBox Grid.Row="2" Grid.Column="2" Grid.RowSpan="3" Margin="3" DataContext="{Binding Settings.ThemeSettings.VideoSettings}">
             <StackPanel Orientation="Vertical">
-                <TextBlock Text="Video Settings" Margin="5" FontWeight="Bold" FontStyle="Italic" HorizontalAlignment="Center"/>
+                <TextBlock Text="Video / GIF Settings" Margin="5" FontWeight="Bold" FontStyle="Italic" HorizontalAlignment="Center"/>
 
                 <StackPanel Orientation="Vertical" adonisExtensions:LayerExtension.IncreaseLayer="True">
                     <Grid>
@@ -172,21 +172,21 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
-                        <TextBlock  Grid.Row="1" Grid.Column="1" Text="Minimum Video Loops: " VerticalAlignment="Center"/>
-                        <TextBlock Grid.Row="2" Grid.Column="1"  Text="Maximum Video Time: " VerticalAlignment="Center"/>
+                        <TextBlock  Grid.Row="1" Grid.Column="1" Text="Minimum Loops" VerticalAlignment="Center"/>
                         <TextBox Grid.Row="1" Grid.Column="2" adonisExtensions:WatermarkExtension.Watermark="Loops..." Margin="5 5 3 0"
-                                 Text="{Binding MinimumVideoLoops, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                 Text="{Binding MinimumLoops, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                             <TextBox.Style>
                                 <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
                             </TextBox.Style>
                         </TextBox>
+                        <TextBlock Grid.Row="2" Grid.Column="1"  Text="Maximum Time" VerticalAlignment="Center"/>
                         <TextBox Grid.Row="2" Grid.Column="2" adonisExtensions:WatermarkExtension.Watermark="Seconds..." Margin="5 5 3 0"
-                                 Text="{Binding MaximumVideoTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                 Text="{Binding MaximumTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                             <TextBox.Style>
                                 <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
                             </TextBox.Style>
                         </TextBox>
-                        <TextBlock Grid.Row="3" Grid.Column="1"  Text="Default Video Volume: " VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="3" Grid.Column="1"  Text="Default Volume" VerticalAlignment="Center"/>
                         <TextBox Grid.Row="3" Grid.Column="2"  adonisExtensions:WatermarkExtension.Watermark="Volume..." Margin="5 5 3 0" adonisExtensions:LayerExtension.Layer="3"
                                  Text="{Binding DefaultVideoVolume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                             <TextBox.Style>
@@ -197,7 +197,7 @@
                 </StackPanel>
 
                 <StackPanel Orientation="Vertical" Margin="0 5 0 5">
-                    <TextBlock Text="Mute Audio If: " FontWeight="Medium"/>
+                    <TextBlock Text="Mute Audio If" FontWeight="Medium"/>
                     <CheckBox Content="Audio is Playing" adonisExtensions:LayerExtension.Layer="3" Margin="5 3 5 3"
                               IsChecked="{Binding MuteIfAudioPlaying, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                     <CheckBox Content="Application is Focused" adonisExtensions:LayerExtension.Layer="3" Margin="5 3 5 3"
@@ -206,13 +206,13 @@
                               IsChecked="{Binding MuteIfApplicationMaximized, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
                 <StackPanel Orientation="Vertical" Margin="0 5 0 5">
-                    <TextBlock Text="Pause Video If (Per Monitor): " FontWeight="Medium"/>
+                    <TextBlock Text="Pause Video If (Per Monitor)" FontWeight="Medium"/>
                     <CheckBox Content="Application is Open" adonisExtensions:LayerExtension.Layer="3" Margin="5 3 5 3"/>
                     <CheckBox Content="Application is Focused" adonisExtensions:LayerExtension.Layer="3" Margin="5 3 5 3"/>
                     <CheckBox Content="Application is Maximized" adonisExtensions:LayerExtension.Layer="3" Margin="5 3 5 3"/>
                 </StackPanel>
                 <StackPanel Orientation="Vertical" Margin="0 5 0 5">
-                    <TextBlock Text="Pause Video If (All Monitors): " FontWeight="Medium"/>
+                    <TextBlock Text="Pause Video If (All Monitors)" FontWeight="Medium"/>
                     <CheckBox Content="Application is Open" adonisExtensions:LayerExtension.Layer="3" Margin="5 3 5 3"/>
                     <CheckBox Content="Application is Focused" adonisExtensions:LayerExtension.Layer="3" Margin="5 3 5 3"/>
                     <CheckBox Content="Application is Maximized" adonisExtensions:LayerExtension.Layer="3" Margin="5 3 5 3"/>

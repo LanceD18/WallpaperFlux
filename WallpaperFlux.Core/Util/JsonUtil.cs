@@ -295,7 +295,11 @@ namespace WallpaperFlux.Core.Util
                     image.Rank,
                     image.Tags.GetConvertTagsToDictionary(),
                     image.Tags.GetConvertTagNamingExceptionsToDictionary(),
-                    image.Volume));
+                    image.Volume,
+                    image.MinimumLoops,
+                    image.MaximumTime,
+                    image.OverrideMinimumLoops,
+                    image.OverrideMaximumTime));
             }
 
             return simplifiedImages.ToArray();
@@ -526,7 +530,8 @@ namespace WallpaperFlux.Core.Util
                     continue;
                 }
 
-                ImageModel image = new ImageModel(simpleImage.Path, simpleImage.Rank, volume: simpleImage.Volume);
+                ImageModel image = new ImageModel(simpleImage.Path, simpleImage.Rank, volume: simpleImage.Volume, 
+                    minimumLoops: simpleImage.MinLoops, overrideMinimumLoops: simpleImage.OverrideMinLoops, maximumTime: simpleImage.MaxTime, overrideMaximumTime: simpleImage.OverrideMaxTime);
                 ImageTagCollection tags = new ImageTagCollection(image);
 
                 //? We need two iterations of this, one for regular tags & one for naming exceptions
