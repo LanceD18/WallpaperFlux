@@ -25,7 +25,7 @@ namespace WallpaperFlux.Core.Models.Theme
         //! Remember!
 
         private double _relativeFrequencyStatic;
-        [JsonIgnore] public double RelativeFrequencyStatic
+        public double RelativeFrequencyStatic
         {
             get => _relativeFrequencyStatic;
             set
@@ -36,7 +36,7 @@ namespace WallpaperFlux.Core.Models.Theme
         }
 
         private double _relativeFrequencyGIF;
-        [JsonIgnore] public double RelativeFrequencyGIF
+        public double RelativeFrequencyGIF
         {
             get => _relativeFrequencyGIF;
             set
@@ -47,7 +47,7 @@ namespace WallpaperFlux.Core.Models.Theme
         }
 
         private double _relativeFrequencyVideo;
-        [JsonIgnore] public double RelativeFrequencyVideo
+        public double RelativeFrequencyVideo
         {
             get => _relativeFrequencyVideo;
             set
@@ -58,7 +58,7 @@ namespace WallpaperFlux.Core.Models.Theme
         }
 
         private double _exactFrequencyStatic;
-        [JsonIgnore] public double ExactFrequencyStatic
+        [JsonIgnore] public double ExactFrequencyStatic //! Do NOT save exact values! If the user modifies these, a corresponding relative value will be given to be saved instead
         {
             get => _exactFrequencyStatic;
             set
@@ -69,7 +69,7 @@ namespace WallpaperFlux.Core.Models.Theme
         }
 
         private double _exactFrequencyGIF;
-        [JsonIgnore] public double ExactFrequencyGIF
+        [JsonIgnore] public double ExactFrequencyGIF //! Do NOT save exact values! If the user modifies these, a corresponding relative value will be given to be saved instead
         {
             get => _exactFrequencyGIF;
             set
@@ -80,7 +80,7 @@ namespace WallpaperFlux.Core.Models.Theme
         }
 
         private double _exactFrequencyVideo;
-        [JsonIgnore] public double ExactFrequencyVideo
+        [JsonIgnore] public double ExactFrequencyVideo //! Do NOT save exact values! If the user modifies these, a corresponding relative value will be given to be saved instead
         {
             get => _exactFrequencyVideo;
             set
@@ -125,7 +125,7 @@ namespace WallpaperFlux.Core.Models.Theme
             // this boolean accounts for the fact that this method will be called again when all of the below statements re-run the set method (when updating the UI)
             if (_frequenciesUpdated)
             {
-                ParentCalculator.UpdateFrequency(imageType, frequencyType, value / 100); // the visual value is 100 times larger than the actual value which goes from 0-1
+                ParentCalculator.UpdateFrequency(imageType, frequencyType, value, false);
                 UpdateModelFrequency(); // updates the UI to the potentially adjusted frequency
 
                 //? The below is now handled by the FrequencyCalculator since every time the frequencies are verified this should be called

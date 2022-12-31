@@ -41,15 +41,20 @@ namespace WallpaperFlux.Core.Tools
         // TODO This shouldn't be called so frequently while loading a theme, shouldn't be called until the final step
         public void VerifyImageTypeExistence(ImageModel imageToVerify = null)
         {
+            if (JsonUtil.IsLoadingData) return;
+
             bool staticExists = ThemeUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.Static);
             bool gifExists = ThemeUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.GIF);
             bool videoExists = ThemeUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.Video);
 
+            //? if an image is given with the verification process, check if we really need to verify, if only one image exists of this type then we don't need to verify
+            // if no image is given, we just move on with the frequency-modifying verification process
             if (imageToVerify != null)
             {
                 if (ThemeUtil.Theme.Images.ContainsImage(imageToVerify))
                 {
                     //? This appears to be the rank of the image before the change
+                    // TODO Fix the red error, why can't you process this with a rank of 1?
                     if (imageToVerify.Rank > 1) //! Setting this to be true on a rank of 1 will break the process, do not use > 0 or >= 1
                     {
                         // This indicates that there is in fact an image of the given image type but it is either un-ranked or changing its rank and is also the only image of this image type
@@ -156,8 +161,10 @@ namespace WallpaperFlux.Core.Tools
 
         public double GetExactFrequency(ImageType imageType) => ExactFrequency[imageType];
 
-        public void UpdateFrequency(ImageType imageType, FrequencyType frequencyType, double value)
+        public void UpdateFrequency(ImageType imageType, FrequencyType frequencyType, double value, bool valueIsPercentage)
         {
+            if (!valueIsPercentage) value /= 100;  // if retrieving from FrequencyModel, the visual value is 100 times larger than the actual value which goes from 0-1
+
             // Display an error message if the image type is empty and abort the method
             if (!ThemeUtil.Theme.RankController.IsAnyImagesOfTypeRanked(imageType) && !JsonUtil.IsLoadingData)
             {

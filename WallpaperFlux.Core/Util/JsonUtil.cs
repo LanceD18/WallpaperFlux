@@ -84,6 +84,8 @@ namespace WallpaperFlux.Core.Util
 
         [JsonProperty("DisplaySettings")] public SimplifiedDisplaySettings DisplaySettings;
 
+        [JsonProperty("FrequencyData")] public SimplifiedFrequencyModel FrequencyModel;
+
         [JsonProperty("MiscData")] public MiscData MiscData;
 
         [JsonProperty("ImageFolders")] public SimplifiedFolder[] ImageFolders;
@@ -92,11 +94,12 @@ namespace WallpaperFlux.Core.Util
 
         [JsonProperty("ImageData")] public SimplifiedImage[] Images;
 
-        public JsonWallpaperData(SettingsModel settings, SimplifiedDisplaySettings displaySettings, MiscData miscData,
+        public JsonWallpaperData(SettingsModel settings, SimplifiedDisplaySettings displaySettings, SimplifiedFrequencyModel frequencyModel, MiscData miscData,
             SimplifiedFolder[] imageFolders, SimplifiedCategory[] categories, SimplifiedImage[] images)
         {
             Settings = settings;
             DisplaySettings = displaySettings;
+            FrequencyModel = frequencyModel;
             MiscData = miscData;
             ImageFolders = imageFolders;
             Categories = categories;
@@ -202,6 +205,11 @@ namespace WallpaperFlux.Core.Util
             }
 
             SimplifiedDisplaySettings displaySettings = new SimplifiedDisplaySettings(displaySettingArr, isSynced);
+
+            SimplifiedFrequencyModel frequencyModel = new SimplifiedFrequencyModel(
+                ThemeUtil.ThemeSettings.FrequencyModel.RelativeFrequencyStatic,
+                ThemeUtil.ThemeSettings.FrequencyModel.RelativeFrequencyGIF,
+                ThemeUtil.ThemeSettings.FrequencyModel.RelativeFrequencyVideo);
             
             //? --- Misc Data ---
             //! the instance itself will be NULL if you DON'T OPEN it before saving, so don't use ViewModel.Instance here!
@@ -212,6 +220,7 @@ namespace WallpaperFlux.Core.Util
             JsonWallpaperData jsonWallpaperData = new JsonWallpaperData(
                 ThemeUtil.Theme.Settings,
                 displaySettings,
+                frequencyModel,
                 miscData,
                 ConvertToSimplifiedFolders(WallpaperFluxViewModel.Instance.ImageFolders.ToArray()),
                 ConvertToSimplifiedCategories(ThemeUtil.Theme.Categories.ToArray()),
@@ -468,8 +477,16 @@ namespace WallpaperFlux.Core.Util
 
         private static void ConvertThemeOptions(JsonWallpaperData wallpaperData)
         {
+            // --- Load General Settings ---
             ThemeUtil.ReconstructTheme(wallpaperData.Settings);  //! This needs to be done before any images are added otherwise their ranks will be changed!
 
+            // --- Load Frequency Settings ---
+            //! cannot be loaded before calling ThemeUtil.ReconstructTheme, otherwise this will just be overwritten
+            ThemeUtil.ThemeSettings.FrequencyModel.RelativeFrequencyStatic = wallpaperData.FrequencyModel.RelativeFrequencyStatic;
+            ThemeUtil.ThemeSettings.FrequencyModel.RelativeFrequencyGIF = wallpaperData.FrequencyModel.RelativeFrequencyGif;
+            ThemeUtil.ThemeSettings.FrequencyModel.RelativeFrequencyVideo = wallpaperData.FrequencyModel.RelativeFrequencyVideo;
+
+            // --- Load Display Settings ---
             for (int i = 0; i < WallpaperUtil.DisplayUtil.GetDisplayCount(); i++) //? keep in mind that we need to account for dynamic changes to monitor count
             {
                 SimplifiedDisplaySetting simplifiedDisplaySetting = wallpaperData.DisplaySettings.DisplaySettings[i];

@@ -31,7 +31,7 @@ namespace WallpaperFlux.Core.Models.Theme
         public bool AllowTagBasedRenamingForMovedImages { get; set; }
 
         [JsonIgnore] public FrequencyCalculator FrequencyCalc { get; set; } = new FrequencyCalculator();
-        public FrequencyModel FrequencyModel { get; set; } = new FrequencyModel();
+        [JsonIgnore] public FrequencyModel FrequencyModel { get; set; } = new FrequencyModel(); //? Saving is handled via the SimplifiedFrequencyModel
 
         // Video Settings
         public VideoSettings VideoSettings { get; set; } = new VideoSettings();

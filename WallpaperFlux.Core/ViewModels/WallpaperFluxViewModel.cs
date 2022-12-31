@@ -466,6 +466,12 @@ namespace WallpaperFlux.Core.ViewModels
                     }
 
                     JsonUtil.SetIsLoadingData(false);
+
+                    //! this is also called by UpdateImageTypeWeights(), keeping this here regardless however to avoid complications in a future refactor since it is critical
+                    ThemeUtil.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence();
+                    //! this is also called by UpdateImageTypeWeights(), keeping this here regardless however to avoid complications in a future refactor since it is critical
+
+                    ThemeUtil.Theme.RankController.UpdateImageTypeWeights(); //? this is disabled during the loading process and needs to be called once loading is finished to update frequencies & weights
                 }
             }
         }

@@ -140,4 +140,20 @@ namespace WallpaperFlux.Core.JSON
             DisplayStyle = displayStyle;
         }
     }
+
+    public struct SimplifiedFrequencyModel
+    {
+        public double RelativeFrequencyStatic;
+
+        public double RelativeFrequencyGif;
+
+        public double RelativeFrequencyVideo;
+
+        public SimplifiedFrequencyModel(double relativeFrequencyStatic, double relativeFrequencyGif, double relativeFrequencyVideo)
+        {
+            RelativeFrequencyStatic = relativeFrequencyStatic;
+            RelativeFrequencyGif = relativeFrequencyGif;
+            RelativeFrequencyVideo = relativeFrequencyVideo;
+        }
+    }
 }
