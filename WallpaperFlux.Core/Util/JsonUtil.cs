@@ -19,6 +19,7 @@ using WallpaperFlux.Core.ViewModels;
 
 namespace WallpaperFlux.Core.Util
 {
+    //! Temp
     #region Temporary
     public class TemporaryJsonWallpaperData
     {
@@ -75,10 +76,13 @@ namespace WallpaperFlux.Core.Util
         }
     }
     #endregion
+    //! Temp
 
     public class JsonWallpaperData
     {
         [JsonProperty("Settings")] public SettingsModel Settings;
+
+        [JsonProperty("DisplaySettings")] public SimplifiedDisplaySettings DisplaySettings;
 
         [JsonProperty("MiscData")] public MiscData MiscData;
 
@@ -88,9 +92,11 @@ namespace WallpaperFlux.Core.Util
 
         [JsonProperty("ImageData")] public SimplifiedImage[] Images;
 
-        public JsonWallpaperData(SettingsModel settings, MiscData miscData, SimplifiedFolder[] imageFolders, SimplifiedCategory[] categories, SimplifiedImage[] images)
+        public JsonWallpaperData(SettingsModel settings, SimplifiedDisplaySettings displaySettings, MiscData miscData,
+            SimplifiedFolder[] imageFolders, SimplifiedCategory[] categories, SimplifiedImage[] images)
         {
             Settings = settings;
+            DisplaySettings = displaySettings;
             MiscData = miscData;
             ImageFolders = imageFolders;
             Categories = categories;
@@ -98,18 +104,6 @@ namespace WallpaperFlux.Core.Util
         }
     }
 
-    /*x
-    public struct Settings
-    {
-        public int MaxRank;
-
-        public Settings(int maxRank)
-        {
-            MaxRank = maxRank;
-        }
-    }
-    */
-    
     public struct MiscData
     {
         public bool RandomizeSelection;
@@ -191,13 +185,33 @@ namespace WallpaperFlux.Core.Util
             //! Threading this could potentially cause errors with saving to the Default Theme if you're not careful
 
             Debug.WriteLine("Saving to: " + path);
+
+            //? --- Display Settings ---
+            SimplifiedDisplaySetting[] displaySettingArr = new SimplifiedDisplaySetting[WallpaperUtil.DisplayUtil.GetDisplayCount()];
+            bool isSynced = false; //? we are synced if any models have a parent synced to them
+
+            for (int i = 0; i < displaySettingArr.Length; i++)
+            {
+                DisplayModel display = WallpaperFluxViewModel.Instance.DisplaySettings[i];
+
+                displaySettingArr[i].DisplayInterval = display.DisplayInterval;
+                displaySettingArr[i].DisplayIntervalType = display.DisplayIntervalType;
+                displaySettingArr[i].DisplayStyle = display.DisplayStyle;
+
+                if (!display.NotSyncedToParent) isSynced = true;
+            }
+
+            SimplifiedDisplaySettings displaySettings = new SimplifiedDisplaySettings(displaySettingArr, isSynced);
             
+            //? --- Misc Data ---
             //! the instance itself will be NULL if you DON'T OPEN it before saving, so don't use ViewModel.Instance here!
             MiscData miscData = new MiscData(false, false, false, false, 
                 TaggingUtil.GetActiveSortType(), TaggingUtil.GetSortByNameDirection(), TaggingUtil.GetSortByCountDirection());
 
+            //? --- Serialization ---
             JsonWallpaperData jsonWallpaperData = new JsonWallpaperData(
                 ThemeUtil.Theme.Settings,
+                displaySettings,
                 miscData,
                 ConvertToSimplifiedFolders(WallpaperFluxViewModel.Instance.ImageFolders.ToArray()),
                 ConvertToSimplifiedCategories(ThemeUtil.Theme.Categories.ToArray()),
@@ -295,11 +309,11 @@ namespace WallpaperFlux.Core.Util
                     image.Rank,
                     image.Tags.GetConvertTagsToDictionary(),
                     image.Tags.GetConvertTagNamingExceptionsToDictionary(),
-                    image.Volume,
                     image.MinimumLoops,
                     image.MaximumTime,
                     image.OverrideMinimumLoops,
-                    image.OverrideMaximumTime));
+                    image.OverrideMaximumTime,
+                    image.Volume));
             }
 
             return simplifiedImages.ToArray();
@@ -447,6 +461,21 @@ namespace WallpaperFlux.Core.Util
         private static void ConvertThemeOptions(JsonWallpaperData wallpaperData)
         {
             ThemeUtil.ReconstructTheme(wallpaperData.Settings);  //! This needs to be done before any images are added otherwise their ranks will be changed!
+
+            for (int i = 0; i < WallpaperUtil.DisplayUtil.GetDisplayCount(); i++) //? keep in mind that we need to account for dynamic changes to monitor count
+            {
+                SimplifiedDisplaySetting simplifiedDisplaySetting = wallpaperData.DisplaySettings.DisplaySettings[i];
+                DisplayModel displaySetting = WallpaperFluxViewModel.Instance.DisplaySettings[i];
+
+                displaySetting.DisplayInterval = simplifiedDisplaySetting.DisplayInterval;
+                displaySetting.DisplayIntervalType = simplifiedDisplaySetting.DisplayIntervalType;
+                displaySetting.DisplayStyle = simplifiedDisplaySetting.DisplayStyle;
+            }
+
+            if (wallpaperData.DisplaySettings.IsSynced)
+            {
+                WallpaperFluxViewModel.Instance.SyncDisplaySettings(WallpaperFluxViewModel.Instance.DisplaySettings[0]); // if synced, all will be the same, so just pick 0
+            }
         }
 
         private static void ConvertMiscData(JsonWallpaperData wallpaperData)

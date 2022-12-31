@@ -224,7 +224,7 @@
 
                 <!--? Display Setting Template List -->
                 <GroupBox  Grid.Row="3" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True">
-                    <ListBox Width="310" MaxHeight="110"
+                    <ListBox Width="310" MaxHeight="210"
                              ItemsSource="{Binding DisplaySettings}"  SelectedItem="{Binding SelectedDisplaySetting}"
                              adonisExtensions:ScrollViewerExtension.HideScrollBarsUntilMouseOver="True"
                              adonisExtensions:ScrollViewerExtension.VerticalScrollBarPlacement="Overlay"
@@ -391,7 +391,7 @@
                                             <GroupBox HorizontalAlignment="Center">
                                                 <StackPanel Focusable="False">
 
-                                                    <!-- /// Binding to ImageModel /// -->
+                                                    <!--? /// Binding to ImageModel /// -->
                                                     <ContentControl Content="{Binding}" HorizontalAlignment="Center">
                                                         <!-- Resources -->
                                                         <ContentControl.Resources>
@@ -491,8 +491,8 @@
                                                                                 </DataTemplate>
                                                                                 <!--? Windows -->
                                                                                 <DataTemplate x:Key="Windows">
-                                                                                    <MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play"
-                                                                                        Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" MediaEnded="MediaElement_OnMediaEnded"
+                                                                                    <MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" MediaEnded="MediaElement_OnMediaEnded"
+                                                                                        Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" 
                                                                                         Volume="{Binding ActualVolume, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                                                 </DataTemplate>
                                                                             </ContentControl.Resources>
@@ -704,7 +704,7 @@
                                                         </DataTemplate>
                                                         <!-- ? Windows -->
                                                         <DataTemplate x:Key="Windows">
-                                                            <MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play"
+                                                            <MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" MediaEnded="MediaElement_OnMediaEnded"
                                                                           Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" 
                                                                           Volume="{Binding ActualVolume, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                         </DataTemplate>

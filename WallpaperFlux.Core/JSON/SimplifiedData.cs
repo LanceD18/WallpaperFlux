@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using WallpaperFlux.Core.Util;
 
 namespace WallpaperFlux.Core.JSON
 {
@@ -94,18 +95,49 @@ namespace WallpaperFlux.Core.JSON
 
         public bool OverrideMaxTime;
 
-        public SimplifiedImage(string path, int rank, Dictionary<string, List<string>> tags, Dictionary<string, List<string>> tagNamingExceptions,
-            double volume, int minLoops, int maxTime, bool overrideMinLoops, bool overrideMaxTime)
+        public SimplifiedImage(string path, int rank, Dictionary<string, List<string>> tags, Dictionary<string, List<string>> tagNamingExceptions, 
+            int minLoops, int maxTime, bool overrideMinLoops, bool overrideMaxTime, double volume = -1)
         {
             Path = path;
             Rank = rank;
             Tags = tags;
             TagNamingExceptions = tagNamingExceptions;
+            //? the -1 acts as a default null value since volume can't be set to -1, if the volume is at this value then use the global default
+            Volume = volume == -1 ? ThemeUtil.VideoSettings.DefaultVideoVolume : volume;
             Volume = volume;
             MinLoops = minLoops;
             MaxTime = maxTime;
             OverrideMinLoops = overrideMinLoops;
             OverrideMaxTime = overrideMaxTime;
+        }
+    }
+
+    public struct SimplifiedDisplaySettings
+    {
+        public SimplifiedDisplaySetting[] DisplaySettings;
+
+        public bool IsSynced;
+
+        public SimplifiedDisplaySettings(SimplifiedDisplaySetting[] displaySettings, bool synced)
+        {
+            DisplaySettings = displaySettings;
+            IsSynced = synced;
+        }
+    }
+
+    public struct SimplifiedDisplaySetting
+    {
+        public int DisplayInterval;
+
+        public IntervalType DisplayIntervalType;
+
+        public WallpaperStyle DisplayStyle;
+
+        public SimplifiedDisplaySetting(int displayInterval, IntervalType displayIntervalType, WallpaperStyle displayStyle)
+        {
+            DisplayInterval = displayInterval;
+            DisplayIntervalType = displayIntervalType;
+            DisplayStyle = displayStyle;
         }
     }
 }

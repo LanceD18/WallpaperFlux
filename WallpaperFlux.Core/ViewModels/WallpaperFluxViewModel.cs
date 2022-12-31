@@ -48,6 +48,9 @@ namespace WallpaperFlux.Core.ViewModels
         //? this variable exists for use with the xaml despite the Static Reference
         // allows the data of settings to be accessed by the xaml code
         public ThemeModel Theme_USE_STATIC_REFERENCE_FIX_LATER { get; set; } = ThemeUtil.Theme; //! don't forget to update WallpaperFluxView.xaml when you changed this
+        //? this variable exists for use with the xaml despite the Static Reference
+        //? this variable exists for use with the xaml despite the Static Reference
+        //? this variable exists for use with the xaml despite the Static Reference
 
         #region View Variables
         //-----View Variables-----
@@ -316,10 +319,10 @@ namespace WallpaperFlux.Core.ViewModels
                 }
 
                 //! do not directly add to the DisplaySettings itself, this threaded behavior will mistakenly add an extra object unless it's slept for a certain period
-                MvxObservableCollection<DisplayModel> initSettings = new MvxObservableCollection<DisplayModel>();
+                MvxObservableCollection<DisplayModel> initDisplaySettings = new MvxObservableCollection<DisplayModel>();
                 for (int i = 0; i < WallpaperUtil.DisplayUtil.GetDisplayCount(); i++)
                 {
-                    initSettings.Add(new DisplayModel(Mvx.IoCProvider.Resolve<IExternalTimer>(), NextWallpaper)
+                    initDisplaySettings.Add(new DisplayModel(Mvx.IoCProvider.Resolve<IExternalTimer>(), NextWallpaper)
                     {
                         DisplayInterval = 0,
                         DisplayIndex = i,
@@ -329,7 +332,9 @@ namespace WallpaperFlux.Core.ViewModels
                 }
 
                 //! do not directly add to the DisplaySettings itself, this threaded behavior will mistakenly add an extra object unless it's slept for a certain period
-                DisplaySettings = initSettings;
+                //! do not directly add to the DisplaySettings itself, this threaded behavior will mistakenly add an extra object unless it's slept for a certain period
+                DisplaySettings = initDisplaySettings;
+                //! do not directly add to the DisplaySettings itself, this threaded behavior will mistakenly add an extra object unless it's slept for a certain period
 
             }).ConfigureAwait(false);
         }
@@ -615,15 +620,17 @@ namespace WallpaperFlux.Core.ViewModels
         #endregion
 
         #region Display Settings
-        public void SyncDisplaySettings()
+        public void SyncDisplaySettings() => SyncDisplaySettings(SelectedDisplaySetting);
+
+        public void SyncDisplaySettings(DisplayModel parentDisplaySetting)
         {
-            if (SelectedDisplaySetting != null)
+            if (parentDisplaySetting != null)
             {
                 foreach (DisplayModel displaySetting in DisplaySettings)
                 {
-                    if (displaySetting != SelectedDisplaySetting)
+                    if (displaySetting != parentDisplaySetting)
                     {
-                        displaySetting.SyncModel(SelectedDisplaySetting);
+                        displaySetting.SyncModel(parentDisplaySetting);
                     }
                 }
             }

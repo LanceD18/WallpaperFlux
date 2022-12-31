@@ -38,6 +38,7 @@ namespace WallpaperFlux.Core.Models.Theme
 
         // Monitor Options
         //! DO NOT USE YET ; This still needs to be set up, will re-purpose MOST of ThemeSettings so that Monitors can have their own options
+        // TODO DisplayModel may be a better place for this now, it serves a very similar purpose in being a source of display-specific information
         [JsonIgnore] public DisplaySettings[] DisplaySettings { get; set; }
     }
 
