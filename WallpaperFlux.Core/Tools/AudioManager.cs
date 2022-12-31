@@ -51,9 +51,9 @@ namespace WallpaperFlux.Core.Tools
             }
         }
 
-        public static async void CheckForMuteConditions()
+        public static void CheckForMuteConditions()
         {
-            //xawait Task.Run(() =>
+            //! await Task.Run(() => Using audioThread instead
             _audioThread = new Thread(() =>
             {
                 //x Debug.WriteLine("Checking for mute conditions");

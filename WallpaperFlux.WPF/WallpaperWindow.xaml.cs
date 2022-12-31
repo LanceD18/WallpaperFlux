@@ -82,7 +82,13 @@ namespace WallpaperFlux.WPF
                 if (VideoLoopCount < minLoops)
                 {
                     //? we will only check for the video time condition if we have not yet gone beyond the Minimum Loop count
-                    //? essentially, changes are only allowed if we are bosed abobe the minimum loop count AND the max video time
+                    //? essentially, changes are only allowed if we are both above the minimum loop count AND the max video time
+
+                    //! a test countermeasure against failed loads never looping
+                    if (WallpaperMediaElement.IsLoaded) WallpaperMediaElement.Play();
+                    if (WallpaperMediaElementFFME.IsLoaded) await WallpaperMediaElementFFME.Play();
+                    //! a test countermeasure against failed loads never looping
+
                     //xDebug.WriteLine("Nax Video Time: " + maxTime);
                     //xDebug.WriteLine("Media: " + WallpaperMediaElement.Position.Seconds + " | FFME: " + WallpaperMediaElementFFME.Position.Seconds);
                     if (WallpaperMediaElement.Position.Seconds <= maxTime ||

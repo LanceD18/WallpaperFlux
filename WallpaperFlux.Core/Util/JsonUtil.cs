@@ -209,7 +209,8 @@ namespace WallpaperFlux.Core.Util
             SimplifiedFrequencyModel frequencyModel = new SimplifiedFrequencyModel(
                 ThemeUtil.ThemeSettings.FrequencyModel.RelativeFrequencyStatic,
                 ThemeUtil.ThemeSettings.FrequencyModel.RelativeFrequencyGIF,
-                ThemeUtil.ThemeSettings.FrequencyModel.RelativeFrequencyVideo);
+                ThemeUtil.ThemeSettings.FrequencyModel.RelativeFrequencyVideo,
+                ThemeUtil.ThemeSettings.FrequencyModel.WeightedFrequency);
             
             //? --- Misc Data ---
             //! the instance itself will be NULL if you DON'T OPEN it before saving, so don't use ViewModel.Instance here!
@@ -485,6 +486,7 @@ namespace WallpaperFlux.Core.Util
             ThemeUtil.ThemeSettings.FrequencyModel.RelativeFrequencyStatic = wallpaperData.FrequencyModel.RelativeFrequencyStatic;
             ThemeUtil.ThemeSettings.FrequencyModel.RelativeFrequencyGIF = wallpaperData.FrequencyModel.RelativeFrequencyGif;
             ThemeUtil.ThemeSettings.FrequencyModel.RelativeFrequencyVideo = wallpaperData.FrequencyModel.RelativeFrequencyVideo;
+            ThemeUtil.ThemeSettings.FrequencyModel.WeightedFrequency = wallpaperData.FrequencyModel.WeightedFrequency;
 
             // --- Load Display Settings ---
             for (int i = 0; i < WallpaperUtil.DisplayUtil.GetDisplayCount(); i++) //? keep in mind that we need to account for dynamic changes to monitor count

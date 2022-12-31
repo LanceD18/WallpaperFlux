@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Windows;
 using MvvmCross.Platforms.Wpf.Views;
 using MvvmCross.ViewModels;
 using WallpaperFlux.Core.Util;
@@ -50,6 +51,11 @@ namespace WallpaperFlux.WPF.Util
             }
             else // if the window is already open, just focus it
             {
+                if (presenter.ViewWindow.WindowState == WindowState.Minimized)
+                {
+                    presenter.ViewWindow.WindowState = WindowState.Normal;
+                }
+
                 presenter.ViewWindow.Focus();
             }
         }

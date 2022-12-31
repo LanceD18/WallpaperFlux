@@ -279,6 +279,7 @@ namespace WallpaperFlux.WPF.Views
             }
         }
 
+        /*x
         private void MpvPlayerHost_OnLoaded(object sender, RoutedEventArgs e) => LoadImageOrMediaElementOrMpvPlayerHost(sender);
 
         private void MpvPlayerHost_OnUnloaded(object sender, RoutedEventArgs e)
@@ -293,6 +294,7 @@ namespace WallpaperFlux.WPF.Views
                 Console.WriteLine(exception);
             }
         }
+        */
         #endregion
 
         #region Child Window Control

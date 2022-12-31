@@ -149,11 +149,14 @@ namespace WallpaperFlux.Core.JSON
 
         public double RelativeFrequencyVideo;
 
-        public SimplifiedFrequencyModel(double relativeFrequencyStatic, double relativeFrequencyGif, double relativeFrequencyVideo)
+        public bool WeightedFrequency;
+
+        public SimplifiedFrequencyModel(double relativeFrequencyStatic, double relativeFrequencyGif, double relativeFrequencyVideo, bool weightedFrequency)
         {
             RelativeFrequencyStatic = relativeFrequencyStatic;
             RelativeFrequencyGif = relativeFrequencyGif;
             RelativeFrequencyVideo = relativeFrequencyVideo;
+            WeightedFrequency = weightedFrequency;
         }
     }
 }

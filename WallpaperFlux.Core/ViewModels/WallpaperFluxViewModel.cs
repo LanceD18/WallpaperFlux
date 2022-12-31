@@ -467,6 +467,8 @@ namespace WallpaperFlux.Core.ViewModels
 
                     JsonUtil.SetIsLoadingData(false);
 
+                    // ? --- Call methods that were disabled doing the loading process to avoid having them called too frequently, many of these need to be called once loading is finished ---
+
                     //! this is also called by UpdateImageTypeWeights(), keeping this here regardless however to avoid complications in a future refactor since it is critical
                     ThemeUtil.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence();
                     //! this is also called by UpdateImageTypeWeights(), keeping this here regardless however to avoid complications in a future refactor since it is critical
