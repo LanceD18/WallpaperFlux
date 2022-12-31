@@ -329,25 +329,33 @@ namespace WallpaperFlux.Core.Util
             string tempPathName = pathFile.DirectoryName + "\\" + Path.GetFileNameWithoutExtension(pathFile.Name) + backupNameExtension;
             string tempPath = tempPathName + pathFile.Extension;
 
-            // for just in case the user ends up with multiple accidents, we don't want to overwrite any backups with the damaged file
-            if (File.Exists(tempPath))
+            // for just in case the user ends up with multiple accidents, we don't want to overwrite a singular backup with a damaged file
+            int tempPathCount = 1;
+            
+            SortedList<DateTime, string> dateSortedFilePaths = new SortedList<DateTime, string>();
+
+            string newTempPath = tempPath;
+            while (File.Exists(newTempPath))
             {
-                int tempPathCount = 1;
-                string newTempPath = tempPath;
-                while (File.Exists(newTempPath))
+                dateSortedFilePaths.Add(new FileInfo(newTempPath).LastWriteTime, newTempPath);
+                newTempPath = tempPathName + "_" + tempPathCount + pathFile.Extension; // updates the temp path name with a number
+
+                if (tempPathCount > 10) //? overwrite the oldest backup upon reaching 10 backups
                 {
-                    newTempPath = tempPathName + "_" + tempPathCount + pathFile.Extension; // updates the temp path name with a number
-                    tempPathCount++;
+                    newTempPath = dateSortedFilePaths.Values[0];
+                    break;
                 }
 
-                tempPath = newTempPath;
+                tempPathCount++;
             }
+            tempPath = newTempPath;
 
             Debug.WriteLine("Temp File Location: " + tempPath);
-            File.Copy(path, tempPath);
+            File.Copy(path, tempPath, true);
 
             return tempPath;
         }
+
         #endregion
 
         // Load Data

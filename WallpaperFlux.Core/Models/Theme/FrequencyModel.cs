@@ -91,6 +91,12 @@ namespace WallpaperFlux.Core.Models.Theme
         }
         #endregion
 
+        //? Changing the weighted frequency should change the EXACT FREQUENCY and leave the RELATIVE FREQUENCY alone
+        //? Changing the weighted frequency should change the EXACT FREQUENCY and leave the RELATIVE FREQUENCY alone
+        //? Changing the weighted frequency should change the EXACT FREQUENCY and leave the RELATIVE FREQUENCY alone
+        //? So when saving to JSON, only save the RELATIVE FREQUENCY
+        //? So when saving to JSON, only save the RELATIVE FREQUENCY
+        //? So when saving to JSON, only save the RELATIVE FREQUENCY
         private bool _weightedFrequency;
         public bool WeightedFrequency
         {

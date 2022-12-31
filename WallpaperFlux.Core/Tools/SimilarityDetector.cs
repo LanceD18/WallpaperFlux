@@ -15,6 +15,8 @@ namespace WallpaperFlux.Core.Tools
     //     - It will use it's own form of precision however,each increment in precision reduce the RGB range required for pixel match:
     //          1 = 10%, 2 = 5%, 3 = 2.5%, 4 = Exact Match
 
+    // Checksum would also be a nice option to consider and likely way more holistically efficient
+
     public class SimilarityDetector
     {
         
