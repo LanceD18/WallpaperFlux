@@ -4,6 +4,7 @@ using System.Diagnostics;
 using LanceTools;
 using WallpaperFlux.Core.Collections;
 using WallpaperFlux.Core.Controllers;
+using WallpaperFlux.Core.JSON;
 using WallpaperFlux.Core.Models.Tagging;
 
 namespace WallpaperFlux.Core.Models.Theme
@@ -22,6 +23,8 @@ namespace WallpaperFlux.Core.Models.Theme
         public FolderCollection Folders_TODO;
 
         public WallpaperRandomizationController WallpaperRandomizer;
+
+        public SimplifiedFolderPriority[] PreLoadedFolderPriorities; // for use when the TagViewModel is activated;
 
         public void Init(int maxRank)
         {

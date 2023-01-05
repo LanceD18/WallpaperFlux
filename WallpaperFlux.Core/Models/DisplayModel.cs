@@ -150,7 +150,6 @@ namespace WallpaperFlux.Core.Models
                         }
                     }
                 }
-
             }
             else
             {

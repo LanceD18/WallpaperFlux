@@ -12,6 +12,7 @@ using HandyControl.Tools.Extension;
 using MvvmCross.Commands;
 using MvvmCross.ViewModels;
 using WallpaperFlux.Core.Collections;
+using WallpaperFlux.Core.JSON;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Models.Controls;
 using WallpaperFlux.Core.Models.Tagging;
@@ -158,7 +159,9 @@ namespace WallpaperFlux.Core.ViewModels
 
         #endregion
 
-        #region ----- TagBoard -----
+        #region ----- Drawers -----
+
+        #region --- TagBoard ---
         private MvxObservableCollection<TagModel> _tagBoardTags = new MvxObservableCollection<TagModel>();
 
         public MvxObservableCollection<TagModel> TagBoardTags
@@ -167,12 +170,38 @@ namespace WallpaperFlux.Core.ViewModels
             set => SetProperty(ref _tagBoardTags, value);
         }
 
-        private double _tagBoardHeight;
-        public double TagBoardHeight
+        private double _drawerHeight;
+        public double DrawerHeight
         {
-            get => _tagBoardHeight;
-            set => SetProperty(ref _tagBoardHeight, value); //? needed to update the height when resizing the window
+            get => _drawerHeight;
+            set => SetProperty(ref _drawerHeight, value); //? needed to update the height when resizing the window
         }
+
+        #endregion
+
+        #region --- FolderPriority ---
+
+        private MvxObservableCollection<FolderPriorityModel> _folderPriorities = new MvxObservableCollection<FolderPriorityModel>();
+
+        public MvxObservableCollection<FolderPriorityModel> FolderPriorities
+        {
+            get => _folderPriorities;
+            set => SetProperty(ref _folderPriorities, value);
+        }
+
+        private FolderPriorityModel _selectedFolderPriority;
+
+        public FolderPriorityModel SelectedFolderPriority
+        {
+            get => _selectedFolderPriority;
+            set
+            {
+                SetProperty(ref _selectedFolderPriority, value);
+                RaisePropertyChanged(() => CanDeletePriorities);
+            }
+        }
+
+        #endregion
 
         #endregion
 
@@ -183,14 +212,6 @@ namespace WallpaperFlux.Core.ViewModels
         public bool CategoryIsSelected => SelectedCategory != null;
 
         public bool CategoriesExist => Categories.Count > 0;
-
-        private bool _tagboardToggle;
-
-        public bool TagboardToggle
-        {
-            get => _tagboardToggle;
-            set => SetProperty(ref _tagboardToggle, value);
-        }
 
         // need to also check if the tag-linking source is null for just in case the selected tag is deselected
         public bool CanUseTagLinker => SelectedCategory?.SelectedTagTab?.SelectedTag != null || TagLinkingSource != null;
@@ -219,6 +240,24 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
+        // --- Drawers ---
+        private bool _tagboardToggle;
+
+        public bool TagboardToggle
+        {
+            get => _tagboardToggle;
+            set => SetProperty(ref _tagboardToggle, value);
+        }
+
+        private bool _folderPriorityToggle;
+
+        public bool FolderPriorityToggle
+        {
+            get => _folderPriorityToggle;
+            set => SetProperty(ref _folderPriorityToggle, value);
+        }
+
+        public bool CanDeletePriorities => SelectedFolderPriority != null;
         #endregion
 
         #region Commands
@@ -227,7 +266,9 @@ namespace WallpaperFlux.Core.ViewModels
 
         public IMvxCommand AddTagToSelectedCategoryCommand { get; set; }
 
-        #region ----- TagBoard -----
+        #region ----- Drawers -----
+
+        #region --- TagBoard ---
 
         public IMvxCommand CloseTagBoardCommand { get; set; }
 
@@ -238,6 +279,20 @@ namespace WallpaperFlux.Core.ViewModels
         public IMvxCommand SetOptionalTagBoardSelectionCommand { get; set; }
 
         public IMvxCommand SetExcludedTagBoardSelectionCommand { get; set; }
+
+        #endregion
+
+        #region --- FolderPriority ---
+
+        public IMvxCommand ViewFolderPriorityCommand { get; set; }
+
+        public IMvxCommand CloseFolderPriorityCommand { get; set; }
+
+        public IMvxCommand CreatePriorityCommand { get; set; }
+
+        public IMvxCommand DeleteSelectedPrioritiesCommand { get; set; }
+
+        #endregion
 
         #endregion
 
@@ -259,13 +314,14 @@ namespace WallpaperFlux.Core.ViewModels
             });
 
             //? If the category's use for naming state is disabled, the tag should reference that when needed instead of changing its own UseForNaming parameter
-            AddTagToSelectedCategoryCommand = new MvxCommand(() =>
-            {
-                TaggingUtil.PromptAddTagToCategory(SelectedCategory);
-                //x AddDebugTags(SelectedCategory);
-            });
+            AddTagToSelectedCategoryCommand = new MvxCommand(() => TaggingUtil.PromptAddTagToCategory(SelectedCategory));
 
-            // TagBoard
+            InitDrawers();
+        }
+
+        public void InitDrawers()
+        {
+            // --- TagBoard ---
             CloseTagBoardCommand = new MvxCommand(() => TagboardToggle = false); //? the open/toggle TagBoard is initially called by CategoryModel and sent to a method here
             SelectImagesFromTagBoardCommand = new MvxCommand(() => RebuildImageSelector(SearchValidImagesWithTagBoard()));
             SetMandatoryTagBoardSelectionCommand = new MvxCommand(() => SetAllTagBoardTagsSearchType(TagSearchType.Mandatory));
@@ -273,6 +329,15 @@ namespace WallpaperFlux.Core.ViewModels
             SetExcludedTagBoardSelectionCommand = new MvxCommand(() => SetAllTagBoardTagsSearchType(TagSearchType.Excluded));
 
             TagBoardTags.CollectionChanged += TagBoardTagsOnCollectionChanged;
+
+            // --- Folder Priority ---
+            ViewFolderPriorityCommand = new MvxCommand(ToggleFolderPriority);
+            CloseFolderPriorityCommand = new MvxCommand(() => FolderPriorityToggle = false);
+            CreatePriorityCommand = new MvxCommand(() => FolderPriorities.Add(new FolderPriorityModel(MessageBoxUtil.GetString(
+                "Folder Priority Name", "Give a name for your priority", "Priority name..."))));
+            DeleteSelectedPrioritiesCommand = new MvxCommand(DeleteSelectedPriorities);
+
+            RebuildFolderPriorities(ThemeUtil.Theme.PreLoadedFolderPriorities);
         }
 
         /// <summary>
@@ -285,6 +350,8 @@ namespace WallpaperFlux.Core.ViewModels
 
         public void HighlightTags()
         {
+            if (JsonUtil.IsLoadingData) return;
+
             Debug.WriteLine("Highlighting tags...");
             foreach (TagModel tag in previouslyHighlightedTags) tag.IsHighlightedInSomeImages = false; //? this should be undone on each re-run in one way or another
 
@@ -353,8 +420,9 @@ namespace WallpaperFlux.Core.ViewModels
 
         #endregion
 
-        #region TagBoard
+        #region --- Drawers ---
 
+        #region TagBoard
         public void ToggleTagBoard() => TagboardToggle = !TagboardToggle;
 
         public void AddTagsToTagBoard(TagModel[] tags) //! Range actions [ i.e., AddRange() ] are not supported for observable collections so we must do this manually
@@ -372,7 +440,7 @@ namespace WallpaperFlux.Core.ViewModels
 
         public void RemoveTagFromTagBoard(TagModel tag) => TagBoardTags.Remove(tag);
 
-        public void SetTagBoardHeight(double newHeight) => TagBoardHeight = newHeight;
+        public void SetDrawerHeight(double newHeight) => DrawerHeight = newHeight;
 
         /// <summary>
         /// Check all potential images for validity then select the valid images. Use the tag's search type for validity comparisons.
@@ -431,6 +499,56 @@ namespace WallpaperFlux.Core.ViewModels
 
         #endregion
 
+        #region Folder Priority
+
+        public void ToggleFolderPriority() => FolderPriorityToggle = !FolderPriorityToggle;
+
+        public FolderPriorityModel[] GetSelectedFolderPriorities() => FolderPriorities.Where(f => f.IsSelected).ToArray();
+
+        /// <summary>
+        /// Return the winning priority
+        /// </summary>
+        /// <param name="folderA"></param>
+        /// <param name="folderB"></param>
+        /// <returns></returns>
+        public string CompareFolderPriorities(string folderA, string folderB)
+        {
+            FolderModel folderModelA = FolderUtil.GetFolderModel(folderA);
+            FolderModel folderModelB = FolderUtil.GetFolderModel(folderB);
+
+            // give a significantly lower value if no folder model is given, allowing one of the two options to be forcefully picked
+            int priorityA = folderModelA == null ? -10 : folderModelA.PriorityIndex;
+            int priorityB = folderModelB == null ? -10 : folderModelB.PriorityIndex;
+
+            if (priorityB > priorityA) // higher priority folder found
+            {
+                return folderB;
+            }
+
+            if (priorityB == priorityA) // conflict resolution needed
+            {
+                if (priorityB == -1 || priorityB == -10) return string.Empty; // if there is no priority, return the empty string
+
+                return FolderPriorities[priorityA].ConflictResolutionFolder;
+            }
+
+            return folderA;
+        }
+
+        public void RebuildFolderPriorities(SimplifiedFolderPriority[] newFolderPriorities)
+        {
+            FolderPriorities = new MvxObservableCollection<FolderPriorityModel>();
+
+            foreach (SimplifiedFolderPriority priority in newFolderPriorities)
+            {
+                FolderPriorities.Add(new FolderPriorityModel(priority.Name, priority.ConflictResolutionFolder));
+            }
+        }
+
+        #endregion
+
+        #endregion
+
         #region Command Methods
 
         // TODO REMOVE AT SOME POiNT
@@ -463,6 +581,15 @@ namespace WallpaperFlux.Core.ViewModels
             category.AddTagRange(tagsToAdd);
         }
         //! temp debug code
+
+        private void DeleteSelectedPriorities()
+        {
+            FolderPriorityModel[] priorities = GetSelectedFolderPriorities();
+
+            foreach (FolderPriorityModel priority in priorities) priority.ClearFolders(); // set all affected folders to the default priority value
+
+            FolderPriorities.RemoveItems(GetSelectedFolderPriorities());
+        }
         #endregion
     }
 }

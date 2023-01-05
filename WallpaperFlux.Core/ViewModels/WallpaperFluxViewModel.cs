@@ -443,7 +443,7 @@ namespace WallpaperFlux.Core.ViewModels
 
         public void PromptLoadTheme()
         {
-            bool loadingOld = MessageBoxUtil.PromptYesNo("Load old data? [Remove this prompt when you no longer rely on the old data]");
+            //xbool loadingOld = MessageBoxUtil.PromptYesNo("Load old data? [Remove this prompt when you no longer rely on the old data]");
 
             using (CommonOpenFileDialog dialog = new CommonOpenFileDialog())
             {
@@ -456,24 +456,19 @@ namespace WallpaperFlux.Core.ViewModels
                 {
                     JsonUtil.SetIsLoadingData(true);
 
-                    if (loadingOld)
-                    {
-                        JsonUtil.ConvertOldTheme(JsonUtil.LoadOldData(dialog.FileName));
-                    }
-                    else
-                    {
-                        JsonUtil.ConvertTheme(JsonUtil.LoadData(dialog.FileName));
-                    }
+                    JsonUtil.ConvertTheme(JsonUtil.LoadData(dialog.FileName));
 
                     JsonUtil.SetIsLoadingData(false);
 
-                    // ? --- Call methods that were disabled doing the loading process to avoid having them called too frequently, many of these need to be called once loading is finished ---
+                    // ? --- Call methods that were disabled doing the loading process but need to be called once loading is finished (Many were disabled for being called too frequently or improperly) ---
 
                     //! this is also called by UpdateImageTypeWeights(), keeping this here regardless however to avoid complications in a future refactor since it is critical
                     ThemeUtil.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence();
                     //! this is also called by UpdateImageTypeWeights(), keeping this here regardless however to avoid complications in a future refactor since it is critical
 
                     ThemeUtil.Theme.RankController.UpdateImageTypeWeights(); //? this is disabled during the loading process and needs to be called once loading is finished to update frequencies & weights
+
+                    TaggingUtil.HighlightTags(); 
                 }
             }
         }
@@ -550,9 +545,8 @@ namespace WallpaperFlux.Core.ViewModels
 
             foreach (SimplifiedFolder folder in simpleFolders)
             {
-                folders.Add(new FolderModel(folder.Path, folder.Enabled));
+                folders.Add(new FolderModel(folder.Path, folder.Enabled, folder.PriorityIndex));
             }
-            Debug.WriteLine("Folders Created");
 
             AddFolderRange(folders.ToArray());
         }

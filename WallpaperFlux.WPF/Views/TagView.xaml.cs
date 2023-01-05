@@ -74,7 +74,7 @@ namespace WallpaperFlux.WPF.Views
             }
         }
 
-        private void TagView_OnSizeChanged_UpdateTagBoardHeight(object sender, SizeChangedEventArgs e) => ((TagViewModel)this.DataContext).SetTagBoardHeight(ActualHeight - 75);
+        private void TagView_OnSizeChanged_UpdateDrawerHeight(object sender, SizeChangedEventArgs e) => ((TagViewModel)this.DataContext).SetDrawerHeight(ActualHeight - 75);
 
         // this captures the selection range of the entire listbox item
         private void TagTabControl_ListBoxItem_OnPreviewMouseDown(object sender, MouseButtonEventArgs e)

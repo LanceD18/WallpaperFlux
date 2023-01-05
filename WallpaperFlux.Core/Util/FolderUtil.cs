@@ -79,10 +79,8 @@ namespace WallpaperFlux.Core.Util
                     {
                         return dialog.FileName;
                     }
-                    else
-                    {
-                        MessageBoxUtil.ShowError("The theme does not contain this folder");
-                    }
+
+                    MessageBoxUtil.ShowError("The theme does not contain this folder");
                 }
             }
 
@@ -102,7 +100,21 @@ namespace WallpaperFlux.Core.Util
                         return imageFolder;
                     }
                 }
+            }
+            
+            //? We don't need an error message here because GetValidFolderPath handles this for us
 
+            return null;
+        }
+
+        public static FolderModel GetFolderModel(string path)
+        {
+            foreach (FolderModel imageFolder in WallpaperFluxViewModel.Instance.ImageFolders)
+            {
+                if (imageFolder.Path == path)
+                {
+                    return imageFolder;
+                }
             }
 
             return null;

@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using LanceTools.IO;
+using MvvmCross.ViewModels;
 using Newtonsoft.Json;
 using WallpaperFlux.Core.Collections;
 using WallpaperFlux.Core.JSON;
@@ -86,6 +87,8 @@ namespace WallpaperFlux.Core.Util
 
         [JsonProperty("FrequencyData")] public SimplifiedFrequencyModel FrequencyModel;
 
+        [JsonProperty("FolderPriorities")] public SimplifiedFolderPriority[] FolderPriorities;
+
         [JsonProperty("MiscData")] public MiscData MiscData;
 
         [JsonProperty("ImageFolders")] public SimplifiedFolder[] ImageFolders;
@@ -94,12 +97,13 @@ namespace WallpaperFlux.Core.Util
 
         [JsonProperty("ImageData")] public SimplifiedImage[] Images;
 
-        public JsonWallpaperData(SettingsModel settings, SimplifiedDisplaySettings displaySettings, SimplifiedFrequencyModel frequencyModel, MiscData miscData,
-            SimplifiedFolder[] imageFolders, SimplifiedCategory[] categories, SimplifiedImage[] images)
+        public JsonWallpaperData(SettingsModel settings, SimplifiedDisplaySettings displaySettings, SimplifiedFrequencyModel frequencyModel, SimplifiedFolderPriority[] folderPriorities,
+            MiscData miscData, SimplifiedFolder[] imageFolders, SimplifiedCategory[] categories, SimplifiedImage[] images)
         {
             Settings = settings;
             DisplaySettings = displaySettings;
             FrequencyModel = frequencyModel;
+            FolderPriorities = folderPriorities;
             MiscData = miscData;
             ImageFolders = imageFolders;
             Categories = categories;
@@ -169,6 +173,8 @@ namespace WallpaperFlux.Core.Util
 
         public static void SaveData(string path)
         {
+            if (IsLoadingData) return;
+
             //! Implementing a saving thread may cause issues if changes are made while saving or if you accidentally allow to saves to occur at once, so it'll be best to just keep that option off
 
             if (string.IsNullOrEmpty(path)) return;
@@ -211,7 +217,15 @@ namespace WallpaperFlux.Core.Util
                 ThemeUtil.ThemeSettings.FrequencyModel.RelativeFrequencyGIF,
                 ThemeUtil.ThemeSettings.FrequencyModel.RelativeFrequencyVideo,
                 ThemeUtil.ThemeSettings.FrequencyModel.WeightedFrequency);
-            
+
+            SimplifiedFolderPriority[] folderPriorities = new SimplifiedFolderPriority[TagViewModel.Instance.FolderPriorities.Count];
+
+            for (var i = 0; i < folderPriorities.Length; i++)
+            {
+                FolderPriorityModel priority = TagViewModel.Instance.FolderPriorities[i];
+                folderPriorities[i] = new SimplifiedFolderPriority(priority.Name, priority.ConflictResolutionFolder);
+            }
+
             //? --- Misc Data ---
             //! the instance itself will be NULL if you DON'T OPEN it before saving, so don't use ViewModel.Instance here!
             MiscData miscData = new MiscData(false, false, false, false, 
@@ -222,6 +236,7 @@ namespace WallpaperFlux.Core.Util
                 ThemeUtil.Theme.Settings,
                 displaySettings,
                 frequencyModel,
+                folderPriorities,
                 miscData,
                 ConvertToSimplifiedFolders(WallpaperFluxViewModel.Instance.ImageFolders.ToArray()),
                 ConvertToSimplifiedCategories(ThemeUtil.Theme.Categories.ToArray()),
@@ -255,7 +270,7 @@ namespace WallpaperFlux.Core.Util
 
             foreach (FolderModel folder in folders)
             {
-                simplifiedFolders.Add(new SimplifiedFolder(folder.Path, folder.Active));
+                simplifiedFolders.Add(new SimplifiedFolder(folder.Path, folder.Active, folder.PriorityIndex));
             }
 
             return simplifiedFolders.ToArray();
@@ -289,7 +304,8 @@ namespace WallpaperFlux.Core.Util
                     tag.Enabled,
                     tag.UseForNaming,
                     tag.ParentCategory.Name,
-                    ConvertToParentTagArray(tag.GetParentTags())
+                    ConvertToParentTagArray(tag.GetParentTags()),
+                    tag.RenameFolderPath
                 ));
             }
 
@@ -347,7 +363,12 @@ namespace WallpaperFlux.Core.Util
             string newTempPath = tempPath;
             while (File.Exists(newTempPath))
             {
-                dateSortedFilePaths.Add(new FileInfo(newTempPath).LastWriteTime, newTempPath);
+                DateTime dt = new FileInfo(newTempPath).LastWriteTime;
+                if (!dateSortedFilePaths.ContainsKey(dt)) // sometimes files can be saved too closely together, the initial file will be the oldest out of the two
+                {
+                    dateSortedFilePaths.Add(dt, newTempPath);
+                }
+
                 newTempPath = tempPathName + "_" + tempPathCount + pathFile.Extension; // updates the temp path name with a number
 
                 if (tempPathCount > 10) //? overwrite the oldest backup upon reaching 10 backups
@@ -470,9 +491,6 @@ namespace WallpaperFlux.Core.Util
             ConvertTags(wallpaperData);
             ConvertImagesAndFolders(wallpaperData);
 
-            TaggingUtil.HighlightTags();
-
-
             Debug.WriteLine("Conversion Finished");
         }
 
@@ -538,7 +556,7 @@ namespace WallpaperFlux.Core.Util
                 foreach (SimplifiedTag simpleTag in simpleCategory.Tags)
                 {
                     // verify tag before adding
-                    TagModel instanceTag = instanceCategory.VerifyTagWithData(simpleTag.Name, simpleTag.UseForNaming, simpleTag.Enabled, true);
+                    TagModel instanceTag = instanceCategory.VerifyTagWithData(simpleTag.Name, simpleTag.UseForNaming, simpleTag.Enabled, simpleTag.RenameFolderPath, true);
                     instanceTag.ParentCategory = instanceCategory; // not saved into the tag's JSON as it would be unnecessary bloat since the category has this
 
                     // ----- Add Parent Tags (of this Tag) -----
@@ -561,6 +579,8 @@ namespace WallpaperFlux.Core.Util
             //? we need the official category list ahead of time for data handling but this gives them the wrong order, so we used this to fix it
             ThemeUtil.Theme.Categories = new List<CategoryModel>(orderedCategories);
             TaggingUtil.UpdateCategoryView(); // don't forget to update the view
+
+            ThemeUtil.Theme.PreLoadedFolderPriorities = wallpaperData.FolderPriorities;
         }
 
         private static void ConvertImagesAndFolders(JsonWallpaperData wallpaperData)
@@ -613,6 +633,7 @@ namespace WallpaperFlux.Core.Util
             //! (The folders will add all images as their default if added first, if added second they'll just find that the image already exists)
             Debug.WriteLine("Adding folders...");
             WallpaperFluxViewModel.Instance.AddFolderRange(wallpaperData.ImageFolders);
+            Debug.WriteLine("Folders Created");
 
             //? placing this at the end of the loading process just because it's a simple warning message which would be annoying to have interrupt the loading process
             if (invalidImageCount > 0) MessageBoxUtil.ShowError(invalidImageString);
@@ -654,187 +675,6 @@ namespace WallpaperFlux.Core.Util
                     }
                 }
             }
-        }
-
-        public static void ConvertOldTheme(TemporaryJsonWallpaperData wallpaperData)
-        {
-            //! Do NOT turn the regions here into methods, they are only called once and should only be called right after each other!!!
-            //! Do NOT turn the regions here into methods, they are only called once and should only be called right after each other!!!
-            //! Do NOT turn the regions here into methods, they are only called once and should only be called right after each other!!!
-            //! Do NOT turn the regions here into methods, they are only called once and should only be called right after each other!!!
-            //? A local method might be okay but still doesn't enforce singular 'calls' (Unless you want to introduce additional boolean variables)
-
-            #region Convert Theme Options
-            Debug.WriteLine("Converting Theme Options...");
-            ThemeUtil.ReconstructTheme(wallpaperData.miscData.maxRank); //! This needs to be done before any images are added
-            // TODO wallpaperData.themeOptions;
-            #endregion
-
-            #region Convert Misc
-            Debug.WriteLine("Converting Misc...");
-            // TODO wallpaperData.miscData;
-            #endregion
-
-            #region Convert Tags
-            Debug.WriteLine("Converting Tags...");
-            // ----- Add Categories -----
-            List<CategoryModel> orderedCategories = new List<CategoryModel>(); // retains the saved order
-            foreach (TempCategoryData tempCat in wallpaperData.tagData)
-            {
-                // verify category before adding tags
-                // TODO Consider converting the data held up by the TagViewModel Instance into another subset of ThemeModel
-                CategoryModel instanceCategory = TaggingUtil.VerifyCategoryWithData(tempCat.Name, tempCat.UseForNaming, tempCat.Enabled, true);
-
-                // ----- Add Tags (of this Category) -----
-                foreach (TempTagData tempTag in tempCat.Tags)
-                {
-                    // verify tag before adding
-                    TagModel instanceTag = instanceCategory.VerifyTagWithData(tempTag.Name, tempTag.UseForNaming, tempTag.Enabled, true);
-                    instanceTag.ParentCategory = instanceCategory; // not saved into the tag's JSON as it would be unnecessary bloat since the category has this
-
-                    // ----- Add Parent Tags (of this Tag) -----
-                    foreach (Tuple<string, string> parentInfo in tempTag.ParentTags)
-                    {
-                        //? This Tuple should be replace with SimplifiedTag in the official conversion
-                        string parentCategoryName = parentInfo.Item1;
-                        string parentName = parentInfo.Item2;
-
-                        //! Keep in mind that this tackles both Parent and Child tags, no need to loop through the Child Tag list as well
-                        //! (There's no way to directly add child tags anyways)
-                        instanceTag.LinkTag(TaggingUtil.VerifyCategory(parentCategoryName).VerifyTag(parentName), false);
-                    }
-
-                    //x Debug.WriteLine("Adding Tag: " + instanceTag.Name);
-                    instanceCategory.AddTag(instanceTag); // TODO May want to convert this to AddRange in the actual conversion
-                }
-
-                //x Debug.WriteLine("Adding Category: " + instanceCategory.Name + "\n\n\n");
-                //? handled via verification
-                //x TaggingUtil.AddCategory(instanceCategory); // TODO May want to convert this to AddRange in the actual conversion
-
-                orderedCategories.Add(instanceCategory);
-            }
-
-            //? we need the official category list ahead of time for data handling but this gives them the wrong order, so we used this to fix it
-            ThemeUtil.Theme.Categories = new List<CategoryModel>(orderedCategories);
-            TaggingUtil.UpdateCategoryView(); // don't forget to update the view
-            #endregion
-
-            #region Convert Images & Folders
-            Debug.WriteLine("Converting Images...");
-            //! Placing this after AddFolderRange() will *significantly* increase load times as the images will attempt to be added multiple times
-            // TODO Even with the above statement, this still takes a considerable amount of time to load
-            // TODO Some of the lag may have to do with the conversions, it'll likely be a bit better once TempImageData is no longer needed
-
-            int invalidImageCount = 0;
-            string invalidImageString = "The following image(s) no longer exist and have been removed from the theme: ";
-
-            foreach (TempImageData imageData in wallpaperData.imageData)
-            {
-                if (!File.Exists(imageData.Path))
-                {
-                    invalidImageCount++;
-                    invalidImageString += "\n" + imageData.Path;
-                    continue;
-                }
-
-                ImageModel image = new ImageModel(imageData.Path, imageData.Rank, volume: imageData.VideoSettings.Volume);
-                ImageTagCollection tags = new ImageTagCollection(image);
-
-                //? ----- Converting Image's Tags -----
-                foreach (string categoryName in imageData.Tags.Keys)
-                {
-                    //? We will not be verifying anything here, that was done in the Convert Tag section. If it doesn't exist, it will not be added (Instead of crashing)
-                    CategoryModel category = TaggingUtil.GetCategory(categoryName);
-
-                    if (category == null)
-                    {
-                        Debug.WriteLine("Category [" + categoryName + "] was referenced while converting images but was not found while converting tags, dropping");
-                        continue;
-                    }
-
-                    foreach (string tagName in imageData.Tags[categoryName])
-                    {
-                        TagModel tag = category.GetTag(tagName);
-
-                        if (tag == null)
-                        {
-                            Debug.WriteLine("Tag [" + tagName + "] was referenced while converting images but was not found while converting tags, dropping");
-                            continue;
-                        }
-
-                        //! Specific to this, purely for conversion from the old theme, we need to nuke all references to parent tags in images to move over to the new paradigm
-                        //! Will check if a parent tag of this tag was added to this collection, if so, remove it
-                        foreach (TagModel parentTag in tag.GetParentTags())
-                        {
-                            if (tags.Contains(parentTag))
-                            {
-                                tags.Remove(parentTag, false);
-                            }
-                        }
-
-                        tags.Add(tag, false);
-
-                        //! Specific to this, purely for conversion from the old theme, we need to nuke all references to parent tags in images to move over to the new paradigm
-                        //! Will check if this tag is the parent of another tag in this collection, if so, remove it
-                        foreach (TagModel childTag in tag.GetChildTags())
-                        {
-                            if (tags.Contains(childTag))
-                            {
-                                tags.Remove(tag, false);
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                //? ----- Converting Naming Exceptions -----
-                foreach (Tuple<string, string> tagInfo in imageData.TagNamingExceptions)
-                {
-                    string categoryName = tagInfo.Item1;
-                    string tagName = tagInfo.Item2;
-
-                    //? We will not be verifying anything here, that was done in the Convert Tag section. If it doesn't exist, it will not be added (Instead of crashing)
-                    CategoryModel category = TaggingUtil.GetCategory(categoryName);
-
-                    if (category == null)
-                    {
-                        Debug.WriteLine("(Naming Exception) Category [" + categoryName + "] was referenced while converting images but was not found while converting tags, dropping");
-                        continue;
-                    }
-
-                    TagModel tag = category.GetTag(tagName);
-
-                    if (tag == null)
-                    {
-                        Debug.WriteLine("(Naming Exception) Tag [" + tagName + "] was referenced while converting images but was not found while converting tags, dropping");
-                        continue;
-                    }
-
-                    if (!tag.UseForNaming)
-                    {
-                        tags.AddNamingException(tag);
-                    }
-                    else
-                    {
-                        //? parent tags with naming exceptions can now just be added directly since they are no longer automatically added to the image when adding a child, this forces them in on conversion
-                        tags.Add(tag, false);
-                    }
-                }
-
-                //x Debug.WriteLine("Adding Image: " + image.PathName);
-                ThemeUtil.Theme.Images.AddImage(image);
-            }
-
-            if (invalidImageCount > 0) MessageBoxUtil.ShowError(invalidImageString);
-
-            Debug.WriteLine("Adding folders...");
-            //! Folders need to be added after images are added so that they don't have to be verified twice
-            //! (The folders will add all images as their default if added first, if added second they'll just find that the image already exists)
-            WallpaperFluxViewModel.Instance.AddFolderRange(wallpaperData.imageFolders.Keys.ToArray());
-            #endregion
-
-            Debug.WriteLine("Conversion Finished");
         }
         #endregion
     }

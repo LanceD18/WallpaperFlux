@@ -46,9 +46,11 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
+        public int PriorityIndex { get; set; }
+
         private List<string> _images;
 
-        public FolderModel(string path, bool active)
+        public FolderModel(string path, bool active, int priorityIndex = -1)
         {
             if (!Directory.Exists(path))
             {
@@ -62,6 +64,8 @@ namespace WallpaperFlux.Core.Models
 
             //! this will internally validate the image folder so this must be placed after the images are added
             Active = active;
+
+            PriorityIndex = priorityIndex;
 
             ViewFolderCommand = new MvxCommand(ViewFolder);
         }

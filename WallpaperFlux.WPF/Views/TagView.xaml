@@ -17,11 +17,12 @@
              d:DesignHeight="450" d:DesignWidth="800"
              BorderBrush="{Binding WindowBorderBrushColor, Converter={StaticResource ColorToBrushConverter}, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
              BorderThickness="{Binding WindowBorderThickness, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
-             SizeChanged="TagView_OnSizeChanged_UpdateTagBoardHeight">
+             SizeChanged="TagView_OnSizeChanged_UpdateDrawerHeight">
 
     <views:MvxWpfView.Resources>
         <ResourceDictionary>
-            <system:Double x:Key="TagBoardWith">375</system:Double>
+            <system:Double x:Key="TagboardWidth">375</system:Double>
+            <system:Double x:Key="FolderPriorityWidth">215</system:Double>
         </ResourceDictionary>
     </views:MvxWpfView.Resources>
 
@@ -39,122 +40,7 @@
             <RowDefinition Height="8"/>
         </Grid.RowDefinitions>
 
-        <!--? Tagboard Drawer -->
-        <hc:Drawer Dock="Right" ShowMode="Cover" IsOpen="{Binding TagboardToggle}" x:Name="TagBoardDrawer">
-                <GroupBox>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <!--<ColumnDefinition Width="{adonisUi:Space 1}"/>-->
-                        <ColumnDefinition Width="0"/>
-                        <ColumnDefinition Width="auto"/>
-                        <ColumnDefinition Width="auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="0"/>
-                        <RowDefinition Height="auto"/>
-                        <RowDefinition Height="auto"/>
-                        <RowDefinition Height="auto"/>
-                        <RowDefinition Height="auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-
-                    <!-- Tags Selected -->
-                    <GroupBox Width="{StaticResource TagBoardWith}"
-                              Grid.Row="2" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:LayerExtension.Layer="2">
-                        <!--? Header -->
-                        <GroupBox.Header>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="0"/>
-                                    <ColumnDefinition Width="auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="auto"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="0"/>
-                                    <RowDefinition Height="auto"/>
-                                    <RowDefinition Height="auto"/>
-                                    <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
-
-                                <TextBlock Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" Text="Tagboard" FontWeight="Medium" Margin="0 0 0 5">
-                                    <TextBlock.Style>
-                                        <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                                <Button Grid.Row="1" Grid.Column="3" HorizontalAlignment="Right" Content="X" mvx:Bi.nd="Command CloseTagBoardCommand" 
-                                        Margin="5 0 5 0" Foreground="Red" FontSize="16" FontWeight="Bold" adonisExtensions:LayerExtension.Layer="1"/>
-                                <StackPanel Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" 
-                                            adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="0 5 0 0">
-                                    <Button Content="Select Images" Margin="5 0 5 0" Command="{Binding SelectImagesFromTagBoardCommand}"/>
-
-                                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
-
-                                    <TextBlock Text="Set All: " Margin="5 0 0 0" VerticalAlignment="Center"/>
-                                    <Button Content="+" Margin="5 0 5 0" Command="{Binding SetMandatoryTagBoardSelectionCommand}" FontWeight="Medium"
-                                            adonisExtensions:CursorSpotlightExtension.BorderBrush="White" ToolTip="Mandatory (Selection *must* have this tag)"/>
-                                    <Button Content="~" Margin="5 0 5 0" Command="{Binding SetOptionalTagBoardSelectionCommand}" FontWeight="Medium"
-                                            Foreground="LimeGreen" adonisExtensions:CursorSpotlightExtension.BorderBrush="LimeGreen" ToolTip="Optional (Selection *may* have this tag)"/>
-                                    <Button Content="-" Margin="5 0 5 0" Command="{Binding SetExcludedTagBoardSelectionCommand}" FontWeight="Medium"
-                                            Foreground="Red" adonisExtensions:CursorSpotlightExtension.BorderBrush="Red" ToolTip="Excluded (Selection *cannot* have this tag)"/>
-                                </StackPanel>
-                            </Grid>
-                            <!--
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-
-                            </StackPanel>
-                            -->
-                        </GroupBox.Header>
-
-                        <!--? ListBox  -->
-                        <ListBox ItemsSource="{Binding TagBoardTags}" SelectionMode="Extended" 
-                                 Height="{Binding TagBoardHeight, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
-                                                 adonisExtensions:ScrollViewerExtension.HideScrollBarsUntilMouseOver="True"
-                                                 adonisExtensions:ScrollViewerExtension.VerticalScrollBarPlacement="Overlay"
-                                                 adonisExtensions:ScrollViewerExtension.VerticalScrollBarExpansionMode="ExpandOnHover"
-                                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-
-                            <!-- Wrap Setup -->
-                            <ListBox.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel IsItemsHost="True" Width="{StaticResource TagBoardWith}"/>
-                                </ItemsPanelTemplate>
-                            </ListBox.ItemsPanel>
-
-                            <!-- Tags Item Template -->
-                            <ListBox.ItemTemplate>
-                                <DataTemplate DataType="tagging:TagModel">
-                                    <!-- The GroupBox adds a fitting adonis background to every tag -->
-                                    <GroupBox  adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:CornerRadiusExtension.CornerRadius="15">
-                                        <StackPanel Orientation="Horizontal">
-                                            <Button VerticalAlignment="Center" Content="{Binding SearchTypeString}" ToolTip="{Binding SearchTypeToolTip}"
-                                                    Foreground="{Binding SearchTypeColor,  Converter={StaticResource ColorToBrushConverter}}"
-                                                    Command="{Binding CycleSearchTypeCommand}"
-                                                    adonisExtensions:RippleExtension.FadeInDuration="0"
-                                                    adonisExtensions:RippleExtension.FadeOutDuration="0"
-                                                    adonisExtensions:RippleExtension.ForegroundBrush="{Binding SearchTypeColor,  Converter={StaticResource ColorToBrushConverter}}"
-                                                    FontSize="10" FontWeight="Medium" Margin="0 0 5 0" BorderThickness="0" Width="22"/>
-                                            <!-- ! Without a set width, the excluded parameter will change the size of the button and cause potential formatting jumps -->
-                                            <TextBlock VerticalAlignment="Center" Text="{Binding Name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
-                                                       Foreground="{Binding SearchTypeColor,  Converter={StaticResource ColorToBrushConverter}}"/>
-                                            <Button VerticalAlignment="Center" Content="X"  Command="{Binding RemoveTagFromTagBoardCommand}" 
-                                                    Foreground="Red" FontSize="10" FontWeight="Medium" Margin="5 0 0 0" BorderThickness="0" />
-                                        </StackPanel>
-                                    </GroupBox>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </GroupBox>
-                </Grid>
-            </GroupBox>
-
-        </hc:Drawer>
-
-        <!-- TODO Rename category can just be a ContextMenu button now -->
-        <!-- TODO Same thing with Select Category Images -->
-
-        <!-- Toolbar -->
+        <!--? Toolbar -->
         <Menu Grid.Row="1" Grid.Column="1" Padding="2">
             <!-- Categories -->
             <MenuItem Header="Categories">
@@ -184,40 +70,14 @@
             </MenuItem>
 
             <MenuItem Header="Options">
+                <!-- Open a drawer menu that shows priorities -->
+                <MenuItem Header="View Folder Priority" Command="{Binding ViewFolderPriorityCommand}"/>
                 <MenuItem Header="Randomize Selection" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding RandomizeSelection, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 <MenuItem Header="Reverse Selection" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding ReverseSelection, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
             </MenuItem>
-
-            <!-- Settings -->
-            <!-- TODO Remember that each CATEGORY has their own default settings -->
-            <!-- ! This seems to have been moved to the context menus now (and is handled better there anyways since each category has their own options) -->
-            <!--
-            <MenuItem Header="Settings">
-                <MenuItem Header="Default Tag Settings: " IsEnabled="False">
-
-                </MenuItem>
-                <Separator/>
-                <MenuItem Header="Enabled" IsCheckable="True" IsChecked="True" StaysOpenOnClick="True">
-                    <MenuItem.ToolTip>
-                        Every new tag will be created with this setting
-                    </MenuItem.ToolTip>
-                </MenuItem>
-                <MenuItem Header="Use For Naming" IsCheckable="True" IsChecked="True" StaysOpenOnClick="True">
-                    <MenuItem.ToolTip>
-                        Every new tag will be created with this setting
-                    </MenuItem.ToolTip>
-                </MenuItem>
-                <Separator/>
-                <MenuItem Header="Apply Default Settings to [All] Tags"/> "All tags in this category"
-            </MenuItem>
-            -->
         </Menu>
 
         <Separator Grid.Row="2" Grid.Column="1"/>
-
-        <!--
-        <TextBlock Grid.Row="3" Grid.Column="1" Text="Categories" FontSize="16" FontWeight="Bold" Margin="0 5 0 0"/>
-        -->
 
         <!--? Categories & Tags -->
         <GroupBox Grid.Row="3" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:LayerExtension.Layer="2">
@@ -519,6 +379,15 @@
 
                                                                 <Separator/>
 
+                                                                <MenuItem Header="{Binding RenameFolderContextMenuString, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="False"
+                                                                          ToolTip="The rename folder helps to determine what folder an image will be assigned to upon renaming"/>
+                                                                <MenuItem Header="Assign Rename Folder" Command="{Binding AssignRenameFolderCommand}"
+                                                                          ToolTip="The rename folder helps to determine what folder an image will be assigned to upon renaming"/>
+                                                                <MenuItem Header="Remove Rename Folder" Command="{Binding RemoveRenameFolderCommand}"
+                                                                          ToolTip="The rename folder helps to determine what folder an image will be assigned to upon renaming"/>
+
+                                                                <Separator/>
+
                                                                 <!-- Checkboxes -->
                                                                 <MenuItem Header="Enabled" IsCheckable="True" StaysOpenOnClick="True" 
                                                                               IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
@@ -543,5 +412,231 @@
                 </TabControl.ContentTemplate>
             </TabControl>
         </GroupBox>
+
+        <!--? Tagboard Drawer -->
+        <hc:Drawer Dock="Right" ShowMode="Cover" IsOpen="{Binding TagboardToggle}">
+            <GroupBox>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <!--<ColumnDefinition Width="{adonisUi:Space 1}"/>-->
+                        <ColumnDefinition Width="0"/>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="0"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <GroupBox Width="{StaticResource TagboardWidth}"
+                              Grid.Row="2" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:LayerExtension.Layer="2">
+                        <!--? Header -->
+                        <GroupBox.Header>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="0"/>
+                                    <ColumnDefinition Width="auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="0"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" Text="Tagboard" FontWeight="Medium" Margin="0 0 0 5">
+                                    <TextBlock.Style>
+                                        <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <Button Grid.Row="1" Grid.Column="3" HorizontalAlignment="Right" Content="X" Command="{Binding CloseTagBoardCommand}"
+                                        Margin="5 0 5 0" Foreground="Red" FontSize="16" FontWeight="Bold" adonisExtensions:LayerExtension.Layer="1"/>
+                                <StackPanel Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                            adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="0 5 0 0">
+                                    <Button Content="Select Images" Margin="5 0 5 0" Command="{Binding SelectImagesFromTagBoardCommand}"/>
+
+                                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
+
+                                    <TextBlock Text="Set All: " Margin="5 0 0 0" VerticalAlignment="Center"/>
+                                    <Button Content="+" Margin="5 0 5 0" Command="{Binding SetMandatoryTagBoardSelectionCommand}" FontWeight="Medium"
+                                            adonisExtensions:CursorSpotlightExtension.BorderBrush="White" ToolTip="Mandatory (Selection *must* have this tag)"/>
+                                    <Button Content="~" Margin="5 0 5 0" Command="{Binding SetOptionalTagBoardSelectionCommand}" FontWeight="Medium"
+                                            Foreground="LimeGreen" adonisExtensions:CursorSpotlightExtension.BorderBrush="LimeGreen" ToolTip="Optional (Selection *may* have this tag)"/>
+                                    <Button Content="-" Margin="5 0 5 0" Command="{Binding SetExcludedTagBoardSelectionCommand}" FontWeight="Medium"
+                                            Foreground="Red" adonisExtensions:CursorSpotlightExtension.BorderBrush="Red" ToolTip="Excluded (Selection *cannot* have this tag)"/>
+                                </StackPanel>
+                            </Grid>
+                        </GroupBox.Header>
+
+                        <!--? ListBox  -->
+                        <ListBox ItemsSource="{Binding TagBoardTags}" SelectionMode="Extended" 
+                                 Height="{Binding DrawerHeight, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 adonisExtensions:ScrollViewerExtension.HideScrollBarsUntilMouseOver="True"
+                                                 adonisExtensions:ScrollViewerExtension.VerticalScrollBarPlacement="Overlay"
+                                                 adonisExtensions:ScrollViewerExtension.VerticalScrollBarExpansionMode="ExpandOnHover"
+                                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+
+                            <!-- Wrap Setup -->
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel IsItemsHost="True" Width="{StaticResource VerticalDrawerWidth}"/>
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+
+                            <!-- Tags Item Template -->
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="tagging:TagModel">
+                                    <!-- The GroupBox adds a fitting adonis background to every tag -->
+                                    <GroupBox  adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:CornerRadiusExtension.CornerRadius="15">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button VerticalAlignment="Center" Content="{Binding SearchTypeString}" ToolTip="{Binding SearchTypeToolTip}"
+                                                    Foreground="{Binding SearchTypeColor,  Converter={StaticResource ColorToBrushConverter}}"
+                                                    Command="{Binding CycleSearchTypeCommand}"
+                                                    adonisExtensions:RippleExtension.FadeInDuration="0"
+                                                    adonisExtensions:RippleExtension.FadeOutDuration="0"
+                                                    adonisExtensions:RippleExtension.ForegroundBrush="{Binding SearchTypeColor,  Converter={StaticResource ColorToBrushConverter}}"
+                                                    FontSize="10" FontWeight="Medium" Margin="0 0 5 0" BorderThickness="0" Width="22"/>
+                                            <!-- ! Without a set width, the excluded parameter will change the size of the button and cause potential formatting jumps -->
+                                            <TextBlock VerticalAlignment="Center" Text="{Binding Name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                                                       Foreground="{Binding SearchTypeColor,  Converter={StaticResource ColorToBrushConverter}}"/>
+                                            <Button VerticalAlignment="Center" Content="X"  Command="{Binding RemoveTagFromTagBoardCommand}" 
+                                                    Foreground="Red" FontSize="10" FontWeight="Medium" Margin="5 0 0 0" BorderThickness="0" />
+                                        </StackPanel>
+                                    </GroupBox>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </GroupBox>
+                </Grid>
+            </GroupBox>
+
+        </hc:Drawer>
+
+        <!--? Folder Priority Drawer -->
+        <hc:Drawer Dock="Left" ShowMode="Cover" IsOpen="{Binding FolderPriorityToggle}">
+            <GroupBox>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <!--<ColumnDefinition Width="{adonisUi:Space 1}"/>-->
+                        <ColumnDefinition Width="0"/>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="0"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <GroupBox Width="{StaticResource FolderPriorityWidth}"
+                              Grid.Row="2" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:LayerExtension.Layer="2">
+                        <!--? Header -->
+                        <GroupBox.Header>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="0"/>
+                                    <ColumnDefinition Width="auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="0"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" Text="Folder Priority" FontWeight="Medium" Margin="0 0 0 5">
+                                    <TextBlock.Style>
+                                        <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <Button Grid.Row="1" Grid.Column="3" HorizontalAlignment="Right" Content="X" Command="{Binding CloseFolderPriorityCommand}"
+                                        Margin="5 0 5 0" Foreground="Red" FontSize="16" FontWeight="Bold" adonisExtensions:LayerExtension.Layer="1"/>
+                                <StackPanel Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                            adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="0 5 0 0">
+                                    <Button Content="Create" Margin="5 0 5 0" Command="{Binding CreatePriorityCommand}"
+                                            adonisExtensions:CursorSpotlightExtension.BorderBrush="LimeGreen"
+                                            adonisExtensions:RippleExtension.BackgroundBrush="LimeGreen"/>
+                                    <Button Content="Delete" Margin="5 0 5 0" Command="{Binding DeleteSelectedPrioritiesCommand}" 
+                                            IsEnabled="{Binding CanDeletePriorities, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                                            adonisExtensions:CursorSpotlightExtension.BorderBrush="Red"
+                                            adonisExtensions:RippleExtension.BackgroundBrush="Red"/>
+                                </StackPanel>
+                            </Grid>
+                        </GroupBox.Header>
+
+                        <!-- TODO Reorderable List -->
+                        <!-- TODO User can create or delete priorities -->
+                        <!-- TODO Priority Context Menu: Show Contained folders, Assign Conflict Solution Folder -->
+
+                        <!--? Folder Priority ListBox  -->
+                        <ListBox ItemsSource="{Binding FolderPriorities}" SelectionMode="Extended" SelectedItem="{Binding SelectedFolderPriority}" 
+                                 Height="{Binding DrawerHeight, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 adonisExtensions:ScrollViewerExtension.HideScrollBarsUntilMouseOver="True"
+                                                 adonisExtensions:ScrollViewerExtension.VerticalScrollBarPlacement="Overlay"
+                                                 adonisExtensions:ScrollViewerExtension.VerticalScrollBarExpansionMode="ExpandOnHover"
+                                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+
+                            <!-- Wrap Setup -->
+                            <!--
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Vertical" IsItemsHost="True" Width="{StaticResource VerticalDrawerWidth}"/>
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                            -->
+
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                    <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            
+                            <!--? Folder Priority Item Template -->
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="tagging:FolderPriorityModel">
+                                    <!-- The GroupBox adds a fitting adonis background to every tag -->
+                                    <GroupBox adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:CornerRadiusExtension.CornerRadius="15">
+                                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding Name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                        <!--? Folder Priority Context Menu -->
+                                        <GroupBox.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem Header="{Binding Name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="False"/>
+                                                <MenuItem Header="Rename"/>
+                                                <MenuItem Header="Assign Folder" Command="{Binding AssignFolderCommand}"/>
+                                                <MenuItem Header="Remove Folder" Command="{Binding RemoveFolderCommand}"/>
+                                                <MenuItem Header="List Assigned Folders" Command="{Binding ListAssignedFoldersCommand}"/>
+
+                                                <Separator/>
+
+                                                <MenuItem Header="{Binding ConflictResolutionFolderContextMenuString}" IsEnabled="False"/>
+                                                <MenuItem Header="Assign Conflict Resolution Folder" Command="{Binding AssignConflictResolutionFolder}"/>
+                                                <MenuItem Header="Remove Conflict Resolution Folder" Command="{Binding RemoveConflictResolutionFolder}"/>
+                                            </ContextMenu>
+                                        </GroupBox.ContextMenu>
+                                    </GroupBox>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </GroupBox>
+                </Grid>
+            </GroupBox>
+
+        </hc:Drawer>
+
     </Grid>
 </views:MvxWpfView>

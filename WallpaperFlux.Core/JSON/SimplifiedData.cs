@@ -13,10 +13,13 @@ namespace WallpaperFlux.Core.JSON
 
         public bool Enabled;
 
-        public SimplifiedFolder(string path, bool enabled)
+        public int PriorityIndex;
+
+        public SimplifiedFolder(string path, bool enabled, int priorityIndex)
         {
             Path = path;
             Enabled = enabled;
+            PriorityIndex = priorityIndex;
         }
     }
 
@@ -51,13 +54,16 @@ namespace WallpaperFlux.Core.JSON
 
         public SimplifiedParentTag[] ParentTags;
 
-        public SimplifiedTag(string name, bool enabled, bool useForNaming, string parentCategoryName, SimplifiedParentTag[] parentTags)
+        public string RenameFolderPath;
+
+        public SimplifiedTag(string name, bool enabled, bool useForNaming, string parentCategoryName, SimplifiedParentTag[] parentTags, string renameFolder)
         {
             Name = name;
             Enabled = enabled;
             UseForNaming = useForNaming;
             ParentCategoryName = parentCategoryName;
             ParentTags = parentTags;
+            RenameFolderPath = renameFolder;
         }
     }
 
@@ -157,6 +163,19 @@ namespace WallpaperFlux.Core.JSON
             RelativeFrequencyGif = relativeFrequencyGif;
             RelativeFrequencyVideo = relativeFrequencyVideo;
             WeightedFrequency = weightedFrequency;
+        }
+    }
+
+    public struct SimplifiedFolderPriority
+    {
+        public string Name;
+
+        public string ConflictResolutionFolder;
+
+        public SimplifiedFolderPriority(string name, string conflictResolutionFolder)
+        {
+            Name = name;
+            ConflictResolutionFolder = conflictResolutionFolder;
         }
     }
 }

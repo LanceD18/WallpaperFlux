@@ -163,12 +163,11 @@
                 -->
 
                 <!-- Folder Buttons -->
-                <Button mvx:Bi.nd="Command AddFolderCommand" Grid.Row="1" Grid.Column="1" Width="135" Height="25" Content="Add Folder" Margin="10"
+                <Button mvx:Bi.nd="Command AddFolderCommand" Grid.Row="1" Grid.Column="1" Width="135" Height="25" Content="Add Folder" Margin="10" HorizontalAlignment="Stretch"
                     adonisExtensions:CursorSpotlightExtension.BorderBrush="LimeGreen"
-                    adonisExtensions:RippleExtension.BackgroundBrush="LimeGreen" HorizontalAlignment="Stretch"/>
+                    adonisExtensions:RippleExtension.BackgroundBrush="LimeGreen"/>
                 <Button mvx:Bi.nd="Command RemoveFolderCommand"
-                        Grid.Row="1" Grid.Column="2" Width="135" Height="25" Content="Remove Folder" Margin="5" 
-                        IsEnabled="{Binding CanRemoveWallpaper}"
+                        Grid.Row="1" Grid.Column="2" Width="135" Height="25" Content="Remove Folder" Margin="5" IsEnabled="{Binding CanRemoveWallpaper}"
                         adonisExtensions:CursorSpotlightExtension.BorderBrush="Red"
                         adonisExtensions:RippleExtension.BackgroundBrush="Red"/>
 
@@ -284,7 +283,7 @@
 
         <GridSplitter Grid.Row="4" Grid.Column="2" Width="5" ResizeDirection="Columns"/>
 
-        <!--? Image Selector / Image Inspector -->
+        <!--? Image Selector -->
         <GroupBox Grid.Row="4" Grid.RowSpan="2" Grid.Column="3" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin=" 0 5 5 5">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -613,7 +612,7 @@
         </GroupBox>
 
         <!--? Image Inspector Drawer -->
-        <hc:Drawer Dock="Left" ShowMode="Cover" IsOpen="{Binding InspectorToggle}" x:Name="TagBoardDrawer">
+        <hc:Drawer Dock="Left" ShowMode="Cover" IsOpen="{Binding InspectorToggle}">
             <ScrollViewer Height="{Binding InspectorHeight, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
                 <GroupBox Width="{StaticResource InspectorWidth}"
                           adonisExtensions:ScrollViewerExtension.HideScrollBarsUntilMouseOver="True"

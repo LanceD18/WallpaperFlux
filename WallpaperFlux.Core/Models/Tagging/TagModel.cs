@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using LanceTools;
@@ -17,6 +18,7 @@ namespace WallpaperFlux.Core.Models.Tagging
 {
     public class TagModel : ListBoxItemModel
     {
+        #region Core
         public string Name { get; private set; }
 
         private bool _enabled;
@@ -75,7 +77,6 @@ namespace WallpaperFlux.Core.Models.Tagging
             }
         }
 
-        public bool UseForNaming_IncludeCategory => UseForNaming && ParentCategory.UseForNaming;
 
         //? Just create a TagModelJSON.cs that converts all of these into strings on saving the theme
         //! Using a string will require us to update this on rename, and search for the tag when needed, so lets just save the string portion for when saving
@@ -85,17 +86,60 @@ namespace WallpaperFlux.Core.Models.Tagging
         //xpublic HashSet<Tuple<string, string>> ParentTags = new HashSet<Tuple<string, string>>();
         //xpublic HashSet<Tuple<string, string>> ChildTags = new HashSet<Tuple<string, string>>();
 
+        private string _renameFolderPath = string.Empty;
+        public string RenameFolderPath
+        {
+            get
+            {
+                /* TODO
+                if (!JsonUtil.IsLoadingData)
+                {
+                    if (!WallpaperFluxViewModel.Instance.ContainsFolder(_renameFolderPath))
+                    {
+                        RenameFolderPath = string.Empty; // reset to default if an invalid value is detected
+                    }
+                }
+                */
+
+                return _renameFolderPath;
+            }
+            set
+            {
+                //? we cannot check if the folder path is valid while loading as folders are processed *after* tags, invalid folders will be handled elsewhere
+                SetProperty(ref _renameFolderPath, value);
+                RaisePropertyChanged(() => RenameFolderContextMenuString);
+            }
+        } // the folder images of this tag will be assigned to when renamed (if the priority of this folder is high enough)
+
         //! Using a string will require us to update this on rename, and search for the category when needed, and this isn't even being saved so lets just avoid the hassle
         public CategoryModel ParentCategory;
 
         //? We are ignoring this since these should get implemented on loading in the images through their TagCollection
         private HashSet<ImageModel> LinkedImages = new HashSet<ImageModel>(); //? Will be converted to strings in TagModelJson.cs for saving purposes instead of saving the entire object
 
+        #endregion
+
         #region View Variables
+
+        public string ImageCountStringTag => "(" + GetLinkedImageCount() + ")";
 
         public string ImageCountStringContextMenu => "Found in " + GetLinkedImageCount() + " image(s)";
 
-        public string ImageCountStringTag => "(" + GetLinkedImageCount() + ")";
+        public string RenameFolderContextMenuString
+        {
+            get
+            {
+                if (_renameFolderPath != string.Empty)
+                {
+                    return "Rename Folder [" + new FileInfo(_renameFolderPath).Name + "]";
+                }
+
+                return "No Rename Folder Assigned";
+            }
+        }
+
+        public bool UseForNaming_IncludeCategory => UseForNaming && ParentCategory.UseForNaming;
+
 
         #region ----- Highlighting -----
         //? Used for determining which tag's font to highlight when an image is selected
@@ -247,17 +291,27 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         #endregion
 
-        public IMvxCommand ToggleNamingExceptionCommand { get; set; }
+        public IMvxCommand ToggleNamingExceptionCommand { get; set; } //? for the inspector
+
+        public IMvxCommand AssignRenameFolderCommand { get; set; }
+
+        public IMvxCommand RemoveRenameFolderCommand { get; set; }
 
         #endregion
 
-        public TagModel(string name, CategoryModel parentCategory, bool useForNaming = true, bool enabled = true)
+        public TagModel(string name, CategoryModel parentCategory, bool useForNaming = true, bool enabled = true, string renameFolderPath = "")
         {
             Name = name;
             ParentCategory = parentCategory;
             UseForNaming = useForNaming;
             Enabled = enabled;
+            RenameFolderPath = renameFolderPath;
 
+            InitCommands();
+        }
+
+        private void InitCommands()
+        {
             SelectImagesWithTag = new MvxCommand(() => TagViewModel.Instance.RebuildImageSelector(GetLinkedImages().ToArray()));
             RenameTagCommand = new MvxCommand(PromptRename);
             RemoveTagCommand = new MvxCommand(PromptRemoveTag);
@@ -272,39 +326,14 @@ namespace WallpaperFlux.Core.Models.Tagging
 
             // TagBoard
             RemoveTagFromTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.RemoveTagFromTagBoard(this));
-            CycleSearchTypeCommand = new MvxCommand(() =>
-            {
-                // cycles between the search types
-                switch (SearchType)
-                {
-                    case TagSearchType.Mandatory:
-                        SearchType = TagSearchType.Optional;
-                        break;
+            CycleSearchTypeCommand = new MvxCommand(CycleSearchType);
 
-                    case TagSearchType.Optional:
-                        SearchType = TagSearchType.Excluded;
-                        break;
+            // Naming Exceptions
+            ToggleNamingExceptionCommand = new MvxCommand(ToggleNamingException);
 
-                    case TagSearchType.Excluded:
-                        SearchType = TagSearchType.Mandatory;
-                        break;
-                }
-            });
-
-            ToggleNamingExceptionCommand = new MvxCommand(() =>
-            {
-                if (!IsNamingSelectionOfSelectedImage)
-                {
-                    WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.SelectedImage.Tags.AddNamingException(this);
-                }
-                else
-                {
-                    WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.SelectedImage.Tags.RemoveNamingException(this);
-                }
-
-                RaisePropertyChanged(() => ExceptionText);
-                RaisePropertyChanged(() => ExceptionColor);
-            });
+            // Folder Rename Priority
+            AssignRenameFolderCommand = new MvxCommand(() => RenameFolderPath = FolderUtil.GetValidFolderPath());
+            RemoveRenameFolderCommand = new MvxCommand(() => RenameFolderPath = string.Empty);
         }
 
         #region Image Addition / Removal
@@ -565,6 +594,40 @@ namespace WallpaperFlux.Core.Models.Tagging
                 if (!TaggingUtil.RemoveTag(this)) MessageBoxUtil.ShowError("The tag, " + Name + ", does not exist");
             }
         }
+        public void CycleSearchType()
+        {
+            // cycles between the search types
+            switch (SearchType)
+            {
+                case TagSearchType.Mandatory:
+                    SearchType = TagSearchType.Optional;
+                    break;
+
+                case TagSearchType.Optional:
+                    SearchType = TagSearchType.Excluded;
+                    break;
+
+                case TagSearchType.Excluded:
+                    SearchType = TagSearchType.Mandatory;
+                    break;
+            }
+        }
+
+        public void ToggleNamingException()
+        {
+            if (!IsNamingSelectionOfSelectedImage)
+            {
+                WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.SelectedImage.Tags.AddNamingException(this);
+            }
+            else
+            {
+                WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.SelectedImage.Tags.RemoveNamingException(this);
+            }
+
+            RaisePropertyChanged(() => ExceptionText);
+            RaisePropertyChanged(() => ExceptionColor);
+        }
+
         #endregion
     }
 }

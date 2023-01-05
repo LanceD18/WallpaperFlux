@@ -10,6 +10,7 @@ using LanceTools;
 using LanceTools.IO;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using WallpaperFlux.Core.Models;
+using WallpaperFlux.Core.Models.Tagging;
 using WallpaperFlux.Core.Util;
 using WallpaperFlux.Core.ViewModels;
 
@@ -107,7 +108,7 @@ namespace WallpaperFlux.Core.Tools
 
                 // generates a string HashSet of all files within this directory
                 //? remember to use .ToLower() since we are ignoring case sensitivity for the naming here
-                // TODO Would ignoring case sensitivity really matter in a theme that starts from this version? The only reason it's been kept on it for "legacy compatibility"
+                // TODO Would ignoring case sensitivity really matter in a theme that starts from this version? The only reason it's been kept on is for "legacy compatibility" (of which there is 1 user)
                 HashSet<string> filePaths = new DirectoryInfo(directory).GetFiles().Select(f =>
                     f.FullName.Substring(0, f.FullName.IndexOf(f.Extension, StringComparison.Ordinal)).ToLower()).ToHashSet();
 
@@ -206,7 +207,7 @@ namespace WallpaperFlux.Core.Tools
 
             foreach (ImageModel image in images)
             {
-                // ----- Get & Validate Desired Name -----
+                //? ----- Get & Validate Desired Name -----
                 string desiredName = image.GetTaggedName();
 
                 if (desiredName == "")
@@ -216,9 +217,10 @@ namespace WallpaperFlux.Core.Tools
                     continue;
                 }
 
-                // ----- Attach Image to Respective Desired Name Collection -----
-                // if a moveDirectory is present use that, otherwise, use the image's directory
-                string directory = moveDirectory == null ? image.PathFolder : moveDirectory.FullName;
+                //? ----- Attach Image to Respective Desired Name Collection -----
+                // if a moveDirectory is present use that, otherwise, use the image's directory, OR the folder of the tag with the highest priority
+
+                string directory = moveDirectory == null ? GetPrioritizedImagePathFolder(image) : moveDirectory.FullName;
                 Debug.WriteLine("Directory: " + directory + " | DesiredName: " + desiredName + " | Image: " + image.PathFolder);
 
                 if (!desiredNames.ContainsKey(directory)) // add directories that we have not encountered yet
@@ -245,6 +247,57 @@ namespace WallpaperFlux.Core.Tools
             }
 
             return desiredNames;
+        }
+
+        private static string GetPrioritizedImagePathFolder(ImageModel image)
+        {
+            string resFolder = ""; //? we want to start off with this string for comparison purposes (other more checks will have to be made)
+
+            foreach (TagModel tag in image.Tags.GetTags())
+            {
+                string curFolder = tag.RenameFolderPath;
+                if (string.IsNullOrEmpty(curFolder))
+                {
+                    curFolder = GetPrioritizedImagePathFolder(tag); // keep searching until there are no parent tags left to search from
+
+                    // if we still fail to find a valid folder, move on
+                    if (string.IsNullOrEmpty(curFolder)) continue;
+                }
+
+                resFolder = TagViewModel.Instance.CompareFolderPriorities(resFolder, curFolder);
+            }
+
+            if (string.IsNullOrEmpty(resFolder)) resFolder = image.PathFolder; // this is additionally a nice safety net for just in case something fails, so that we don't rename to an empty location
+
+            if (!WallpaperFluxViewModel.Instance.ContainsFolder(resFolder)) resFolder = image.PathFolder; // another safety net
+
+            return resFolder;
+        }
+
+        /// <summary>
+        /// In the event that a tag isn't assigned to a rename folder, scan its parent tags instead
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <returns></returns>
+        private static string GetPrioritizedImagePathFolder(TagModel tag)
+        {
+            string resFolder = "";
+
+            foreach (TagModel parentTag in tag.GetParentTags())
+            {
+                string curFolder = parentTag.RenameFolderPath;
+                if (string.IsNullOrEmpty(curFolder))
+                {
+                    curFolder = GetPrioritizedImagePathFolder(parentTag); // keep searching until there are no parent tags left to search from
+
+                    // if we still fail to find a valid folder, move on
+                    if (string.IsNullOrEmpty(curFolder)) continue;
+                }
+
+                resFolder = TagViewModel.Instance.CompareFolderPriorities(resFolder, curFolder);
+            }
+
+            return resFolder;
         }
 
         #endregion

@@ -241,9 +241,9 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         #region Tag Control
 
-        public TagModel AddTag(string tagName, bool useForNaming = true, bool enabled = true)
+        public TagModel AddTag(string tagName, bool useForNaming = true, bool enabled = true, string renameFolderPath = "")
         {
-            TagModel tag = new TagModel(tagName, this, useForNaming, enabled);
+            TagModel tag = new TagModel(tagName, this, useForNaming, enabled, renameFolderPath);
             AddTag(tag);
             return tag;
         }
@@ -324,15 +324,16 @@ namespace WallpaperFlux.Core.Models.Tagging
         /// <param name="tagName"></param>
         /// <param name="useForNaming"></param>
         /// <param name="enabled"></param>
+        /// <param name="renameFolderPath"></param>
         /// <param name="applyActualData"></param>
         /// <returns></returns>
-        public TagModel VerifyTag(string tagName, bool useForNaming = true, bool enabled = true, bool applyActualData = false)
+        public TagModel VerifyTag(string tagName, bool useForNaming = true, bool enabled = true, string renameFolderPath = "", bool applyActualData = false)
         {
             if (!ContainsTag(tagName))
             {
                 //xDebug.WriteLine("Tag " + tagName + " is missing, adding");
                 // tag is missing, add it
-                return AddTag(tagName, useForNaming, enabled);
+                return AddTag(tagName, useForNaming, enabled, renameFolderPath);
             }
             else
             {
@@ -344,6 +345,7 @@ namespace WallpaperFlux.Core.Models.Tagging
                 {
                     tag.UseForNaming = useForNaming;
                     tag.Enabled = enabled;
+                    tag.RenameFolderPath = renameFolderPath;
                 }
 
                 return tag;
@@ -351,7 +353,8 @@ namespace WallpaperFlux.Core.Models.Tagging
         }
 
         // just a version with mandatory arguments
-        public TagModel VerifyTagWithData(string tagName, bool useForNaming, bool enabled, bool applyActualData) => VerifyTag(tagName, useForNaming, enabled, applyActualData);
+        public TagModel VerifyTagWithData(string tagName, bool useForNaming, bool enabled, string renameFolderPath, bool applyActualData) 
+            => VerifyTag(tagName, useForNaming, enabled, renameFolderPath, applyActualData);
 
         #endregion
 
