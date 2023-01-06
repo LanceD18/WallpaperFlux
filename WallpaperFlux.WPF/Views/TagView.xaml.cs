@@ -94,16 +94,11 @@ namespace WallpaperFlux.WPF.Views
             }
         }
 
-        #region Tab Item Drag n Drop
-        // Help:s https://stackoverflow.com/questions/10738161/is-it-possible-to-rearrange-tab-items-in-tab-control-in-wpf
+        #region Drag n Drop
+        // Help: https://stackoverflow.com/questions/10738161/is-it-possible-to-rearrange-tab-items-in-tab-control-in-wpf
         private void TabItem_PreviewMouseMove(object sender, MouseEventArgs e)
         {
-            if (!(e.Source is TabItem tabItem))
-            {
-                return;
-            }
-
-            if (Mouse.PrimaryDevice.LeftButton == MouseButtonState.Pressed)
+            if (Mouse.PrimaryDevice.LeftButton == MouseButtonState.Pressed && e.Source is TabItem tabItem)
             {
                 DragDrop.DoDragDrop(tabItem, tabItem, DragDropEffects.All);
             }
@@ -147,9 +142,55 @@ namespace WallpaperFlux.WPF.Views
             }
             else
             {
-                Debug.WriteLine("Self");
+                Debug.WriteLine("Self or Invalid");
             }
         }
+
+
+        // Help: https://stackoverflow.com/questions/3350187/wpf-c-rearrange-items-in-listbox-via-drag-and-drop
+        private void ListBoxItem_FolderPriority_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed && sender is ListBoxItem draggedItem)
+            {
+                DragDrop.DoDragDrop(draggedItem, draggedItem.DataContext, DragDropEffects.Move);
+                draggedItem.IsSelected = true;
+            }
+        }
+
+        private void ListBoxItem_FolderPriority_Drop(object sender, DragEventArgs e)
+        {
+            if (e.Source is ContentPresenter contentPresenterTarget &&
+                e.Data.GetData(typeof(FolderPriorityModel)) is FolderPriorityModel sourcePriority)
+            {
+                if (contentPresenterTarget.Content is FolderPriorityModel targetPriority)
+                {
+                    if (!targetPriority.Equals(sourcePriority))
+                    {
+                        Debug.WriteLine("Dropped");
+
+                        Debug.WriteLine("Source: " + sourcePriority.Name);
+                        Debug.WriteLine("Target: " + targetPriority.Name);
+
+                        TaggingUtil.ShiftPriorities(sourcePriority, targetPriority);
+
+                        sourcePriority.IsSelected = true;
+                    }
+                    else
+                    {
+                        Debug.WriteLine("Self");
+                    }
+                }
+                else
+                {
+                    Debug.WriteLine("Invalid Target");
+                }
+            }
+            else
+            {
+                Debug.WriteLine("Invalid Source or Target");
+            }
+        }
+
         #endregion
     }
 }

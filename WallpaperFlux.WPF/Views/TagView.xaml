@@ -602,6 +602,10 @@
                                 <Style TargetType="ListBoxItem">
                                     <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                                     <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                    <Setter Property="AllowDrop" Value="True"/>
+                                    <EventSetter Event="PreviewMouseMove" Handler="ListBoxItem_FolderPriority_PreviewMouseMove"/>
+                                    <EventSetter Event="Drop" Handler="ListBoxItem_FolderPriority_Drop"/>
                                 </Style>
                             </ListBox.ItemContainerStyle>
                             

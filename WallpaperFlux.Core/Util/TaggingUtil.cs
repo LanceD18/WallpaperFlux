@@ -195,8 +195,19 @@ namespace WallpaperFlux.Core.Util
             
             // re-insert the category at the target position, the insertion will handle the shifting on its own
             InsertCategory(targetIndex, sourceCategory);
+        }
 
-            UpdateCategoryView();
+        public static void ShiftPriorities(FolderPriorityModel sourcePriority, FolderPriorityModel targetPriority)
+        {
+            // gather the required indexes to shift the source priority
+            int sourceIndex = TagViewModel.Instance.FolderPriorities.IndexOf(sourcePriority);
+            int targetIndex = TagViewModel.Instance.FolderPriorities.IndexOf(targetPriority);
+
+            // remove the original instance of the priority from its source position
+            TagViewModel.Instance.FolderPriorities.RemoveAt(sourceIndex);
+
+            // re-insert the priority at the target position, the insertion will handle the shifting on its own
+            TagViewModel.Instance.FolderPriorities.Insert(targetIndex, sourcePriority);
         }
 
         #region Prompt

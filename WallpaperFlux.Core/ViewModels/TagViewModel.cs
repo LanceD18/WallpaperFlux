@@ -333,11 +333,13 @@ namespace WallpaperFlux.Core.ViewModels
             // --- Folder Priority ---
             ViewFolderPriorityCommand = new MvxCommand(ToggleFolderPriority);
             CloseFolderPriorityCommand = new MvxCommand(() => FolderPriorityToggle = false);
-            CreatePriorityCommand = new MvxCommand(() => FolderPriorities.Add(new FolderPriorityModel(MessageBoxUtil.GetString(
-                "Folder Priority Name", "Give a name for your priority", "Priority name..."))));
+            CreatePriorityCommand = new MvxCommand(CreatePriority);
             DeleteSelectedPrioritiesCommand = new MvxCommand(DeleteSelectedPriorities);
 
-            RebuildFolderPriorities(ThemeUtil.Theme.PreLoadedFolderPriorities);
+            if (ThemeUtil.Theme.PreLoadedFolderPriorities != null) // only access this if a load has been processed
+            {
+                RebuildFolderPriorities(ThemeUtil.Theme.PreLoadedFolderPriorities);
+            }
         }
 
         /// <summary>
@@ -582,6 +584,12 @@ namespace WallpaperFlux.Core.ViewModels
         }
         //! temp debug code
 
+        private void CreatePriority()
+        {
+            string priorityName = MessageBoxUtil.GetString("Folder Priority Name", "Give a name for your priority", "Priority name...");
+
+            if (priorityName != "") FolderPriorities.Add(new FolderPriorityModel(priorityName));
+        }
         private void DeleteSelectedPriorities()
         {
             FolderPriorityModel[] priorities = GetSelectedFolderPriorities();
