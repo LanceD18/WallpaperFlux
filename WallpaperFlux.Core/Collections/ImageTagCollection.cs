@@ -69,6 +69,35 @@ namespace WallpaperFlux.Core.Collections
 
         public HashSet<TagModel> GetTags() => _tags;
 
+        /// <summary>
+        /// Gets tags but excludes parent tags whose child tags are also in the collection
+        /// </summary>
+        /// <returns></returns>
+        public HashSet<TagModel> GetTags_ExcludeParents()
+        {
+            HashSet<TagModel> childOnlyTags = new HashSet<TagModel>();
+
+            foreach (TagModel tag in _tags)
+            {
+                bool invalidTag = false;
+                foreach (TagModel childTag in tag.GetChildTags())
+                {
+                    if (_tags.Contains(childTag))
+                    {
+                        invalidTag = true;
+                        break;
+                    }
+                }
+
+                if (!invalidTag)
+                {
+                    childOnlyTags.Add(tag);
+                }
+            }
+
+            return childOnlyTags;
+        }
+
         public HashSet<TagModel> GetTagNamingExceptions() => _tagNamingExceptions;
         
         public Dictionary<string, List<string>> GetConvertTagsToDictionary() => ConvertTagsToDictionary(_tags);

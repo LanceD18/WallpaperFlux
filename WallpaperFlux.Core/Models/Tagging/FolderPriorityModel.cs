@@ -22,8 +22,8 @@ namespace WallpaperFlux.Core.Models.Tagging
             get => _name;
             private set
             {
+                UpdateFolders(_name, value);
                 SetProperty(ref _name, value);
-                UpdateFolders();
             }
         }
 
@@ -149,13 +149,13 @@ namespace WallpaperFlux.Core.Models.Tagging
         /// <summary>
         /// update assigned folders to the new name
         /// </summary>
-        public void UpdateFolders()
+        public void UpdateFolders(string oldName, string newName)
         {
             foreach (FolderModel folder in WallpaperFluxViewModel.Instance.ImageFolders)
             {
-                if (folder.PriorityName == Name)
+                if (folder.PriorityName == oldName)
                 {
-                    folder.PriorityName = Name;
+                    folder.PriorityName = newName;
                 }
             }
         }
@@ -168,7 +168,10 @@ namespace WallpaperFlux.Core.Models.Tagging
             {
                 if (folder.PriorityName == Name)
                 {
-                    assignedFolders += folder.Path + "\n";
+                    if (Directory.Exists(folder.Path))
+                    {
+                        assignedFolders += "[" + new DirectoryInfo(folder.Path).Name + "]\n";
+                    }
                 }
             }
 

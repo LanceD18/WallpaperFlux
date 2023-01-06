@@ -262,7 +262,7 @@ namespace WallpaperFlux.Core.Tools
         {
             string resFolder = ""; //? we want to start off with this string for comparison purposes (other more checks will have to be made)
 
-            foreach (TagModel tag in image.Tags.GetTags())
+            foreach (TagModel tag in image.Tags.GetTags_ExcludeParents())
             {
                 string curFolder = tag.RenameFolderPath;
                 if (string.IsNullOrEmpty(curFolder))
