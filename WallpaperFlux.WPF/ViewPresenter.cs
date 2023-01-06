@@ -80,10 +80,19 @@ namespace WallpaperFlux.WPF
             window.WindowStartupLocation = _windowStartupLocation;
             ViewWindow = window;
 
-            if (attribute.Modal)
-                window.ShowDialog();
-            else
-                window.Show();
+            try
+            {
+                if (attribute.Modal)
+                    window.ShowDialog();
+                else
+                    window.Show();
+            }
+            catch (Exception e)
+            {
+                // TODO Re-test this scenario
+                Debug.WriteLine("Window Open Failed"); //? this can occur if the child window has its own child window open (I think, re-test this for just in case)
+            }
+
             return Task.FromResult(true);
         }
 

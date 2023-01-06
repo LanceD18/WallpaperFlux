@@ -91,23 +91,20 @@ namespace WallpaperFlux.Core.Models.Tagging
         {
             get
             {
-                /* TODO
-                if (!JsonUtil.IsLoadingData)
-                {
-                    if (!WallpaperFluxViewModel.Instance.ContainsFolder(_renameFolderPath))
-                    {
-                        RenameFolderPath = string.Empty; // reset to default if an invalid value is detected
-                    }
-                }
-                */
-
                 return _renameFolderPath;
             }
             set
             {
-                //? we cannot check if the folder path is valid while loading as folders are processed *after* tags, invalid folders will be handled elsewhere
-                SetProperty(ref _renameFolderPath, value);
-                RaisePropertyChanged(() => RenameFolderContextMenuString);
+                if (Directory.Exists(value))
+                {
+                    SetProperty(ref _renameFolderPath, value);
+                    RaisePropertyChanged(() => RenameFolderContextMenuString);
+                }
+                else
+                {
+                    SetProperty(ref _renameFolderPath, string.Empty);
+                    RaisePropertyChanged(() => RenameFolderContextMenuString);
+                }
             }
         } // the folder images of this tag will be assigned to when renamed (if the priority of this folder is high enough)
 
@@ -131,7 +128,7 @@ namespace WallpaperFlux.Core.Models.Tagging
             {
                 if (_renameFolderPath != string.Empty)
                 {
-                    return "Rename Folder [" + new FileInfo(_renameFolderPath).Name + "]";
+                    return "Rename Folder [" + new DirectoryInfo(_renameFolderPath).Name + "]";
                 }
 
                 return "No Rename Folder Assigned";

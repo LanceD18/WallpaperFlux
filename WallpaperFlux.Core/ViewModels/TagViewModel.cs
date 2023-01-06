@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Drawing;
 using System.Dynamic;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -201,6 +202,13 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
+        private string _defaultConflictResolutionPathText;
+        public string DefaultConflictResolutionPathText
+        {
+            get => _defaultConflictResolutionPathText;
+            set => SetProperty(ref _defaultConflictResolutionPathText, value);
+        } //? can't set this via a lambda because MVVM will break (might have something to do with the static source)
+
         #endregion
 
         #endregion
@@ -242,7 +250,6 @@ namespace WallpaperFlux.Core.ViewModels
 
         // --- Drawers ---
         private bool _tagboardToggle;
-
         public bool TagboardToggle
         {
             get => _tagboardToggle;
@@ -250,7 +257,6 @@ namespace WallpaperFlux.Core.ViewModels
         }
 
         private bool _folderPriorityToggle;
-
         public bool FolderPriorityToggle
         {
             get => _folderPriorityToggle;
@@ -292,6 +298,10 @@ namespace WallpaperFlux.Core.ViewModels
 
         public IMvxCommand DeleteSelectedPrioritiesCommand { get; set; }
 
+        public IMvxCommand AssignDefaultResolutionCommand { get; set; }
+
+        public IMvxCommand RemoveDefaultResolutionCommand { get; set; }
+
         #endregion
 
         #endregion
@@ -331,15 +341,31 @@ namespace WallpaperFlux.Core.ViewModels
             TagBoardTags.CollectionChanged += TagBoardTagsOnCollectionChanged;
 
             // --- Folder Priority ---
+            if (ThemeUtil.Theme.PreLoadedFolderPriorities != null) // only access this if a load has been processed
+            {
+                RebuildFolderPriorities(ThemeUtil.Theme.PreLoadedFolderPriorities);
+            }
+
+            if (Directory.Exists(TaggingUtil.DefaultConflictResolutionPath)) //? remember, this value will be "" in new themes
+            {
+                DefaultConflictResolutionPathText = new DirectoryInfo(TaggingUtil.DefaultConflictResolutionPath).Name;
+            }
+
             ViewFolderPriorityCommand = new MvxCommand(ToggleFolderPriority);
             CloseFolderPriorityCommand = new MvxCommand(() => FolderPriorityToggle = false);
             CreatePriorityCommand = new MvxCommand(CreatePriority);
             DeleteSelectedPrioritiesCommand = new MvxCommand(DeleteSelectedPriorities);
 
-            if (ThemeUtil.Theme.PreLoadedFolderPriorities != null) // only access this if a load has been processed
+            AssignDefaultResolutionCommand = new MvxCommand(() =>
             {
-                RebuildFolderPriorities(ThemeUtil.Theme.PreLoadedFolderPriorities);
-            }
+                string path = FolderUtil.GetValidFolderPath();
+                if (!string.IsNullOrEmpty(path))
+                {
+                    TaggingUtil.DefaultConflictResolutionPath = path;
+                }
+            });
+
+            RemoveDefaultResolutionCommand = new MvxCommand(() => TaggingUtil.DefaultConflictResolutionPath = string.Empty);
         }
 
         /// <summary>
@@ -519,8 +545,8 @@ namespace WallpaperFlux.Core.ViewModels
             FolderModel folderModelB = FolderUtil.GetFolderModel(folderB);
 
             // give a significantly lower value if no folder model is given, allowing one of the two options to be forcefully picked
-            int priorityA = folderModelA == null ? -10 : folderModelA.PriorityIndex;
-            int priorityB = folderModelB == null ? -10 : folderModelB.PriorityIndex;
+            int priorityA = folderModelA == null ? -10 : GetPriorityIndex(folderModelA.PriorityName);
+            int priorityB = folderModelB == null ? -10 : GetPriorityIndex(folderModelB.PriorityName);
 
             if (priorityB > priorityA) // higher priority folder found
             {
@@ -529,7 +555,7 @@ namespace WallpaperFlux.Core.ViewModels
 
             if (priorityB == priorityA) // conflict resolution needed
             {
-                if (priorityB == -1 || priorityB == -10) return string.Empty; // if there is no priority, return the empty string
+                if (priorityB == -1 || priorityB == -10) return TaggingUtil.DefaultConflictResolutionPath; // if there is no priority, return the default resolution
 
                 return FolderPriorities[priorityA].ConflictResolutionFolder;
             }
@@ -545,6 +571,32 @@ namespace WallpaperFlux.Core.ViewModels
             {
                 FolderPriorities.Add(new FolderPriorityModel(priority.Name, priority.ConflictResolutionFolder));
             }
+        }
+
+        public bool ContainsFolderPriority(string name)
+        {
+            foreach (FolderPriorityModel priority in FolderPriorities)
+            {
+                if (name == priority.Name)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public int GetPriorityIndex(string name)
+        {
+            for (var i = 0; i < FolderPriorities.Count; i++)
+            {
+                if (name == FolderPriorities[i].Name)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
         }
 
         #endregion
@@ -587,6 +639,12 @@ namespace WallpaperFlux.Core.ViewModels
         private void CreatePriority()
         {
             string priorityName = MessageBoxUtil.GetString("Folder Priority Name", "Give a name for your priority", "Priority name...");
+
+            if (ContainsFolderPriority(priorityName))
+            {
+                MessageBoxUtil.ShowError("The priority [" + priorityName + "] already exists");
+                return;
+            }
 
             if (priorityName != "") FolderPriorities.Add(new FolderPriorityModel(priorityName));
         }

@@ -200,7 +200,8 @@ namespace WallpaperFlux.Core.Tools
         private static Dictionary<string, Dictionary<string, HashSet<ImageModel>>> GetDesiredNames(ImageModel[] images, DirectoryInfo moveDirectory)
         {
             string failedToNameException = "No name could be created for the following images." +
-                                           "\nThese images either have no tags or all of their tags cannot be used for naming:\n";
+                                           "\nThese images either have no tags or all of their tags cannot be used for naming" +
+                                           "\nor the given tag's rename folder is no longer valid";
             bool failedToNameAnImage = false;
 
             Dictionary<string, Dictionary<string, HashSet<ImageModel>>> desiredNames = new Dictionary<string, Dictionary<string, HashSet<ImageModel>>>();
@@ -212,7 +213,7 @@ namespace WallpaperFlux.Core.Tools
 
                 if (desiredName == "")
                 {
-                    failedToNameException += "\n" + image.Path;
+                    failedToNameException += "\n[Failed Name] " + image.Path;
                     failedToNameAnImage = true;
                     continue;
                 }
@@ -221,6 +222,14 @@ namespace WallpaperFlux.Core.Tools
                 // if a moveDirectory is present use that, otherwise, use the image's directory, OR the folder of the tag with the highest priority
 
                 string directory = moveDirectory == null ? GetPrioritizedImagePathFolder(image) : moveDirectory.FullName;
+
+                if (!WallpaperFluxViewModel.Instance.ContainsFolder(directory))
+                {
+                    failedToNameException += "\n[Invalid Folder] " + image.Path;
+                    failedToNameAnImage = true;
+                    continue;
+                }
+
                 Debug.WriteLine("Directory: " + directory + " | DesiredName: " + desiredName + " | Image: " + image.PathFolder);
 
                 if (!desiredNames.ContainsKey(directory)) // add directories that we have not encountered yet

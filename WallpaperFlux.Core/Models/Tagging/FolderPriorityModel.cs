@@ -15,7 +15,17 @@ namespace WallpaperFlux.Core.Models.Tagging
     public class FolderPriorityModel : ListBoxItemModel
     {
         private string _conflictResolutionFolder = string.Empty;
-        public string Name { get; private set; }
+
+        private string _name;
+        public string Name
+        {
+            get => _name;
+            private set
+            {
+                SetProperty(ref _name, value);
+                UpdateFolders();
+            }
+        }
 
         public string ConflictResolutionFolder
         {
@@ -41,9 +51,7 @@ namespace WallpaperFlux.Core.Models.Tagging
             }
         }
 
-        public int AssignedFolderCount => WallpaperFluxViewModel.Instance.ImageFolders.Count(f => f.PriorityIndex == PriorityIndex);
-
-        public int PriorityIndex => TagViewModel.Instance.FolderPriorities.IndexOf(this);
+        public int AssignedFolderCount => WallpaperFluxViewModel.Instance.ImageFolders.Count(f => f.PriorityName == Name);
 
         public IMvxCommand RenameCommand { get; set; }
 
@@ -65,14 +73,28 @@ namespace WallpaperFlux.Core.Models.Tagging
             AssignFolderCommand = new MvxCommand(AssignFolder);
             RemoveFolderCommand = new MvxCommand(RemoveFolder);
             ListAssignedFoldersCommand = new MvxCommand(ListAssignedFolders);
-            AssignConflictResolutionFolder = new MvxCommand(() => ConflictResolutionFolder = FolderUtil.GetValidFolderPath());
+            AssignConflictResolutionFolder = new MvxCommand(() =>
+            {
+                string path = FolderUtil.GetValidFolderPath();
+                if (!string.IsNullOrEmpty(path))
+                {
+                    ConflictResolutionFolder = path;
+                }
+            });
             RemoveConflictResolutionFolder = new MvxCommand(() => ConflictResolutionFolder = string.Empty);
         }
 
         public void Rename()
         {
-            Name = MessageBoxUtil.GetString("Folder Priority Name", "Give a name for your priority", "Priority name...");
-            RaisePropertyChanged(() => Name);
+            string priorityName = MessageBoxUtil.GetString("Folder Priority Name", "Give a name for your priority", "Priority name...");
+
+            if (TagViewModel.Instance.ContainsFolderPriority(priorityName))
+            {
+                MessageBoxUtil.ShowError("The priority [" + priorityName + "] already exists");
+                return;
+            }
+
+            Name = priorityName;
         }
 
         /// <summary>
@@ -80,22 +102,32 @@ namespace WallpaperFlux.Core.Models.Tagging
         /// </summary>
         public void AssignFolder()
         {
-            FolderModel selectedFolder = FolderUtil.GetValidFolderModel();
-            if (selectedFolder != null)
+            FolderModel[] selectedFolders = FolderUtil.GetValidFolderModels();
+
+            foreach (FolderModel selectedFolder in selectedFolders)
             {
-                selectedFolder.PriorityIndex = PriorityIndex;
-                RaisePropertyChanged(() => AssignedFolderCount);
+                if (selectedFolder != null)
+                {
+                    selectedFolder.PriorityName = Name;
+                }
             }
+
+            RaisePropertyChanged(() => AssignedFolderCount);
         }
 
         public void RemoveFolder()
         {
-            FolderModel selectedFolder = FolderUtil.GetValidFolderModel();
-            if (selectedFolder != null)
+            FolderModel[] selectedFolders = FolderUtil.GetValidFolderModels();
+
+            foreach (FolderModel selectedFolder in selectedFolders)
             {
-                selectedFolder.PriorityIndex = -1;
-                RaisePropertyChanged(() => AssignedFolderCount);
+                if (selectedFolder != null)
+                {
+                    selectedFolder.PriorityName = "";
+                }
             }
+
+            RaisePropertyChanged(() => AssignedFolderCount);
         }
 
         /// <summary>
@@ -105,10 +137,25 @@ namespace WallpaperFlux.Core.Models.Tagging
         {
             foreach (FolderModel folder in WallpaperFluxViewModel.Instance.ImageFolders)
             {
-                if (folder.PriorityIndex == PriorityIndex)
+                if (folder.PriorityName == Name)
                 {
-                    folder.PriorityIndex = -1;
-                    RaisePropertyChanged(() => AssignedFolderCount);
+                    folder.PriorityName = "";
+                }
+            }
+
+            RaisePropertyChanged(() => AssignedFolderCount);
+        }
+
+        /// <summary>
+        /// update assigned folders to the new name
+        /// </summary>
+        public void UpdateFolders()
+        {
+            foreach (FolderModel folder in WallpaperFluxViewModel.Instance.ImageFolders)
+            {
+                if (folder.PriorityName == Name)
+                {
+                    folder.PriorityName = Name;
                 }
             }
         }
@@ -119,7 +166,7 @@ namespace WallpaperFlux.Core.Models.Tagging
 
             foreach (FolderModel folder in WallpaperFluxViewModel.Instance.ImageFolders)
             {
-                if (folder.PriorityIndex == PriorityIndex)
+                if (folder.PriorityName == Name)
                 {
                     assignedFolders += folder.Path + "\n";
                 }

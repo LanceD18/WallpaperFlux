@@ -13,13 +13,13 @@ namespace WallpaperFlux.Core.JSON
 
         public bool Enabled;
 
-        public int PriorityIndex;
+        public string PriorityName;
 
-        public SimplifiedFolder(string path, bool enabled, int priorityIndex)
+        public SimplifiedFolder(string path, bool enabled, string priorityName)
         {
             Path = path;
             Enabled = enabled;
-            PriorityIndex = priorityIndex;
+            PriorityName = priorityName;
         }
     }
 

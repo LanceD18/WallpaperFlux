@@ -127,10 +127,12 @@ namespace WallpaperFlux.Core.Util
 
         public bool SortTagsByCountDirection;
 
+        public string DefaultConflictResolutionPath;
+
         // TODO Display Settings
 
         public MiscData(bool randomizeSelection, bool reverseSelection, bool randomizeSelectionViaTags, bool reverseSelectionViaTags,
-            TagSortType tagSortType, bool sortTagsByNameDirection, bool sortTagsByCountDirection)
+            TagSortType tagSortType, bool sortTagsByNameDirection, bool sortTagsByCountDirection, string defaultConflictResolutionPath)
         {
             RandomizeSelection = randomizeSelection;
             ReverseSelection = reverseSelection;
@@ -139,6 +141,7 @@ namespace WallpaperFlux.Core.Util
             TagSortType = tagSortType;
             SortTagsByNameDirection = sortTagsByNameDirection;
             SortTagsByCountDirection = sortTagsByCountDirection;
+            DefaultConflictResolutionPath = defaultConflictResolutionPath;
         }
     }
 
@@ -161,6 +164,8 @@ namespace WallpaperFlux.Core.Util
         public static bool IsLoadingData { get; private set; } // used to speed up the loading process by preventing unnecessary calls
 
         public static void SetIsLoadingData(bool isLoadingData) => IsLoadingData = isLoadingData;
+
+        public static List<Action> ActionsPendingLoad = new List<Action>();
 
         #region Data Saving
 
@@ -195,7 +200,59 @@ namespace WallpaperFlux.Core.Util
 
             Debug.WriteLine("Saving to: " + path);
 
-            //? --- Display Settings ---
+            //? ----- Conversions -----
+
+            // Frequency
+            SimplifiedFrequencyModel frequencyModel = new SimplifiedFrequencyModel(
+                ThemeUtil.ThemeSettings.FrequencyModel.RelativeFrequencyStatic,
+                ThemeUtil.ThemeSettings.FrequencyModel.RelativeFrequencyGIF,
+                ThemeUtil.ThemeSettings.FrequencyModel.RelativeFrequencyVideo,
+                ThemeUtil.ThemeSettings.FrequencyModel.WeightedFrequency);
+
+            // --- Misc Data ---
+            //! the instance itself will be NULL if you DON'T OPEN it before saving, so don't use ViewModel.Instance here!
+            MiscData miscData = new MiscData(false, false, false, false, 
+                TaggingUtil.GetActiveSortType(), TaggingUtil.GetSortByNameDirection(), TaggingUtil.GetSortByCountDirection(),
+                TaggingUtil.DefaultConflictResolutionPath);
+
+            //? --- Serialization ---
+            JsonWallpaperData jsonWallpaperData = new JsonWallpaperData(
+                ThemeUtil.Theme.Settings,
+                ConvertToSimplifiedDisplaySettings(),
+                frequencyModel,
+                ConvertToSimplifiedFolderPriorities(),
+                miscData,
+                ConvertToSimplifiedFolders(WallpaperFluxViewModel.Instance.ImageFolders.ToArray()),
+                ConvertToSimplifiedCategories(ThemeUtil.Theme.Categories.ToArray()),
+                ConvertToSimplifiedImages(ThemeUtil.Theme.Images.GetAllImages().ToArray()));
+
+            Debug.WriteLine("Writing to JSON file");
+            using (StreamWriter file = File.CreateText(path))
+            {
+                new JsonSerializer { Formatting = Formatting.Indented }.Serialize(file, jsonWallpaperData);
+            }
+            Debug.WriteLine("Writing finished");
+            //x});
+            //xSavingThread.Start();
+        }
+
+        private static SimplifiedFolderPriority[] ConvertToSimplifiedFolderPriorities()
+        {
+            SimplifiedFolderPriority[] folderPriorities = new SimplifiedFolderPriority[TagViewModel.Instance.FolderPriorities.Count];
+
+            for (var i = 0; i < folderPriorities.Length; i++)
+            {
+                FolderPriorityModel priority = TagViewModel.Instance.FolderPriorities[i];
+                folderPriorities[i] = new SimplifiedFolderPriority(priority.Name, priority.ConflictResolutionFolder);
+            }
+
+            return folderPriorities;
+        }
+
+
+        #region Simplified Data Conversions
+        private static SimplifiedDisplaySettings ConvertToSimplifiedDisplaySettings()
+        {
             SimplifiedDisplaySetting[] displaySettingArr = new SimplifiedDisplaySetting[WallpaperUtil.DisplayUtil.GetDisplayCount()];
             bool isSynced = false; //? we are synced if any models have a parent synced to them
 
@@ -211,66 +268,16 @@ namespace WallpaperFlux.Core.Util
             }
 
             SimplifiedDisplaySettings displaySettings = new SimplifiedDisplaySettings(displaySettingArr, isSynced);
-
-            SimplifiedFrequencyModel frequencyModel = new SimplifiedFrequencyModel(
-                ThemeUtil.ThemeSettings.FrequencyModel.RelativeFrequencyStatic,
-                ThemeUtil.ThemeSettings.FrequencyModel.RelativeFrequencyGIF,
-                ThemeUtil.ThemeSettings.FrequencyModel.RelativeFrequencyVideo,
-                ThemeUtil.ThemeSettings.FrequencyModel.WeightedFrequency);
-
-            SimplifiedFolderPriority[] folderPriorities = new SimplifiedFolderPriority[TagViewModel.Instance.FolderPriorities.Count];
-
-            for (var i = 0; i < folderPriorities.Length; i++)
-            {
-                FolderPriorityModel priority = TagViewModel.Instance.FolderPriorities[i];
-                folderPriorities[i] = new SimplifiedFolderPriority(priority.Name, priority.ConflictResolutionFolder);
-            }
-
-            //? --- Misc Data ---
-            //! the instance itself will be NULL if you DON'T OPEN it before saving, so don't use ViewModel.Instance here!
-            MiscData miscData = new MiscData(false, false, false, false, 
-                TaggingUtil.GetActiveSortType(), TaggingUtil.GetSortByNameDirection(), TaggingUtil.GetSortByCountDirection());
-
-            //? --- Serialization ---
-            JsonWallpaperData jsonWallpaperData = new JsonWallpaperData(
-                ThemeUtil.Theme.Settings,
-                displaySettings,
-                frequencyModel,
-                folderPriorities,
-                miscData,
-                ConvertToSimplifiedFolders(WallpaperFluxViewModel.Instance.ImageFolders.ToArray()),
-                ConvertToSimplifiedCategories(ThemeUtil.Theme.Categories.ToArray()),
-                ConvertToSimplifiedImages(ThemeUtil.Theme.Images.GetAllImages().ToArray()));
-
-            Debug.WriteLine("Writing to JSON file");
-            using (StreamWriter file = File.CreateText(path))
-            {
-                new JsonSerializer { Formatting = Formatting.Indented }.Serialize(file, jsonWallpaperData);
-            }
-            Debug.WriteLine("Writing finished");
-            //x});
-            //xSavingThread.Start();
-
-            //? ----- Remove Backup [If the user has this option enabled] -----
-            // TODO Create an option for this later
-            /*x
-            if (backupPath != null)
-            {
-                //! How does this differ from FileSystem.DeleteFile??? (I'm assuming this doesn't go to the recycling bin)
-                File.Delete(backupPath);
-            }
-            */
-
+            return displaySettings;
         }
 
-        #region Simplified Data Conversions
         private static SimplifiedFolder[] ConvertToSimplifiedFolders(FolderModel[] folders)
         {
             List<SimplifiedFolder> simplifiedFolders = new List<SimplifiedFolder>();
 
             foreach (FolderModel folder in folders)
             {
-                simplifiedFolders.Add(new SimplifiedFolder(folder.Path, folder.Active, folder.PriorityIndex));
+                simplifiedFolders.Add(new SimplifiedFolder(folder.Path, folder.Active, folder.PriorityName));
             }
 
             return simplifiedFolders.ToArray();
@@ -421,65 +428,7 @@ namespace WallpaperFlux.Core.Util
             
             return null;
         }
-
-        public static TemporaryJsonWallpaperData LoadOldData(string path)
-        {
-            Debug.WriteLine("Loading Old Data");
-
-            if (File.Exists(path))
-            {
-                /* TODO
-                jpxToJpgWarning = "";
-
-                Debug.WriteLine("Resetting Wallpaper Manager");
-
-                ResetWallpaperManager();
-
-                Debug.WriteLine("Resetting Core Data");
-                //! This must be called before loading JsonWallpaperData to avoid issues
-                ResetCoreData();
-                */
-
-                Debug.WriteLine("Loading JSON Data");
-                //? RankData and ActiveImages will both be automatically set when jsonWallpaperData is loaded as the constructors for ImageData is what sets them
-                TemporaryJsonWallpaperData jsonWallpaperData;
-                using (StreamReader file = File.OpenText(path))
-                {
-                    jsonWallpaperData = new JsonSerializer().Deserialize(file, typeof(TemporaryJsonWallpaperData)) as TemporaryJsonWallpaperData;
-                }
-
-                if (jsonWallpaperData == null)
-                {
-                    MessageBoxUtil.ShowError("Load failed");
-                    return null;
-                }
-
-                Debug.WriteLine("Inserting JSON Data");
-                /* TODO
-                LoadCoreData(jsonWallpaperData);
-                LoadOptionsData(jsonWallpaperData);
-                LoadMiscData(jsonWallpaperData);
-
-                if (jpxToJpgWarning != "")
-                {
-                    MessageBox.Show(jpxStringPrompt + jpxToJpgWarning);
-                }
-                */
-                
-                /* TODO
-                WallpaperPathSetter.ActiveWallpaperTheme = path;
-                UpdateRankPercentiles(ImageType.None); //! Now that image types exist this preemptive change may not be worth it
-                */
-
-                Debug.WriteLine("Finished Loading");
-                return jsonWallpaperData;
-            }
-
-            //! MessageBox warnings for non-existent files should not be used in this method but rather the ones that call it***************************************************************************************-------------
-            Debug.WriteLine("Attempted to load a non-existent file");
-            return null;
-        }
-
+        
         #region JSON Conversion
 
         public static void ConvertTheme(JsonWallpaperData wallpaperData)
@@ -539,6 +488,8 @@ namespace WallpaperFlux.Core.Util
                     TaggingUtil.SetSortByCountDirection(wallpaperData.MiscData.SortTagsByCountDirection);
                     break;
             }
+
+            TaggingUtil.DefaultConflictResolutionPath = wallpaperData.MiscData.DefaultConflictResolutionPath;
         }
 
         private static void ConvertTags(JsonWallpaperData wallpaperData)

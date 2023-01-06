@@ -460,7 +460,11 @@ namespace WallpaperFlux.Core.ViewModels
 
                     JsonUtil.SetIsLoadingData(false);
 
-                    // ? --- Call methods that were disabled doing the loading process but need to be called once loading is finished (Many were disabled for being called too frequently or improperly) ---
+                    // ? Call methods / actions that were disabled doing the loading process but need to be called once loading is finished
+                    // ? (Many were disabled for being called too frequently or improperly)
+
+                    foreach (Action action in JsonUtil.ActionsPendingLoad) action?.Invoke();
+                    JsonUtil.ActionsPendingLoad.Clear();
 
                     //! this is also called by UpdateImageTypeWeights(), keeping this here regardless however to avoid complications in a future refactor since it is critical
                     ThemeUtil.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence();
@@ -545,7 +549,7 @@ namespace WallpaperFlux.Core.ViewModels
 
             foreach (SimplifiedFolder folder in simpleFolders)
             {
-                folders.Add(new FolderModel(folder.Path, folder.Enabled, folder.PriorityIndex));
+                folders.Add(new FolderModel(folder.Path, folder.Enabled, folder.PriorityName));
             }
 
             AddFolderRange(folders.ToArray());

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 using WallpaperFlux.Core.Collections;
 using WallpaperFlux.Core.Models.Tagging;
@@ -41,6 +42,30 @@ namespace WallpaperFlux.Core.Util
             Instance = instance;
         }
         */
+
+        private static string _defaultConflictResolutionPath = string.Empty;
+        public static string DefaultConflictResolutionPath
+        {
+            get => _defaultConflictResolutionPath;
+            set
+            {
+                if (Directory.Exists(value))
+                {
+                    _defaultConflictResolutionPath = value;
+
+                    if (!JsonUtil.IsLoadingData)
+                    {
+                        TagViewModel.Instance.DefaultConflictResolutionPathText = new DirectoryInfo(value).Name;
+                    }
+                }
+                else
+                {
+                    _defaultConflictResolutionPath = "";
+                }
+
+
+            }
+        }
 
         // Tag Sorting & Searching
         public const TagSearchType DEFAULT_TAG_SEARCH_TYPE = TagSearchType.Mandatory;

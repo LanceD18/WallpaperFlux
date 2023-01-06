@@ -22,7 +22,7 @@
     <views:MvxWpfView.Resources>
         <ResourceDictionary>
             <system:Double x:Key="TagboardWidth">375</system:Double>
-            <system:Double x:Key="FolderPriorityWidth">215</system:Double>
+            <system:Double x:Key="FolderPriorityWidth">275</system:Double>
         </ResourceDictionary>
     </views:MvxWpfView.Resources>
 
@@ -451,13 +451,18 @@
                                     <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
 
-                                <TextBlock Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" Text="Tagboard" FontWeight="Medium" Margin="0 0 0 5">
+                                <!-- Title -->
+                                <TextBlock Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalAlignment="Center" Text="Tagboard" FontWeight="Medium" Margin="0 0 0 5">
                                     <TextBlock.Style>
                                         <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
                                     </TextBlock.Style>
                                 </TextBlock>
+
+                                <!-- Exit -->
                                 <Button Grid.Row="1" Grid.Column="3" HorizontalAlignment="Right" Content="X" Command="{Binding CloseTagBoardCommand}"
                                         Margin="5 0 5 0" Foreground="Red" FontSize="16" FontWeight="Bold" adonisExtensions:LayerExtension.Layer="1"/>
+
+                                <!-- Header Buttons -->
                                 <StackPanel Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" 
                                             adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="0 5 0 0">
                                     <Button Content="Select Images" Margin="5 0 5 0" Command="{Binding SelectImagesFromTagBoardCommand}"/>
@@ -486,7 +491,7 @@
                             <!-- Wrap Setup -->
                             <ListBox.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <WrapPanel IsItemsHost="True" Width="{StaticResource VerticalDrawerWidth}"/>
+                                    <WrapPanel IsItemsHost="True" Width="{StaticResource TagboardWidth}"/>
                                 </ItemsPanelTemplate>
                             </ListBox.ItemsPanel>
 
@@ -554,18 +559,24 @@
                                     <RowDefinition Height="0"/>
                                     <RowDefinition Height="auto"/>
                                     <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
                                     <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
 
-                                <TextBlock Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" Text="Folder Priority" FontWeight="Medium" Margin="0 0 0 5">
+                                <!-- Title -->
+                                <TextBlock Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalAlignment="Center" Text="Folder Priority" FontWeight="Medium" Margin="0 0 0 5">
                                     <TextBlock.Style>
                                         <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
                                     </TextBlock.Style>
                                 </TextBlock>
+
+                                <!-- Exit -->
                                 <Button Grid.Row="1" Grid.Column="3" HorizontalAlignment="Right" Content="X" Command="{Binding CloseFolderPriorityCommand}"
                                         Margin="5 0 5 0" Foreground="Red" FontSize="16" FontWeight="Bold" adonisExtensions:LayerExtension.Layer="1"/>
-                                <StackPanel Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" 
-                                            adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="0 5 0 0">
+
+                                <!-- Header Buttons -->
+                                <StackPanel Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                            adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="0 5 0 5">
                                     <Button Content="Create" Margin="5 0 5 0" Command="{Binding CreatePriorityCommand}"
                                             adonisExtensions:CursorSpotlightExtension.BorderBrush="LimeGreen"
                                             adonisExtensions:RippleExtension.BackgroundBrush="LimeGreen"/>
@@ -573,6 +584,15 @@
                                             IsEnabled="{Binding CanDeletePriorities, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                                             adonisExtensions:CursorSpotlightExtension.BorderBrush="Red"
                                             adonisExtensions:RippleExtension.BackgroundBrush="Red"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="2"  Orientation="Horizontal" HorizontalAlignment="Center" Margin="0 5 0 0">
+                                    <TextBlock VerticalAlignment="Center">
+                                        <Run Text="Default Resolution ["/>
+                                        <Run Text="{Binding DefaultConflictResolutionPathText}"/>
+                                        <Run Text="] "/>
+                                    </TextBlock>
+                                    <Button Content="Set" Command="{Binding AssignDefaultResolutionCommand}" adonisExtensions:LayerExtension.Layer="1" Margin="0 0 3 0"/>
+                                    <Button Content="Clear" Command="{Binding RemoveDefaultResolutionCommand}" adonisExtensions:LayerExtension.Layer="1"/>
                                 </StackPanel>
                             </Grid>
                         </GroupBox.Header>
@@ -593,7 +613,7 @@
                             <!--
                             <ListBox.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <WrapPanel Orientation="Vertical" IsItemsHost="True" Width="{StaticResource VerticalDrawerWidth}"/>
+                                    <WrapPanel Orientation="Vertical" IsItemsHost="True" Width="{StaticResource TagboardWidth}"/>
                                 </ItemsPanelTemplate>
                             </ListBox.ItemsPanel>
                             -->
@@ -620,9 +640,9 @@
                                         <GroupBox.ContextMenu>
                                             <ContextMenu>
                                                 <MenuItem Header="{Binding Name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="False"/>
-                                                <MenuItem Header="Rename"/>
-                                                <MenuItem Header="Assign Folder" Command="{Binding AssignFolderCommand}"/>
-                                                <MenuItem Header="Remove Folder" Command="{Binding RemoveFolderCommand}"/>
+                                                <MenuItem Header="Rename" Command="{Binding RenameCommand}"/>
+                                                <MenuItem Header="Assign Folder(s)" Command="{Binding AssignFolderCommand}"/>
+                                                <MenuItem Header="Remove Folder(s)" Command="{Binding RemoveFolderCommand}"/>
                                                 <MenuItem Header="List Assigned Folders" Command="{Binding ListAssignedFoldersCommand}"/>
 
                                                 <Separator/>

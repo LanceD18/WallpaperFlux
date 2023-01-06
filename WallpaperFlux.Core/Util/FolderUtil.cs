@@ -87,6 +87,43 @@ namespace WallpaperFlux.Core.Util
             return string.Empty;
         }
 
+        public static string[] GetValidFolderPaths()
+        {
+            using (CommonOpenFileDialog dialog = new CommonOpenFileDialog())
+            {
+                // dialog properties
+                dialog.Multiselect = true;
+                dialog.IsFolderPicker = true;
+
+                if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
+                {
+                    string errorOutput = "";
+
+                    List<string> validFolders = new List<string>();
+                    foreach (string fileName in dialog.FileNames)
+                    {
+                        if (WallpaperFluxViewModel.Instance.ContainsFolder(fileName))
+                        {
+                            validFolders.Add(fileName);
+                        }
+                        else
+                        {
+                            errorOutput += "\n" + fileName;
+                        }
+                    }
+
+                    if (errorOutput != "")
+                    {
+                        MessageBoxUtil.ShowError("The theme does not contain the following folders: " + errorOutput);
+                    }
+
+                    return validFolders.ToArray();
+                }
+            }
+
+            return new[] { string.Empty };
+        }
+
         public static FolderModel GetValidFolderModel()
         {
             string folderPath = GetValidFolderPath();
@@ -118,6 +155,31 @@ namespace WallpaperFlux.Core.Util
             }
 
             return null;
+        }
+
+        public static FolderModel[] GetValidFolderModels()
+        {
+            List<FolderModel> validFolderModels = new List<FolderModel>();
+            string[] folderPaths = GetValidFolderPaths();
+
+            foreach (string path in folderPaths)
+            {
+                if (path != string.Empty)
+                {
+                    foreach (FolderModel imageFolder in WallpaperFluxViewModel.Instance.ImageFolders)
+                    {
+                        if (imageFolder.Path == path)
+                        {
+                            validFolderModels.Add(imageFolder);
+                        }
+                    }
+                }
+            }
+
+            //? We don't need an error message here because GetValidFolderPath handles this for us
+
+            return validFolderModels.ToArray();
+
         }
     }
 }
