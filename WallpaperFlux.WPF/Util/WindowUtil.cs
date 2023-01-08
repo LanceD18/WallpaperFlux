@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 using System.Windows;
 using MvvmCross.Platforms.Wpf.Views;
@@ -24,6 +25,13 @@ namespace WallpaperFlux.WPF.Util
 
         private const float IMAGE_SELECTION_WINDOW_WIDTH = 410;
         private const float IMAGE_SELECTION_WINDOW_HEIGHT = 265;
+
+        public static void InitializeViewModels()
+        {
+            TagViewModel.Instance = InitializeViewModel(TagViewModel.Instance);
+            SettingsViewModel.Instance = InitializeViewModel(SettingsViewModel.Instance);
+            ImageSelectionViewModel.Instance = InitializeViewModel(ImageSelectionViewModel.Instance);
+        }
 
         // The windows using this initializer will be closed and re-opened throughout the life of the program
         // This allows the data of the closed window to be preserved through a static "Instance" variable

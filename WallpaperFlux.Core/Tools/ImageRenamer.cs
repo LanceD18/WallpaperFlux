@@ -201,7 +201,7 @@ namespace WallpaperFlux.Core.Tools
         {
             string failedToNameException = "No name could be created for the following images." +
                                            "\nThese images either have no tags or all of their tags cannot be used for naming" +
-                                           "\nor the given tag's rename folder is no longer valid";
+                                           "\nor the folder is no longer valid";
             bool failedToNameAnImage = false;
 
             Dictionary<string, Dictionary<string, HashSet<ImageModel>>> desiredNames = new Dictionary<string, Dictionary<string, HashSet<ImageModel>>>();
@@ -225,9 +225,17 @@ namespace WallpaperFlux.Core.Tools
 
                 if (!WallpaperFluxViewModel.Instance.ContainsFolder(directory))
                 {
-                    failedToNameException += "\n[Invalid Folder] " + image.Path;
-                    failedToNameAnImage = true;
-                    continue;
+                    if (!WallpaperFluxViewModel.Instance.ContainsFolder(image.PathFolder))
+                    {
+                        failedToNameException += "\n[Invalid Folder] " + image.Path;
+                        failedToNameAnImage = true;
+                        continue;
+                    }
+                    else
+                    {
+                        Debug.WriteLine("Invalid Priority Folder given");
+                        directory = image.PathFolder;
+                    }
                 }
 
                 Debug.WriteLine("Directory: " + directory + " | DesiredName: " + desiredName + " | Image: " + image.PathFolder);
@@ -262,7 +270,7 @@ namespace WallpaperFlux.Core.Tools
         {
             string resFolder = ""; //? we want to start off with this string for comparison purposes (other more checks will have to be made)
 
-            foreach (TagModel tag in image.Tags.GetTags_ExcludeParents())
+            foreach (TagModel tag in image.Tags.GetTags()) //? don't exclude parents tags, they are still useful to be added on top of child tags for various use cases
             {
                 string curFolder = tag.RenameFolderPath;
                 if (string.IsNullOrEmpty(curFolder))
@@ -273,7 +281,8 @@ namespace WallpaperFlux.Core.Tools
                     if (string.IsNullOrEmpty(curFolder)) continue;
                 }
 
-                resFolder = TagViewModel.Instance.CompareFolderPriorities(resFolder, curFolder);
+                resFolder = TaggingUtil.CompareFolderPriorities(resFolder, curFolder);
+                Debug.WriteLine("Result: " + resFolder);
             }
 
             if (string.IsNullOrEmpty(resFolder)) resFolder = image.PathFolder; // this is additionally a nice safety net for just in case something fails, so that we don't rename to an empty location
@@ -287,10 +296,11 @@ namespace WallpaperFlux.Core.Tools
         /// In the event that a tag isn't assigned to a rename folder, scan its parent tags instead
         /// </summary>
         /// <param name="tag"></param>
-        /// <returns></returns>
+        /// <returns></returns>E
         private static string GetPrioritizedImagePathFolder(TagModel tag)
         {
             string resFolder = "";
+            Debug.WriteLine("Scanning Tag: " + tag.Name);
 
             foreach (TagModel parentTag in tag.GetParentTags())
             {
@@ -303,7 +313,8 @@ namespace WallpaperFlux.Core.Tools
                     if (string.IsNullOrEmpty(curFolder)) continue;
                 }
 
-                resFolder = TagViewModel.Instance.CompareFolderPriorities(resFolder, curFolder);
+                resFolder = TaggingUtil.CompareFolderPriorities(resFolder, curFolder);
+                Debug.WriteLine("Result: " + resFolder);
             }
 
             return resFolder;

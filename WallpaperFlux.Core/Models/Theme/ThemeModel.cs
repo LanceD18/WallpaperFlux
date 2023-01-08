@@ -19,12 +19,14 @@ namespace WallpaperFlux.Core.Models.Theme
 
         public RankController RankController;
 
-        // TODO Will need to be implemented for saving
-        public FolderCollection Folders_TODO;
+        // TODO Alternative folder implementation, consider using this to improve folder handling
+        //xpublic FolderCollection Folders_TODO;
 
         public WallpaperRandomizationController WallpaperRandomizer;
 
-        public SimplifiedFolderPriority[] PreLoadedFolderPriorities; // for use when the TagViewModel is activated;
+        //!public SimplifiedFolderPriority[] PreLoadedFolderPriorities; // for use when the TagViewModel is activated;
+
+        //!public List<FolderPriorityModel> PlaceholderFolderPriorities; // TODO Remove the need for this, it is used when TagViewModel doesn't exist
 
         public void Init(int maxRank)
         {

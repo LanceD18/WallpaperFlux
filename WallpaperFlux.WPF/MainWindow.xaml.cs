@@ -49,6 +49,7 @@ namespace WallpaperFlux.WPF
             
             InitializeComponent();
             InitializeWallpapers();
+            WindowUtil.InitializeViewModels();
 
             Closing += OnCloseApplication;
             MessageBoxUtil.InputBoxFunc = OnCallInputBox;

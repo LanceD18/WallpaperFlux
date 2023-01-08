@@ -238,17 +238,33 @@ namespace WallpaperFlux.Core.Util
 
         private static SimplifiedFolderPriority[] ConvertToSimplifiedFolderPriorities()
         {
-            SimplifiedFolderPriority[] folderPriorities = new SimplifiedFolderPriority[TagViewModel.Instance.FolderPriorities.Count];
+            SimplifiedFolderPriority[] folderPriorities;
+            //xif (TagViewModel.Instance != null)
+            //x{
+                folderPriorities = new SimplifiedFolderPriority[TagViewModel.Instance.FolderPriorities.Count];
+            //x}
+            //xelse
+            //x{
+            //x    folderPriorities = new SimplifiedFolderPriority[ThemeUtil.Theme.PlaceholderFolderPriorities.Count];
+            //x}
 
             for (var i = 0; i < folderPriorities.Length; i++)
             {
-                FolderPriorityModel priority = TagViewModel.Instance.FolderPriorities[i];
+                FolderPriorityModel priority;
+                //xif (TagViewModel.Instance != null)
+                //x{
+                    priority = TagViewModel.Instance.FolderPriorities[i];
+                //x}
+                //xelse
+                //x{
+                //x    priority = ThemeUtil.Theme.PlaceholderFolderPriorities[i];
+                //x}
+
                 folderPriorities[i] = new SimplifiedFolderPriority(priority.Name, priority.ConflictResolutionFolder);
             }
 
             return folderPriorities;
         }
-
 
         #region Simplified Data Conversions
         private static SimplifiedDisplaySettings ConvertToSimplifiedDisplaySettings()
@@ -531,7 +547,19 @@ namespace WallpaperFlux.Core.Util
             ThemeUtil.Theme.Categories = new List<CategoryModel>(orderedCategories);
             TaggingUtil.UpdateCategoryView(); // don't forget to update the view
 
+            /*x
             ThemeUtil.Theme.PreLoadedFolderPriorities = wallpaperData.FolderPriorities;
+
+            // TODO Temp code, remove this at some point
+            ThemeUtil.Theme.PlaceholderFolderPriorities = new List<FolderPriorityModel>();
+
+            foreach (SimplifiedFolderPriority priority in wallpaperData.FolderPriorities)
+            {
+                ThemeUtil.Theme.PlaceholderFolderPriorities.Add(new FolderPriorityModel(priority.Name, priority.ConflictResolutionFolder));
+            }
+            // TODO Temp code, remove this at some point
+            */
+            TagViewModel.Instance.RebuildFolderPriorities(wallpaperData.FolderPriorities);
         }
 
         private static void ConvertImagesAndFolders(JsonWallpaperData wallpaperData)

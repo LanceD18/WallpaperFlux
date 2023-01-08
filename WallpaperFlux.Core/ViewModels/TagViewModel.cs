@@ -341,10 +341,12 @@ namespace WallpaperFlux.Core.ViewModels
             TagBoardTags.CollectionChanged += TagBoardTagsOnCollectionChanged;
 
             // --- Folder Priority ---
+            /*x
             if (ThemeUtil.Theme.PreLoadedFolderPriorities != null) // only access this if a load has been processed
             {
                 RebuildFolderPriorities(ThemeUtil.Theme.PreLoadedFolderPriorities);
             }
+            */
 
             if (Directory.Exists(TaggingUtil.DefaultConflictResolutionPath)) //? remember, this value will be "" in new themes
             {
@@ -533,35 +535,7 @@ namespace WallpaperFlux.Core.ViewModels
 
         public FolderPriorityModel[] GetSelectedFolderPriorities() => FolderPriorities.Where(f => f.IsSelected).ToArray();
 
-        /// <summary>
-        /// Return the winning priority
-        /// </summary>
-        /// <param name="folderA"></param>
-        /// <param name="folderB"></param>
-        /// <returns></returns>
-        public string CompareFolderPriorities(string folderA, string folderB)
-        {
-            FolderModel folderModelA = FolderUtil.GetFolderModel(folderA);
-            FolderModel folderModelB = FolderUtil.GetFolderModel(folderB);
 
-            // give a significantly lower value if no folder model is given, allowing one of the two options to be forcefully picked
-            int priorityA = folderModelA == null ? -10 : GetPriorityIndex(folderModelA.PriorityName);
-            int priorityB = folderModelB == null ? -10 : GetPriorityIndex(folderModelB.PriorityName);
-
-            if (priorityB > priorityA) // higher priority folder found
-            {
-                return folderB;
-            }
-
-            if (priorityB == priorityA) // conflict resolution needed
-            {
-                if (priorityB == -1 || priorityB == -10) return TaggingUtil.DefaultConflictResolutionPath; // if there is no priority, return the default resolution
-
-                return FolderPriorities[priorityA].ConflictResolutionFolder;
-            }
-
-            return folderA;
-        }
 
         public void RebuildFolderPriorities(SimplifiedFolderPriority[] newFolderPriorities)
         {
@@ -586,18 +560,7 @@ namespace WallpaperFlux.Core.ViewModels
             return false;
         }
 
-        public int GetPriorityIndex(string name)
-        {
-            for (var i = 0; i < FolderPriorities.Count; i++)
-            {
-                if (name == FolderPriorities[i].Name)
-                {
-                    return i;
-                }
-            }
 
-            return -1;
-        }
 
         #endregion
 

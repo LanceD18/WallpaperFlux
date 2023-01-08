@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using WallpaperFlux.Core.Collections;
+using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Models.Tagging;
 using WallpaperFlux.Core.ViewModels;
 
@@ -53,17 +55,15 @@ namespace WallpaperFlux.Core.Util
                 {
                     _defaultConflictResolutionPath = value;
 
-                    if (!JsonUtil.IsLoadingData)
-                    {
+                    //xif (!JsonUtil.IsLoadingData)
+                    //x{
                         TagViewModel.Instance.DefaultConflictResolutionPathText = new DirectoryInfo(value).Name;
-                    }
+                    //x}
                 }
                 else
                 {
                     _defaultConflictResolutionPath = "";
                 }
-
-
             }
         }
 
@@ -96,7 +96,7 @@ namespace WallpaperFlux.Core.Util
                 if (TagViewModel.Instance.Categories != null)
                 {
                     //xTagViewModel.Instance.Categories = new MvvmCross.ViewModels.MvxObservableCollection<CategoryModel>(DataUtil.Theme.Categories);
-                    //! each switch increases the minimum number of required events (CHECK THIS), could maybe use a 'new' statement instead (see above commented code)
+                    // TODO each switch increases the minimum number of required events (CHECK THIS, see .SwitchTo() description), could maybe use a 'new' statement instead (see above commented code)
                     TagViewModel.Instance.Categories.SwitchTo(ThemeUtil.Theme.Categories);
 
                     /*x
@@ -288,5 +288,74 @@ namespace WallpaperFlux.Core.Util
         public static void SetSortByCountDirection(bool sortByCountDirection) => _sortByCountDirection = sortByCountDirection;
 
         #endregion
+
+        /// <summary>
+        /// Return the winning priority
+        /// </summary>
+        /// <param name="folderA"></param>
+        /// <param name="folderB"></param>
+        /// <returns></returns>
+        public static string CompareFolderPriorities(string folderA, string folderB)
+        {
+            FolderModel folderModelA = FolderUtil.GetFolderModel(folderA);
+            FolderModel folderModelB = FolderUtil.GetFolderModel(folderB);
+
+            // give a significantly lower value if no folder model is given, allowing one of the two options to be forcefully picked
+            int priorityA = folderModelA == null ? -10 : GetPriorityIndex(folderModelA.PriorityName);
+            int priorityB = folderModelB == null ? -10 : GetPriorityIndex(folderModelB.PriorityName);
+
+            Debug.WriteLine("Comparing: " + folderA + " | " + folderB);
+            Debug.WriteLine("Priorities: " + priorityA + " | " + priorityB);
+
+            if (priorityB > priorityA) // higher priority folder found
+            {
+                Debug.WriteLine("Higher Priority: " + folderB);
+                return folderB;
+            }
+
+            if (priorityB == priorityA) // conflict resolution needed
+            {
+                Debug.WriteLine("Resolving Conflict between: " + folderA + " | " + folderB);
+                Debug.WriteLine("Checking for duplicate folder...");
+                if (folderA == folderB) return folderA; // if the given folders are the same, just use the folder
+
+                Debug.WriteLine("Folders are not identical, checking for null priority...");
+                if (priorityB == -1 || priorityB == -10) return DefaultConflictResolutionPath; // if there is no priority, return the default resolution
+
+                Debug.WriteLine("Using Resolution of " + folderA);
+
+                //x TODO Temporary TagViewModel fix
+                //xif (TagViewModel.Instance != null)
+                //x{
+                    return TagViewModel.Instance.FolderPriorities[priorityA].ConflictResolutionFolder;
+                //x}
+                //xelse
+                //x{
+                //x    return ThemeUtil.Theme.PlaceholderFolderPriorities[priorityA].ConflictResolutionFolder;
+                //x}
+
+            }
+
+            Debug.WriteLine("Retained: " + folderA);
+
+            return folderA;
+        }
+
+        public static int GetPriorityIndex(string name)
+        {
+            // TODO Temporary TagViewModel fix
+            //xFolderPriorityModel[] priorities = TagViewModel.Instance != null ? TagViewModel.Instance.FolderPriorities.ToArray() : ThemeUtil.Theme.PlaceholderFolderPriorities.ToArray();
+            FolderPriorityModel[] priorities = TagViewModel.Instance.FolderPriorities.ToArray();
+
+            for (var i = 0; i < priorities.Length; i++)
+            {
+                if (name == priorities[i].Name)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
     }
 }

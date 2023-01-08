@@ -41,8 +41,10 @@ namespace WallpaperFlux.WPF.Views
         {
             InitializeComponent();
 
-            ViewModel = TagViewModel.Instance = WindowUtil.InitializeViewModel(TagViewModel.Instance);
-            //? The below may be re-implemented in the future is the bug associated with it is fixed
+            //! [Now initialized through the constructor of WindowUtil] ViewModel = TagViewModel.Instance = WindowUtil.InitializeViewModel(TagViewModel.Instance);
+            ViewModel = TagViewModel.Instance;
+
+            //? The below may be re-implemented in the future if the bug associated with it is fixed
             //x TaggingUtil.SetInstance(TagViewModel.Instance);
             Debug.WriteLine("Opened"); //? this constructor essentially acts an an on-open event, so we'll use it to select the first category on opening
         }
