@@ -45,10 +45,9 @@ namespace WallpaperFlux.WPF
             string roamingFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             string wallpaperFluxApplicationDataFolder = roamingFolder + "\\WallpaperFlux";
 
-
             Library.FFmpegDirectory = wallpaperFluxApplicationDataFolder + "\\FFmpeg\\ffmpeg-4.4-full_build-shared\\bin";
             Library.LoadFFmpeg();
-            
+
             MediaElement.FFmpegMessageLogged += (s, ev) => Debug.WriteLine(ev.Message);
         }
 

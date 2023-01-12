@@ -121,6 +121,18 @@ namespace WallpaperFlux.Core.Models
             {
                 SetProperty(ref _volume, MathE.Clamp(value, 0, 100));
                 RaisePropertyChanged(() => ActualVolume);
+
+                if (!JsonUtil.IsLoadingData)
+                {
+                    for (int i = 0; i < WallpaperUtil.DisplayUtil.GetDisplayCount(); i++) 
+                    {
+                        if (WallpaperUtil.WallpaperHandler.GetWallpaperPath(i) == ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[i])
+                        {
+                            WallpaperUtil.WallpaperHandler.UpdateVolume(i);
+                        }
+                    }
+                   
+                }
             }
         }
 
@@ -292,31 +304,6 @@ namespace WallpaperFlux.Core.Models
             PasteTagBoardCommand = new MvxCommand(PasteTagBoard);
         }
 
-        protected bool Equals(ImageModel other)
-        {
-            return _path == other._path && _rank == other._rank;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((ImageModel)obj);
-        }
-
-        //? remember that these can be generated under Resharper with Resharper -> Edit -> Generate Code -> Equality Members
-        //? https://stackoverflow.com/questions/14652567/is-there-a-way-to-auto-generate-gethashcode-and-equals-with-resharper
-        // for use with dictionary addition
-        public override int GetHashCode()
-        {
-            //? we need to use readonly variables here to ensure that the hashcode is not lost, hence the hashPath & hashRank
-            unchecked
-            {
-                return ((_hashPath != null ? _hashPath.GetHashCode() : 0) * 397) ^ _hashRank;
-            }
-        }
-
         public Size GetSize()
         {
             if (_imageSize == Size.Empty) //! initializing the size multiple times would bog down resources, so just set it after the first call and be done with it, it won't change in 99% of cases
@@ -431,5 +418,30 @@ namespace WallpaperFlux.Core.Models
             WallpaperUtil.SetWallpaper(displayIndex, Path, true, true); // no randomization required here
         }
         #endregion
+
+        protected bool Equals(ImageModel other)
+        {
+            return _path == other._path && _rank == other._rank;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((ImageModel)obj);
+        }
+
+        //? remember that these can be generated under Resharper with Resharper -> Edit -> Generate Code -> Equality Members
+        //? https://stackoverflow.com/questions/14652567/is-there-a-way-to-auto-generate-gethashcode-and-equals-with-resharper
+        // for use with dictionary addition
+        public override int GetHashCode()
+        {
+            //? we need to use readonly variables here to ensure that the hashcode is not lost, hence the hashPath & hashRank
+            unchecked
+            {
+                return ((_hashPath != null ? _hashPath.GetHashCode() : 0) * 397) ^ _hashRank;
+            }
+        }
     }
 }

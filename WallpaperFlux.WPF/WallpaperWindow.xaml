@@ -9,12 +9,14 @@
         xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
         xmlns:windowsForms="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms"
         xmlns:media="https://github.com/mysteryx93/MediaPlayerUI.NET"
+        xmlns:hc="https://handyorg.github.io/handycontrol"
         mc:Ignorable="d" Background="Transparent" ResizeMode="NoResize"
         Title="WallpaperWindow" Height="450" Width="800" WindowStyle="None">
     <Grid>
         <Image x:Name="WallpaperImage" Width="auto" Height="auto"/>
         <ffme:MediaElement x:Name="WallpaperMediaElementFFME" Width="auto" Height="auto" UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play" MediaEnded="WallpaperMediaElementFFME_OnMediaEnded"/>
         <MediaElement x:Name="WallpaperMediaElement" Width="auto" Height="auto" UnloadedBehavior="Manual" LoadedBehavior="Play" MediaEnded="WallpaperMediaElement_OnMediaEnded"/>
+        <hc:GifImage/>
 
         <!--
         <WindowsFormsHost x:Name="WallpaperMediaElement">

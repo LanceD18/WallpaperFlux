@@ -434,6 +434,7 @@ namespace WallpaperFlux.Core.Util
                 }
 
                 Debug.WriteLine("Finished Loading");
+
                 LoadedThemePath = path;
                 return jsonWallpaperData;
             }

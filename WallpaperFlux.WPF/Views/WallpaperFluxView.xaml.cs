@@ -22,8 +22,10 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using HanumanInstitute.MediaPlayer.Wpf.Mpv;
 using LanceTools.IO;
+using MediaToolkit;
 using MediaToolkit.Model;
 using MediaToolkit.Options;
+using Microsoft.VisualBasic.FileIO;
 using MvvmCross.Base;
 using MvvmCross.Binding.Extensions;
 using MvvmCross.Platforms.Wpf.Presenters.Attributes;
@@ -96,13 +98,9 @@ namespace WallpaperFlux.WPF.Views
 
                     try
                     {
-                        BitmapImage bitmap = new BitmapImage();
-                        string path = imageModel.Path;
-                        FileStream stream = File.OpenRead(path);
+                        //xFileStream stream = File.OpenRead(path);
 
-                        bool isGif = new FileInfo(path).Extension == ".gif";
-
-                        LoadBitmapImage(bitmap, stream, image, isGif);
+                        LoadBitmapImage(image, imageModel.IsGif, path: imageModel.Path);
                     }
                     catch (Exception e)
                     {
@@ -153,15 +151,26 @@ namespace WallpaperFlux.WPF.Views
         //? https://stackoverflow.com/questions/8352787/how-to-free-the-memory-after-the-bitmapimage-is-no-longer-needed
         //? https://stackoverflow.com/questions/2631604/get-absolute-file-path-from-image-in-wpf
         //? prevents the application from continuing to 'use' the image after loading it in, which also saves some memory
-        private void LoadBitmapImage(BitmapImage bitmap, FileStream stream, Image image, bool isGif)
+        private void LoadBitmapImage(Image image, bool isGif, string path = "", FileStream stream = null)
         {
             // TODO THIS METHOD IS BEING CALLED MULTIPLE TIMES PER INSPECTOR SWITCH, FIX
             try //? this can accidentally fire off multiple times and cause crashes when trying to load videos (Who still need this for some reason?)
             {
+                BitmapImage bitmap = new BitmapImage();
+
                 bitmap.BeginInit();
                 bitmap.CreateOptions = BitmapCreateOptions.IgnoreColorProfile; // to help with performance
                 bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                bitmap.StreamSource = stream;
+
+                if (stream != null)
+                {
+                    bitmap.StreamSource = stream;
+                }
+                else if (path != "")
+                {
+                    bitmap.UriSource = new Uri(path); //? uri-source loads the image asynchronously
+                }
+
                 bitmap.EndInit();
                 bitmap.Freeze(); // prevents unnecessary copying: https://stackoverflow.com/questions/799911/in-what-scenarios-does-freezing-wpf-objects-benefit-performance-greatly
 
@@ -177,8 +186,12 @@ namespace WallpaperFlux.WPF.Views
                         image.Source = bitmap;
                     }
 
-                    stream.Close();
-                    stream.Dispose();
+                    if (stream != null)
+                    {
+                        stream.Close();
+                        stream.Dispose();
+                    }
+
                 });
             }
             catch (Exception e)
@@ -198,21 +211,20 @@ namespace WallpaperFlux.WPF.Views
                     try //? this can accidentally fire off multiple times and cause crashes when trying to load videos (Who still need this for some reason?)
                     {
                         BitmapImage bitmap = new BitmapImage();
-                        string path = imageModel.Path;
-                        FileStream stream = File.OpenRead(path);
-
-                        RenderOptions.SetBitmapScalingMode(bitmap, BitmapScalingMode.LowQuality);
+                        //xstring path = imageModel.Path;
+                        //xFileStream stream = File.OpenRead(path);
 
                         bitmap.BeginInit();
+                        RenderOptions.SetBitmapScalingMode(bitmap, BitmapScalingMode.LowQuality);
                         bitmap.DecodePixelHeight = imageModel.ImageSelectorThumbnailHeight; //! Only set either Height or Width (preferably the larger variant?) to prevent awful stretching!
                         //x bitmap.DecodePixelWidth = imageModel.ImageSelectorThumbnailWidth;
                         bitmap.CreateOptions = BitmapCreateOptions.IgnoreColorProfile; // to help with performance
                         bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                        bitmap.StreamSource = stream;
+                        bitmap.UriSource = new Uri(imageModel.Path);
                         bitmap.EndInit();
                         bitmap.Freeze(); // prevents unnecessary copying: https://stackoverflow.com/questions/799911/in-what-scenarios-does-freezing-wpf-objects-benefit-performance-greatly
-                        stream.Close();
-                        stream.Dispose();
+                        //xstream.Close();
+                        //xstream.Dispose();
 
                         Dispatcher.Invoke(() => image.Source = bitmap); // the image must be called on the UI thread which the dispatcher helps us do under this other thread
                     }
@@ -235,24 +247,45 @@ namespace WallpaperFlux.WPF.Views
         {
             if (sender is Image { DataContext: ImageModel imageModel } image)
             {
-
                 Thread thread = new Thread(() =>
                 {
-                    using (var engine = new MediaToolkit.Engine())
+                    using (Engine engine = new Engine())
                     {
                         MediaFile video = new MediaFile(imageModel.Path);
-
                         engine.GetMetadata(video);
                         
-                        ConversionOptions options = new ConversionOptions { Seek = TimeSpan.FromSeconds(0) };
-                        MediaFile outputFile = new MediaFile(AppDomain.CurrentDomain.BaseDirectory + "vidThumbnail.jpeg");
+                        //? several videos show nothing on second 0, creating an empty thumbnail
+                        ConversionOptions options = new ConversionOptions { Seek = TimeSpan.FromSeconds(video.Metadata.Duration.Seconds * 0.05) };
+
+                        string vidThumbnailPath = AppDomain.CurrentDomain.BaseDirectory + "vidThumbnail.jpg";
+                        int collisions = 0;
+                        
+                        //? in most cases the files will be generated fast enough to avoid needing this, but in some rare cases videos will end up with the wrong thumbnail file
+                        while (FileUtil.Exists(vidThumbnailPath))
+                        {
+                            vidThumbnailPath = AppDomain.CurrentDomain.BaseDirectory + "vidThumbnail" + collisions + ".jpg";
+                            collisions++;
+                        }
+
+                        MediaFile outputFile = new MediaFile(vidThumbnailPath);
 
                         engine.GetThumbnail(video, outputFile, options);
-
-                        BitmapImage bitmap = new BitmapImage();
+                        
                         FileStream stream = File.OpenRead(outputFile.Filename);
                         
-                        LoadBitmapImage(bitmap, stream, image, false);
+                        LoadBitmapImage(image, false, stream: stream);
+
+                        if (FileUtil.Exists(vidThumbnailPath))
+                        {
+                            try
+                            {
+                                FileSystem.DeleteFile(vidThumbnailPath);
+                            }
+                            catch (Exception exception)
+                            {
+                                Debug.WriteLine("Thumbnail Deletion Fail: " + exception);
+                            }
+                        }
                     }
                 });
 
@@ -377,6 +410,7 @@ namespace WallpaperFlux.WPF.Views
 
             UpdateImageSelectorTabWrapperWidth();
 
+            /*x
             // close all active thumbnail threads
             while (_ActiveThumbnailThreads.Count > 0)
             {
@@ -390,6 +424,7 @@ namespace WallpaperFlux.WPF.Views
                     thread.Start();
                 }
             }
+            */
         }
 
         private void UpdateImageSelectorTabWrapperWidth()

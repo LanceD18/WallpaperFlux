@@ -2,6 +2,7 @@
 using WallpaperFlux.Core;
 using WallpaperFlux.Core.IoC;
 using WallpaperFlux.Core.Models;
+using WallpaperFlux.WPF.Util;
 
 namespace WallpaperFlux.WPF.IoC
 {
@@ -9,18 +10,32 @@ namespace WallpaperFlux.WPF.IoC
     {
         public void OnWallpaperChange(int index, ImageModel image, bool forceChange)
         {
-            if (MainWindow.Instance.Wallpapers != null)
-            {
-                MainWindow.Instance.Wallpapers[index].OnWallpaperChange(image, forceChange);
-            }
+            MainWindow.Instance.Wallpapers?[index].OnWallpaperChange(image, forceChange);
         }
 
         public void OnWallpaperStyleChange(int index, WallpaperStyle style)
         {
-            if (MainWindow.Instance.Wallpapers != null)
-            {
-                MainWindow.Instance.Wallpapers[index].OnWallpaperStyleChange(style);
-            }
+            MainWindow.Instance.Wallpapers?[index].OnWallpaperStyleChange(style);
+        }
+
+        public string GetWallpaperPath(int index)
+        {
+            return MainWindow.Instance.Wallpapers?[index].ActiveImage?.Path;
+        }
+
+        public void UpdateVolume(int index)
+        {
+            MainWindow.Instance.Wallpapers?[index].UpdateVolume();
+        }
+
+        public void Mute(int index)
+        {
+            MainWindow.Instance.Wallpapers?[index].Mute();
+        }
+
+        public void Unmute(int index)
+        {
+            MainWindow.Instance.Wallpapers?[index].Unmute();
         }
     }
 }

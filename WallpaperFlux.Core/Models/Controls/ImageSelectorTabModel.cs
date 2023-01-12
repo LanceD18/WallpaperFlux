@@ -23,6 +23,7 @@ namespace WallpaperFlux.Core.Models.Controls
 
                 return _selectedImage;
             }
+
             set
             {
                 SetProperty(ref _selectedImage, value);
@@ -40,6 +41,8 @@ namespace WallpaperFlux.Core.Models.Controls
                     {
                         TaggingUtil.HighlightTags();
                     }
+
+                    WallpaperFluxViewModel.Instance.MuteIfInspectorHasAudio();
                 }
             }
         }

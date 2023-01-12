@@ -10,5 +10,13 @@ namespace WallpaperFlux.Core.IoC
         void OnWallpaperChange(int index, ImageModel image, bool forceChange);
 
         void OnWallpaperStyleChange(int index, WallpaperStyle style);
+
+        string GetWallpaperPath(int index);
+
+        void UpdateVolume(int index);
+
+        void Mute(int index);
+
+        void Unmute(int index);
     }
 }

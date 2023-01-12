@@ -398,12 +398,13 @@
 
                                                             <!--? //// StaticOrGIFTemplate //// -->
                                                             <DataTemplate x:Key="StaticOrGIFTemplate">
+                                                                <!--? Thumbnail -->
                                                                 <Image ToolTipService.ShowDuration="{StaticResource MaxInt32}"
-                                                               Width="{Binding ImageSelectorThumbnailWidth}"
-                                                               Height="{Binding ImageSelectorThumbnailHeight}"
-                                                               Margin="3"
-                                                               HorizontalAlignment="Center"
-                                                               Loaded="Image_OnLoaded_LowQuality">
+                                                                       Width="{Binding ImageSelectorThumbnailWidth}"
+                                                                       Height="{Binding ImageSelectorThumbnailHeight}"
+                                                                       Margin="3"
+                                                                       HorizontalAlignment="Center"
+                                                                       Loaded="Image_OnLoaded_LowQuality">
                                                                     <!--? ///// Image Tooltip /////-->
                                                                     <Image.ToolTip>
                                                                         <ContentControl Content="{Binding}">

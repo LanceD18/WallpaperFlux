@@ -6,7 +6,6 @@ using System.Reflection.Metadata;
 using System.Text;
 using System.Threading;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -26,6 +25,8 @@ using WallpaperFlux.WPF.Util;
 using WpfAnimatedGif;
 using WpfScreenHelper;
 using System.Threading.Tasks;
+using Unosquare.FFME;
+using MediaElement = System.Windows.Controls.MediaElement;
 
 namespace WallpaperFlux.WPF
 {
@@ -47,6 +48,8 @@ namespace WallpaperFlux.WPF
         private int VideoLoopCount;
 
         private bool Muted;
+
+        public bool ChangingWallpaper { get; private set; } = false;
 
         public WallpaperWindow(Screen display, IntPtr workerw)
         {
@@ -73,12 +76,16 @@ namespace WallpaperFlux.WPF
         //? The index is checked in ExternalWallpaperHandler now as it has access to the array, which allows wallpapers to be changed independently of one another
         public async void OnWallpaperChange(ImageModel image, bool forceChange)
         {
+            ChangingWallpaper = true;
+            Debug.WriteLine("Changing into: " + image.Path);
+
+            // --- Scan video wallpapers for loop & max time settings ---
             if (!forceChange && ActiveImage is { IsVideoOrGif: true }) // we can only make these checks if the previous wallpaper was a video or gif
             {
                 int minLoops = ActiveImage.OverrideMinimumLoops ? ActiveImage.MinimumLoops : ThemeUtil.VideoSettings.MinimumLoops; 
                 int maxTime = ActiveImage.OverrideMaximumTime ? ActiveImage.MaximumTime : ThemeUtil.VideoSettings.MaximumTime;
 
-                //xDebug.WriteLine("VideoLoopCount: " + VideoLoopCount + " | MinimumVideoLoops: " + minLoops);
+                Debug.WriteLine("VideoLoopCount: " + VideoLoopCount + " | MinimumVideoLoops: " + minLoops);
                 if (VideoLoopCount < minLoops)
                 {
                     //? we will only check for the video time condition if we have not yet gone beyond the Minimum Loop count
@@ -89,11 +96,12 @@ namespace WallpaperFlux.WPF
                     if (WallpaperMediaElementFFME.IsLoaded) await WallpaperMediaElementFFME.Play();
                     //! a test countermeasure against failed loads never looping
 
-                    //xDebug.WriteLine("Nax Video Time: " + maxTime);
-                    //xDebug.WriteLine("Media: " + WallpaperMediaElement.Position.Seconds + " | FFME: " + WallpaperMediaElementFFME.Position.Seconds);
+                    Debug.WriteLine("Nax Video Time: " + maxTime);
+                    Debug.WriteLine("Media: " + WallpaperMediaElement.Position.Seconds + " | FFME: " + WallpaperMediaElementFFME.Position.Seconds);
                     if (WallpaperMediaElement.Position.Seconds <= maxTime ||
                         WallpaperMediaElementFFME.Position.Seconds <= maxTime)
                     {
+                        ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[WallpaperWindowUtil.GetWallpaperIndex(this)] = ActiveImage.Path;
                         return;
                     }
                 }
@@ -101,6 +109,7 @@ namespace WallpaperFlux.WPF
                 VideoLoopCount = 0; // if we are allowed to make a change, reset the loop count
             }
 
+            // --- Verify Wallpaper ---
             FileInfo wallpaperInfo;
             string wallpaperPath = image.Path;
 
@@ -118,27 +127,86 @@ namespace WallpaperFlux.WPF
             //xWallpaperMediaElement.BeginInit();
             //xWallpaperMediaElementFFME.BeginInit();
 
+            // -----Set Wallpaper -----
             if (WallpaperUtil.IsSupportedVideoType_GivenExtension(wallpaperInfo.Extension) || wallpaperInfo.Extension == ".gif") // ---- video or gif ----
             {
-                UpdateVolume(image);
-                
-                //? FFME is unstable and likely to crash on larger videos, but Windows Media Player can't load webms | Also, it seems to load gifs faster
-                if (wallpaperInfo.Extension == ".webm" || wallpaperInfo.Extension == ".gif") 
-                {
-                    DisableMediaElement();
-                    
-                    await WallpaperMediaElementFFME.Open(new Uri(wallpaperInfo.FullName));
-                    WallpaperMediaElementFFME.IsEnabled = true;
-                    WallpaperMediaElementFFME.Visibility = Visibility.Visible;
-                }
-                else //? The regular MediaElement (Windows Media Player) will randomly fail to load gifs (seems to be if loading more than one), loading a blank screen instead
-                {
-                    DisableMediaElementFFME();
+                UpdateVolume(image); //! Do NOT use ActiveImage here, it is not set until the end of the method!
 
-                    WallpaperMediaElement.Source = new Uri(wallpaperInfo.FullName);
-                    WallpaperMediaElement.IsEnabled = true;
-                    WallpaperMediaElement.Visibility = Visibility.Visible;
+                bool ffmeFail = false;
+
+                //? FFME is unstable and likely to crash on larger videos, but Windows Media Player can't load webms | Also, it seems to load gifs faster
+                if (wallpaperInfo.Extension == ".webm" || wallpaperInfo.Extension == ".gif" || wallpaperInfo.Extension == ".mp4") 
+                {
+                    try
+                    {
+                        /* TODO
+                        //x"yuv420p(tv, smpte170m/bt470bg/smpte170m)" // Color Model
+                        //x"h264 (Baseline) (avc1 / 0x31637661)" // Format
+
+                        // https://stackoverflow.com/questions/53799646/ffmpeg-change-output-to-specific-pixel-format
+                        // https://stackoverflow.com/questions/4749967/execute-ffmpeg-command-with-c-sharp
+
+                        using (Process p = new Process())
+                        {
+                            p.StartInfo.UseShellExecute = false;
+                            p.StartInfo.CreateNoWindow = true;
+                            p.StartInfo.RedirectStandardOutput = true;
+                            p.StartInfo.FileName = Library.FFmpegDirectory + "\\ffmpeg.exe";
+                            p.StartInfo.Arguments = parameters;
+                            p.Start();
+                            p.WaitForExit();
+
+                            result = p.StandardOutput.ReadToEnd();
+                        }
+                        */
+
+                        await WallpaperMediaElementFFME.Close();
+                        await WallpaperMediaElementFFME.Open(new Uri(wallpaperInfo.FullName));
+                        WallpaperMediaElementFFME.IsEnabled = true;
+                        WallpaperMediaElementFFME.Visibility = Visibility.Visible;
+
+                        DisableMediaElement();
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.WriteLine("FFME fail, trying MediaPlayer | Fail Source: " + wallpaperPath);
+                        //? Playing .mp4 videos will sometimes fail and crash the program with no warning, this is likely an exit with the code -1073740940 (0xc0000374)
+                        //? MediaPlayer can play .mp4s without crashing but *some* will fail to play their audio, this is a nice compromise
+
+                        ffmeFail = true;
+                    }
                 }
+                else
+                {
+                    ffmeFail = true;
+                }
+                
+                if (ffmeFail) //? The regular MediaElement (Windows Media Player) will randomly fail to load gifs (seems to be if loading more than one), loading a blank screen instead
+                {
+                    try
+                    {
+                        WallpaperMediaElement.Close();
+                        WallpaperMediaElement.Source = new Uri(wallpaperInfo.FullName);
+                        WallpaperMediaElement.IsEnabled = true;
+                        WallpaperMediaElement.Visibility = Visibility.Visible;
+
+                        DisableMediaElementFFME();
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.WriteLine("MediaPlayer fail, create another solution | Fail Source: " + wallpaperPath);
+                        Debug.WriteLine("MediaPlayer fail, create another solution | Fail Source: " + wallpaperPath);
+                        Debug.WriteLine("MediaPlayer fail, create another solution | Fail Source: " + wallpaperPath);
+                        Debug.WriteLine("MediaPlayer fail, create another solution | Fail Source: " + wallpaperPath);
+
+                        // TODO If we fail again then we'll just have to not load the wallpaper for now and attempt to find a solution in the future
+                        // TODO If we fail again then we'll just have to not load the wallpaper for now and attempt to find a solution in the future
+                        // TODO If we fail again then we'll just have to not load the wallpaper for now and attempt to find a solution in the future
+                    }
+
+                }
+
+                RetryMediaOpen(false, image);
 
                 DisableImage();
             }
@@ -148,13 +216,16 @@ namespace WallpaperFlux.WPF
                 // TODO Granted, they would have to be manually ranked by the user first, so you should probably instead just ban them from the ImageInspector
 
                 BitmapImage bitmap = new BitmapImage();
-
-                bitmap.BeginInit();
-                bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                bitmap.UriSource = new Uri(image.Path);
-                bitmap.EndInit();
-                //? this should also allow the bitmap to be picked up by the automatic garbage collection (so don't GC manually)
-                bitmap.Freeze(); // this needs to be frozen before the bitmap is used in the UI thread, call this right after bitmap.EndInit() | https://stackoverflow.com/questions/46709382/async-load-bitmapimage-in-c-sharp
+                //xusing (FileStream stream = File.OpenRead(image.Path))
+                //x{
+                    bitmap.BeginInit();
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    //xbitmap.StreamSource = stream;
+                    bitmap.UriSource = new Uri(image.Path); // supposedly Uri is asynchronous, test the speed between UriSource & StreamSource, but also test their memory handling
+                    bitmap.EndInit();
+                    //? this should also allow the bitmap to be picked up by the automatic garbage collection (so don't GC manually)
+                    bitmap.Freeze(); // this needs to be frozen before the bitmap is used in the UI thread, call this right after bitmap.EndInit() | https://stackoverflow.com/questions/46709382/async-load-bitmapimage-in-c-sharp
+                //x}
 
                 WallpaperImage.Source = bitmap;
                 WallpaperImage.IsEnabled = true;
@@ -168,6 +239,8 @@ namespace WallpaperFlux.WPF
             //xWallpaperImage.EndInit();
             //xWallpaperMediaElement.EndInit();
             //xWallpaperMediaElementFFME.EndInit();
+
+            ChangingWallpaper = false;
         }
 
         private void DisableImage()
@@ -254,10 +327,7 @@ namespace WallpaperFlux.WPF
             }
         }
 
-        private void WallpaperMediaElementFFME_OnMediaEnded(object? sender, EventArgs e)
-        {
-            VideoLoopCount++;
-        }
+        private void WallpaperMediaElementFFME_OnMediaEnded(object? sender, EventArgs e) => VideoLoopCount++;
 
         /*x
         private void WallpaperMediaElementFFME_OnMediaEnded(object? sender, EventArgs e)
@@ -291,7 +361,13 @@ namespace WallpaperFlux.WPF
             UpdateVolume(ActiveImage);
         }
 
-        public void UpdateVolume(ImageModel image)
+        public void UpdateVolume()
+        {
+            if (ChangingWallpaper) return;
+            UpdateVolume(ActiveImage);
+        }
+
+        private void UpdateVolume(ImageModel image)
         {
             Dispatcher.Invoke(() =>
             {
@@ -306,6 +382,58 @@ namespace WallpaperFlux.WPF
                 {
                     WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = 0;
                 }
+            });
+        }
+
+        private async void RetryMediaOpen(bool finalAttempt, ImageModel image)
+        {
+            //xif (image.IsWebmOrGif) return; //? webms & gifs do not advance the position value, closing and reopening them will turn them off
+
+            // retries opening the video if it fails
+            await Task.Run(() =>
+            {
+                Thread.Sleep(1000);
+
+                Dispatcher.Invoke(() =>
+                {
+                    Debug.WriteLine("FFME Opening: " + WallpaperMediaElementFFME.IsOpening);
+                    if (WallpaperMediaElementFFME.IsEnabled && !WallpaperMediaElementFFME.IsOpening)
+                    {
+                        Debug.WriteLine("FFME Position: " + WallpaperMediaElementFFME.Position);
+                        //if (WallpaperMediaElementFFME.Position < TimeSpan.FromSeconds(1))
+                        //{
+                        Debug.WriteLine("Fixing FFME");
+                        //xWallpaperMediaElementFFME.Close();
+                        WallpaperMediaElementFFME.Play();
+                        DisableUnusedElements(UsedElement.FFME);
+
+                        if (!finalAttempt)
+                        {
+                            //WallpaperMediaElementFFME.Open(new Uri(image.Path));
+                            RetryMediaOpen(true, image);
+                        }
+                        //}
+                    }
+
+                    Debug.WriteLine("MediaPlayer Opening: " + WallpaperMediaElementFFME.IsOpening);
+                    if (WallpaperMediaElement.IsEnabled && !WallpaperMediaElementFFME.IsOpening)
+                    {
+                        Debug.WriteLine("MediaPlayer Position: " + WallpaperMediaElement.Position);
+                        //if (WallpaperMediaElement.Position < TimeSpan.FromSeconds(1))
+                        //{
+                        Debug.WriteLine("Fixing MediaPlayer");
+                        //xWallpaperMediaElement.Close();
+                        WallpaperMediaElementFFME.Play();
+                        DisableUnusedElements(UsedElement.MediaElement);
+
+                        if (!finalAttempt)
+                        {
+                            //WallpaperMediaElement.Source = new Uri(image.Path);
+                            RetryMediaOpen(true, image);
+                        }
+                        //}
+                    }
+                });
             });
         }
     }

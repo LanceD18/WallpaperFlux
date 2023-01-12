@@ -227,7 +227,17 @@ namespace WallpaperFlux.Core.ViewModels
 
         public bool IsImageSelected => SelectedImage != null;
 
-        public bool InspectorToggle { get; set; }
+        private bool _inspectorToggle;
+        public bool InspectorToggle
+        {
+            get => _inspectorToggle;
+            set
+            {
+                SetProperty(ref _inspectorToggle, value);
+
+                MuteIfInspectorHasAudio();
+            }
+        }
 
         public bool GroupRenamed { get; set; }
 
@@ -367,6 +377,21 @@ namespace WallpaperFlux.Core.ViewModels
             CloseInspectorCommand = new MvxCommand(CloseInspector);
         }
 
+        public void MuteIfInspectorHasAudio()
+        {
+            if (InspectorToggle && SelectedImage != null && SelectedImage.IsVideoOrGif) // inspector on, mute all wallpapers if the given wallpaper is a video
+            {
+                if (WallpaperUtil.VideoUtil.HasAudio(SelectedImage.Path))
+                {
+                    WallpaperUtil.MuteWallpapers();
+                }
+            }
+            else // vice versa, unmute if inspector is turned off
+            {
+                WallpaperUtil.UnmuteWallpapers();
+            }
+        }
+
         #region Command Methods
         // TODO Create subclasses for the commands with excess methods (Like Theme Data)
         //  -----Command Methods-----
@@ -463,6 +488,8 @@ namespace WallpaperFlux.Core.ViewModels
                     // ? Call methods / actions that were disabled doing the loading process but need to be called once loading is finished
                     // ? (Many were disabled for being called too frequently or improperly)
 
+                    // TODO Clean this up, especially the ViewModel.Instance actions
+
                     foreach (Action action in JsonUtil.ActionsPendingLoad) action?.Invoke();
                     JsonUtil.ActionsPendingLoad.Clear();
 
@@ -472,7 +499,9 @@ namespace WallpaperFlux.Core.ViewModels
 
                     ThemeUtil.Theme.RankController.UpdateImageTypeWeights(); //? this is disabled during the loading process and needs to be called once loading is finished to update frequencies & weights
 
-                    TaggingUtil.HighlightTags(); 
+                    TaggingUtil.HighlightTags();
+
+                    SettingsViewModel.Instance.Settings = ThemeUtil.Theme.Settings;
                 }
             }
         }
@@ -694,6 +723,7 @@ namespace WallpaperFlux.Core.ViewModels
         //? ----- Rebuild Image Selector (String) -----
         private readonly string INVALID_IMAGE_STRING_DEFAULT = "The following selected images do not exist in your theme:\n(Please add the folder that they reside in to include them)";
         private readonly string INVALID_IMAGE_STRING_ALL_INVALID = "None of the selected images exist in your theme. Please add the folder that they reside in to include them.";
+
         public void RebuildImageSelector(string[] selectedImages, bool randomize = false, bool reverseOrder = false)
         {
             List<ImageModel> selectedImageModels = new List<ImageModel>();
@@ -902,23 +932,11 @@ namespace WallpaperFlux.Core.ViewModels
 
         #region Inspector
 
-        private void ToggleInspector()
-        {
-            InspectorToggle = !InspectorToggle;
-            RaisePropertyChanged(() => InspectorToggle);
-        }
+        private void ToggleInspector() => InspectorToggle = !InspectorToggle;
 
-        private void OpenImageEditor()
-        {
-            InspectorToggle = true;
-            RaisePropertyChanged(() => InspectorToggle);
-        }
+        private void OpenInspector() => InspectorToggle = true;
 
-        private void CloseInspector()
-        {
-            InspectorToggle = false;
-            RaisePropertyChanged(() => InspectorToggle);
-        }
+        private void CloseInspector() => InspectorToggle = false;
 
         public void SetInspectorHeight(double newHeight) => InspectorHeight = newHeight;
 

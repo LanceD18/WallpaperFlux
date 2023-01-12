@@ -20,6 +20,7 @@ namespace WallpaperFlux.Core.Util
 
         public static IExternalWallpaperHandler WallpaperHandler = Mvx.IoCProvider.Resolve<IExternalWallpaperHandler>();
         public static IExternalDisplayUtil DisplayUtil = Mvx.IoCProvider.Resolve<IExternalDisplayUtil>();
+        public static IExternalVideoUtil VideoUtil = Mvx.IoCProvider.Resolve<IExternalVideoUtil>();
 
         //-----File Types-----
         private static readonly string IMAGE_FILES_DISPLAY_NAME = "Image Files (*.jpg, *.jpeg, *.jpe, *.jfif, *.png, *.gif, *.mp4, *.webm, *.avi)";
@@ -171,6 +172,24 @@ namespace WallpaperFlux.Core.Util
                 WallpaperFluxViewModel.Instance.DisplaySettings[index].ResetTimer(true);
             }
             return true;
+        }
+
+        public static void MuteWallpapers()
+        {
+            // TODO Have this apply to only videos with audio
+            for (int i = 0; i < DisplayUtil.GetDisplayCount(); i++)
+            {
+                WallpaperHandler.Mute(i);
+            }
+        }
+
+        public static void UnmuteWallpapers()
+        {
+            // TODO Have this apply to only videos with audio
+            for (int i = 0; i < DisplayUtil.GetDisplayCount(); i++)
+            {
+                WallpaperHandler.Unmute(i);
+            }
         }
 
         /*x
