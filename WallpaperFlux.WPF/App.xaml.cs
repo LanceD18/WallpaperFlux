@@ -48,6 +48,8 @@ namespace WallpaperFlux.WPF
             Library.FFmpegDirectory = wallpaperFluxApplicationDataFolder + "\\FFmpeg\\ffmpeg-4.4-full_build-shared\\bin";
             Library.LoadFFmpeg();
 
+            MpvUtil.MpvPath = wallpaperFluxApplicationDataFolder + "\\mpv\\mpv-1.dll";
+
             MediaElement.FFmpegMessageLogged += (s, ev) => Debug.WriteLine(ev.Message);
         }
 

@@ -25,7 +25,10 @@ using WallpaperFlux.WPF.Util;
 using WpfAnimatedGif;
 using WpfScreenHelper;
 using System.Threading.Tasks;
+using MvvmCross.Platforms.Wpf.Presenters.Attributes;
+using MvvmCross.ViewModels;
 using Unosquare.FFME;
+using WallpaperFlux.Core.ViewModels;
 using MediaElement = System.Windows.Controls.MediaElement;
 
 namespace WallpaperFlux.WPF
@@ -45,18 +48,26 @@ namespace WallpaperFlux.WPF
         //? The index is currently gathered by the array utilized in ExternalWallpaperHandler and MainWindow
         public ImageModel ActiveImage;
 
+        public bool ChangingWallpaper { get; private set; } = false;
+
+        //xprivate MpvPlayer MpvPlayerElement;
+
         private int VideoLoopCount;
 
         private bool Muted;
 
-        public bool ChangingWallpaper { get; private set; } = false;
+        private Screen Display;
 
         public WallpaperWindow(Screen display, IntPtr workerw)
         {
             InitializeComponent();
 
+            //xMpvPlayerElement = new MpvPlayer(workerw, MpvUtil.MpvPath);
+
             Loaded += (s, e) =>
             {
+                //xDisplay = display;
+
                 // Sets bounds of the form
                 Width = display.Bounds.Width;
                 Height = display.Bounds.Height;
@@ -70,6 +81,14 @@ namespace WallpaperFlux.WPF
                 // of any user input. The form will just be rendered, no keyboard or mouse input will reach it.
                 //? (Would have to use WH_KEYBOARD_LL and WH_MOUSE_LL hooks to capture mouse and keyboard input)
                 Win32.SetParent(new WindowInteropHelper(this).Handle, workerw);
+
+                /*x
+                MpvPlayerElement = new MpvPlayer(CreateHwndSource(workerw).Handle, MpvUtil.MpvPath)
+                {
+                    Loop = true,
+                    AutoPlay = true
+                };
+                */
             };
         }
 
@@ -140,8 +159,6 @@ namespace WallpaperFlux.WPF
                     try
                     {
                         /* TODO
-                        //x"yuv420p(tv, smpte170m/bt470bg/smpte170m)" // Color Model
-                        //x"h264 (Baseline) (avc1 / 0x31637661)" // Format
 
                         // https://stackoverflow.com/questions/53799646/ffmpeg-change-output-to-specific-pixel-format
                         // https://stackoverflow.com/questions/4749967/execute-ffmpeg-command-with-c-sharp
@@ -159,11 +176,18 @@ namespace WallpaperFlux.WPF
                             result = p.StandardOutput.ReadToEnd();
                         }
                         */
+                        
+                        //xMpvPlayerElement.Load(wallpaperInfo.FullName);
+                        //xMpvPlayerElement.Resume();
+                        WallpaperMpvFormHost.IsEnabled = true;
+                        WallpaperMpvFormHost.Visibility = Visibility.Visible;
 
+                        /*
                         await WallpaperMediaElementFFME.Close();
                         await WallpaperMediaElementFFME.Open(new Uri(wallpaperInfo.FullName));
                         WallpaperMediaElementFFME.IsEnabled = true;
                         WallpaperMediaElementFFME.Visibility = Visibility.Visible;
+                        */
 
                         DisableMediaElement();
                     }
@@ -263,6 +287,12 @@ namespace WallpaperFlux.WPF
             await WallpaperMediaElementFFME.Close();
             WallpaperMediaElementFFME.IsEnabled = false;
             WallpaperMediaElementFFME.Visibility = Visibility.Hidden;
+
+            //! temp
+            //xMpvPlayerElement.Stop();
+            WallpaperMpvFormHost.IsEnabled = false;
+            WallpaperMpvFormHost.Visibility = Visibility.Hidden;
+            //! temp
         }
 
         private void DisableUnusedElements(UsedElement usedElement)
@@ -376,10 +406,12 @@ namespace WallpaperFlux.WPF
                     if (image != null) //? it's okay to set the volume to 0 ahead of time, but sometimes the given image may not be initialized
                     {
                         WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = image.Volume / 100;
+                        //xMpvPlayerElement.Volume = (int)image.Volume;
                     }
                 }
                 else
                 {
+                   //x WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = MpvPlayerElement.Volume = 0;
                     WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = 0;
                 }
             });
