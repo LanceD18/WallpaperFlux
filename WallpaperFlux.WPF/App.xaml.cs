@@ -29,6 +29,7 @@ namespace WallpaperFlux.WPF
         protected override void OnStartup(StartupEventArgs e)
         {
             InitializeFFmpeg();
+            LibVLCSharp.Shared.Core.Initialize();
 
             base.OnStartup(e);
         }

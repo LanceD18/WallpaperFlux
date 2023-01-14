@@ -25,10 +25,12 @@ using WallpaperFlux.WPF.Util;
 using WpfAnimatedGif;
 using WpfScreenHelper;
 using System.Threading.Tasks;
+using LibVLCSharp.Shared;
 using MvvmCross.Platforms.Wpf.Presenters.Attributes;
 using MvvmCross.ViewModels;
 using Unosquare.FFME;
 using WallpaperFlux.Core.ViewModels;
+using WallpaperFlux.WPF.Windows;
 using MediaElement = System.Windows.Controls.MediaElement;
 
 namespace WallpaperFlux.WPF
@@ -42,7 +44,8 @@ namespace WallpaperFlux.WPF
         {
             Image,
             MediaElement,
-            FFME
+            FFME,
+            VLC
         }
 
         //? The index is currently gathered by the array utilized in ExternalWallpaperHandler and MainWindow
@@ -50,24 +53,20 @@ namespace WallpaperFlux.WPF
 
         public bool ChangingWallpaper { get; private set; } = false;
 
-        //xprivate MpvPlayer MpvPlayerElement;
-
         private int VideoLoopCount;
 
         private bool Muted;
 
-        private Screen Display;
+        private LibVLC _libVlc = new LibVLC(true);
 
         public WallpaperWindow(Screen display, IntPtr workerw)
         {
             InitializeComponent();
 
-            //xMpvPlayerElement = new MpvPlayer(workerw, MpvUtil.MpvPath);
+            //xMpvPlayerHostElement.DllPath = MpvUtil.MpvPath;
 
             Loaded += (s, e) =>
             {
-                //xDisplay = display;
-
                 // Sets bounds of the form
                 Width = display.Bounds.Width;
                 Height = display.Bounds.Height;
@@ -75,20 +74,14 @@ namespace WallpaperFlux.WPF
                 Top = display.Bounds.Y + DisplayUtil.MinDisplayY;
 
                 //? Default, should match what's stated on the WPF
-                WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = Stretch.Fill; // this is actually stretch
+                WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = WallpaperVlcViewBox.Stretch = Stretch.Fill; // this is actually stretch
 
                 // This line makes the form a child of the WorkerW window, thus putting it behind the desktop icons and out of reach 
                 // of any user input. The form will just be rendered, no keyboard or mouse input will reach it.
                 //? (Would have to use WH_KEYBOARD_LL and WH_MOUSE_LL hooks to capture mouse and keyboard input)
                 Win32.SetParent(new WindowInteropHelper(this).Handle, workerw);
 
-                /*x
-                MpvPlayerElement = new MpvPlayer(CreateHwndSource(workerw).Handle, MpvUtil.MpvPath)
-                {
-                    Loop = true,
-                    AutoPlay = true
-                };
-                */
+                WallpaperVlc.MediaPlayer = new LibVLCSharp.Shared.MediaPlayer(_libVlc);
             };
         }
 
@@ -98,35 +91,8 @@ namespace WallpaperFlux.WPF
             ChangingWallpaper = true;
             Debug.WriteLine("Changing into: " + image.Path);
 
-            // --- Scan video wallpapers for loop & max time settings ---
-            if (!forceChange && ActiveImage is { IsVideoOrGif: true }) // we can only make these checks if the previous wallpaper was a video or gif
-            {
-                int minLoops = ActiveImage.OverrideMinimumLoops ? ActiveImage.MinimumLoops : ThemeUtil.VideoSettings.MinimumLoops; 
-                int maxTime = ActiveImage.OverrideMaximumTime ? ActiveImage.MaximumTime : ThemeUtil.VideoSettings.MaximumTime;
-
-                Debug.WriteLine("VideoLoopCount: " + VideoLoopCount + " | MinimumVideoLoops: " + minLoops);
-                if (VideoLoopCount < minLoops)
-                {
-                    //? we will only check for the video time condition if we have not yet gone beyond the Minimum Loop count
-                    //? essentially, changes are only allowed if we are both above the minimum loop count AND the max video time
-
-                    //! a test countermeasure against failed loads never looping
-                    if (WallpaperMediaElement.IsLoaded) WallpaperMediaElement.Play();
-                    if (WallpaperMediaElementFFME.IsLoaded) await WallpaperMediaElementFFME.Play();
-                    //! a test countermeasure against failed loads never looping
-
-                    Debug.WriteLine("Nax Video Time: " + maxTime);
-                    Debug.WriteLine("Media: " + WallpaperMediaElement.Position.Seconds + " | FFME: " + WallpaperMediaElementFFME.Position.Seconds);
-                    if (WallpaperMediaElement.Position.Seconds <= maxTime ||
-                        WallpaperMediaElementFFME.Position.Seconds <= maxTime)
-                    {
-                        ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[WallpaperWindowUtil.GetWallpaperIndex(this)] = ActiveImage.Path;
-                        return;
-                    }
-                }
-
-                VideoLoopCount = 0; // if we are allowed to make a change, reset the loop count
-            }
+            // --- If the scan is true we end this method early as the video's display time is still valid ---
+            if (await VerifyMinLoopMaxTimeSettings(forceChange)) return;
 
             // --- Verify Wallpaper ---
             FileInfo wallpaperInfo;
@@ -151,90 +117,46 @@ namespace WallpaperFlux.WPF
             {
                 UpdateVolume(image); //! Do NOT use ActiveImage here, it is not set until the end of the method!
 
-                bool ffmeFail = false;
-
-                //? FFME is unstable and likely to crash on larger videos, but Windows Media Player can't load webms | Also, it seems to load gifs faster
-                if (wallpaperInfo.Extension == ".webm" || wallpaperInfo.Extension == ".gif" || wallpaperInfo.Extension == ".mp4") 
+                if (wallpaperInfo.Extension == ".mp4" || wallpaperInfo.Extension == ".avi") //? VLC can't load .webm files (haven't tried GIFs but FFME handles these fine)
                 {
-                    try
-                    {
-                        /* TODO
-
-                        // https://stackoverflow.com/questions/53799646/ffmpeg-change-output-to-specific-pixel-format
-                        // https://stackoverflow.com/questions/4749967/execute-ffmpeg-command-with-c-sharp
-
-                        using (Process p = new Process())
+                        using (Media media = new Media(_libVlc, wallpaperInfo.FullName))
                         {
-                            p.StartInfo.UseShellExecute = false;
-                            p.StartInfo.CreateNoWindow = true;
-                            p.StartInfo.RedirectStandardOutput = true;
-                            p.StartInfo.FileName = Library.FFmpegDirectory + "\\ffmpeg.exe";
-                            p.StartInfo.Arguments = parameters;
-                            p.Start();
-                            p.WaitForExit();
+                            //xWallpaperVlc.MediaPlayer?.Stop();
+                            WallpaperVlc.MediaPlayer?.Play(media);
+                            WallpaperVlcViewBox.IsEnabled = true;
+                            WallpaperVlcViewBox.Visibility = Visibility.Visible;
 
-                            result = p.StandardOutput.ReadToEnd();
+                            if (WallpaperVlc.MediaPlayer != null) // if the media fails to open
+                            {
+                                WallpaperVlc.MediaPlayer.EndReached += VlcMediaPlayer_OnEndReached;
+                            }
+
+                            DisableUnusedElements(UsedElement.VLC);
                         }
-                        */
-                        
-                        //xMpvPlayerElement.Load(wallpaperInfo.FullName);
-                        //xMpvPlayerElement.Resume();
-                        WallpaperMpvFormHost.IsEnabled = true;
-                        WallpaperMpvFormHost.Visibility = Visibility.Visible;
-
-                        /*
-                        await WallpaperMediaElementFFME.Close();
-                        await WallpaperMediaElementFFME.Open(new Uri(wallpaperInfo.FullName));
-                        WallpaperMediaElementFFME.IsEnabled = true;
-                        WallpaperMediaElementFFME.Visibility = Visibility.Visible;
-                        */
-
-                        DisableMediaElement();
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.WriteLine("FFME fail, trying MediaPlayer | Fail Source: " + wallpaperPath);
-                        //? Playing .mp4 videos will sometimes fail and crash the program with no warning, this is likely an exit with the code -1073740940 (0xc0000374)
-                        //? MediaPlayer can play .mp4s without crashing but *some* will fail to play their audio, this is a nice compromise
-
-                        ffmeFail = true;
-                    }
                 }
-                else
+                else if (wallpaperInfo.Extension == ".webm" || wallpaperInfo.Extension == ".gif") //? FFME can't handle .avi files and crashes on some .mp4s depending on their pixel format
                 {
-                    ffmeFail = true;
+                    await WallpaperMediaElementFFME.Close();
+                    await WallpaperMediaElementFFME.Open(new Uri(wallpaperInfo.FullName));
+                    WallpaperMediaElementFFME.IsEnabled = true;
+                    WallpaperMediaElementFFME.Visibility = Visibility.Visible;
+
+                    DisableUnusedElements(UsedElement.FFME);
+
+                    RetryMediaOpen(false, image); //? If there's too much load on the system FFME media will fail to start and need to be re-initialized
                 }
-                
-                if (ffmeFail) //? The regular MediaElement (Windows Media Player) will randomly fail to load gifs (seems to be if loading more than one), loading a blank screen instead
+                else //? Use the MediaElement as a last resort
                 {
-                    try
-                    {
-                        WallpaperMediaElement.Close();
-                        WallpaperMediaElement.Source = new Uri(wallpaperInfo.FullName);
-                        WallpaperMediaElement.IsEnabled = true;
-                        WallpaperMediaElement.Visibility = Visibility.Visible;
+                    WallpaperMediaElement.Close();
+                    WallpaperMediaElement.Source = new Uri(wallpaperInfo.FullName);
+                    WallpaperMediaElement.IsEnabled = true;
+                    WallpaperMediaElement.Visibility = Visibility.Visible;
 
-                        DisableMediaElementFFME();
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.WriteLine("MediaPlayer fail, create another solution | Fail Source: " + wallpaperPath);
-                        Debug.WriteLine("MediaPlayer fail, create another solution | Fail Source: " + wallpaperPath);
-                        Debug.WriteLine("MediaPlayer fail, create another solution | Fail Source: " + wallpaperPath);
-                        Debug.WriteLine("MediaPlayer fail, create another solution | Fail Source: " + wallpaperPath);
-
-                        // TODO If we fail again then we'll just have to not load the wallpaper for now and attempt to find a solution in the future
-                        // TODO If we fail again then we'll just have to not load the wallpaper for now and attempt to find a solution in the future
-                        // TODO If we fail again then we'll just have to not load the wallpaper for now and attempt to find a solution in the future
-                    }
-
+                    DisableUnusedElements(UsedElement.MediaElement);
                 }
 
-                RetryMediaOpen(false, image);
-
-                DisableImage();
             }
-            else // ---- static ----
+            else //? ---- static ----
             {
                 // TODO Consider adding a check for the static image type as well, as random file types can still be detected and cause a crash
                 // TODO Granted, they would have to be manually ranked by the user first, so you should probably instead just ban them from the ImageInspector
@@ -267,6 +189,45 @@ namespace WallpaperFlux.WPF
             ChangingWallpaper = false;
         }
 
+        /// <summary>
+        /// Scan video wallpapers for loop & max time settings
+        /// </summary>
+        /// <param name="forceChange"></param>
+        /// <returns></returns>
+        private async Task<bool> VerifyMinLoopMaxTimeSettings(bool forceChange)
+        {
+            if (!forceChange && ActiveImage is { IsVideoOrGif: true }) // we can only make these checks if the previous wallpaper was a video or gif
+            {
+                int minLoops = ActiveImage.OverrideMinimumLoops ? ActiveImage.MinimumLoops : ThemeUtil.VideoSettings.MinimumLoops;
+                int maxTime = ActiveImage.OverrideMaximumTime ? ActiveImage.MaximumTime : ThemeUtil.VideoSettings.MaximumTime;
+
+                Debug.WriteLine("VideoLoopCount: " + VideoLoopCount + " | MinimumVideoLoops: " + minLoops);
+                if (VideoLoopCount < minLoops)
+                {
+                    //? we will only check for the video time condition if we have not yet gone beyond the Minimum Loop count
+                    //? essentially, changes are only allowed if we are both above the minimum loop count AND the max video time
+
+                    //! a test countermeasure against failed loads never looping
+                    if (WallpaperMediaElement.IsLoaded) WallpaperMediaElement.Play();
+                    if (WallpaperMediaElementFFME.IsLoaded) await WallpaperMediaElementFFME.Play();
+                    //! a test countermeasure against failed loads never looping
+
+                    Debug.WriteLine("Nax Video Time: " + maxTime);
+                    Debug.WriteLine("Media: " + WallpaperMediaElement.Position.Seconds + " | FFME: " + WallpaperMediaElementFFME.Position.Seconds);
+                    if (WallpaperMediaElement.Position.Seconds <= maxTime ||
+                        WallpaperMediaElementFFME.Position.Seconds <= maxTime)
+                    {
+                        ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[WallpaperWindowUtil.GetWallpaperIndex(this)] = ActiveImage.Path;
+                        return true;
+                    }
+                }
+
+                VideoLoopCount = 0; // if we are allowed to make a change, reset the loop count
+            }
+
+            return false;
+        }
+
         private void DisableImage()
         {
             WallpaperImage.Source = null;
@@ -282,17 +243,18 @@ namespace WallpaperFlux.WPF
             WallpaperMediaElement.Visibility = Visibility.Hidden;
         }
 
-        private async void DisableMediaElementFFME()
+        private async void DisableFFME()
         {
             await WallpaperMediaElementFFME.Close();
             WallpaperMediaElementFFME.IsEnabled = false;
             WallpaperMediaElementFFME.Visibility = Visibility.Hidden;
+        }
 
-            //! temp
-            //xMpvPlayerElement.Stop();
-            WallpaperMpvFormHost.IsEnabled = false;
-            WallpaperMpvFormHost.Visibility = Visibility.Hidden;
-            //! temp
+        private void DisableVlc()
+        {
+            WallpaperVlc.MediaPlayer?.Stop();
+            WallpaperVlcViewBox.IsEnabled = false;
+            WallpaperVlcViewBox.Visibility = Visibility.Hidden;
         }
 
         private void DisableUnusedElements(UsedElement usedElement)
@@ -301,17 +263,26 @@ namespace WallpaperFlux.WPF
             {
                 case UsedElement.Image:
                     DisableMediaElement();
-                    DisableMediaElementFFME();
+                    DisableFFME();
+                    DisableVlc();
                     break;
 
                 case UsedElement.MediaElement:
+                    DisableFFME();
+                    DisableVlc();
                     DisableImage();
-                    DisableMediaElementFFME();
                     break;
 
                 case UsedElement.FFME:
-                    DisableImage();
                     DisableMediaElement();
+                    DisableVlc();
+                    DisableImage();
+                    break;
+
+                case UsedElement.VLC:
+                    DisableMediaElement();
+                    DisableFFME();
+                    DisableImage();
                     break;
             }
         }
@@ -324,22 +295,22 @@ namespace WallpaperFlux.WPF
                 switch (style)
                 {
                     case WallpaperStyle.Fill:
-                        WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = Stretch.UniformToFill;
+                        WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = WallpaperVlcViewBox.Stretch = Stretch.UniformToFill;
                         //xWallpaperImage.Stretch = Stretch.UniformToFill;
                         break;
 
                     case WallpaperStyle.Stretch:
-                        WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = Stretch.Fill;
+                        WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = WallpaperVlcViewBox.Stretch = Stretch.Fill;
                         //xWallpaperImage.Stretch = Stretch.Fill;
                         break;
 
                     case WallpaperStyle.Fit:
-                        WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = Stretch.Uniform;
+                        WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = WallpaperVlcViewBox.Stretch = Stretch.Uniform;
                         //xWallpaperImage.Stretch = Stretch.Uniform;
                         break;
 
                     case WallpaperStyle.Center:
-                        WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = Stretch.None;
+                        WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = WallpaperVlcViewBox.Stretch = Stretch.None;
                         //xWallpaperImage.Stretch = Stretch.None;
                         break;
                 }
@@ -359,26 +330,12 @@ namespace WallpaperFlux.WPF
 
         private void WallpaperMediaElementFFME_OnMediaEnded(object? sender, EventArgs e) => VideoLoopCount++;
 
-        /*x
-        private void WallpaperMediaElementFFME_OnMediaEnded(object? sender, EventArgs e)
+        private void VlcMediaPlayer_OnEndReached(object? sender, EventArgs e)
         {
-            Debug.WriteLine("(FFME) A");
-            if (sender is Unosquare.FFME.MediaElement ffmeElement)
-            {
-                Debug.WriteLine(ffmeElement.Source.AbsoluteUri);
-                Debug.WriteLine("B");
-                //xffmeElement.Pause();
-                //xffmeElement.Stop();
-                //xffmeElement.Position = TimeSpan.Zero;
-                //xffmeElement.Play();
-                //xWallpaperMediaElementFFME.Open(new Uri(ffmeElement.Source.AbsoluteUri));
-                Debug.WriteLine("C");
-            }
-
-            Debug.WriteLine("D");
+            Debug.WriteLine("am loopin");
+            VideoLoopCount++;
         }
 
-        */
         public void Mute()
         {
             Muted = true;
@@ -405,14 +362,22 @@ namespace WallpaperFlux.WPF
                 {
                     if (image != null) //? it's okay to set the volume to 0 ahead of time, but sometimes the given image may not be initialized
                     {
-                        WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = image.Volume / 100;
-                        //xMpvPlayerElement.Volume = (int)image.Volume;
+                        WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume =  image.Volume / 100;
+
+                        if (WallpaperVlc.MediaPlayer != null)
+                        {
+                            WallpaperVlc.MediaPlayer.Volume = (int)image.Volume;
+                        }
                     }
                 }
                 else
                 {
-                   //x WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = MpvPlayerElement.Volume = 0;
                     WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = 0;
+
+                    if (WallpaperVlc.MediaPlayer != null)
+                    {
+                        WallpaperVlc.MediaPlayer.Volume = 0;
+                    }
                 }
             });
         }
@@ -442,25 +407,6 @@ namespace WallpaperFlux.WPF
                         if (!finalAttempt)
                         {
                             //WallpaperMediaElementFFME.Open(new Uri(image.Path));
-                            RetryMediaOpen(true, image);
-                        }
-                        //}
-                    }
-
-                    Debug.WriteLine("MediaPlayer Opening: " + WallpaperMediaElementFFME.IsOpening);
-                    if (WallpaperMediaElement.IsEnabled && !WallpaperMediaElementFFME.IsOpening)
-                    {
-                        Debug.WriteLine("MediaPlayer Position: " + WallpaperMediaElement.Position);
-                        //if (WallpaperMediaElement.Position < TimeSpan.FromSeconds(1))
-                        //{
-                        Debug.WriteLine("Fixing MediaPlayer");
-                        //xWallpaperMediaElement.Close();
-                        WallpaperMediaElementFFME.Play();
-                        DisableUnusedElements(UsedElement.MediaElement);
-
-                        if (!finalAttempt)
-                        {
-                            //WallpaperMediaElement.Source = new Uri(image.Path);
                             RetryMediaOpen(true, image);
                         }
                         //}
