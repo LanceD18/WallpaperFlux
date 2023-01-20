@@ -176,6 +176,15 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
+        public bool IsMp4OrAvi
+        {
+            get
+            {
+                string extension = System.IO.Path.GetExtension(Path);
+                return extension == ".mp4" || extension == ".avi";
+            }
+        }
+
         public bool IsVideoOrGif => IsVideo || IsGif;
 
         // Commands

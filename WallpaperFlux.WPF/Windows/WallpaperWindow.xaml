@@ -15,14 +15,14 @@
         Title="WallpaperWindow" Height="450" Width="800" WindowStyle="None">
     <Grid>
         <Viewbox x:Name="WallpaperVlcViewBox">
-            <vlc:VideoView x:Name="WallpaperVlc" Width="auto" Height="auto" Background="Transparent"/>
+            <vlc:VideoView x:Name="WallpaperVlc"/>
         </Viewbox>
-        
+
         <Image x:Name="WallpaperImage" Width="auto" Height="auto" Visibility="Hidden"/>
-        <ffme:MediaElement x:Name="WallpaperMediaElementFFME" Width="auto" Height="auto" UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play" MediaEnded="WallpaperMediaElementFFME_OnMediaEnded" Visibility="Hidden"/>
+        <ffme:MediaElement x:Name="WallpaperMediaElementFFME" Width="auto" Height="auto" UnloadedBehavior="Manual"
+                           LoadedBehavior="Play" LoopingBehavior="Play" MediaEnded="WallpaperMediaElementFFME_OnMediaEnded" Visibility="Hidden"/>
         <MediaElement x:Name="WallpaperMediaElement" Width="auto" Height="auto" UnloadedBehavior="Manual" LoadedBehavior="Play" MediaEnded="WallpaperMediaElement_OnMediaEnded" Visibility="Hidden"/>
         <hc:GifImage/>
-
 
         <!-- ! Improperly using this will break the WallpaperWindow handles until this is disabled -->
         <!--
