@@ -51,8 +51,6 @@ namespace WallpaperFlux.WPF
         //? The index is currently gathered by the array utilized in ExternalWallpaperHandler and MainWindow
         public ImageModel ActiveImage;
 
-        public bool ChangingWallpaper { get; private set; } = false;
-
         private int VideoLoopCount;
 
         private bool Muted;
@@ -93,7 +91,6 @@ namespace WallpaperFlux.WPF
         //? The index is checked in ExternalWallpaperHandler now as it has access to the array, which allows wallpapers to be changed independently of one another
         public async void OnWallpaperChange(ImageModel image, bool forceChange)
         {
-            ChangingWallpaper = true;
             Debug.WriteLine("Changing into: " + image.Path);
 
             // --- If the scan is true we end this method early as the video's display time is still valid ---
@@ -127,6 +124,8 @@ namespace WallpaperFlux.WPF
             // -----Set Wallpaper -----
             if (WallpaperUtil.IsSupportedVideoType_GivenExtension(wallpaperInfo.Extension) || wallpaperInfo.Extension == ".gif") // ---- video or gif ----
             {
+                UpdateVolume(image); //! Do NOT use ActiveImage here, it is not set until the end of the method!
+
                 if (wallpaperInfo.Extension == ".mp4" || wallpaperInfo.Extension == ".avi") //? VLC can't load .webm files (haven't tried GIFs but FFME handles these fine)
                 {
                     using (Media media = new Media(_libVlc, wallpaperInfo.FullName))
@@ -144,7 +143,6 @@ namespace WallpaperFlux.WPF
                         {
                             vlcStopwatch.Start();
                         }
-
 
                         /*x
                         if (WallpaperVlc.MediaPlayer != null) // if the MediaPlayer fails to start we won't need this
@@ -176,8 +174,6 @@ namespace WallpaperFlux.WPF
 
                     DisableUnusedElements(UsedElement.MediaElement);
                 }
-
-                UpdateVolume(image); //! Do NOT use ActiveImage here, it is not set until the end of the method!
             }
             else //? ---- static ----
             {
@@ -208,8 +204,6 @@ namespace WallpaperFlux.WPF
             //xWallpaperImage.EndInit();
             //xWallpaperMediaElement.EndInit();
             //xWallpaperMediaElementFFME.EndInit();
-
-            ChangingWallpaper = false;
         }
 
         /// <summary>
@@ -387,7 +381,6 @@ namespace WallpaperFlux.WPF
 
         public void UpdateVolume()
         {
-            if (ChangingWallpaper) return;
             UpdateVolume(ActiveImage);
         }
 

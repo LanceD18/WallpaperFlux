@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using LanceTools;
+using LanceTools.IO;
 using MvvmCross.Commands;
 using MvvmCross.ViewModels;
 using Newtonsoft.Json;
@@ -437,7 +438,9 @@ namespace WallpaperFlux.Core.Models.Tagging
         /// <returns></returns>
         public HashSet<ImageModel> GetLinkedImages()
         {
-            HashSet<ImageModel> images = new HashSet<ImageModel>(LinkedImages);
+            //? Only include images that actually exist (helps to detect and remove deleted images)
+            HashSet<ImageModel> images = new HashSet<ImageModel>(
+                LinkedImages.Where(f => FileUtil.Exists(f.Path)));
 
             foreach (TagModel tag in ChildTags)
             {

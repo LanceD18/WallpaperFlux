@@ -70,7 +70,7 @@ namespace WallpaperFlux.Core.Collections
         public HashSet<TagModel> GetTags() => _tags;
 
         /// <summary>
-        /// Gets tags but excludes parent tags whose child tags are also in the collection
+        /// Gets tags but excludes parent tags whose child tags are also in the collection (note that parents are excluded by design, this implies the intentional inclusion of a parent)
         /// </summary>
         /// <returns></returns>
         public HashSet<TagModel> GetTags_ExcludeParents()
