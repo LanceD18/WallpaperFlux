@@ -1,0 +1,45 @@
+﻿<views:MvxWindow x:Class="WallpaperFlux.WPF.WallpaperWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:gif="http://wpfanimatedgif.codeplex.com"
+        xmlns:ffme="clr-namespace:Unosquare.FFME;assembly=ffme.win"
+        xmlns:local="clr-namespace:WallpaperFlux.WPF"
+        xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
+        xmlns:windowsForms="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms"
+        xmlns:media="https://github.com/mysteryx93/MediaPlayerUI.NET"
+        xmlns:hc="https://handyorg.github.io/handycontrol"
+        xmlns:vlc="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF"
+        mc:Ignorable="d" Background="Transparent" ResizeMode="NoResize"
+        Title="WallpaperWindow" Height="450" Width="800" WindowStyle="None">
+    <Grid>
+        <Viewbox x:Name="WallpaperVlcViewBox">
+            <vlc:VideoView x:Name="WallpaperVlc"/>
+        </Viewbox>
+
+        <Image x:Name="WallpaperImage" Width="auto" Height="auto" Visibility="Hidden"/>
+        <ffme:MediaElement x:Name="WallpaperMediaElementFFME" Width="auto" Height="auto" UnloadedBehavior="Manual"
+                           LoadedBehavior="Play" LoopingBehavior="Play" MediaEnded="WallpaperMediaElementFFME_OnMediaEnded" Visibility="Hidden"/>
+        <MediaElement x:Name="WallpaperMediaElement" Width="auto" Height="auto" UnloadedBehavior="Manual" LoadedBehavior="Play" MediaEnded="WallpaperMediaElement_OnMediaEnded" Visibility="Hidden"/>
+        <hc:GifImage/>
+
+        <!-- ! Improperly using this will break the WallpaperWindow handles until this is disabled -->
+        <!--
+        <WindowsFormsHost Width="auto" Height="auto" x:Name="WallpaperMpvFormHost">
+            <windowsForms:Panel x:Name="MpvPlayerHost"/>
+        </WindowsFormsHost>
+        -->
+
+        <!--
+        <media:MediaPlayer x:Name="WallpaperMediaPlayerMPV">
+            <media:MpvPlayerHost x:Name="MpvPlayerHostElement" Width="auto" Height="auto" Loop="True" AutoPlay="True"/>
+        </media:MediaPlayer>
+        -->
+
+        <!--
+        <media:MpvPlayerHost x:Name="MpvPlayerHostElement" Width="auto" Height="auto" Loop="True" AutoPlay="True" 
+                             Player="{Binding WallpaperMpv}"/>
+        -->
+    </Grid>
+</views:MvxWindow>

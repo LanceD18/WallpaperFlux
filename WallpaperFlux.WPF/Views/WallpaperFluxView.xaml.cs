@@ -251,8 +251,20 @@ namespace WallpaperFlux.WPF.Views
                 {
                     using (Engine engine = new Engine())
                     {
+                        if (!FileUtil.Exists(imageModel.Path))
+                        {
+                            Debug.WriteLine("Thumbnail creation failed ; video path does not exist");
+                            return;
+                        }
+
                         MediaFile video = new MediaFile(imageModel.Path);
                         engine.GetMetadata(video);
+
+                        if (video.Metadata == null)
+                        {
+                            Debug.WriteLine("Metadata failed to generate");
+                            return;
+                        }
                         
                         //? several videos show nothing on second 0, creating an empty thumbnail
                         ConversionOptions options = new ConversionOptions { Seek = TimeSpan.FromSeconds(video.Metadata.Duration.Seconds * 0.05) };
@@ -269,11 +281,26 @@ namespace WallpaperFlux.WPF.Views
 
                         MediaFile outputFile = new MediaFile(vidThumbnailPath);
 
-                        engine.GetThumbnail(video, outputFile, options);
-                        
-                        FileStream stream = File.OpenRead(outputFile.Filename);
-                        
-                        LoadBitmapImage(image, false, stream: stream);
+                        try
+                        {
+                            engine.GetThumbnail(video, outputFile, options);
+                        }
+                        catch(Exception e)
+                        {
+                            Debug.WriteLine("Engine failed to get thumbnail from output file | " + e);
+                        }
+
+                        if (FileUtil.Exists(outputFile.Filename))
+                        {
+                            using (FileStream stream = File.OpenRead(outputFile.Filename))
+                            {
+                                LoadBitmapImage(image, false, stream: stream);
+                            }
+                        }
+                        else
+                        {
+                            Debug.WriteLine("Output File Failed to generate thumbnail");
+                        }
 
                         if (FileUtil.Exists(vidThumbnailPath))
                         {
