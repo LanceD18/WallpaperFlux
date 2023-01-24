@@ -17,6 +17,7 @@ namespace WallpaperFlux.Core.Models.Tagging
         private string _conflictResolutionFolder = string.Empty;
 
         private string _name;
+
         public string Name
         {
             get => _name;
@@ -33,11 +34,11 @@ namespace WallpaperFlux.Core.Models.Tagging
             private set
             {
                 SetProperty(ref _conflictResolutionFolder, value);
-                RaisePropertyChanged(() => ConflictResolutionFolderContextMenuString);
+                RaisePropertyChanged(() => ConflictResolutionFolderContextMenuText);
             }
         }
 
-        public string ConflictResolutionFolderContextMenuString
+        public string ConflictResolutionFolderContextMenuText
         {
             get
             {
@@ -47,12 +48,38 @@ namespace WallpaperFlux.Core.Models.Tagging
                 }
 
                 return "No Conflict Resolution Folder Assigned";
-
             }
         }
 
         public int AssignedFolderCount => WallpaperFluxViewModel.Instance.ImageFolders.Count(f => f.PriorityName == Name);
 
+        //? Instead of using the index of the priority, this priority will mimic the behavior of another priority,
+        //? using their conflict resolution in cases that go beyond the scope of this priority's tags
+        private int _priorityOverride = -1;
+        public int PriorityOverride
+        {
+            get => _priorityOverride;
+            set
+            {
+                SetProperty(ref _priorityOverride, value);
+                RaisePropertyChanged(() => PriorityOverrideText);
+            }
+        }
+
+        public string PriorityOverrideText
+        {
+            get
+            {
+                if (PriorityOverride != -1)
+                {
+                    return "Priority Override: " + PriorityOverride;
+                }
+
+                return "Using Default Priority";
+            }
+        }
+
+        #region Commands
         public IMvxCommand RenameCommand { get; set; }
 
         public IMvxCommand AssignFolderCommand { get; set; }
@@ -61,27 +88,26 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         public IMvxCommand ListAssignedFoldersCommand { get; set; }
 
-        public IMvxCommand AssignConflictResolutionFolder { get; set; }
+        public IMvxCommand AssignConflictResolutionFolderCommand { get; set; }
 
-        public IMvxCommand RemoveConflictResolutionFolder { get; set; }
+        public IMvxCommand RemoveConflictResolutionFolderCommand { get; set; }
 
-        public FolderPriorityModel(string name, string conflictResolutionFolder = "")
+        public IMvxCommand OverridePriorityCommand { get; set; }
+        #endregion
+
+        public FolderPriorityModel(string name, string conflictResolutionFolder = "", int priorityOverride = -1)
         {
             Name = name;
             ConflictResolutionFolder = conflictResolutionFolder;
+            PriorityOverride = priorityOverride;
+
             RenameCommand = new MvxCommand(Rename);
             AssignFolderCommand = new MvxCommand(AssignFolder);
             RemoveFolderCommand = new MvxCommand(RemoveFolder);
             ListAssignedFoldersCommand = new MvxCommand(ListAssignedFolders);
-            AssignConflictResolutionFolder = new MvxCommand(() =>
-            {
-                string path = FolderUtil.GetValidFolderPath();
-                if (!string.IsNullOrEmpty(path))
-                {
-                    ConflictResolutionFolder = path;
-                }
-            });
-            RemoveConflictResolutionFolder = new MvxCommand(() => ConflictResolutionFolder = string.Empty);
+            AssignConflictResolutionFolderCommand = new MvxCommand(AssignConflictResolutionFolder);
+            RemoveConflictResolutionFolderCommand = new MvxCommand(() => ConflictResolutionFolder = string.Empty);
+            OverridePriorityCommand = new MvxCommand(SetPriorityOverride);
         }
 
         public void Rename()
@@ -176,6 +202,25 @@ namespace WallpaperFlux.Core.Models.Tagging
             }
 
             MessageBox.Show(assignedFolders);
+        }
+
+        public void AssignConflictResolutionFolder()
+        {
+            string path = FolderUtil.GetValidFolderPath();
+            if (!string.IsNullOrEmpty(path))
+            {
+                ConflictResolutionFolder = path;
+            }
+        }
+
+        public void SetPriorityOverride()
+        {
+            if (MessageBoxUtil.GetInteger("Set Priority Override",
+                "Enter a value. Choose a value of -1 to turn off the priority override",
+                out int priorityOverride, "Priority Override...."))
+            {
+                PriorityOverride = priorityOverride;
+            }
         }
     }
 }

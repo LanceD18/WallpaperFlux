@@ -647,9 +647,16 @@
 
                                                 <Separator/>
 
-                                                <MenuItem Header="{Binding ConflictResolutionFolderContextMenuString}" IsEnabled="False"/>
-                                                <MenuItem Header="Assign Conflict Resolution Folder" Command="{Binding AssignConflictResolutionFolder}"/>
-                                                <MenuItem Header="Remove Conflict Resolution Folder" Command="{Binding RemoveConflictResolutionFolder}"/>
+                                                <MenuItem Header="{Binding ConflictResolutionFolderContextMenuText}" IsEnabled="False"/>
+                                                <MenuItem Header="Assign Conflict Resolution Folder" Command="{Binding AssignConflictResolutionFolderCommand}"/>
+                                                <MenuItem Header="Remove Conflict Resolution Folder" Command="{Binding RemoveConflictResolutionFolderCommand}"/>
+
+                                                <Separator/>
+
+                                                <MenuItem Header="{Binding PriorityOverrideText}" IsEnabled="False"/>
+                                                <MenuItem Header="Override Priority"
+                                                          Command="{Binding OverridePriorityCommand}"
+                                                          ToolTip="Set to -1 to disable | Overrides the positional priority. If the default conflict resolution is not applicable, use the override instead"/>
                                             </ContextMenu>
                                         </GroupBox.ContextMenu>
                                     </GroupBox>

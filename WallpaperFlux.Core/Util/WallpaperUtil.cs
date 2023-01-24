@@ -49,7 +49,7 @@ namespace WallpaperFlux.Core.Util
 
         public static bool IsSupportedVideoType(string filePath) => IsSupportedVideoType_GivenExtension(Path.GetExtension(filePath));
 
-        public static bool IsSupportedVideoType_GivenExtension(string extension) => extension == ".mp4" || extension == ".webm" || extension == ".avi";
+        public static bool IsSupportedVideoType_GivenExtension(string extension) => extension == ".mp4" || extension == ".webm" || extension == ".avi" || extension == ".wmv";
 
         // Derived from: https://www.codeproject.com/Articles/856020/Draw-Behind-Desktop-Icons-in-Windows-plus
         // Gets the IntPtr value that will allow us to draw the wallpaper behind the desktop icons

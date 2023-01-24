@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using LanceTools.DiagnosticsUtil;
-using LanceTools.IO;
 using MvvmCross.Commands;
 using MvvmCross.ViewModels;
 using WallpaperFlux.Core.Util;
@@ -21,10 +20,7 @@ namespace WallpaperFlux.Core.Models
         {
             get => _path;
 
-            private set
-            {
-                _path = value;
-            }
+            private set => _path = value;
         }
 
         // TODO Rename this to Enabled to match with similar functions across other aspects of the program
@@ -48,7 +44,7 @@ namespace WallpaperFlux.Core.Models
         {
             get
             {
-                if (Directory.Exists(_path)) //? invalid directories will still call this
+                if (Directory.Exists(Path))
                 {
                     return new DirectoryInfo(Path).GetFiles().Select((s) => s.FullName).ToList();
                 }
@@ -101,7 +97,7 @@ namespace WallpaperFlux.Core.Models
                 }
                 else
                 {
-                    if (FileUtil.Exists(image))
+                    if (File.Exists(image))
                     {
                         ThemeUtil.Theme.Images.AddImage(image);
                         ThemeUtil.Theme.Images.GetImage(image).Active = Active;

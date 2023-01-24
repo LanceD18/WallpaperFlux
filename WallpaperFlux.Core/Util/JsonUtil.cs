@@ -238,29 +238,12 @@ namespace WallpaperFlux.Core.Util
 
         private static SimplifiedFolderPriority[] ConvertToSimplifiedFolderPriorities()
         {
-            SimplifiedFolderPriority[] folderPriorities;
-            //xif (TagViewModel.Instance != null)
-            //x{
-                folderPriorities = new SimplifiedFolderPriority[TagViewModel.Instance.FolderPriorities.Count];
-            //x}
-            //xelse
-            //x{
-            //x    folderPriorities = new SimplifiedFolderPriority[ThemeUtil.Theme.PlaceholderFolderPriorities.Count];
-            //x}
+            SimplifiedFolderPriority[] folderPriorities = new SimplifiedFolderPriority[TagViewModel.Instance.FolderPriorities.Count];
 
-            for (var i = 0; i < folderPriorities.Length; i++)
+            for (int i = 0; i < folderPriorities.Length; i++)
             {
-                FolderPriorityModel priority;
-                //xif (TagViewModel.Instance != null)
-                //x{
-                    priority = TagViewModel.Instance.FolderPriorities[i];
-                //x}
-                //xelse
-                //x{
-                //x    priority = ThemeUtil.Theme.PlaceholderFolderPriorities[i];
-                //x}
-
-                folderPriorities[i] = new SimplifiedFolderPriority(priority.Name, priority.ConflictResolutionFolder);
+                FolderPriorityModel priority = TagViewModel.Instance.FolderPriorities[i];
+                folderPriorities[i] = new SimplifiedFolderPriority(priority.Name, priority.ConflictResolutionFolder, priority.PriorityOverride);
             }
 
             return folderPriorities;
@@ -547,19 +530,7 @@ namespace WallpaperFlux.Core.Util
             //? we need the official category list ahead of time for data handling but this gives them the wrong order, so we used this to fix it
             ThemeUtil.Theme.Categories = new List<CategoryModel>(orderedCategories);
             TaggingUtil.UpdateCategoryView(); // don't forget to update the view
-
-            /*x
-            ThemeUtil.Theme.PreLoadedFolderPriorities = wallpaperData.FolderPriorities;
-
-            // TODO Temp code, remove this at some point
-            ThemeUtil.Theme.PlaceholderFolderPriorities = new List<FolderPriorityModel>();
-
-            foreach (SimplifiedFolderPriority priority in wallpaperData.FolderPriorities)
-            {
-                ThemeUtil.Theme.PlaceholderFolderPriorities.Add(new FolderPriorityModel(priority.Name, priority.ConflictResolutionFolder));
-            }
-            // TODO Temp code, remove this at some point
-            */
+            
             TagViewModel.Instance.RebuildFolderPriorities(wallpaperData.FolderPriorities);
         }
 

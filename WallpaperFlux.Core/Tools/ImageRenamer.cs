@@ -272,8 +272,9 @@ namespace WallpaperFlux.Core.Tools
 
             foreach (TagModel tag in image.Tags.GetTags()) //? don't exclude parents tags, they are still useful to be added on top of child tags for various use cases
             {
+                int priorityOverride = -1;
                 string curFolder = tag.RenameFolderPath;
-                if (string.IsNullOrEmpty(curFolder))
+                if (string.IsNullOrEmpty(curFolder)) //? if there is no rename folder assigned
                 {
                     curFolder = GetPrioritizedImagePathFolder(tag); // keep searching until there are no parent tags left to search from
 
@@ -304,8 +305,9 @@ namespace WallpaperFlux.Core.Tools
 
             foreach (TagModel parentTag in tag.GetParentTags())
             {
+                int priorityOverride = -1;
                 string curFolder = parentTag.RenameFolderPath;
-                if (string.IsNullOrEmpty(curFolder))
+                if (string.IsNullOrEmpty(curFolder)) //? if there is no rename folder assigned
                 {
                     curFolder = GetPrioritizedImagePathFolder(parentTag); // keep searching until there are no parent tags left to search from
 

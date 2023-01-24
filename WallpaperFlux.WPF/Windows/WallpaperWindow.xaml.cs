@@ -22,7 +22,7 @@ using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core;
 using WallpaperFlux.Core.Util;
 using WallpaperFlux.WPF.Util;
-using WpfAnimatedGif;
+using XamlAnimatedGif;
 using WpfScreenHelper;
 using System.Threading.Tasks;
 using LibVLCSharp.Shared;
@@ -59,11 +59,17 @@ namespace WallpaperFlux.WPF
 
         private Stopwatch vlcStopwatch = new Stopwatch();
 
-        public WallpaperWindow(Screen display, IntPtr workerw)
+        public int DisplayIndex;
+
+        public Window MpvWindow;
+
+        public WallpaperWindow(Screen display, IntPtr workerw, int displayIndex)
         {
             InitializeComponent();
 
-            //xMpvPlayerHostElement.DllPath = MpvUtil.MpvPath;
+            DisplayIndex = displayIndex;
+
+            //xMpvHost.DllPath = MpvUtil.MpvPath;
 
             Loaded += (s, e) =>
             {
@@ -85,6 +91,13 @@ namespace WallpaperFlux.WPF
                 WallpaperVlc.Width = Width; // auto doesn't work for vlc (will receive an improper size)
                 WallpaperVlc.Height = Height; // auto doesn't work for vlc (will receive an improper size)
                 DisableVlc();
+
+                /*x
+                MpvWindow = new MpvWindow(this, DisplayIndex, workerw);
+                MpvWindow.Width = Width;
+                MpvWindow.Height = Height;
+                MpvWindow.Show();
+                */
             };
         }
 
@@ -122,11 +135,13 @@ namespace WallpaperFlux.WPF
             //xWallpaperMediaElementFFME.BeginInit();
 
             // -----Set Wallpaper -----
-            if (WallpaperUtil.IsSupportedVideoType_GivenExtension(wallpaperInfo.Extension) || wallpaperInfo.Extension == ".gif") // ---- video or gif ----
+            if (WallpaperUtil.IsSupportedVideoType_GivenExtension(wallpaperInfo.Extension) || image.IsGif) //? ---- video ----
             {
                 UpdateVolume(image); //! Do NOT use ActiveImage here, it is not set until the end of the method!
 
-                if (wallpaperInfo.Extension == ".mp4" || wallpaperInfo.Extension == ".avi") //? VLC can't load .webm files (haven't tried GIFs but FFME handles these fine)
+                //xMpvUtil.Open[DisplayIndex]?.Invoke(wallpaperInfo.FullName);
+                
+                if (WallpaperWindowUtil.IsVideoVlcCompatible(wallpaperInfo.Extension)) //? VLC can't load .webm files
                 {
                     using (Media media = new Media(_libVlc, wallpaperInfo.FullName))
                     {
@@ -154,18 +169,28 @@ namespace WallpaperFlux.WPF
                         DisableUnusedElements(UsedElement.VLC);
                     }
                 }
-                else if (wallpaperInfo.Extension == ".webm" || wallpaperInfo.Extension == ".gif") //? FFME can't handle .avi files and crashes on some .mp4s depending on their pixel format
+                else if (wallpaperInfo.Extension == ".webm" || image.IsGif) //? FFME can't handle .avi files and crashes on some videos depending on their pixel format, this seems to be more common with .webms
                 {
-                    await WallpaperMediaElementFFME.Close();
-                    await WallpaperMediaElementFFME.Open(new Uri(wallpaperInfo.FullName));
-                    WallpaperMediaElementFFME.IsEnabled = true;
-                    WallpaperMediaElementFFME.Visibility = Visibility.Visible;
+                    Debug.WriteLine("FFME (Recording path for just in case of crash, convert crashed .webms to .mp4): " + image.Path);
 
-                    DisableUnusedElements(UsedElement.FFME);
+                    try
+                    {
+                        await WallpaperMediaElementFFME.Close();
+                        await WallpaperMediaElementFFME.Open(new Uri(wallpaperInfo.FullName));
+                        WallpaperMediaElementFFME.IsEnabled = true;
+                        WallpaperMediaElementFFME.Visibility = Visibility.Visible;
 
-                    RetryMediaOpen(false, image); //? If there's too much load on the system FFME media will fail to start and need to be re-initialized
+                        DisableUnusedElements(UsedElement.FFME);
+
+                        RetryMediaOpen(false, image); //? If there's too much load on the system FFME media will fail to start and need to be re-initialized
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.WriteLine("Failed FFME Open: " + image.Path);
+                    }
+
                 }
-                else //? Use the MediaElement as a last resort
+                else //? Use the MediaElement as a last resort | seems to handle .wmv just fine
                 {
                     WallpaperMediaElement.Close();
                     WallpaperMediaElement.Source = new Uri(wallpaperInfo.FullName);
@@ -192,11 +217,22 @@ namespace WallpaperFlux.WPF
                 bitmap.Freeze(); // this needs to be frozen before the bitmap is used in the UI thread, call this right after bitmap.EndInit() | https://stackoverflow.com/questions/46709382/async-load-bitmapimage-in-c-sharp
                 //x}
 
-                WallpaperImage.Source = bitmap;
-                WallpaperImage.IsEnabled = true;
-                WallpaperImage.Visibility = Visibility.Visible;
-
-                DisableUnusedElements(UsedElement.Image);
+                //xif (!image.IsGif)
+                //x{
+                    WallpaperImage.Source = bitmap;
+                    WallpaperImage.IsEnabled = true;
+                    WallpaperImage.Visibility = Visibility.Visible;
+                    DisableUnusedElements(UsedElement.Image);
+                //x}
+                /*x
+                else
+                {
+                    AnimationBehavior.SetSourceUri(WallpaperGif, new Uri(image.Path));
+                    WallpaperGif.IsEnabled = true;
+                    WallpaperGif.Visibility = Visibility.Visible;
+                    DisableUnusedElements(UsedElement.GifImage);
+                }
+                */
             }
 
             ActiveImage = image; //? this change implies that the wallpaper was SUCCESSFULLY changed | Errors, video loop control, etc. can stop this
@@ -270,6 +306,15 @@ namespace WallpaperFlux.WPF
             WallpaperImage.IsEnabled = false;
             WallpaperImage.Visibility = Visibility.Hidden;
         }
+
+        /*x
+        private void DisableGifImage()
+        {
+            AnimationBehavior.SetSourceUri(WallpaperGif, null);
+            WallpaperGif.IsEnabled = false;
+            WallpaperGif.Visibility = Visibility.Hidden;
+        }
+        */
 
         private void DisableMediaElement()
         {
@@ -384,24 +429,70 @@ namespace WallpaperFlux.WPF
             UpdateVolume(ActiveImage);
         }
 
-        private void UpdateVolume(ImageModel image)
+        private async void UpdateVolume(ImageModel image)
         {
             Dispatcher.Invoke(() =>
             {
+
                 if (!Muted)
                 {
+                    int repeatInterval = 100;
+
                     if (image != null) //? it's okay to set the volume to 0 ahead of time, but sometimes the given image may not be initialized
                     {
-                        WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume =  image.Volume / 100;
+                        if (!image.IsVideo) return;
 
-                        if (WallpaperVlc.MediaPlayer != null)
+                        if (WallpaperVlc.MediaPlayer != null && WallpaperWindowUtil.IsVideoVlcCompatible(new FileInfo(image.Path).Extension))
                         {
-                            WallpaperVlc.MediaPlayer.Volume = (int)image.Volume;
+                            if (WallpaperVlc.MediaPlayer.Volume != (int)image.Volume)
+                            {
+                                WallpaperVlc.MediaPlayer.Volume = (int)image.Volume;
+
+                                //? Debug fix to volume failing to update
+                                Task.Run(() =>
+                                {
+                                    Thread.Sleep(repeatInterval);
+
+                                    Dispatcher.Invoke(() =>
+                                    {
+                                        WallpaperVlc.MediaPlayer.Volume = (int)image.Volume;
+                                        Debug.WriteLine("VLC Volume: " + WallpaperVlc.MediaPlayer.Volume);
+
+                                        if (WallpaperVlc.MediaPlayer.Volume != (int)image.Volume) UpdateVolume();
+                                    });
+                                });
+                            }
+                        }
+                        else
+                        {
+                            if (Math.Abs(WallpaperMediaElement.Volume - (image.Volume / 100)) > 0.00001 || Math.Abs(WallpaperMediaElementFFME.Volume - (image.Volume / 100)) > 0.00001)
+                            {
+                                WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = image.Volume;
+
+                                //? Debug fix to volume failing to update
+                                Task.Run(() =>
+                                {
+                                    Thread.Sleep(repeatInterval);
+
+                                    Dispatcher.Invoke(() =>
+                                    {
+                                        WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = image.Volume / 100;
+                                        Debug.WriteLine("MediaElement Volume: " + WallpaperMediaElement.Volume);
+                                        Debug.WriteLine("FFME Volume: " + WallpaperMediaElementFFME.Volume);
+
+                                        if (Math.Abs(WallpaperMediaElement.Volume - (image.Volume / 100)) > 0.00001 ||
+                                            Math.Abs(WallpaperMediaElementFFME.Volume - (image.Volume / 100)) > 0.00001)
+                                            UpdateVolume();
+                                    });
+                                });
+                            }
                         }
                     }
                 }
                 else
                 {
+                    //? mute regardless of whether or not there is a valid image
+
                     WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = 0;
 
                     if (WallpaperVlc.MediaPlayer != null)

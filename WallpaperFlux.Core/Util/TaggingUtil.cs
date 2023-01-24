@@ -222,19 +222,6 @@ namespace WallpaperFlux.Core.Util
             InsertCategory(targetIndex, sourceCategory);
         }
 
-        public static void ShiftPriorities(FolderPriorityModel sourcePriority, FolderPriorityModel targetPriority)
-        {
-            // gather the required indexes to shift the source priority
-            int sourceIndex = TagViewModel.Instance.FolderPriorities.IndexOf(sourcePriority);
-            int targetIndex = TagViewModel.Instance.FolderPriorities.IndexOf(targetPriority);
-
-            // remove the original instance of the priority from its source position
-            TagViewModel.Instance.FolderPriorities.RemoveAt(sourceIndex);
-
-            // re-insert the priority at the target position, the insertion will handle the shifting on its own
-            TagViewModel.Instance.FolderPriorities.Insert(targetIndex, sourcePriority);
-        }
-
         #region Prompt
         public static CategoryModel PromptAddCategory()
         {
@@ -289,6 +276,7 @@ namespace WallpaperFlux.Core.Util
 
         #endregion
 
+        #region Priorities
         /// <summary>
         /// Return the winning priority
         /// </summary>
@@ -301,8 +289,10 @@ namespace WallpaperFlux.Core.Util
             FolderModel folderModelB = FolderUtil.GetFolderModel(folderB);
 
             // give a significantly lower value if no folder model is given, allowing one of the two options to be forcefully picked
-            int priorityA = folderModelA == null ? -10 : GetPriorityIndex(folderModelA.PriorityName);
-            int priorityB = folderModelB == null ? -10 : GetPriorityIndex(folderModelB.PriorityName);
+            FolderPriorityModel priorityModelA = null;
+            FolderPriorityModel priorityModelB = null;
+            int priorityA = folderModelA == null ? -10 : GetPriorityIndex(folderModelA.PriorityName, out priorityModelA, false);
+            int priorityB = folderModelB == null ? -10 : GetPriorityIndex(folderModelB.PriorityName, out priorityModelB, false);
 
             Debug.WriteLine("Comparing: " + folderA + " | " + folderB);
             Debug.WriteLine("Priorities: " + priorityA + " | " + priorityB);
@@ -320,42 +310,105 @@ namespace WallpaperFlux.Core.Util
                 if (folderA == folderB) return folderA; // if the given folders are the same, just use the folder
 
                 Debug.WriteLine("Folders are not identical, checking for null priority...");
+                //? note that if A was null, either B would have already won or B we will end here from B also turning out null
                 if (priorityB == -1 || priorityB == -10) return DefaultConflictResolutionPath; // if there is no priority, return the default resolution
 
-                Debug.WriteLine("Using Resolution of " + folderA);
-
-                //x TODO Temporary TagViewModel fix
-                //xif (TagViewModel.Instance != null)
-                //x{
-                    return TagViewModel.Instance.FolderPriorities[priorityA].ConflictResolutionFolder;
-                //x}
-                //xelse
-                //x{
-                //x    return ThemeUtil.Theme.PlaceholderFolderPriorities[priorityA].ConflictResolutionFolder;
-                //x}
-
-            }
-
-            Debug.WriteLine("Retained: " + folderA);
-
-            return folderA;
-        }
-
-        public static int GetPriorityIndex(string name)
-        {
-            // TODO Temporary TagViewModel fix
-            //xFolderPriorityModel[] priorities = TagViewModel.Instance != null ? TagViewModel.Instance.FolderPriorities.ToArray() : ThemeUtil.Theme.PlaceholderFolderPriorities.ToArray();
-            FolderPriorityModel[] priorities = TagViewModel.Instance.FolderPriorities.ToArray();
-
-            for (var i = 0; i < priorities.Length; i++)
-            {
-                if (name == priorities[i].Name)
+                if (priorityModelB == null || priorityModelB.PriorityOverride == -1 || priorityModelA == null || priorityModelA.PriorityOverride == -1)
                 {
-                    return i;
+                    // Standard case, the folder with the override will just use the override's resolution
+
+                    Debug.WriteLine("Using Resolution of " + folderA);
+
+                    return TagViewModel.Instance.FolderPriorities[priorityA].ConflictResolutionFolder;
+                }
+                else // both priorities have an override
+                {
+                    Debug.WriteLine("Double Override Found, scan actual priorities");
+                    //? folders won't be found null by this point
+
+                    int actualPriorityA = GetPriorityIndex(folderModelA.PriorityName, true);
+                    int actualPriorityB = GetPriorityIndex(folderModelB.PriorityName, true);
+                    Debug.WriteLine("Actual Priorities: " + actualPriorityA + " | " + actualPriorityB);
+
+                    // if both have an override and one priority is greater thant he other, use the higher priority
+                    if (actualPriorityB > actualPriorityA) // higher priority folder found
+                    {
+                        Debug.WriteLine("Higher Priority: " + folderB);
+                        return folderB;
+                    }
+
+                    // if both have an override and both default priorities are the same, use their actual conflict resolution
+                    if (actualPriorityB == actualPriorityA)
+                    {
+                        // previous fail conditions are not possible at this point, just use the conflict resolution folder
+                        return TagViewModel.Instance.FolderPriorities[actualPriorityA].ConflictResolutionFolder;
+                    }
+
+                    //? if both of these conditions fail, just go to the default fail route where folderA wins
+                    Debug.WriteLine("Retained for having higher priority: " + folderA);
+                    return folderA;
                 }
             }
 
+            Debug.WriteLine("Retained for having higher priority: " + folderA);
+            return folderA;
+        }
+
+        public static FolderPriorityModel GetPriority(string name)
+        {
+            FolderPriorityModel[] priorities = TagViewModel.Instance.FolderPriorities.ToArray();
+
+            for (int i = 0; i < priorities.Length; i++)
+            {
+                if (name == priorities[i].Name)
+                {
+                    return priorities[i];
+                }
+            }
+
+            return null;
+        }
+
+        public static int GetPriorityIndex(string name, bool ignoreOverride) => GetPriorityIndex(name, out _, ignoreOverride);
+
+        public static int GetPriorityIndex(string name, out FolderPriorityModel priority, bool ignoreOverride)
+        {
+            FolderPriorityModel[] priorities = TagViewModel.Instance.FolderPriorities.ToArray();
+
+            for (int i = 0; i < priorities.Length; i++)
+            {
+                if (name == priorities[i].Name)
+                {
+                    priority = priorities[i];
+
+                    // a priority override of -1 means that the priority override is disabled, so in that instance we will return the index, or the priority's actual priority
+                    if (ignoreOverride || priorities[i].PriorityOverride == -1)
+                    {
+                        return i;
+                    }
+                    else
+                    {
+                        return priorities[i].PriorityOverride;
+                    }
+                }
+            }
+
+            priority = null;
             return -1;
         }
+
+        public static void ShiftPriorities(FolderPriorityModel sourcePriority, FolderPriorityModel targetPriority)
+        {
+            // gather the required indexes to shift the source priority
+            int sourceIndex = TagViewModel.Instance.FolderPriorities.IndexOf(sourcePriority);
+            int targetIndex = TagViewModel.Instance.FolderPriorities.IndexOf(targetPriority);
+
+            // remove the original instance of the priority from its source position
+            TagViewModel.Instance.FolderPriorities.RemoveAt(sourceIndex);
+
+            // re-insert the priority at the target position, the insertion will handle the shifting on its own
+            TagViewModel.Instance.FolderPriorities.Insert(targetIndex, sourcePriority);
+        }
+        #endregion
     }
 }

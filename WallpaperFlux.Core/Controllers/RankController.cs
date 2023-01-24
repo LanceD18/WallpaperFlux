@@ -320,11 +320,49 @@ namespace WallpaperFlux.Core.Controllers
         /// <returns></returns>
         public int GetImagesOfTypeRankSum(ImageType imageType)
         {
-            int count = 0;
-            for (var i = 1; i < RankData[imageType].Count; i++) //? i starts at 1 since rank 0 images are not included
+            int sum = 0;
+            for (int i = 1; i < RankData[imageType].Count; i++) //? i starts at 1 since rank 0 images are not included (would be multiplied by 0 anyways, but this method reduces iterations)
             {
-                count += RankData[imageType][i].Count * i; // i = rank
+                sum += RankData[imageType][i].Count * i; // i = rank
             }
+
+            return sum;
+        }
+
+        public int GetImagesOfTypeRankCountTotal(ImageType imageType)
+        {
+            int count = 0;
+            for (int i = 1; i < RankData[imageType].Count; i++) //? i starts at 1 since rank 0 images are not included (would be multiplied by 0 anyways)
+            {
+                count += GetImagesOfTypeRankCount(imageType, i);
+            }
+
+            return count;
+        }
+
+        public int GetImagesOfTypeRankCount(ImageType imageType, int rank)
+        {
+            return RankData[imageType][rank].Count;
+        }
+
+        public int GetRankCount(int rank)
+        {
+            int count = 0;
+
+            count += GetImagesOfTypeRankCount(ImageType.Static, rank);
+            count += GetImagesOfTypeRankCount(ImageType.GIF, rank);
+            count += GetImagesOfTypeRankCount(ImageType.Video, rank);
+
+            return count;
+        }
+
+        public int GetRankCountTotal()
+        {
+            int count = 0;
+
+            count += GetImagesOfTypeRankCountTotal(ImageType.Static);
+            count += GetImagesOfTypeRankCountTotal(ImageType.GIF);
+            count += GetImagesOfTypeRankCountTotal(ImageType.Video);
 
             return count;
         }

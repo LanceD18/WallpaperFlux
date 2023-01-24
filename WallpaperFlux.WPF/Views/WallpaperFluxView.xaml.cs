@@ -365,12 +365,18 @@ namespace WallpaperFlux.WPF.Views
 
             //! Keep in mind that the ViewWindow will be destroyed upon closing the TagView, so yes we need to add the event again
             //? Prevents the TagBoard from causing a crash the next time the tag view is opened if the tag view is closed with the TagBoard open
-            TagPresenter.ViewWindow.Closing += TagPresenter_ViewWindow_Closed_TagBoardFix;
+            TagPresenter.ViewWindow.Closing += TagPresenter_ViewWindow_Closed_DrawerFix;
         }
 
-        private void MenuItem_MoreSettings_Click(object sender, RoutedEventArgs e) => 
+        private void MenuItem_MoreSettings_Click(object sender, RoutedEventArgs e)
+        {
             WindowUtil.PresentWindow(ref SettingsPresenter, typeof(SettingsView), typeof(SettingsViewModel),
                 WindowUtil.SETTINGS_WINDOW_WIDTH, WindowUtil.SETTINGS_WINDOW_HEIGHT, "Settings", false);
+
+            //! Keep in mind that the ViewWindow will be destroyed upon closing the TagView, so yes we need to add the event again
+            //? Prevents the TagBoard from causing a crash the next time the tag view is opened if the tag view is closed with the TagBoard open
+            SettingsPresenter.ViewWindow.Closing += SettingsPresenter_ViewWindow_Closed_DrawerFix;
+        }
 
         /// <summary>
         /// Disables the TagBoard on closing the view
@@ -378,7 +384,23 @@ namespace WallpaperFlux.WPF.Views
         /// <param name="sender"></param>
         /// <param name="e"></param>
         //? Prevents the TagBoard from causing a crash the next time the tag view is opened if the tag view is closed with the TagBoard open
-        private void TagPresenter_ViewWindow_Closed_TagBoardFix(object sender, EventArgs e) => TagViewModel.Instance.TagboardToggle = false;
+        private void TagPresenter_ViewWindow_Closed_DrawerFix(object sender, EventArgs e)
+        {
+            TagViewModel.Instance.CloseFolderPriority();
+            TagViewModel.Instance.CloseTagBoard();
+        }
+
+        /// <summary>
+        /// Disables the Settings Window on closing the view
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        //? Prevents the TagBoard from causing a crash the next time the tag view is opened if the tag view is closed with the TagBoard open
+        private void SettingsPresenter_ViewWindow_Closed_DrawerFix(object sender, EventArgs e)
+        {
+            SettingsViewModel.Instance.CloseRankGraph();
+        }
+
         #endregion
 
         #region Image Selector

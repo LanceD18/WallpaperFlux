@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using WallpaperFlux.Core.Controllers;
 using WallpaperFlux.Core.Models.Theme;
 using WallpaperFlux.Core.Tools;
 
@@ -15,6 +16,8 @@ namespace WallpaperFlux.Core.Util
         public static ThemeSettings ThemeSettings => Theme.Settings.ThemeSettings;
         public static FrequencyCalculator FrequencyCalculator => Theme.Settings.ThemeSettings.FrequencyCalc;
         public static VideoSettings VideoSettings => Theme.Settings.ThemeSettings.VideoSettings;
+
+        public static RankController RankController => Theme.RankController;
 
         static ThemeUtil()
         {

@@ -172,10 +172,13 @@ namespace WallpaperFlux.Core.JSON
 
         public string ConflictResolutionFolder;
 
-        public SimplifiedFolderPriority(string name, string conflictResolutionFolder)
+        public int PriorityOverride;
+
+        public SimplifiedFolderPriority(string name, string conflictResolutionFolder, int priorityOverride = -1)
         {
             Name = name;
             ConflictResolutionFolder = conflictResolutionFolder;
+            PriorityOverride = priorityOverride;
         }
     }
 }

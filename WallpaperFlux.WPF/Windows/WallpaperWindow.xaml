@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:gif="http://wpfanimatedgif.codeplex.com"
+        xmlns:gif="https://github.com/XamlAnimatedGif/XamlAnimatedGif"
         xmlns:ffme="clr-namespace:Unosquare.FFME;assembly=ffme.win"
         xmlns:local="clr-namespace:WallpaperFlux.WPF"
         xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
@@ -15,31 +15,42 @@
         Title="WallpaperWindow" Height="450" Width="800" WindowStyle="None">
     <Grid>
         <Viewbox x:Name="WallpaperVlcViewBox">
-            <vlc:VideoView x:Name="WallpaperVlc"/>
+            <vlc:VideoView x:Name="WallpaperVlc" Visibility="Hidden"/>
         </Viewbox>
 
         <Image x:Name="WallpaperImage" Width="auto" Height="auto" Visibility="Hidden"/>
         <ffme:MediaElement x:Name="WallpaperMediaElementFFME" Width="auto" Height="auto" UnloadedBehavior="Manual"
                            LoadedBehavior="Play" LoopingBehavior="Play" MediaEnded="WallpaperMediaElementFFME_OnMediaEnded" Visibility="Hidden"/>
         <MediaElement x:Name="WallpaperMediaElement" Width="auto" Height="auto" UnloadedBehavior="Manual" LoadedBehavior="Play" MediaEnded="WallpaperMediaElement_OnMediaEnded" Visibility="Hidden"/>
-        <hc:GifImage/>
+        <!--
+        <hc:GifImage x:Name="WallpaperGif" Width="auto" Height="auto"/>
+        -->
+
+        <!--
+        <Frame  x:Name="MpvFrame"
+                VerticalAlignment="Stretch" VerticalContentAlignment="Center"
+                HorizontalAlignment="Stretch"  HorizontalContentAlignment="Center" Source="MpvWindow.xaml" Background="Transparent" />
+        -->
+
+        <!--
+        <media:MediaPlayer x:Name="WallpaperMediaPlayerMPV" Visibility="Hidden"/>
+        -->
 
         <!-- ! Improperly using this will break the WallpaperWindow handles until this is disabled -->
         <!--
-        <WindowsFormsHost Width="auto" Height="auto" x:Name="WallpaperMpvFormHost">
+        <WindowsFormsHost Width="auto" Height="auto" x:Name="MpvFormHost">
             <windowsForms:Panel x:Name="MpvPlayerHost"/>
         </WindowsFormsHost>
         -->
 
         <!--
-        <media:MediaPlayer x:Name="WallpaperMediaPlayerMPV">
-            <media:MpvPlayerHost x:Name="MpvPlayerHostElement" Width="auto" Height="auto" Loop="True" AutoPlay="True"/>
+        <media:MediaPlayer x:Name="MpvMediaPlayer">
+            <media:MpvPlayerHost x:Name="MpvHost" Width="auto" Height="auto" Loop="True" AutoPlay="True"/>
         </media:MediaPlayer>
         -->
 
         <!--
-        <media:MpvPlayerHost x:Name="MpvPlayerHostElement" Width="auto" Height="auto" Loop="True" AutoPlay="True" 
-                             Player="{Binding WallpaperMpv}"/>
+        <media:MpvPlayerHost x:Name="MpvHost" Width="auto" Height="auto" Loop="True" AutoPlay="True"/>
         -->
     </Grid>
 </views:MvxWindow>

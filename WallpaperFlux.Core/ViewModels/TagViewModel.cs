@@ -332,7 +332,7 @@ namespace WallpaperFlux.Core.ViewModels
         public void InitDrawers()
         {
             // --- TagBoard ---
-            CloseTagBoardCommand = new MvxCommand(() => TagboardToggle = false); //? the open/toggle TagBoard is initially called by CategoryModel and sent to a method here
+            CloseTagBoardCommand = new MvxCommand(CloseTagBoard); //? the open/toggle TagBoard is initially called by CategoryModel and sent to a method here
             SelectImagesFromTagBoardCommand = new MvxCommand(() => RebuildImageSelector(SearchValidImagesWithTagBoard()));
             SetMandatoryTagBoardSelectionCommand = new MvxCommand(() => SetAllTagBoardTagsSearchType(TagSearchType.Mandatory));
             SetOptionalTagBoardSelectionCommand = new MvxCommand(() => SetAllTagBoardTagsSearchType(TagSearchType.Optional));
@@ -354,7 +354,7 @@ namespace WallpaperFlux.Core.ViewModels
             }
 
             ViewFolderPriorityCommand = new MvxCommand(ToggleFolderPriority);
-            CloseFolderPriorityCommand = new MvxCommand(() => FolderPriorityToggle = false);
+            CloseFolderPriorityCommand = new MvxCommand(CloseFolderPriority);
             CreatePriorityCommand = new MvxCommand(CreatePriority);
             DeleteSelectedPrioritiesCommand = new MvxCommand(DeleteSelectedPriorities);
 
@@ -527,6 +527,11 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
+        public void CloseTagBoard()
+        {
+            TagboardToggle = false;
+        }
+
         #endregion
 
         #region Folder Priority
@@ -535,15 +540,13 @@ namespace WallpaperFlux.Core.ViewModels
 
         public FolderPriorityModel[] GetSelectedFolderPriorities() => FolderPriorities.Where(f => f.IsSelected).ToArray();
 
-
-
         public void RebuildFolderPriorities(SimplifiedFolderPriority[] newFolderPriorities)
         {
             FolderPriorities = new MvxObservableCollection<FolderPriorityModel>();
 
             foreach (SimplifiedFolderPriority priority in newFolderPriorities)
             {
-                FolderPriorities.Add(new FolderPriorityModel(priority.Name, priority.ConflictResolutionFolder));
+                FolderPriorities.Add(new FolderPriorityModel(priority.Name, priority.ConflictResolutionFolder, priority.PriorityOverride));
             }
         }
 
@@ -560,7 +563,10 @@ namespace WallpaperFlux.Core.ViewModels
             return false;
         }
 
-
+        public void CloseFolderPriority()
+        {
+            FolderPriorityToggle = false;
+        }
 
         #endregion
 

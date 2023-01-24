@@ -14,6 +14,7 @@
     <PackageReference Include="FFmpeg.AutoGen" Version="4.4.1.1" />
     <PackageReference Include="LibVLCSharp" Version="3.6.7" />
     <PackageReference Include="LibVLCSharp.WPF" Version="3.6.7" />
+    <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.0-beta.701" />
     <PackageReference Include="MediaPlayer.Wpf.Mpv" Version="1.0.1" />
     <PackageReference Include="MediaToolkit" Version="1.1.0.1" />
     <PackageReference Include="Mpv.NET" Version="1.2.0" />
@@ -25,8 +26,8 @@
     <PackageReference Include="SharpGen.Runtime" Version="1.2.1" />
     <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.18" />
     <PackageReference Include="Vlc.DotNet.Wpf" Version="3.1.0" />
-    <PackageReference Include="WpfAnimatedGif" Version="2.0.2" />
     <PackageReference Include="WpfScreenHelper" Version="1.0.0" />
+    <PackageReference Include="XamlAnimatedGif" Version="2.1.0" />
   </ItemGroup>
 
   <ItemGroup>
