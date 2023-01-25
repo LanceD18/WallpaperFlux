@@ -371,6 +371,24 @@ namespace WallpaperFlux.Core.Models
 
         public bool ContainsTag(TagModel tag) => Tags.Contains(tag);
 
+        public bool ContainsChildTag(TagModel tag) //? this means that the image may not have this tag but *does* have a child tag of this tag
+        {
+            foreach (TagModel childTag in tag.GetChildTags())
+            {
+                if (ContainsTagOrChildTag(childTag))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public bool ContainsTagOrChildTag(TagModel tag)
+        {
+            return ContainsTag(tag) || ContainsChildTag(tag);
+        }
+
         public void AddTagNamingException(TagModel tag) => Tags.AddNamingException(tag);
         #endregion
 

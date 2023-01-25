@@ -285,13 +285,21 @@
 
                                 <!-- Rank Counters -->
                                 <StackPanel Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalAlignment="Bottom" Orientation="Horizontal">
-                                    <TextBlock Text="{Binding RankedText}" Margin="0 0 10 0 "/>
-                                    <TextBlock Text="{Binding UnrankedText}"/>
+                                    <TextBlock Text="{Binding RankedText}" Margin="0 0 10 0" FontStyle="Normal">
+                                        <TextBlock.Style>
+                                            <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding UnrankedText}" FontStyle="Normal">
+                                        <TextBlock.Style>
+                                            <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
+                                        </TextBlock.Style>
+                                    </TextBlock>
                                 </StackPanel>
 
                                 <StackPanel Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="2"  Orientation="Horizontal" Margin="0 5 0 0" HorizontalAlignment="Center"
                                             adonisExtensions:LayerExtension.Layer="3">
-                                    <CheckBox Content="All" IsChecked="{Binding RankColumnToggle}" Margin="0 0 10 0"/>
+                                    <CheckBox Content="All" IsChecked="{Binding AllColumnToggle}" Margin="0 0 10 0"/>
                                     <CheckBox Content="Static" IsChecked="{Binding StaticColumnToggle}" Margin="0 0 10 0"/>
                                     <CheckBox Content="GIF" IsChecked="{Binding GifColumnToggle}" Margin="0 0 10 0"/>
                                     <CheckBox Content="Video" IsChecked="{Binding VideoColumnToggle}" Margin="0 0 10 0"/>

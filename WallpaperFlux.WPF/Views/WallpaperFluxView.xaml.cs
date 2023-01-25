@@ -386,8 +386,9 @@ namespace WallpaperFlux.WPF.Views
         //? Prevents the TagBoard from causing a crash the next time the tag view is opened if the tag view is closed with the TagBoard open
         private void TagPresenter_ViewWindow_Closed_DrawerFix(object sender, EventArgs e)
         {
-            TagViewModel.Instance.CloseFolderPriority();
             TagViewModel.Instance.CloseTagBoard();
+            TagViewModel.Instance.CloseFolderPriority();
+            TagViewModel.Instance.CloseRankGraph();
         }
 
         /// <summary>

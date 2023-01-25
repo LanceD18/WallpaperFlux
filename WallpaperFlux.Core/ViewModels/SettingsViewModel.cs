@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using LiveChartsCore;
+using LiveChartsCore.Drawing;
 using LiveChartsCore.Kernel.Drawing;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Drawing;
@@ -21,7 +22,7 @@ namespace WallpaperFlux.Core.ViewModels
 
         public SettingsModel Settings { get; set; } = ThemeUtil.Theme.Settings; //? most of the data handling is managed through here
 
-        public ColumnSeries<int> RankColumnSeries = new ColumnSeries<int>();
+        public ColumnSeries<int> AllColumnSeries = new ColumnSeries<int>();
         public ColumnSeries<int> StaticColumnSeries = new ColumnSeries<int>();
         public ColumnSeries<int> GifColumnSeries = new ColumnSeries<int>();
         public ColumnSeries<int> VideoColumnSeries = new ColumnSeries<int>();
@@ -38,23 +39,35 @@ namespace WallpaperFlux.Core.ViewModels
 
                 if (value) // update graph
                 {
-                    List<int> rankValues = new List<int>();
+                    List<int> allValues = new List<int>();
                     List<int> staticValues = new List<int>();
                     List<int> gifValues = new List<int>();
                     List<int> videoValues = new List<int>();
 
+                    // we need a buffer value for rank 0 since we aren't actually displaying the un-ranked images
+                    // without this buffer, the graph will always place the bars 1 value off
+                    allValues.Add(0);
+                    staticValues.Add(0);
+                    gifValues.Add(0);
+                    videoValues.Add(0);
+
                     for (int i = 1; i <= ThemeUtil.ThemeSettings.MaxRank; i++) //? not including un-ranked, those will take over the majority of the graph
                     {
-                        rankValues.Add(ThemeUtil.RankController.GetRankCount(i));
+                        allValues.Add(ThemeUtil.RankController.GetRankCount(i));
                         staticValues.Add(ThemeUtil.RankController.GetImagesOfTypeRankCount(ImageType.Static, i));
                         gifValues.Add(ThemeUtil.RankController.GetImagesOfTypeRankCount(ImageType.GIF, i));
                         videoValues.Add(ThemeUtil.RankController.GetImagesOfTypeRankCount(ImageType.Video, i));
                     }
 
-                    RankColumnSeries.Values = rankValues;
+                    AllColumnSeries.Values = allValues;
                     StaticColumnSeries.Values = staticValues;
                     GifColumnSeries.Values = gifValues;
                     VideoColumnSeries.Values = videoValues;
+
+                    //xRankColumnSeries.Fill = new SolidColorPaint(SKColors.Blue);
+                    StaticColumnSeries.Fill = new SolidColorPaint(SKColors.SlateBlue);
+                    GifColumnSeries.Fill = new SolidColorPaint(SKColors.LimeGreen);
+                    VideoColumnSeries.Fill = new SolidColorPaint(SKColors.OrangeRed);
                 }
             }
         }
@@ -63,15 +76,14 @@ namespace WallpaperFlux.Core.ViewModels
 
         public string UnrankedText => "Unranked: " + ThemeUtil.RankController.GetRankCount(0);
 
-        private bool _rankColumnToggle = true;
-        public bool RankColumnToggle
+        private bool _allColumnToggle = true;
+        public bool AllColumnToggle
         {
-            get => _rankColumnToggle;
+            get => _allColumnToggle;
             set
             {
-                SetProperty(ref _rankColumnToggle, value);
-                RankColumnSeries.IsVisible = value;
-                RankColumnSeries.IsVisible = value;
+                SetProperty(ref _allColumnToggle, value);
+                AllColumnSeries.IsVisible = value;
             }
         }
 
@@ -82,7 +94,6 @@ namespace WallpaperFlux.Core.ViewModels
             set
             {
                 SetProperty(ref _staticColumnToggle, value);
-                StaticColumnSeries.IsVisible = value;
                 StaticColumnSeries.IsVisible = value;
             }
         }
@@ -95,7 +106,6 @@ namespace WallpaperFlux.Core.ViewModels
             {
                 SetProperty(ref _gifColumnToggle, value);
                 GifColumnSeries.IsVisible = value;
-                GifColumnSeries.IsVisible = value;
             }
         }
 
@@ -106,7 +116,6 @@ namespace WallpaperFlux.Core.ViewModels
             set
             {
                 SetProperty(ref _videoColumnToggle, value);
-                VideoColumnSeries.IsVisible = value;
                 VideoColumnSeries.IsVisible = value;
             }
         }
@@ -122,19 +131,19 @@ namespace WallpaperFlux.Core.ViewModels
         //? LiveChart2 Docs: https://lvcharts.com/docs/WPF/2.0.0-beta.330/CartesianChart.Cartesian%20chart%20control (Don't accidentally use LiveChart1 docs)
         public SettingsViewModel()
         {
-            RankColumnSeries.Name = "All";
+            AllColumnSeries.Name = "All";
             StaticColumnSeries.Name = "Static";
             GifColumnSeries.Name = "GIF";
             VideoColumnSeries.Name = "Video";
 
-            RankColumnSeries.IsVisible = RankColumnToggle;
+            AllColumnSeries.IsVisible = AllColumnToggle;
             StaticColumnSeries.IsVisible = StaticColumnToggle;
             GifColumnSeries.IsVisible = GifColumnToggle;
             VideoColumnSeries.IsVisible = VideoColumnToggle;
 
             RankSeries = new ISeries[]
             {
-                RankColumnSeries,
+                AllColumnSeries,
                 StaticColumnSeries,
                 GifColumnSeries,
                 VideoColumnSeries

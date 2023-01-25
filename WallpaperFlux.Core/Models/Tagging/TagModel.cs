@@ -295,6 +295,8 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         public IMvxCommand RemoveRenameFolderCommand { get; set; }
 
+        public IMvxCommand ToggleRankGraphCommand { get; set; }
+
         #endregion
 
         public TagModel(string name, CategoryModel parentCategory, bool useForNaming = true, bool enabled = true, string renameFolderPath = "")
@@ -332,6 +334,9 @@ namespace WallpaperFlux.Core.Models.Tagging
             // Folder Rename Priority
             AssignRenameFolderCommand = new MvxCommand(() => RenameFolderPath = FolderUtil.GetValidFolderPath());
             RemoveRenameFolderCommand = new MvxCommand(() => RenameFolderPath = string.Empty);
+
+            // Rank Graph
+            ToggleRankGraphCommand = new MvxCommand(TagViewModel.Instance.ToggleRankGraph);
         }
 
         #region Image Addition / Removal

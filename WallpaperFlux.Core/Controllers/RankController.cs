@@ -7,6 +7,7 @@ using LanceTools;
 using LanceTools.Collections.Reactive;
 using WallpaperFlux.Core.Collections;
 using WallpaperFlux.Core.Models;
+using WallpaperFlux.Core.Models.Tagging;
 using WallpaperFlux.Core.Models.Theme;
 using WallpaperFlux.Core.Util;
 
@@ -312,7 +313,7 @@ namespace WallpaperFlux.Core.Controllers
         }
         #endregion
 
-        #region ImageTypeWeights
+        #region Rank Count & Weights/Sum
         /// <summary>
         /// Gets the sum of the collective ranks of all images of an image type, a rank 100 image adds 100 to the sum while a rank 0 image adds 0 to the sum
         /// </summary>
@@ -329,6 +330,11 @@ namespace WallpaperFlux.Core.Controllers
             return sum;
         }
 
+        public int GetImagesOfTypeRankCount(ImageType imageType, int rank)
+        {
+            return RankData[imageType][rank].Count;
+        }
+
         public int GetImagesOfTypeRankCountTotal(ImageType imageType)
         {
             int count = 0;
@@ -338,11 +344,6 @@ namespace WallpaperFlux.Core.Controllers
             }
 
             return count;
-        }
-
-        public int GetImagesOfTypeRankCount(ImageType imageType, int rank)
-        {
-            return RankData[imageType][rank].Count;
         }
 
         public int GetRankCount(int rank)
@@ -363,6 +364,29 @@ namespace WallpaperFlux.Core.Controllers
             count += GetImagesOfTypeRankCountTotal(ImageType.Static);
             count += GetImagesOfTypeRankCountTotal(ImageType.GIF);
             count += GetImagesOfTypeRankCountTotal(ImageType.Video);
+
+            return count;
+        }
+
+        public int GetRankCountOfTag(int rank, TagModel tag)
+        {
+            int count = 0;
+
+            count += GetImagesOfTypeRankCountOfTag(ImageType.Static, rank, tag);
+            count += GetImagesOfTypeRankCountOfTag(ImageType.GIF, rank, tag);
+            count += GetImagesOfTypeRankCountOfTag(ImageType.Video, rank, tag);
+
+            return count;
+        }
+
+        public int GetImagesOfTypeRankCountOfTag(ImageType imageType, int rank, TagModel tag)
+        {
+            int count = 0;
+
+            foreach (ImageModel image in RankData[imageType][rank])
+            {
+                if (image.ContainsTagOrChildTag(tag)) count++;
+            }
 
             return count;
         }
