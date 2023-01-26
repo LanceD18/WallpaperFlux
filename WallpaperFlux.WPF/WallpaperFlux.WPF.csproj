@@ -33,10 +33,10 @@
 
   <ItemGroup>
     <Reference Include="LanceTools">
-      <HintPath>..\..\..\..\Code Library\C#\LanceTools\LanceTools\LanceTools\bin\Release\LanceTools.dll</HintPath>
+      <HintPath>..\..\LanceTools\LanceTools\bin\Release\LanceTools.dll</HintPath>
     </Reference>
     <Reference Include="LanceTools.WPF">
-      <HintPath>..\..\..\..\Code Library\C#\LanceTools\LanceTools\LanceTools.WPF\bin\Release\netcoreapp3.1\LanceTools.WPF.dll</HintPath>
+      <HintPath>..\..\LanceTools\LanceTools.WPF\bin\Release\netcoreapp3.1\LanceTools.WPF.dll</HintPath>
     </Reference>
   </ItemGroup>
 

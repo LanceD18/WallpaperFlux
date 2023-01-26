@@ -159,7 +159,12 @@ namespace WallpaperFlux.Core.Tools
 
         public double GetRelativeFrequency(ImageType imageType) => RelativeFrequency[imageType];
 
-        public double GetExactFrequency(ImageType imageType) => ExactFrequency[imageType];
+        public double GetExactFrequency(ImageType imageType)
+        {
+            if (ThemeUtil.Theme.RankController.GetImagesOfTypeRankSum(imageType) == 0) ExactFrequency[imageType] = 0;
+
+            return ExactFrequency[imageType];
+        }
 
         public void UpdateFrequency(ImageType imageType, FrequencyType frequencyType, double value, bool valueIsPercentage)
         {
