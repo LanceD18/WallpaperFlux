@@ -13,6 +13,7 @@
              xmlns:hc="https://handyorg.github.io/handycontrol"
              xmlns:viewModels="clr-namespace:WallpaperFlux.Core.ViewModels;assembly=WallpaperFlux.Core"
              xmlns:system="clr-namespace:System;assembly=System.Runtime"
+             xmlns:wpf="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
              mc:Ignorable="d" FontSize="12" FontFamily="Segoe UI"
              d:DesignHeight="450" d:DesignWidth="800"
              BorderBrush="{Binding WindowBorderBrushColor, Converter={StaticResource ColorToBrushConverter}, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
@@ -23,6 +24,7 @@
         <ResourceDictionary>
             <system:Double x:Key="TagboardWidth">375</system:Double>
             <system:Double x:Key="FolderPriorityWidth">275</system:Double>
+            <system:Double x:Key="RankGraphHeight">300</system:Double>
         </ResourceDictionary>
     </views:MvxWpfView.Resources>
 
@@ -396,7 +398,7 @@
 
                                                                 <Separator/>
 
-                                                                <MenuItem Header="Show Rank Distribution Graph"/>
+                                                                <MenuItem Header="Show Rank Distribution Graph" Command="{Binding ToggleRankGraphCommand}"/>
                                                             </ContextMenu>
                                                         </GroupBox.ContextMenu>
                                                     </GroupBox>
@@ -647,15 +649,98 @@
 
                                                 <Separator/>
 
-                                                <MenuItem Header="{Binding ConflictResolutionFolderContextMenuString}" IsEnabled="False"/>
-                                                <MenuItem Header="Assign Conflict Resolution Folder" Command="{Binding AssignConflictResolutionFolder}"/>
-                                                <MenuItem Header="Remove Conflict Resolution Folder" Command="{Binding RemoveConflictResolutionFolder}"/>
+                                                <MenuItem Header="{Binding ConflictResolutionFolderContextMenuText}" IsEnabled="False"/>
+                                                <MenuItem Header="Assign Conflict Resolution Folder" Command="{Binding AssignConflictResolutionFolderCommand}"/>
+                                                <MenuItem Header="Remove Conflict Resolution Folder" Command="{Binding RemoveConflictResolutionFolderCommand}"/>
+
+                                                <Separator/>
+
+                                                <MenuItem Header="{Binding PriorityOverrideText}" IsEnabled="False"/>
+                                                <MenuItem Header="Override Priority"
+                                                          Command="{Binding OverridePriorityCommand}"
+                                                          ToolTip="Set to -1 to disable | Overrides the positional priority. If the default conflict resolution is not applicable, use the override instead"/>
                                             </ContextMenu>
                                         </GroupBox.ContextMenu>
                                     </GroupBox>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
+                    </GroupBox>
+                </Grid>
+            </GroupBox>
+
+        </hc:Drawer>
+
+        <!--? Rank Graph Drawer -->
+        <hc:Drawer Dock="Bottom" ShowMode="Cover" IsOpen="{Binding RankGraphToggle}">
+            <GroupBox>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <!--<ColumnDefinition Width="{adonisUi:Space 1}"/>-->
+                        <ColumnDefinition Width="0"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="0"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- You can just drag the window to see more tags if need be -->
+                    <GroupBox Height="{StaticResource RankGraphHeight}"
+                              Grid.Row="2" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:LayerExtension.Layer="2">
+                        <!--? Header -->
+                        <GroupBox.Header>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="0"/>
+                                    <ColumnDefinition Width="auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="0"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Title -->
+                                <TextBlock Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalAlignment="Center" Text="Rank Distribution Graph"
+                                           FontWeight="Medium" Margin="0 0 0 5">
+                                    <TextBlock.Style>
+                                        <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
+                                    </TextBlock.Style>
+                                </TextBlock>
+
+                                <!-- Tag Name -->
+                                <TextBlock Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                           FontStyle="Normal" Text="{Binding SelectedTagName}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
+                                    </TextBlock.Style>
+                                </TextBlock>
+
+                                <StackPanel Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="2"  Orientation="Horizontal" Margin="0 5 0 0" HorizontalAlignment="Center"
+                                            adonisExtensions:LayerExtension.Layer="3">
+                                    <CheckBox Content="All" IsChecked="{Binding AllColumnToggle}" Margin="0 0 10 0"/>
+                                    <CheckBox Content="Static" IsChecked="{Binding StaticColumnToggle}" Margin="0 0 10 0"/>
+                                    <CheckBox Content="GIF" IsChecked="{Binding GifColumnToggle}" Margin="0 0 10 0"/>
+                                    <CheckBox Content="Video" IsChecked="{Binding VideoColumnToggle}" Margin="0 0 10 0"/>
+                                </StackPanel>
+
+                                <!-- Exit -->
+                                <Button Grid.Row="1" Grid.Column="3" HorizontalAlignment="Right" Content="X" Command="{Binding CloseRankGraphCommand}"
+                                        Margin="5 0 5 0" Foreground="Red" FontSize="16" FontWeight="Bold" adonisExtensions:LayerExtension.Layer="1"/>
+                            </Grid>
+                        </GroupBox.Header>
+
+                        <wpf:CartesianChart Series="{Binding RankSeries}" LegendPosition="Top" ZoomMode="X"/>
+
                     </GroupBox>
                 </Grid>
             </GroupBox>

@@ -74,6 +74,7 @@ namespace WallpaperFlux.Core.Models.Theme
 
     public class SettingsModel : MvxNotifyPropertyChanged
     {
+
         // Theme Settings
         public ThemeSettings ThemeSettings { get; set; } = new ThemeSettings();
 
@@ -82,6 +83,7 @@ namespace WallpaperFlux.Core.Models.Theme
         public bool EnableDefaultThemeHotkey { get; set; }
 
         // ----- WPF -----
+
         // Commands
         [JsonIgnore] public IMvxCommand UpdateMaxRankCommand { get; set; }
 
@@ -94,6 +96,7 @@ namespace WallpaperFlux.Core.Models.Theme
         public void InitCommands()
         {
             UpdateMaxRankCommand = new MvxCommand(UpdateMaxRank);
+
         }
 
         #region Commands

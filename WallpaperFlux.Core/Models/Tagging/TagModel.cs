@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using LanceTools;
+using LanceTools.IO;
 using MvvmCross.Commands;
 using MvvmCross.ViewModels;
 using Newtonsoft.Json;
@@ -294,6 +295,8 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         public IMvxCommand RemoveRenameFolderCommand { get; set; }
 
+        public IMvxCommand ToggleRankGraphCommand { get; set; }
+
         #endregion
 
         public TagModel(string name, CategoryModel parentCategory, bool useForNaming = true, bool enabled = true, string renameFolderPath = "")
@@ -331,6 +334,9 @@ namespace WallpaperFlux.Core.Models.Tagging
             // Folder Rename Priority
             AssignRenameFolderCommand = new MvxCommand(() => RenameFolderPath = FolderUtil.GetValidFolderPath());
             RemoveRenameFolderCommand = new MvxCommand(() => RenameFolderPath = string.Empty);
+
+            // Rank Graph
+            ToggleRankGraphCommand = new MvxCommand(TagViewModel.Instance.ToggleRankGraph);
         }
 
         #region Image Addition / Removal
@@ -437,7 +443,9 @@ namespace WallpaperFlux.Core.Models.Tagging
         /// <returns></returns>
         public HashSet<ImageModel> GetLinkedImages()
         {
-            HashSet<ImageModel> images = new HashSet<ImageModel>(LinkedImages);
+            //? Only include images that actually exist (helps to detect and remove deleted images)
+            HashSet<ImageModel> images = new HashSet<ImageModel>(
+                LinkedImages.Where(f => FileUtil.Exists(f.Path)));
 
             foreach (TagModel tag in ChildTags)
             {

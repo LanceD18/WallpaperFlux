@@ -28,7 +28,6 @@ namespace WallpaperFlux.WPF.Views
 
             //! [Now initialized through the constructor of WindowUtil] ViewModel = SettingsViewModel.Instance = WindowUtil.InitializeViewModel(SettingsViewModel.Instance);
             ViewModel = SettingsViewModel.Instance;
-
         }
     }
 }

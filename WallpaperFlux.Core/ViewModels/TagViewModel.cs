@@ -10,8 +10,12 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using HandyControl.Tools.Extension;
+using LiveChartsCore;
+using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Painting;
 using MvvmCross.Commands;
 using MvvmCross.ViewModels;
+using SkiaSharp;
 using WallpaperFlux.Core.Collections;
 using WallpaperFlux.Core.JSON;
 using WallpaperFlux.Core.Models;
@@ -53,6 +57,18 @@ namespace WallpaperFlux.Core.ViewModels
 
                 HighlightTags();
                 RaisePropertyChanged(() => CategoryIsSelected);
+            }
+        }
+
+        public string SelectedTagName
+        {
+            get
+            {
+                if (SelectedCategory == null) return "";
+                if (SelectedCategory.SelectedTagTab == null) return "";
+                if (SelectedCategory.SelectedTagTab.SelectedTag == null) return "";
+
+                return SelectedCategory.SelectedTagTab.SelectedTag.Name;
             }
         }
 
@@ -211,6 +227,17 @@ namespace WallpaperFlux.Core.ViewModels
 
         #endregion
 
+        #region --- Rank Graph ---
+
+        public ColumnSeries<int> AllColumnSeries = new ColumnSeries<int>();
+        public ColumnSeries<int> StaticColumnSeries = new ColumnSeries<int>();
+        public ColumnSeries<int> GifColumnSeries = new ColumnSeries<int>();
+        public ColumnSeries<int> VideoColumnSeries = new ColumnSeries<int>();
+
+        public ISeries[] RankSeries { get; set; }
+
+        #endregion
+
         #endregion
 
         #endregion
@@ -263,6 +290,67 @@ namespace WallpaperFlux.Core.ViewModels
             set => SetProperty(ref _folderPriorityToggle, value);
         }
 
+        #region Rank Graph
+
+        private bool _rankGraphToggle;
+        public bool RankGraphToggle
+        {
+            get => _rankGraphToggle;
+            set
+            {
+                SetProperty(ref _rankGraphToggle, value);
+
+                if (value) UpdateRankGraph();
+            }
+        }
+
+
+        private bool _allColumnToggle = true;
+        public bool AllColumnToggle
+        {
+            get => _allColumnToggle;
+            set
+            {
+                SetProperty(ref _allColumnToggle, value);
+                AllColumnSeries.IsVisible = value;
+            }
+        }
+
+        private bool _staticColumnToggle;
+        public bool StaticColumnToggle
+        {
+            get => _staticColumnToggle;
+            set
+            {
+                SetProperty(ref _staticColumnToggle, value);
+                StaticColumnSeries.IsVisible = value;
+            }
+        }
+
+        private bool _gifColumnToggle;
+        public bool GifColumnToggle
+        {
+            get => _gifColumnToggle;
+            set
+            {
+                SetProperty(ref _gifColumnToggle, value);
+                GifColumnSeries.IsVisible = value;
+            }
+        }
+
+        private bool _videoColumnToggle;
+        public bool VideoColumnToggle
+        {
+            get => _videoColumnToggle;
+            set
+            {
+                SetProperty(ref _videoColumnToggle, value);
+                VideoColumnSeries.IsVisible = value;
+            }
+        }
+
+        #endregion
+
         public bool CanDeletePriorities => SelectedFolderPriority != null;
         #endregion
 
@@ -304,6 +392,12 @@ namespace WallpaperFlux.Core.ViewModels
 
         #endregion
 
+        #region --- RankGraph ---
+
+        public IMvxCommand CloseRankGraphCommand { get; set; }
+
+        #endregion
+
         #endregion
 
         #endregion
@@ -331,8 +425,8 @@ namespace WallpaperFlux.Core.ViewModels
 
         public void InitDrawers()
         {
-            // --- TagBoard ---
-            CloseTagBoardCommand = new MvxCommand(() => TagboardToggle = false); //? the open/toggle TagBoard is initially called by CategoryModel and sent to a method here
+            //? --- TagBoard ---
+            CloseTagBoardCommand = new MvxCommand(CloseTagBoard); //? the open/toggle TagBoard is initially called by CategoryModel and sent to a method here
             SelectImagesFromTagBoardCommand = new MvxCommand(() => RebuildImageSelector(SearchValidImagesWithTagBoard()));
             SetMandatoryTagBoardSelectionCommand = new MvxCommand(() => SetAllTagBoardTagsSearchType(TagSearchType.Mandatory));
             SetOptionalTagBoardSelectionCommand = new MvxCommand(() => SetAllTagBoardTagsSearchType(TagSearchType.Optional));
@@ -340,7 +434,7 @@ namespace WallpaperFlux.Core.ViewModels
 
             TagBoardTags.CollectionChanged += TagBoardTagsOnCollectionChanged;
 
-            // --- Folder Priority ---
+            //? --- Folder Priority ---
             /*x
             if (ThemeUtil.Theme.PreLoadedFolderPriorities != null) // only access this if a load has been processed
             {
@@ -354,7 +448,7 @@ namespace WallpaperFlux.Core.ViewModels
             }
 
             ViewFolderPriorityCommand = new MvxCommand(ToggleFolderPriority);
-            CloseFolderPriorityCommand = new MvxCommand(() => FolderPriorityToggle = false);
+            CloseFolderPriorityCommand = new MvxCommand(CloseFolderPriority);
             CreatePriorityCommand = new MvxCommand(CreatePriority);
             DeleteSelectedPrioritiesCommand = new MvxCommand(DeleteSelectedPriorities);
 
@@ -368,6 +462,28 @@ namespace WallpaperFlux.Core.ViewModels
             });
 
             RemoveDefaultResolutionCommand = new MvxCommand(() => TaggingUtil.DefaultConflictResolutionPath = string.Empty);
+
+            //? --- Rank Graph ---
+
+            AllColumnSeries.Name = "All";
+            StaticColumnSeries.Name = "Static";
+            GifColumnSeries.Name = "GIF";
+            VideoColumnSeries.Name = "Video";
+
+            AllColumnSeries.IsVisible = AllColumnToggle;
+            StaticColumnSeries.IsVisible = StaticColumnToggle;
+            GifColumnSeries.IsVisible = GifColumnToggle;
+            VideoColumnSeries.IsVisible = VideoColumnToggle;
+
+            RankSeries = new ISeries[]
+            {
+                AllColumnSeries,
+                StaticColumnSeries,
+                GifColumnSeries,
+                VideoColumnSeries
+            };
+
+            CloseRankGraphCommand = new MvxCommand(CloseRankGraph);
         }
 
         /// <summary>
@@ -527,6 +643,11 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
+        public void CloseTagBoard()
+        {
+            TagboardToggle = false;
+        }
+
         #endregion
 
         #region Folder Priority
@@ -535,15 +656,13 @@ namespace WallpaperFlux.Core.ViewModels
 
         public FolderPriorityModel[] GetSelectedFolderPriorities() => FolderPriorities.Where(f => f.IsSelected).ToArray();
 
-
-
         public void RebuildFolderPriorities(SimplifiedFolderPriority[] newFolderPriorities)
         {
             FolderPriorities = new MvxObservableCollection<FolderPriorityModel>();
 
             foreach (SimplifiedFolderPriority priority in newFolderPriorities)
             {
-                FolderPriorities.Add(new FolderPriorityModel(priority.Name, priority.ConflictResolutionFolder));
+                FolderPriorities.Add(new FolderPriorityModel(priority.Name, priority.ConflictResolutionFolder, priority.PriorityOverride));
             }
         }
 
@@ -560,7 +679,55 @@ namespace WallpaperFlux.Core.ViewModels
             return false;
         }
 
+        public void CloseFolderPriority()
+        {
+            FolderPriorityToggle = false;
+        }
 
+        #endregion
+
+        #region RankGraph
+
+        public void UpdateRankGraph()
+        {
+            if (SelectedCategory == null) return;
+            if (SelectedCategory.SelectedTagTab == null) return;
+            if (SelectedCategory.SelectedTagTab.SelectedTag == null) return;
+
+            List<int> allValues = new List<int>();
+            List<int> staticValues = new List<int>();
+            List<int> gifValues = new List<int>();
+            List<int> videoValues = new List<int>();
+
+            // we need a buffer value for rank 0 since we aren't actually displaying the un-ranked images
+            // without this buffer, the graph will always place the bars 1 value off
+            allValues.Add(0);
+            staticValues.Add(0);
+            gifValues.Add(0);
+            videoValues.Add(0);
+
+            for (int i = 1; i <= ThemeUtil.ThemeSettings.MaxRank; i++) //? not including un-ranked, those will take over the majority of the graph
+            {
+                allValues.Add(ThemeUtil.RankController.GetRankCountOfTag(i, SelectedCategory.SelectedTagTab.SelectedTag));
+                staticValues.Add(ThemeUtil.RankController.GetImagesOfTypeRankCountOfTag(ImageType.Static, i, SelectedCategory.SelectedTagTab.SelectedTag));
+                gifValues.Add(ThemeUtil.RankController.GetImagesOfTypeRankCountOfTag(ImageType.GIF, i, SelectedCategory.SelectedTagTab.SelectedTag));
+                videoValues.Add(ThemeUtil.RankController.GetImagesOfTypeRankCountOfTag(ImageType.Video, i, SelectedCategory.SelectedTagTab.SelectedTag));
+            }
+
+            AllColumnSeries.Values = allValues;
+            StaticColumnSeries.Values = staticValues;
+            GifColumnSeries.Values = gifValues;
+            VideoColumnSeries.Values = videoValues;
+
+            //xRankColumnSeries.Fill = new SolidColorPaint(SKColors.Blue);
+            StaticColumnSeries.Fill = new SolidColorPaint(SKColors.SlateBlue);
+            GifColumnSeries.Fill = new SolidColorPaint(SKColors.LimeGreen);
+            VideoColumnSeries.Fill = new SolidColorPaint(SKColors.OrangeRed);
+        }
+
+        public void ToggleRankGraph() => RankGraphToggle = !RankGraphToggle;
+
+        public void CloseRankGraph() => RankGraphToggle = false;
 
         #endregion
 

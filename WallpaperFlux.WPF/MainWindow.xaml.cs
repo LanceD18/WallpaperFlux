@@ -16,6 +16,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using HanumanInstitute.MediaPlayer.Wpf.Mpv;
+using Mpv.NET.Player;
 using MvvmCross.Platforms.Wpf.Views;
 using WallpaperFlux.Core.Tools;
 using WallpaperFlux.Core.Util;
@@ -60,10 +62,12 @@ namespace WallpaperFlux.WPF
             IntPtr workerw = WallpaperUtil.GetDesktopWorkerW();
 
             int displayCount = DisplayUtil.Displays.Count();
+            MpvUtil.Open = new Action<string>[displayCount];
+
             Wallpapers = new WallpaperWindow[displayCount];
             for (int i = 0; i < displayCount; i++)
             {
-                Wallpapers[i] = new WallpaperWindow(DisplayUtil.Displays.ElementAt(i), workerw);
+                Wallpapers[i] = new WallpaperWindow(DisplayUtil.Displays.ElementAt(i), workerw, i);
                 Wallpapers[i].Show();
 
                 AudioManager.OnMute += Wallpapers[i].Mute;

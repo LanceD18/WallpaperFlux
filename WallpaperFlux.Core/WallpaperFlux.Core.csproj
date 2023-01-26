@@ -9,11 +9,13 @@
     <PackageReference Include="CSCore" Version="1.2.1.2" />
     <PackageReference Include="HandyControl" Version="3.3.0" />
     <PackageReference Include="HandyControls" Version="3.3.10" />
+    <PackageReference Include="LiveChartsCore" Version="2.0.0-beta.701" />
+    <PackageReference Include="LiveChartsCore.SkiaSharpView" Version="2.0.0-beta.701" />
     <PackageReference Include="Microsoft.WindowsAPICodePack-Core" Version="1.1.0.2" />
     <PackageReference Include="Microsoft.WindowsAPICodePack-Shell" Version="1.1.0" />
     <PackageReference Include="MvvmCross" Version="8.0.1" />
     <PackageReference Include="MvvmLightLibs" Version="5.4.1.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="WpfAnimatedGif" Version="2.0.2" />
   </ItemGroup>
 

@@ -1,0 +1,19 @@
+﻿<Window x:Class="WallpaperFlux.WPF.Windows.MpvWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WallpaperFlux.WPF.Windows"
+        xmlns:media="https://github.com/mysteryx93/MediaPlayerUI.NET"
+        mc:Ignorable="d"
+        Title="MpvWindow" Height="450" Width="800">
+    <Grid>
+        <!--
+        <media:MpvPlayerHost x:Name="MpvHost" Width="auto" Height="auto" Loop="True" AutoPlay="True"/>
+        -->
+
+        <media:MediaPlayer x:Name="MpvMediaPlayer">
+            <media:MpvPlayerHost x:Name="MpvHost" Width="auto" Height="auto" Loop="True" AutoPlay="True"/>
+        </media:MediaPlayer>
+    </Grid>
+</Window>

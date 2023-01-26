@@ -20,15 +20,7 @@ namespace WallpaperFlux.Core.Models
         {
             get => _path;
 
-            private set
-            {
-                _path = value;
-
-                if (Directory.Exists(value)) //? invalid directories will still call this in the constructor
-                {
-                    _images = new DirectoryInfo(Path).GetFiles().Select((s) => s.FullName).ToList();
-                }
-            }
+            private set => _path = value;
         }
 
         // TODO Rename this to Enabled to match with similar functions across other aspects of the program
@@ -48,7 +40,18 @@ namespace WallpaperFlux.Core.Models
 
         public string PriorityName { get; set; }
 
-        private List<string> _images;
+        private List<string> _images
+        {
+            get
+            {
+                if (Directory.Exists(Path))
+                {
+                    return new DirectoryInfo(Path).GetFiles().Select((s) => s.FullName).ToList();
+                }
+
+                return new List<string>();
+            }
+        }
 
         public FolderModel(string path, bool active, string priorityName = "")
         {

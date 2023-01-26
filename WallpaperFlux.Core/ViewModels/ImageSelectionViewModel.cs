@@ -58,8 +58,7 @@ namespace WallpaperFlux.Core.ViewModels
         public bool RadioRankRange { get; set; }
 
         #endregion
-        
-        
+
         #region Commands
 
         public IMvxCommand SelectImagesCommand { get; set; }
@@ -89,6 +88,8 @@ namespace WallpaperFlux.Core.ViewModels
 
         private ImageModel[] FilterImages(ImageModel[] images)
         {
+            if (images == null) return new ImageModel[] { };
+
             List<ImageModel> filteredImages = new List<ImageModel>();
 
             if (RadioAll) // if we're specifying a rank then we're be 

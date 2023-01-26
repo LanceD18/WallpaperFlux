@@ -21,6 +21,12 @@ namespace WallpaperFlux.Core.Models.Controls
             {
                 SetProperty(ref _selectedTag, value);
                 TagViewModel.Instance.RaisePropertyChanged(() => TagViewModel.Instance.CanUseTagLinker);
+                TagViewModel.Instance.RaisePropertyChanged(() => TagViewModel.Instance.SelectedTagName);
+
+                if (TagViewModel.Instance.RankGraphToggle) // if the rank graph drawer is open, update the graph
+                {
+                    TagViewModel.Instance.UpdateRankGraph();
+                }
 
                 //x // The selected tag will become the linking source when the linker is turned on, but shouldn't be modified while it is on
                 //x if (!TaggingUtil.GetTagLinkerToggle()) TagViewModel.Instance.TagLinkingSource = value;

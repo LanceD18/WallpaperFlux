@@ -9,8 +9,17 @@
                   xmlns:tagging="clr-namespace:WallpaperFlux.Core.Models.Tagging;assembly=WallpaperFlux.Core"
                   xmlns:adonisUi="clr-namespace:AdonisUI;assembly=AdonisUI"
                   xmlns:system="clr-namespace:System;assembly=System.Runtime"
+                  xmlns:hc="https://handyorg.github.io/handycontrol"
+                  xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
                   mc:Ignorable="d" FontSize="12" FontFamily="Segoe UI"
                   d:DesignHeight="450" d:DesignWidth="800">
+
+    <views:MvxWpfView.Resources>
+        <ResourceDictionary>
+            <system:Double x:Key="RankGraphHeight">475</system:Double>
+        </ResourceDictionary>
+    </views:MvxWpfView.Resources>
+
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="8"/>
@@ -32,7 +41,7 @@
             <RowDefinition Height="8"/>
         </Grid.RowDefinitions>
 
-        <!-- Settings Title -->
+        <!--? Settings Title -->
         <TextBlock Grid.Row="1" Grid.Column="1" Text="Settings" FontSize="16" FontWeight="Bold" Margin="10"/>
 
         <!--? Rank Settings -->
@@ -221,10 +230,94 @@
         </GroupBox>
 
         <StackPanel Grid.Row="5" Grid.Column="1">
+
             <CheckBox Content="Enable Detection of Inactive Images" ToolTip="This allows inactive images to appear in the image selector" Margin="3"
                       IsChecked="{Binding Settings.ThemeSettings.EnableDetectionOfInactiveImages}"/>
-            <Button Width="175" Content="Rank Distribution Graph" Margin="3" Command="{Binding OpenRankDistributionGraphCommand}" HorizontalAlignment="Left"/>
+
+            <Button Width="175" Content="Rank Distribution Graph" Margin="3" Command="{Binding ToggleRankGraphCommand}" HorizontalAlignment="Left"/>
+
         </StackPanel>
+
+        <!--? Rank Graph Drawer -->
+        <hc:Drawer Dock="Top" ShowMode="Cover" IsOpen="{Binding RankGraphToggle}">
+            <GroupBox>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <!--<ColumnDefinition Width="{adonisUi:Space 1}"/>-->
+                        <ColumnDefinition Width="0"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="0"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <GroupBox Height="{StaticResource RankGraphHeight}"
+                              Grid.Row="2" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:LayerExtension.Layer="2">
+                        <!--? Header -->
+                        <GroupBox.Header>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="0"/>
+                                    <ColumnDefinition Width="auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="0"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Title -->
+                                <TextBlock Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalAlignment="Center" Text="Rank Distribution Graph"
+                                           FontWeight="Medium" Margin="0 0 0 5">
+                                    <TextBlock.Style>
+                                        <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
+                                    </TextBlock.Style>
+                                </TextBlock>
+
+                                <!-- Rank Counters -->
+                                <StackPanel Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalAlignment="Bottom" Orientation="Horizontal">
+                                    <TextBlock Text="{Binding RankedText}" Margin="0 0 10 0" FontStyle="Normal">
+                                        <TextBlock.Style>
+                                            <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding UnrankedText}" FontStyle="Normal">
+                                        <TextBlock.Style>
+                                            <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="2"  Orientation="Horizontal" Margin="0 5 0 0" HorizontalAlignment="Center"
+                                            adonisExtensions:LayerExtension.Layer="3">
+                                    <CheckBox Content="All" IsChecked="{Binding AllColumnToggle}" Margin="0 0 10 0"/>
+                                    <CheckBox Content="Static" IsChecked="{Binding StaticColumnToggle}" Margin="0 0 10 0"/>
+                                    <CheckBox Content="GIF" IsChecked="{Binding GifColumnToggle}" Margin="0 0 10 0"/>
+                                    <CheckBox Content="Video" IsChecked="{Binding VideoColumnToggle}" Margin="0 0 10 0"/>
+                                </StackPanel>
+
+                                <!-- Exit -->
+                                <Button Grid.Row="1" Grid.Column="3" HorizontalAlignment="Right" Content="X" Command="{Binding CloseRankGraphCommand}"
+                                        Margin="5 0 5 0" Foreground="Red" FontSize="16" FontWeight="Bold" adonisExtensions:LayerExtension.Layer="1"/>
+                            </Grid>
+                        </GroupBox.Header>
+
+                        <lvc:CartesianChart Series="{Binding RankSeries}" LegendPosition="Top" ZoomMode="X"/>
+
+                    </GroupBox>
+                </Grid>
+            </GroupBox>
+
+        </hc:Drawer>
 
     </Grid>
 </views:MvxWpfView>

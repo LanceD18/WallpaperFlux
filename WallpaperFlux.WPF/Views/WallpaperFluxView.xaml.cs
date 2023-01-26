@@ -251,8 +251,20 @@ namespace WallpaperFlux.WPF.Views
                 {
                     using (Engine engine = new Engine())
                     {
+                        if (!FileUtil.Exists(imageModel.Path))
+                        {
+                            Debug.WriteLine("Thumbnail creation failed ; video path does not exist");
+                            return;
+                        }
+
                         MediaFile video = new MediaFile(imageModel.Path);
                         engine.GetMetadata(video);
+
+                        if (video.Metadata == null)
+                        {
+                            Debug.WriteLine("Metadata failed to generate");
+                            return;
+                        }
                         
                         //? several videos show nothing on second 0, creating an empty thumbnail
                         ConversionOptions options = new ConversionOptions { Seek = TimeSpan.FromSeconds(video.Metadata.Duration.Seconds * 0.05) };
@@ -269,11 +281,26 @@ namespace WallpaperFlux.WPF.Views
 
                         MediaFile outputFile = new MediaFile(vidThumbnailPath);
 
-                        engine.GetThumbnail(video, outputFile, options);
-                        
-                        FileStream stream = File.OpenRead(outputFile.Filename);
-                        
-                        LoadBitmapImage(image, false, stream: stream);
+                        try
+                        {
+                            engine.GetThumbnail(video, outputFile, options);
+                        }
+                        catch(Exception e)
+                        {
+                            Debug.WriteLine("Engine failed to get thumbnail from output file | " + e);
+                        }
+
+                        if (FileUtil.Exists(outputFile.Filename))
+                        {
+                            using (FileStream stream = File.OpenRead(outputFile.Filename))
+                            {
+                                LoadBitmapImage(image, false, stream: stream);
+                            }
+                        }
+                        else
+                        {
+                            Debug.WriteLine("Output File Failed to generate thumbnail");
+                        }
 
                         if (FileUtil.Exists(vidThumbnailPath))
                         {
@@ -338,12 +365,18 @@ namespace WallpaperFlux.WPF.Views
 
             //! Keep in mind that the ViewWindow will be destroyed upon closing the TagView, so yes we need to add the event again
             //? Prevents the TagBoard from causing a crash the next time the tag view is opened if the tag view is closed with the TagBoard open
-            TagPresenter.ViewWindow.Closing += TagPresenter_ViewWindow_Closed_TagBoardFix;
+            TagPresenter.ViewWindow.Closing += TagPresenter_ViewWindow_Closed_DrawerFix;
         }
 
-        private void MenuItem_MoreSettings_Click(object sender, RoutedEventArgs e) => 
+        private void MenuItem_MoreSettings_Click(object sender, RoutedEventArgs e)
+        {
             WindowUtil.PresentWindow(ref SettingsPresenter, typeof(SettingsView), typeof(SettingsViewModel),
                 WindowUtil.SETTINGS_WINDOW_WIDTH, WindowUtil.SETTINGS_WINDOW_HEIGHT, "Settings", false);
+
+            //! Keep in mind that the ViewWindow will be destroyed upon closing the TagView, so yes we need to add the event again
+            //? Prevents the TagBoard from causing a crash the next time the tag view is opened if the tag view is closed with the TagBoard open
+            SettingsPresenter.ViewWindow.Closing += SettingsPresenter_ViewWindow_Closed_DrawerFix;
+        }
 
         /// <summary>
         /// Disables the TagBoard on closing the view
@@ -351,7 +384,24 @@ namespace WallpaperFlux.WPF.Views
         /// <param name="sender"></param>
         /// <param name="e"></param>
         //? Prevents the TagBoard from causing a crash the next time the tag view is opened if the tag view is closed with the TagBoard open
-        private void TagPresenter_ViewWindow_Closed_TagBoardFix(object sender, EventArgs e) => TagViewModel.Instance.TagboardToggle = false;
+        private void TagPresenter_ViewWindow_Closed_DrawerFix(object sender, EventArgs e)
+        {
+            TagViewModel.Instance.CloseTagBoard();
+            TagViewModel.Instance.CloseFolderPriority();
+            TagViewModel.Instance.CloseRankGraph();
+        }
+
+        /// <summary>
+        /// Disables the Settings Window on closing the view
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        //? Prevents the TagBoard from causing a crash the next time the tag view is opened if the tag view is closed with the TagBoard open
+        private void SettingsPresenter_ViewWindow_Closed_DrawerFix(object sender, EventArgs e)
+        {
+            SettingsViewModel.Instance.CloseRankGraph();
+        }
+
         #endregion
 
         #region Image Selector
