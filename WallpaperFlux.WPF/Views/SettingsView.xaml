@@ -229,12 +229,33 @@
             </StackPanel>
         </GroupBox>
 
+        <!-- ? Other Settings -->
         <StackPanel Grid.Row="5" Grid.Column="1">
 
             <CheckBox Content="Enable Detection of Inactive Images" ToolTip="This allows inactive images to appear in the image selector" Margin="3"
                       IsChecked="{Binding Settings.ThemeSettings.EnableDetectionOfInactiveImages}"/>
 
             <Button Width="175" Content="Rank Distribution Graph" Margin="3" Command="{Binding ToggleRankGraphCommand}" HorizontalAlignment="Left"/>
+
+            <StackPanel Orientation="Horizontal" DataContext="{Binding Settings}">
+                <TextBlock Text="Window Height Offset" VerticalAlignment="Center"/>
+                <TextBox adonisExtensions:WatermarkExtension.Watermark="Height..." Margin="5 5 3 0"
+                         Text="{Binding WindowHeightOffset, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                    <TextBox.Style>
+                        <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInputPlusMinus}"/>
+                    </TextBox.Style>
+                </TextBox>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" DataContext="{Binding Settings}">
+                <TextBlock Text="Window Width Offset" VerticalAlignment="Center"/>
+                <TextBox adonisExtensions:WatermarkExtension.Watermark="Width..." Margin="5 5 3 0"
+                         Text="{Binding WindowWidthOffset, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                    <TextBox.Style>
+                        <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInputPlusMinus}"/>
+                    </TextBox.Style>
+                </TextBox>
+            </StackPanel>
 
         </StackPanel>
 

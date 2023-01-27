@@ -10,6 +10,7 @@ namespace WallpaperFlux.WPF.Util
     public static class DisplayUtil
     {
         //! IMPORTANT: Using Winform's screen property may cause issues since WPF's measurement units are not in pixels, which is why we are using WpfScreenHelper
+        // TODO Why is this an IEnumerable and not just converted to an array?
         public static readonly IEnumerable<Screen> Displays = Screen.AllScreens;
 
         //? Screen.AllScreens seems to do this by default due to the way it functions, I wouldn't rely on that though as there's no documentation for it

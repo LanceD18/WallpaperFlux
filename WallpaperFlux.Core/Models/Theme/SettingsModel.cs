@@ -1,9 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using LanceTools;
+using MvvmCross;
 using MvvmCross.Commands;
+using MvvmCross.IoC;
 using MvvmCross.ViewModels;
 using Newtonsoft.Json;
+using WallpaperFlux.Core.IoC;
 using WallpaperFlux.Core.Tools;
 using WallpaperFlux.Core.Util;
 
@@ -78,6 +81,28 @@ namespace WallpaperFlux.Core.Models.Theme
         // Theme Settings
         public ThemeSettings ThemeSettings { get; set; } = new ThemeSettings();
 
+        private int _windowHeightOffset;
+        public int WindowHeightOffset
+        {
+            get => _windowHeightOffset;
+            set
+            {
+                SetProperty(ref _windowHeightOffset, value);
+                Mvx.IoCProvider.Resolve<IExternalWallpaperHandler>().UpdateSize();
+            }
+        }
+
+        private int _windowWidthOffset;
+        public int WindowWidthOffset
+        {
+            get => _windowWidthOffset;
+            set
+            {
+                SetProperty(ref _windowWidthOffset, value);
+                Mvx.IoCProvider.Resolve<IExternalWallpaperHandler>().UpdateSize();
+            }
+        }
+
         // Global Settings
         public string DefaultTheme { get; set; }
         public bool EnableDefaultThemeHotkey { get; set; }
@@ -96,7 +121,11 @@ namespace WallpaperFlux.Core.Models.Theme
         public void InitCommands()
         {
             UpdateMaxRankCommand = new MvxCommand(UpdateMaxRank);
+        }
 
+        public void UpdateDependents() // for when loading data, mass update dependents
+        {
+            Mvx.IoCProvider.Resolve<IExternalWallpaperHandler>().UpdateSize();
         }
 
         #region Commands

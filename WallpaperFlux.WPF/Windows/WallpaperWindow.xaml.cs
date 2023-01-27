@@ -63,9 +63,13 @@ namespace WallpaperFlux.WPF
 
         public Window MpvWindow;
 
+        public Screen Display;
+
         public WallpaperWindow(Screen display, IntPtr workerw, int displayIndex)
         {
             InitializeComponent();
+
+            Display = display;
 
             DisplayIndex = displayIndex;
 
@@ -74,8 +78,8 @@ namespace WallpaperFlux.WPF
             Loaded += (s, e) =>
             {
                 // Sets bounds of the form
-                Width = display.Bounds.Width;
-                Height = display.Bounds.Height;
+                Width = display.Bounds.Width + ThemeUtil.Theme.Settings.WindowWidthOffset;
+                Height = display.Bounds.Height + ThemeUtil.Theme.Settings.WindowHeightOffset;
                 Left = display.Bounds.X + DisplayUtil.DisplayXAdjustment;
                 Top = display.Bounds.Y + DisplayUtil.MinDisplayY;
 
@@ -99,6 +103,18 @@ namespace WallpaperFlux.WPF
                 MpvWindow.Show();
                 */
             };
+        }
+
+        public void UpdateSize()
+        {
+            // Sets bounds of the form
+            Width = Display.Bounds.Width + ThemeUtil.Theme.Settings.WindowWidthOffset;
+            Height = Display.Bounds.Height + ThemeUtil.Theme.Settings.WindowHeightOffset;
+            Left = Display.Bounds.X + DisplayUtil.DisplayXAdjustment;
+            Top = Display.Bounds.Y + DisplayUtil.MinDisplayY;
+
+            WallpaperVlc.Width = Width; // auto doesn't work for vlc (will receive an improper size)
+            WallpaperVlc.Height = Height; // auto doesn't work for vlc (will receive an improper size)
         }
 
         //? The index is checked in ExternalWallpaperHandler now as it has access to the array, which allows wallpapers to be changed independently of one another

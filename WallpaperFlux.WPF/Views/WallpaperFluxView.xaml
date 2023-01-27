@@ -412,16 +412,17 @@
                                                                             <ContentControl.Resources>
                                                                                 <!-- Static -->
                                                                                 <DataTemplate x:Key="StaticTemplate">
-                                                                                    <Image>
+                                                                                    <Image Loaded="Tooltip_Image_OnLoaded"
+                                                                                        Stretch="Uniform"
+                                                                                        RenderOptions.BitmapScalingMode="HighQuality">
+                                                                                        <!--
                                                                                         <Image.Source>
-                                                                                            <!-- TODO Create another image loading method for this but use high quality or fant -->
-                                                                                            <!-- TODO Using an image loading method will give you further error-control to prevent potential crashes -->
-                                                                                            <!-- TODO Do note that the drawer version loses some quality with the IgnoreColorProfile, we want to keep quality here -->
                                                                                             <BitmapImage
                                                                                                 CacheOption="OnLoad"
                                                                                                 UriSource="{Binding Path, Mode=OneWay}">
                                                                                             </BitmapImage>
                                                                                         </Image.Source>
+                                                                                        -->
                                                                                     </Image>
                                                                                 </DataTemplate>
                                                                                 <!-- GIF -->

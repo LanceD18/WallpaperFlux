@@ -37,5 +37,13 @@ namespace WallpaperFlux.WPF.IoC
         {
             MainWindow.Instance.Wallpapers?[index].Unmute();
         }
+
+        public void UpdateSize()
+        {
+            foreach (WallpaperWindow wallpaper in MainWindow.Instance.Wallpapers)
+            {
+                wallpaper.UpdateSize();
+            }
+        }
     }
 }

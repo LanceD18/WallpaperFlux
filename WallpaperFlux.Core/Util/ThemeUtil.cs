@@ -36,7 +36,7 @@ namespace WallpaperFlux.Core.Util
             Theme = new ThemeModel();
             Theme.Init(settings.ThemeSettings.MaxRank);
             Theme.Settings = settings;
-            Theme.Settings.InitCommands();
+            Theme.Settings.UpdateDependents();
         }
     }
 }

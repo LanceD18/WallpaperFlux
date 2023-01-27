@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration.Internal;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -39,7 +40,9 @@ using WallpaperFlux.Core.ViewModels;
 using WallpaperFlux.WPF.Util;
 using WallpaperFlux.WPF.Windows;
 using WpfAnimatedGif;
+using WpfScreenHelper;
 using Image = System.Windows.Controls.Image;
+using Point = System.Windows.Point;
 using Size = System.Windows.Size;
 
 namespace WallpaperFlux.WPF.Views
@@ -72,7 +75,7 @@ namespace WallpaperFlux.WPF.Views
         {
             if (sender is Image image)
             {
-                LoadImage(image);
+                LoadImage(image, false);
             }
             else if (sender is MediaElement element)
             {
@@ -88,7 +91,7 @@ namespace WallpaperFlux.WPF.Views
             }
         }
 
-        private void LoadImage(Image image)
+        private void LoadImage(Image image, bool highQuality)
         {
             if (image.DataContext is ImageModel imageModel)
             {
@@ -100,7 +103,7 @@ namespace WallpaperFlux.WPF.Views
                     {
                         //xFileStream stream = File.OpenRead(path);
 
-                        LoadBitmapImage(image, imageModel.IsGif, path: imageModel.Path);
+                        LoadBitmapImage(image, imageModel.IsGif, highQuality, path: imageModel.Path);
                     }
                     catch (Exception e)
                     {
@@ -151,15 +154,21 @@ namespace WallpaperFlux.WPF.Views
         //? https://stackoverflow.com/questions/8352787/how-to-free-the-memory-after-the-bitmapimage-is-no-longer-needed
         //? https://stackoverflow.com/questions/2631604/get-absolute-file-path-from-image-in-wpf
         //? prevents the application from continuing to 'use' the image after loading it in, which also saves some memory
-        private void LoadBitmapImage(Image image, bool isGif, string path = "", FileStream stream = null)
+        private void LoadBitmapImage(Image image, bool isGif, bool highQuality, string path = "", FileStream stream = null)
         {
             // TODO THIS METHOD IS BEING CALLED MULTIPLE TIMES PER INSPECTOR SWITCH, FIX
             try //? this can accidentally fire off multiple times and cause crashes when trying to load videos (Who still need this for some reason?)
             {
                 BitmapImage bitmap = new BitmapImage();
 
+                // --- Begin Init ---
                 bitmap.BeginInit();
-                bitmap.CreateOptions = BitmapCreateOptions.IgnoreColorProfile; // to help with performance
+
+                if (!highQuality)
+                {
+                    bitmap.CreateOptions = BitmapCreateOptions.IgnoreColorProfile; // to help with performance
+                }
+
                 bitmap.CacheOption = BitmapCacheOption.OnLoad;
 
                 if (stream != null)
@@ -173,6 +182,7 @@ namespace WallpaperFlux.WPF.Views
 
                 bitmap.EndInit();
                 bitmap.Freeze(); // prevents unnecessary copying: https://stackoverflow.com/questions/799911/in-what-scenarios-does-freezing-wpf-objects-benefit-performance-greatly
+                // --- End Init (Freeze) ---
 
                 //! Task.Run() will be used outside of this method to capture the Bitmap within the 'calling thread'
                 Dispatcher.Invoke(() => // the image must be called on the UI thread which the dispatcher helps us do under this other thread
@@ -197,6 +207,115 @@ namespace WallpaperFlux.WPF.Views
             catch (Exception e)
             {
                 Debug.WriteLine("ERROR: Bitmap Loading Failed: " + e);
+            }
+        }
+
+        //? by default the image's DPI is used, causing some tooltips to be incredibly small
+        //? this fix uses the pixel size instead, bypassing the DPI issue
+        private void Tooltip_Image_OnLoaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is Image image)
+            {
+                LoadImage(image, true);
+
+                Point mousePos = PointToScreen(Mouse.GetPosition(this));
+                Rect mouseRect = new Rect(mousePos, mousePos);
+
+                int wallpaperIndex = -1;
+                Screen[] displays = DisplayUtil.Displays.ToArray();
+                for (int i = 0; i < DisplayUtil.Displays.Count(); i++)
+                {
+                    if (displays[i].WorkingArea.IntersectsWith(mouseRect))
+                    {
+                        wallpaperIndex = i;
+                    }
+                }
+
+                try // for just in case the casting fails, we can just use the normal size
+                {
+                    void AttemptSetSize(int retries = 0)
+                    {
+                        if (retries > 10) return;
+
+                        if (wallpaperIndex != -1 && image.Source != null)
+                        {
+                            int pxWidth = ((BitmapSource)image.Source).PixelWidth;
+                            int pxHeight = ((BitmapSource)image.Source).PixelHeight;
+                            double wallWidth = MainWindow.Instance.Wallpapers[wallpaperIndex].Width;
+                            double wallHeight = MainWindow.Instance.Wallpapers[wallpaperIndex].Height;
+                            int largerWallSize = (int)(wallWidth > wallHeight ? wallWidth : wallHeight);
+
+                            bool oversizedWidth = pxWidth > wallWidth;
+                            bool oversizedHeight = pxHeight > wallHeight;
+
+                            // dynamically resize based on the ratio of the oversized dimension
+                            if (oversizedWidth || oversizedHeight)
+                            {
+                                double ratio;
+
+                                if (wallHeight < wallWidth)
+                                {
+                                    if (oversizedHeight) // smaller dimension takes priority
+                                    {
+                                        ratio = wallHeight / pxHeight;
+                                    }
+                                    else
+                                    {
+                                        ratio = wallWidth / pxWidth;
+                                    }
+                                }
+                                else
+                                {
+                                    if (oversizedWidth) // smaller dimension takes priority
+                                    {
+                                        ratio = wallWidth / pxWidth;
+                                    }
+                                    else
+                                    {
+                                        ratio = wallHeight / pxHeight;
+                                    }
+                                }
+
+                                pxWidth = (int)(pxWidth * ratio);
+                                pxHeight = (int)(pxHeight * ratio);
+                            }
+                            else if (pxWidth == pxHeight) // identical
+                            {
+                                pxWidth = largerWallSize;
+                                pxHeight = largerWallSize;
+                            }
+
+                            image.Width = pxWidth;
+                            image.Height = pxHeight;
+                            //xDebug.WriteLine("Pixel Width: " + ((BitmapSource)image.Source).PixelWidth);
+                            //xDebug.WriteLine("Pixel Height: " + ((BitmapSource)image.Source).PixelHeight);
+                        }
+                        else
+                        {
+                            Debug.WriteLine("Potential invalid image source, try again");
+
+                            Task.Run(() =>
+                            {
+                                Thread.Sleep(10);
+
+                                Dispatcher.Invoke(() =>
+                                {
+                                    AttemptSetSize(retries++); //? sometimes the image source won't load fast enough and we'll need to try again
+                                });
+                            });
+                        }
+                    }
+
+                    AttemptSetSize();
+                }
+                catch (Exception exception)
+                {
+                    Debug.WriteLine("Tooltip Resizing Failed: " + exception);
+                }
+            }
+            else
+            {
+                Debug.WriteLine("Image failed to send");
             }
         }
 
@@ -294,7 +413,7 @@ namespace WallpaperFlux.WPF.Views
                         {
                             using (FileStream stream = File.OpenRead(outputFile.Filename))
                             {
-                                LoadBitmapImage(image, false, stream: stream);
+                                LoadBitmapImage(image, false, false, stream: stream);
                             }
                         }
                         else

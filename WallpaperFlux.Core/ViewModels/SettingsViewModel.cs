@@ -8,9 +8,11 @@ using LiveChartsCore.Kernel.Drawing;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Drawing;
 using LiveChartsCore.SkiaSharpView.Painting;
+using MvvmCross;
 using MvvmCross.Commands;
 using MvvmCross.ViewModels;
 using SkiaSharp;
+using WallpaperFlux.Core.IoC;
 using WallpaperFlux.Core.Models.Theme;
 using WallpaperFlux.Core.Util;
 
