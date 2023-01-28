@@ -241,9 +241,11 @@ namespace WallpaperFlux.WPF.Views
                         {
                             int pxWidth = ((BitmapSource)image.Source).PixelWidth;
                             int pxHeight = ((BitmapSource)image.Source).PixelHeight;
+
                             double wallWidth = MainWindow.Instance.Wallpapers[wallpaperIndex].Width;
                             double wallHeight = MainWindow.Instance.Wallpapers[wallpaperIndex].Height;
-                            int largerWallSize = (int)(wallWidth > wallHeight ? wallWidth : wallHeight);
+                            //xDebug.WriteLine("Pixel Width: " + pxWidth);
+                            //xDebug.WriteLine("Pixel Height: " + pxHeight);
 
                             bool oversizedWidth = pxWidth > wallWidth;
                             bool oversizedHeight = pxHeight > wallHeight;
@@ -253,42 +255,24 @@ namespace WallpaperFlux.WPF.Views
                             {
                                 double ratio;
 
-                                if (wallHeight < wallWidth)
+                                if (pxWidth > pxHeight) // the larger value will have the lower ratio, thus squishing down both sizes to the required size
                                 {
-                                    if (oversizedHeight) // smaller dimension takes priority
-                                    {
-                                        ratio = wallHeight / pxHeight;
-                                    }
-                                    else
-                                    {
-                                        ratio = wallWidth / pxWidth;
-                                    }
+                                    //? using the full size of the width will cause long wallpapers to get cut off
+                                    ratio = wallHeight / pxWidth;
                                 }
                                 else
                                 {
-                                    if (oversizedWidth) // smaller dimension takes priority
-                                    {
-                                        ratio = wallWidth / pxWidth;
-                                    }
-                                    else
-                                    {
-                                        ratio = wallHeight / pxHeight;
-                                    }
+                                    ratio = wallHeight / pxHeight;
                                 }
 
                                 pxWidth = (int)(pxWidth * ratio);
                                 pxHeight = (int)(pxHeight * ratio);
                             }
-                            else if (pxWidth == pxHeight) // identical
-                            {
-                                pxWidth = largerWallSize;
-                                pxHeight = largerWallSize;
-                            }
 
                             image.Width = pxWidth;
                             image.Height = pxHeight;
-                            //xDebug.WriteLine("Pixel Width: " + ((BitmapSource)image.Source).PixelWidth);
-                            //xDebug.WriteLine("Pixel Height: " + ((BitmapSource)image.Source).PixelHeight);
+                            //xDebug.WriteLine("Image Width: " + image.Width);
+                            //xDebug.WriteLine("Image Height: " + image.Height);
                         }
                         else
                         {

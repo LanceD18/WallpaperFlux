@@ -468,7 +468,8 @@ namespace WallpaperFlux.Core.Models.Tagging
 
             foreach (TagModel tag in ChildTags)
             {
-                if (tag.LinkedImages.Contains(image)) return true;
+                //? using the LinkedImages variable instead of this method will cause this method to miss child tags of the child tag
+                if (tag.ContainsLinkedImage(image)) return true;
             }
 
             return false;
