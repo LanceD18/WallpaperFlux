@@ -23,6 +23,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using HanumanInstitute.MediaPlayer.Wpf.Mpv;
 using LanceTools.IO;
+using LanceTools.WPF.MVVM;
 using MediaToolkit;
 using MediaToolkit.Model;
 using MediaToolkit.Options;

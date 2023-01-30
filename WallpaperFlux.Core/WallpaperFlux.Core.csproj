@@ -6,9 +6,10 @@
 
   <ItemGroup>
     <PackageReference Include="AdonisUI" Version="1.17.1" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.1.0" />
     <PackageReference Include="CSCore" Version="1.2.1.2" />
-    <PackageReference Include="HandyControl" Version="3.3.0" />
-    <PackageReference Include="HandyControls" Version="3.3.10" />
+    <PackageReference Include="HandyControl" Version="3.4.0" />
+    <PackageReference Include="HandyControls" Version="3.4.4" />
     <PackageReference Include="LiveChartsCore" Version="2.0.0-beta.701" />
     <PackageReference Include="LiveChartsCore.SkiaSharpView" Version="2.0.0-beta.701" />
     <PackageReference Include="Microsoft.WindowsAPICodePack-Core" Version="1.1.0.2" />
@@ -22,6 +23,9 @@
   <ItemGroup>
     <Reference Include="LanceTools">
       <HintPath>..\..\..\..\Code Library\C#\LanceTools\LanceTools\LanceTools\bin\Release\LanceTools.dll</HintPath>
+    </Reference>
+    <Reference Include="LanceTools.WPF.Adonis">
+      <HintPath>..\..\..\..\Code Library\C#\LanceTools\LanceTools\LanceTools.WPF.Adonis\bin\Release\netcoreapp3.1\LanceTools.WPF.Adonis.dll</HintPath>
     </Reference>
   </ItemGroup>
 

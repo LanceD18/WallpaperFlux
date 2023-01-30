@@ -8,6 +8,7 @@ using System.Text;
 using AdonisUI.Controls;
 using LanceTools;
 using LanceTools.IO;
+using LanceTools.WPF.Adonis.Util;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Models.Tagging;

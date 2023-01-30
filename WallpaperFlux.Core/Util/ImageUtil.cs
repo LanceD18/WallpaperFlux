@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using LanceTools.WPF.Adonis.Util;
 using MvvmCross;
 using WallpaperFlux.Core.IoC;
 using WallpaperFlux.Core.Models;

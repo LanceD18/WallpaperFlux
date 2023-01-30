@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using LanceTools.WPF.Adonis.Util;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using MvvmCross;
 using MvvmCross.ViewModels;

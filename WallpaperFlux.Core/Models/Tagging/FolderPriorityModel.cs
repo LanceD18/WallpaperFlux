@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using AdonisUI.Controls;
+using LanceTools.WPF.Adonis.Util;
 using MvvmCross.Commands;
 using MvvmCross.ViewModels;
 using WallpaperFlux.Core.Models.Controls;

@@ -17,6 +17,7 @@ using System.Xml;
 using AdonisUI.Controls;
 using HandyControl.Controls;
 using LanceTools;
+using LanceTools.WPF.Adonis.Util;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Microsoft.WindowsAPICodePack.Shell.PropertySystem;
 using MvvmCross;

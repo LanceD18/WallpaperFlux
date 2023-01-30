@@ -15,6 +15,7 @@ using WallpaperFlux.WPF.Windows;
 
 namespace WallpaperFlux.WPF
 {
+    /*
     public class ViewPresenter : MvxWpfViewPresenter
     {
         public Window ViewWindow;
@@ -107,4 +108,5 @@ namespace WallpaperFlux.WPF
             ViewWindow = null;
         }
     }
+    */
 }

@@ -54,7 +54,6 @@ namespace WallpaperFlux.WPF
             WindowUtil.InitializeViewModels();
 
             Closing += OnCloseApplication;
-            MessageBoxUtil.InputBoxFunc = OnCallInputBox;
         }
 
         private void InitializeWallpapers()
@@ -90,13 +89,5 @@ namespace WallpaperFlux.WPF
             //? Without this the creation of extra views will stop the program from completely closing normally
             Application.Current.Shutdown();
         }
-
-        private string OnCallInputBox(string title, string caption, string watermark, InputBoxType inputBoxType)
-        {
-            InputBoxWindow inputBox = new InputBoxWindow(title, caption, watermark, inputBoxType);
-            inputBox.ShowDialog();
-            return inputBox.Input;
-        }
-
     }
 }

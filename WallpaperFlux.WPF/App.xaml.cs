@@ -11,6 +11,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using LanceTools.Util;
 using MvvmCross;
 using MvvmCross.Core;
 using MvvmCross.Platforms.Wpf.Views;
@@ -92,32 +93,16 @@ namespace WallpaperFlux.WPF
         }
 
         // Constrains text preview to numbers only
-        private void OnPreviewTextInput_PositiveNumbersOnly(object sender, TextCompositionEventArgs e)
-        {
-            Regex regex = new Regex("[^0-9]+");
-            e.Handled = regex.IsMatch(e.Text);
-        }
+        private void OnPreviewTextInput_PositiveNumbersOnly(object sender, TextCompositionEventArgs e) => e.Handled = RegexUtil.IsPositiveNumber(e.Text);
 
         // Constrains text preview to numbers and decimal places only
-        private void OnPreviewTextInput_PositiveNumbersAndDecimalsOnly(object sender, TextCompositionEventArgs e)
-        {
-            Regex regex = new Regex("[^0-9\\.]+");
-            e.Handled = regex.IsMatch(e.Text);
-        }
+        private void OnPreviewTextInput_PositiveNumbersAndDecimalsOnly(object sender, TextCompositionEventArgs e) => e.Handled = RegexUtil.IsPositiveDecimalNumber(e.Text);
 
         // Constrains text preview to numbers only, allows negative input
-        private void OnPreviewTextInput_NumbersOnly(object sender, TextCompositionEventArgs e)
-        {
-            Regex regex = new Regex("[^0-9-]");
-            e.Handled = regex.IsMatch(e.Text);
-        }
+        private void OnPreviewTextInput_NumbersOnly(object sender, TextCompositionEventArgs e) => e.Handled = RegexUtil.IsNumber(e.Text);
 
         // Constrains text preview to numbers and decimal places only, allows negative input
-        private void OnPreviewTextInput_NumbersAndDecimalsOnly(object sender, TextCompositionEventArgs e)
-        {
-            Regex regex = new Regex("[^0-9-\\.]+");
-            e.Handled = regex.IsMatch(e.Text);
-        }
+        private void OnPreviewTextInput_NumbersAndDecimalsOnly(object sender, TextCompositionEventArgs e) => e.Handled = RegexUtil.IsDecimalNumber(e.Text);
 
         #endregion
     }

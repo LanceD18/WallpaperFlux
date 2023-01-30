@@ -1,4 +1,4 @@
-﻿<views:MvxWpfView x:Name="WallpaperView"
+﻿<views:MvxWpfView
     xmlns:views="clr-namespace:MvvmCross.Platforms.Wpf.Views;assembly=MvvmCross.Platforms.Wpf"
     xmlns:mvx="clr-namespace:MvvmCross.Platforms.Wpf.Binding;assembly=MvvmCross.Platforms.Wpf"
     x:Class="WallpaperFlux.WPF.Views.WallpaperFluxView"

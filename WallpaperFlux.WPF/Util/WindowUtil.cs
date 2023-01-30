@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using System.Windows;
+using LanceTools.WPF.MVVM;
 using MvvmCross.Platforms.Wpf.Views;
 using MvvmCross.ViewModels;
 using WallpaperFlux.Core.Util;

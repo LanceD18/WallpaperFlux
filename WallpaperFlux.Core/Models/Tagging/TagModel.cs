@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using LanceTools;
 using LanceTools.IO;
+using LanceTools.WPF.Adonis.Util;
 using MvvmCross.Commands;
 using MvvmCross.ViewModels;
 using Newtonsoft.Json;

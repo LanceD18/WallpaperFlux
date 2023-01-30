@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using LanceTools;
+using LanceTools.WPF.Adonis.Util;
 using MvvmCross;
 using WallpaperFlux.Core.IoC;
 using WallpaperFlux.Core.Models;
