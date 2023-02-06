@@ -29,7 +29,9 @@ using LibVLCSharp.Shared;
 using MvvmCross.Platforms.Wpf.Presenters.Attributes;
 using MvvmCross.ViewModels;
 using Unosquare.FFME;
+using WallpaperFlux.Core.Tools;
 using WallpaperFlux.Core.ViewModels;
+using WallpaperFlux.Winform;
 using WallpaperFlux.WPF.Windows;
 using MediaElement = System.Windows.Controls.MediaElement;
 
@@ -45,15 +47,13 @@ namespace WallpaperFlux.WPF
             Image,
             MediaElement,
             FFME,
-            VLC
+            VLC,
+            Mpv
         }
 
-        //? The index is currently gathered by the array utilized in ExternalWallpaperHandler and MainWindow
         public ImageModel ActiveImage;
 
-        private int VideoLoopCount;
-
-        private bool Muted;
+        private int LoopCount;
 
         private LibVLC _libVlc = new LibVLC(true, "--input-repeat=65545");
 
@@ -64,6 +64,8 @@ namespace WallpaperFlux.WPF
         public Window MpvWindow;
 
         public Screen Display;
+
+        public WallpaperForm ConnectedForm => MainWindow.Instance.WallpaperForms[DisplayIndex];
 
         public WallpaperWindow(Screen display, IntPtr workerw, int displayIndex)
         {
@@ -91,9 +93,11 @@ namespace WallpaperFlux.WPF
                 //? (Would have to use WH_KEYBOARD_LL and WH_MOUSE_LL hooks to capture mouse and keyboard input)
                 Win32.SetParent(new WindowInteropHelper(this).Handle, workerw);
 
+                /*!
                 WallpaperVlc.MediaPlayer = new LibVLCSharp.Shared.MediaPlayer(_libVlc);
                 WallpaperVlc.Width = Width; // auto doesn't work for vlc (will receive an improper size)
                 WallpaperVlc.Height = Height; // auto doesn't work for vlc (will receive an improper size)
+                */
                 DisableVlc();
 
                 /*x
@@ -102,6 +106,9 @@ namespace WallpaperFlux.WPF
                 MpvWindow.Height = Height;
                 MpvWindow.Show();
                 */
+
+                MainWindow.Instance.OpenWinform(display, workerw, displayIndex, IncrementLoopCount);
+                DisableMpv();
             };
         }
 
@@ -113,8 +120,10 @@ namespace WallpaperFlux.WPF
             Left = Display.Bounds.X + DisplayUtil.DisplayXAdjustment;
             Top = Display.Bounds.Y + DisplayUtil.MinDisplayY;
 
+                /*!
             WallpaperVlc.Width = Width; // auto doesn't work for vlc (will receive an improper size)
             WallpaperVlc.Height = Height; // auto doesn't work for vlc (will receive an improper size)
+                */
         }
 
         //? The index is checked in ExternalWallpaperHandler now as it has access to the array, which allows wallpapers to be changed independently of one another
@@ -129,7 +138,7 @@ namespace WallpaperFlux.WPF
             }
             else
             {
-                VideoLoopCount = 0; // if we are allowed to make a change, reset the loop count
+                LoopCount = 0; // if we are allowed to make a change, reset the loop count
             }
 
             // --- Verify Wallpaper ---
@@ -156,7 +165,16 @@ namespace WallpaperFlux.WPF
                 UpdateVolume(image); //! Do NOT use ActiveImage here, it is not set until the end of the method!
 
                 //xMpvUtil.Open[DisplayIndex]?.Invoke(wallpaperInfo.FullName);
-                
+
+                if (WallpaperUtil.IsSupportedVideoType_GivenExtension(wallpaperInfo.Extension))
+                {
+                    ConnectedForm.Enabled = true;
+                    ConnectedForm.Visible = true;
+                    ConnectedForm.BringToFront();
+                    ConnectedForm.SetWallpaper(image);
+                    DisableUnusedElements(UsedElement.Mpv);
+                }
+                /*
                 if (WallpaperWindowUtil.IsVideoVlcCompatible(wallpaperInfo.Extension)) //? VLC can't load .webm files
                 {
                     using (Media media = new Media(_libVlc, wallpaperInfo.FullName))
@@ -175,17 +193,11 @@ namespace WallpaperFlux.WPF
                             vlcStopwatch.Start();
                         }
 
-                        /*x
-                        if (WallpaperVlc.MediaPlayer != null) // if the MediaPlayer fails to start we won't need this
-                        {
-                            WallpaperVlc.MediaPlayer.EndReached += VlcMediaPlayer_OnEndReached; //? doesn't work while looping, but we cannot change the position of VLC either
-                        }
-                        */
-
                         DisableUnusedElements(UsedElement.VLC);
                     }
                 }
-                else if (wallpaperInfo.Extension == ".webm" || image.IsGif) //? FFME can't handle .avi files and crashes on some videos depending on their pixel format, this seems to be more common with .webms
+                */
+                else if (/*wallpaperInfo.Extension == ".webm" ||*/ image.IsGif) //? FFME can't handle .avi files and crashes on some videos depending on their pixel format, this seems to be more common with .webms
                 {
                     Debug.WriteLine("FFME (Recording path for just in case of crash, convert crashed .webms to .mp4): " + image.Path);
 
@@ -266,10 +278,11 @@ namespace WallpaperFlux.WPF
         private bool VerifyMinLoopMaxTimeSettings(bool forceChange)
         {
             int vlcPosition = 0;
+            /*!
             if (ActiveImage is { IsMp4OrAvi: true } && WallpaperVlc.MediaPlayer != null)
             {
                 vlcPosition = vlcStopwatch.Elapsed.Seconds;
-                VideoLoopCount = (int)(vlcStopwatch.ElapsedMilliseconds / WallpaperVlc.MediaPlayer.Length);
+                LoopCount = (int)(vlcStopwatch.ElapsedMilliseconds / WallpaperVlc.MediaPlayer.Length);
 
                 /*x
                 // TODO Something keeps stopping the stopwatch, fix this
@@ -279,16 +292,17 @@ namespace WallpaperFlux.WPF
                     vlcStopwatch.Start();
                 }
                 //!temp
-                */
+                /
             }
+            */
 
             if (!forceChange && ActiveImage is { IsVideoOrGif: true }) // we can only make these checks if the previous wallpaper was a video or gif
             {
                 int minLoops = ActiveImage.OverrideMinimumLoops ? ActiveImage.MinimumLoops : ThemeUtil.VideoSettings.MinimumLoops;
                 int maxTime = ActiveImage.OverrideMaximumTime ? ActiveImage.MaximumTime : ThemeUtil.VideoSettings.MaximumTime;
 
-                Debug.WriteLine("VideoLoopCount: " + VideoLoopCount + " | MinimumVideoLoops: " + minLoops);
-                if (VideoLoopCount < minLoops)
+                Debug.WriteLine("LoopCount: " + LoopCount + " | MinimumVideoLoops: " + minLoops);
+                if (LoopCount < minLoops)
                 {
                     //? we will only check for the video time condition if we have not yet gone beyond the Minimum Loop count
                     //? essentially, changes are only allowed if we are both above the minimum loop count AND the max video time
@@ -349,10 +363,19 @@ namespace WallpaperFlux.WPF
 
         private void DisableVlc()
         {
+            /*!
             WallpaperVlc.MediaPlayer?.Stop();
             WallpaperVlc.IsEnabled = false;
             WallpaperVlc.Visibility = Visibility.Hidden;
             vlcStopwatch.Reset();
+            */
+        }
+
+        private void DisableMpv()
+        {
+            ConnectedForm.Enabled = false;
+            ConnectedForm.Visible = false;
+            ConnectedForm.StopMpv();
         }
 
         private void DisableUnusedElements(UsedElement usedElement)
@@ -363,24 +386,35 @@ namespace WallpaperFlux.WPF
                     DisableMediaElement();
                     DisableFFME();
                     DisableVlc();
+                    DisableMpv();
                     break;
 
                 case UsedElement.MediaElement:
                     DisableFFME();
                     DisableVlc();
                     DisableImage();
+                    DisableMpv();
                     break;
 
                 case UsedElement.FFME:
                     DisableMediaElement();
                     DisableVlc();
                     DisableImage();
+                    DisableMpv();
                     break;
 
                 case UsedElement.VLC:
                     DisableMediaElement();
                     DisableFFME();
                     DisableImage();
+                    DisableMpv();
+                    break;
+
+                case UsedElement.Mpv:
+                    DisableMediaElement();
+                    DisableFFME();
+                    DisableImage();
+                    DisableVlc();
                     break;
             }
         }
@@ -412,12 +446,14 @@ namespace WallpaperFlux.WPF
                         //xWallpaperImage.Stretch = Stretch.None;
                         break;
                 }
+
+                ConnectedForm.SetWallpaperStyle(style);
             });
         }
 
         private void WallpaperMediaElement_OnMediaEnded(object sender, RoutedEventArgs e)
         {
-            VideoLoopCount++;
+            LoopCount++;
 
             if (sender is MediaElement element)
             {
@@ -426,18 +462,18 @@ namespace WallpaperFlux.WPF
             }
         }
 
-        private void WallpaperMediaElementFFME_OnMediaEnded(object? sender, EventArgs e) => VideoLoopCount++;
+        private void WallpaperMediaElementFFME_OnMediaEnded(object? sender, EventArgs e) => LoopCount++;
 
         public void Mute()
         {
-            Muted = true;
             UpdateVolume(ActiveImage);
+            ConnectedForm.Mute();
         }
 
         public void Unmute()
         {
-            Muted = false;
             UpdateVolume(ActiveImage);
+            ConnectedForm.Unmute();
         }
 
         public void UpdateVolume()
@@ -449,8 +485,7 @@ namespace WallpaperFlux.WPF
         {
             Dispatcher.Invoke(() =>
             {
-
-                if (!Muted)
+                if (!AudioManager.IsWallpapersMuted)
                 {
                     int repeatInterval = 100;
 
@@ -458,6 +493,7 @@ namespace WallpaperFlux.WPF
                     {
                         if (!image.IsVideo) return;
 
+                        /*!
                         if (WallpaperVlc.MediaPlayer != null && WallpaperWindowUtil.IsVideoVlcCompatible(new FileInfo(image.Path).Extension))
                         {
                             if (WallpaperVlc.MediaPlayer.Volume != (int)image.Volume)
@@ -478,6 +514,12 @@ namespace WallpaperFlux.WPF
                                     });
                                 });
                             }
+                        }
+                        */
+
+                        if (WallpaperUtil.IsSupportedVideoType(image.Path))
+                        {
+                            ConnectedForm.UpdateVolume(image);
                         }
                         else
                         {
@@ -511,10 +553,12 @@ namespace WallpaperFlux.WPF
 
                     WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = 0;
 
+                    /*!
                     if (WallpaperVlc.MediaPlayer != null)
                     {
                         WallpaperVlc.MediaPlayer.Volume = 0;
                     }
+                    */
                 }
             });
         }
@@ -551,5 +595,7 @@ namespace WallpaperFlux.WPF
                 });
             });
         }
+
+        public void IncrementLoopCount() => LoopCount++;
     }
 }

@@ -34,10 +34,10 @@ namespace WallpaperFlux.Core.Util
             dialog.Filters.Add(new CommonFileDialogFilter(IMAGE_FILES_DISPLAY_NAME, IMAGE_FILES_EXTENSION_LIST));
             dialog.Filters.Add(new CommonFileDialogFilter(ALL_FILES_DISPLAY_NAME, ALL_FILES_EXTENSION_LIST));
         }
-
+               
         public static bool IsStatic(string filePath) => IsStatic_GivenExtension(Path.GetExtension(filePath));
 
-        private static bool IsStatic_GivenExtension(string extension) => !(extension == ".gif" || WallpaperUtil.IsSupportedVideoType_GivenExtension(extension));
+        private static bool IsStatic_GivenExtension(string extension) => !(extension == ".gif" || IsSupportedVideoType_GivenExtension(extension));
 
         public static bool IsGif(string filePath) => IsGif_GivenExtension(Path.GetExtension(filePath));
 

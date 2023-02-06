@@ -38,14 +38,14 @@ namespace WallpaperFlux.Core.Tools
         public static void StartAudioManagerTimer()
         {
             _audioTimer = Mvx.IoCProvider.Resolve<IExternalTimer>();
-            _audioTimer.Interval = TimeSpan.FromSeconds(1);
+            _audioTimer.Interval = TimeSpan.FromMilliseconds(100);
             _audioTimer.Tick += AudioManagerOnTick;
             _audioTimer.Start();
         }
 
         private static void AudioManagerOnTick(object sender, EventArgs e)
         {
-            if (!_audioThread.IsAlive) // we don't want a lagged thread to overwrite and/or conflict with an upcoming thread, nor do we want so many running at the same time
+            if (!_audioThread.IsAlive) // we don't want a lagged thread to overwrite and/or conflict with an upcoming thread, nor do we want too many running at the same time
             {
                 CheckForMuteConditions();
             }
@@ -211,17 +211,15 @@ namespace WallpaperFlux.Core.Tools
         private static void MuteWallpapers()
         {
             Debug.WriteLine("Mute");
-            OnMute?.Invoke();
-            //xforeach (var wallpaper in WallpaperData.WallpaperManagerForm.GetWallpapers()) wallpaper.Mute();
             IsWallpapersMuted = true;
+            OnMute?.Invoke();
         }
 
         private static void UnmuteWallpapers()
         {
             Debug.WriteLine("Unmute");
-            OnUnmute?.Invoke();
-            //xforeach (var wallpaper in WallpaperData.WallpaperManagerForm.GetWallpapers()) wallpaper.Unmute();
             IsWallpapersMuted = false;
+            OnUnmute?.Invoke();
         }
     }
 }

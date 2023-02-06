@@ -15,7 +15,9 @@
         Title="WallpaperWindow" Height="450" Width="800" WindowStyle="None">
     <Grid>
         <Viewbox x:Name="WallpaperVlcViewBox">
+            <!--
             <vlc:VideoView x:Name="WallpaperVlc" Visibility="Hidden"/>
+        -->
         </Viewbox>
 
         <Image x:Name="WallpaperImage" Width="auto" Height="auto" Visibility="Hidden"/>

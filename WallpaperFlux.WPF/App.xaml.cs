@@ -17,6 +17,7 @@ using MvvmCross.Core;
 using MvvmCross.Platforms.Wpf.Views;
 using Unosquare.FFME;
 using WallpaperFlux.Core;
+using WallpaperFlux.Winform.Util;
 using WallpaperFlux.WPF.Util;
 using MediaElement = Unosquare.FFME.MediaElement;
 

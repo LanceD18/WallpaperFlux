@@ -26,12 +26,14 @@
     <PackageReference Include="SharpGen.Runtime" Version="1.2.1" />
     <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.18" />
     <PackageReference Include="Vlc.DotNet.Wpf" Version="3.1.0" />
-    <PackageReference Include="WpfScreenHelper" Version="1.0.0" />
+    <PackageReference Include="WpfScreenHelper" Version="2.1.0" />
     <PackageReference Include="XamlAnimatedGif" Version="2.1.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\WallpaperFlux.Core\WallpaperFlux.Core.csproj" />
+    <ProjectReference Include="..\WallpaperFlux.Winform\WallpaperFlux.Winform.csproj" />
+    <ProjectReference Include="..\WallpaperFlux.Winform\WallpaperFlux.Winform_broken.csproj" />
   </ItemGroup>
 
   <ItemGroup>

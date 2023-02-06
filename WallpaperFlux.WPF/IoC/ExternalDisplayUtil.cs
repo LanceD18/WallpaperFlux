@@ -13,5 +13,9 @@ namespace WallpaperFlux.WPF.IoC
         public void ResetLargestDisplayIndexOrder() => DisplayUtil.ResetLargestDisplayIndexOrder();
 
         public IEnumerable<int> GetLargestDisplayIndexOrder() => DisplayUtil.GetLargestDisplayIndexOrder();
+
+        public int GetDisplayXAdjustment() => DisplayUtil.DisplayXAdjustment;
+
+        public int GetMinDisplayY() => DisplayUtil.MinDisplayY;
     }
 }

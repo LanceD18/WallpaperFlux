@@ -9,5 +9,9 @@ namespace WallpaperFlux.Core.IoC
         void ResetLargestDisplayIndexOrder();
 
         IEnumerable<int> GetLargestDisplayIndexOrder();
+
+        int GetDisplayXAdjustment();
+
+        int GetMinDisplayY();
     }
 }
