@@ -20,5 +20,7 @@ namespace WallpaperFlux.Core.IoC
         void Unmute(int index);
 
         void UpdateSize();
+
+        void DisableMpv();
     }
 }

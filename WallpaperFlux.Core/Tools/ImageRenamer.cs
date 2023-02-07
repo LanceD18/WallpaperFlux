@@ -67,7 +67,7 @@ namespace WallpaperFlux.Core.Tools
 
         public static void AutoMoveImage(ImageModel image)
         {
-            string folderPath = FolderUtil.GetValidFolderPath();
+            string folderPath = FolderUtil.PromptValidFolderPath();
 
             if (folderPath != string.Empty)
             {
@@ -77,7 +77,7 @@ namespace WallpaperFlux.Core.Tools
 
         public static void AutoMoveImageRange(ImageModel[] images)
         {
-            string folderPath = FolderUtil.GetValidFolderPath();
+            string folderPath = FolderUtil.PromptValidFolderPath();
 
             if (folderPath != string.Empty)
             {
@@ -338,7 +338,7 @@ namespace WallpaperFlux.Core.Tools
 
         public static void DirectlyMoveImage(ImageModel image)
         {
-            string folderPath = FolderUtil.GetValidFolderPath();
+            string folderPath = FolderUtil.PromptValidFolderPath();
 
             if (folderPath != string.Empty)
             {
@@ -348,7 +348,7 @@ namespace WallpaperFlux.Core.Tools
 
         public static void DirectlyMoveImageRange(ImageModel[] images)
         {
-            string folderPath = FolderUtil.GetValidFolderPath();
+            string folderPath = FolderUtil.PromptValidFolderPath();
 
             if (folderPath != string.Empty)
             {
@@ -376,9 +376,9 @@ namespace WallpaperFlux.Core.Tools
         private static bool ValidateImagePathUpdate(string oldPath, string newPath, ImageModel image, out string errorMessage)
         {
             // TODO THESE ERROR MESSAGES SHOULD BE COMPILED INTO ONE LARGE MESSAGE, REMEMBER THAT YOU HAVE A SCROLLBAR NOW
-            if (image != null && File.Exists(oldPath))
+            if (image != null && FileUtil.Exists(oldPath))
             {
-                if (!File.Exists(newPath))
+                if (!FileUtil.Exists(newPath))
                 {
                     if (new FileInfo(newPath).Name.IndexOfAny(Path.GetInvalidFileNameChars()) == -1)
                     {

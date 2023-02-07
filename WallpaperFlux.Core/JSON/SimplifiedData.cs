@@ -15,7 +15,7 @@ namespace WallpaperFlux.Core.JSON
 
         public string PriorityName;
 
-        public SimplifiedFolder(string path, bool enabled, string priorityName)
+        public SimplifiedFolder(string path, string priorityName, bool enabled = true)
         {
             Path = path;
             Enabled = enabled;
@@ -33,7 +33,7 @@ namespace WallpaperFlux.Core.JSON
 
         public SimplifiedTag[] Tags;
 
-        public SimplifiedCategory(string name, bool enabled, bool useForNaming, SimplifiedTag[] tags)
+        public SimplifiedCategory(string name, SimplifiedTag[] tags, bool enabled = true, bool useForNaming = true)
         {
             Name = name;
             Enabled = enabled;
@@ -56,7 +56,7 @@ namespace WallpaperFlux.Core.JSON
 
         public string RenameFolderPath;
 
-        public SimplifiedTag(string name, bool enabled, bool useForNaming, string parentCategoryName, SimplifiedParentTag[] parentTags, string renameFolder)
+        public SimplifiedTag(string name, string parentCategoryName, SimplifiedParentTag[] parentTags, string renameFolder, bool enabled = true, bool useForNaming = true)
         {
             Name = name;
             Enabled = enabled;
@@ -85,6 +85,8 @@ namespace WallpaperFlux.Core.JSON
 
         public int Rank;
 
+        public bool Enabled;
+
         // TODO Consider handling similarly to SimplifiedParentTag or the other way around for both, analyze the benefits / costs to the JSON size (The dictionary method results in less category naming)
         // TODO The reason why SimplifiedParentTag was handled differently in the first place was because of it pulling directly from the property in the older version
         public Dictionary<string, List<string>> Tags; //? similar to SimplifiedParentTag, we want to know the category name to prevent duplicate name issues without loading in too much information
@@ -101,15 +103,19 @@ namespace WallpaperFlux.Core.JSON
 
         public bool OverrideMaxTime;
 
-        public SimplifiedImage(string path, int rank, Dictionary<string, List<string>> tags, Dictionary<string, List<string>> tagNamingExceptions, 
-            int minLoops, int maxTime, bool overrideMinLoops, bool overrideMaxTime, double volume = -1)
+        public SimplifiedImage(string path, int rank, Dictionary<string, List<string>> tags, Dictionary<string, List<string>> tagNamingExceptions,
+            int minLoops, int maxTime, bool overrideMinLoops, bool overrideMaxTime, bool enabled = true, double volume = -1)
         {
             Path = path;
             Rank = rank;
+            Enabled = enabled;
             Tags = tags;
             TagNamingExceptions = tagNamingExceptions;
+
             //? the -1 acts as a default null value since volume can't be set to -1, if the volume is at this value then use the global default
             Volume = volume == -1 ? ThemeUtil.VideoSettings.DefaultVideoVolume : volume;
+            //? the -1 acts as a default null value since volume can't be set to -1, if the volume is at this value then use the global default
+
             Volume = volume;
             MinLoops = minLoops;
             MaxTime = maxTime;

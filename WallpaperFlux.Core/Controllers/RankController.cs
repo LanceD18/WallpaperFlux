@@ -41,17 +41,17 @@ namespace WallpaperFlux.Core.Controllers
 
             foreach (ImageType imageType in RankData.Keys)
             {
-                RankData[imageType].OnListAddItem += RankData_OnParentListAddItem;
-                RankData[imageType].OnListRemoveItem += RankData_OnParentListRemoveItem;
+                RankData[imageType].OnListAddItem += RankData_OnAddRank;
+                RankData[imageType].OnListRemoveItem += RankData_OnRemoveRank;
             }
         }
 
         //! this method should only be called by the Setter of the ImageModel Rank property unless otherwise noted
         public void ModifyRank(ImageModel image, int oldRank, ref int newRank)
         {
-            // clamps the given rank to the rank-range for just in case something out-of-bounds is given
-            //xDebug.WriteLine("ModifyRank: " + ContainsRank(newRank, image.ImageType) + " | " + RankData[image.ImageType].Count);
+            if (JsonUtil.IsLoadingData) return; //? this will be revisited for all images once loading is finished and all folders are re-validated
 
+            // clamps the given rank to the rank-range for just in case something out-of-bounds is given
             newRank = ClampValueToRankRange(newRank);
 
             RankData[image.ImageType][oldRank].Remove(image);
@@ -269,24 +269,33 @@ namespace WallpaperFlux.Core.Controllers
         #endregion
 
         #region Events
-        private void RankData_OnParentListAddItem(object sender, ListChangedEventArgs<ReactiveHashSet<ImageModel>> e)
+        private void RankData_OnAddRank(object sender, ListChangedEventArgs<ReactiveHashSet<ImageModel>> e)
         {
-            e.Item.OnHashSetAddItem += RankData_OnListAddItem;
-            e.Item.OnHashSetRemoveItem += RankData_OnListRemoveItem;
+            e.Item.OnHashSetAddItem += RankData_OnRankAddImage;
+            e.Item.OnHashSetRemoveItem += RankData_OnRankRemoveImage;
         }
 
-        private void RankData_OnParentListRemoveItem(object sender, ListChangedEventArgs<ReactiveHashSet<ImageModel>> e)
+        private void RankData_OnRemoveRank(object sender, ListChangedEventArgs<ReactiveHashSet<ImageModel>> e)
         {
-            e.Item.OnHashSetAddItem -= RankData_OnListAddItem;
-            e.Item.OnHashSetRemoveItem -= RankData_OnListRemoveItem;
+            e.Item.OnHashSetAddItem -= RankData_OnRankAddImage;
+            e.Item.OnHashSetRemoveItem -= RankData_OnRankRemoveImage;
         }
 
-        private void RankData_OnListAddItem(object sender, HashSetChangedEventArgs<ImageModel> e)
+        private void RankData_OnRankAddImage(object sender, HashSetChangedEventArgs<ImageModel> e)
         {
             //xif (!IsLoadingData) // UpdateRankPercentiles will be called once the loading ends
             //x{
-            PercentileController.PotentialWeightedRankUpdate = true;
-            if ((sender as ReactiveHashSet<ImageModel>).Count == 1) // allows the now unempty rank to be selected
+
+            ReactiveHashSet<ImageModel> rank = (sender as ReactiveHashSet<ImageModel>);
+
+            if (!e.Item.IsEnabled()) //? if the added image is not enabled, just remove it and move on
+            {
+                rank?.Remove(e.Item);
+                return;
+            }
+
+            PercentileController.PotentialWeightedRankUpdate = true; // any update to a rank's collection could trigger a weighted rank update
+            if (rank?.Count == 1) //? checks when the collection of a rank has a count of 1 image
             {
                 Debug.WriteLine("A recently adjusted rank now has one image");
                 PercentileController.PotentialRegularRankUpdate = true;
@@ -297,12 +306,12 @@ namespace WallpaperFlux.Core.Controllers
             //x}
         }
 
-        private void RankData_OnListRemoveItem(object sender, HashSetChangedEventArgs<ImageModel> e)
+        private void RankData_OnRankRemoveImage(object sender, HashSetChangedEventArgs<ImageModel> e)
         {
             //xif (!IsLoadingData) // UpdateRankPercentiles will be called once the loading ends
             //x{
-            PercentileController.PotentialWeightedRankUpdate = true;
-            if ((sender as ReactiveHashSet<ImageModel>).Count == 0) // prevents the empty rank from being selected
+            PercentileController.PotentialWeightedRankUpdate = true; // any update to a rank's collection could trigger a weighted rank update
+            if (((ReactiveHashSet<ImageModel>)sender).Count == 0) //? checks when the collection of a rank has a count of 0 images
             {
                 Debug.WriteLine("A recently adjusted rank is now empty");
                 PercentileController.PotentialRegularRankUpdate = true;

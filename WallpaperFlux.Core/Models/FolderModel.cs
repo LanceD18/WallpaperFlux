@@ -5,13 +5,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using LanceTools.DiagnosticsUtil;
+using LanceTools.IO;
 using MvvmCross.Commands;
 using MvvmCross.ViewModels;
 using WallpaperFlux.Core.Util;
 
 namespace WallpaperFlux.Core.Models
 {
-    // the FolderModel will pick up every file within it and attempt to enable/disable it based on the model's active state & whether or not the file is within the theme
+    // the FolderModel will pick up every file within it and attempt to enable/disable it based on the model's enabled state & whether or not the file is within the theme
     public class FolderModel : MvxNotifyPropertyChanged
     {
         private string _path;
@@ -24,17 +25,16 @@ namespace WallpaperFlux.Core.Models
         }
 
         // TODO Rename this to Enabled to match with similar functions across other aspects of the program
-        private bool _active;
+        private bool _enabled;
 
-        public bool Active
+        public bool Enabled
         {
-            get => _active;
+            get => _enabled;
 
             set
             {
-                _active = value;
-                RaisePropertyChanged(() => Active); // TODO You should probably change this to SetProperty()
-                ValidateImages();
+                SetProperty(ref _enabled, value);
+                ValidateImages(true);
             }
         }
 
@@ -53,7 +53,7 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
-        public FolderModel(string path, bool active, string priorityName = "")
+        public FolderModel(string path, bool enabled, string priorityName = "")
         {
             if (!Directory.Exists(path))
             {
@@ -66,7 +66,7 @@ namespace WallpaperFlux.Core.Models
             Path = path;
 
             //! this will internally validate the image folder so this must be placed after the images are added
-            Active = active;
+            Enabled = enabled;
 
             PriorityName = priorityName;
 
@@ -81,30 +81,30 @@ namespace WallpaperFlux.Core.Models
             ProcessUtil.OpenFile(Path);
         }
 
-        // updated the active state of each image based on the folder's active state
-        // if the image does not exist, add it to the theme, regardless of whether or not the folder is active
-        //? This serves a dual purpose, enabling/disabling images within a folder AND detecting new images upon validation
-        // TODO Optimize Me
-        public void ValidateImages()
+        // updated the enabled state of each image based on the folder's enabled state
+        // if the image does not exist, add it to the theme
+        public void ValidateImages(bool updateEnabledState)
         {
             //! This currently doesn't check for non-image files
 
-            foreach (string image in _images)
+            if (JsonUtil.IsLoadingData) return; //? we will call all folders once loading is finished, this processes tackles both the Image Collection AND Rank Controller
+
+            foreach (string imagePath in _images)
             {
-                if (ThemeUtil.Theme.Images.ContainsImage(image))
+                if (FileUtil.Exists(imagePath)) //? no need to delete from _images if the image does not exist considering how the { get; } function of _images works
                 {
-                    ThemeUtil.Theme.Images.GetImage(image).Active = Active;
-                }
-                else
-                {
-                    if (File.Exists(image))
+                    ImageModel image = ThemeUtil.Theme.Images.GetImage(imagePath);
+
+                    if (image == null) // new image found
                     {
-                        ThemeUtil.Theme.Images.AddImage(image);
-                        ThemeUtil.Theme.Images.GetImage(image).Active = Active;
+                        ThemeUtil.Theme.Images.AddImage(imagePath, this);
                     }
-                    else //? this image was removed, delete it
+                    else // check if existing image is enabled
                     {
-                        _images.Remove(image);
+                        //xif (!JsonUtil.IsLoadingData) ThemeUtil.Theme.Images.AddImage(image, this); //? the image will add itself while loading
+                        image.ParentFolder = this;
+
+                        if (updateEnabledState) image.UpdateEnabledState(); //? so that we don't have to loop twice to process changes to Enabled
                     }
                 }
             }
@@ -120,7 +120,7 @@ namespace WallpaperFlux.Core.Models
 
         public string[] GetImagePaths()
         {
-            ValidateImages(); // check for potentially deleted images
+            ValidateImages(false); // check for new images
 
             return _images.ToArray();
         }

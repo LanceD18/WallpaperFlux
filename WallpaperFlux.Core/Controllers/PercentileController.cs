@@ -141,8 +141,6 @@ namespace WallpaperFlux.Core.Controllers
             PotentialWeightedRankUpdate = false; //? Prevents this from being called often due to the potential performance costs
             PotentialRegularRankUpdate = false; //? Prevents this from being called often due to the potential performance costs
 
-            ModifiedRankPercentiles = GetModifiedRankPercentiles(imageType);
-            
             ModifiedRankPercentiles = ThemeUtil.Theme.Settings.ThemeSettings.WeightedRanks ? GetWeightedRankPercentiles(imageType) : GetModifiedRankPercentiles(imageType);
 
             // Update Image Type Weights if the Weighted Frequency option is checked

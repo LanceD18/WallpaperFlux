@@ -23,7 +23,7 @@ namespace WallpaperFlux.Core.Models.Tagging
         #region Core
         public string Name { get; private set; }
 
-        private bool _enabled;
+        private bool _enabled = true;
 
         public bool Enabled
         {
@@ -32,21 +32,7 @@ namespace WallpaperFlux.Core.Models.Tagging
             set
             {
                 SetProperty(ref _enabled, value);
-                /*x
-
-                if (_enabled != value)  // prevents unnecessary calls
-                {
-                    _enabled = value;
-
-                    if (LinkedImages != null)
-                    {
-                        if (!WallpaperData.IsLoadingData)
-                        {
-                            WallpaperData.EvaluateImageActiveStates(LinkedImages.ToArray(), !value); // will forceDisable if the value is set to false
-                        }
-                    }
-                }
-                */
+                UpdateLinkedImagesEnabledState();
             }
         }
 
@@ -333,11 +319,25 @@ namespace WallpaperFlux.Core.Models.Tagging
             ToggleNamingExceptionCommand = new MvxCommand(ToggleNamingException);
 
             // Folder Rename Priority
-            AssignRenameFolderCommand = new MvxCommand(() => RenameFolderPath = FolderUtil.GetValidFolderPath());
+            AssignRenameFolderCommand = new MvxCommand(() => RenameFolderPath = FolderUtil.PromptValidFolderPath());
             RemoveRenameFolderCommand = new MvxCommand(() => RenameFolderPath = string.Empty);
 
             // Rank Graph
             ToggleRankGraphCommand = new MvxCommand(TagViewModel.Instance.ToggleRankGraph);
+        }
+
+        public bool IsEnabled()
+        {
+            if (!Enabled) return false;
+
+            if (!ParentCategory.Enabled) return false;
+
+            foreach (TagModel parentTag in ParentTags)
+            {
+                if (!parentTag.IsEnabled()) return false;
+            }
+
+            return true;
         }
 
         #region Image Addition / Removal
@@ -348,7 +348,7 @@ namespace WallpaperFlux.Core.Models.Tagging
 
             if (canAdd)
             {
-                foreach (ImageModel image in images) image.AddTag(this, false);
+                foreach (ImageModel image in images) image.AddTag(this, false); //! TAG HIGHLIGHT DONE BELOW
             }
 
             TaggingUtil.HighlightTags();
@@ -361,7 +361,7 @@ namespace WallpaperFlux.Core.Models.Tagging
 
             if (canRemove)
             {
-                foreach(ImageModel image in images) image.RemoveTag(this, false);
+                foreach(ImageModel image in images) image.RemoveTag(this, false); //! TAG HIGHLIGHT DONE BELOW
             }
 
             TaggingUtil.HighlightTags();
@@ -375,13 +375,13 @@ namespace WallpaperFlux.Core.Models.Tagging
             {
                 if (!image.ContainsTag(this))
                 {
-                    image.AddTag(this, false);
+                    image.AddTag(this, false); //! TAG HIGHLIGHT DONE BELOW
                 }
                 else
                 {
                     if (!highlightedInSomeImages) //? in this case we will only add the tag to ensure that it is added to all corresponding images before allowing removal
                     {
-                        image.RemoveTag(this, false);
+                        image.RemoveTag(this, false); //! TAG HIGHLIGHT DONE BELOW
                     }
                 }
             }
@@ -476,10 +476,23 @@ namespace WallpaperFlux.Core.Models.Tagging
             return false;
         }
 
+        public void UpdateLinkedImagesEnabledState()
+        {
+            foreach (ImageModel image in LinkedImages)
+            {
+                image.UpdateEnabledState();
+            }
+
+            foreach (TagModel childTag in ChildTags) // we also need to turn off child tags
+            {
+                childTag.UpdateLinkedImagesEnabledState();
+            }
+        }
+
         #endregion
 
         #region Parent / Child Tag Linking
-        
+
         public void LinkTag(TagModel tag, bool highlightTags)
         {
             if (tag == this) return; // can't link a tag to itself

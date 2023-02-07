@@ -455,7 +455,7 @@ namespace WallpaperFlux.Core.ViewModels
 
             AssignDefaultResolutionCommand = new MvxCommand(() =>
             {
-                string path = FolderUtil.GetValidFolderPath();
+                string path = FolderUtil.PromptValidFolderPath();
                 if (!string.IsNullOrEmpty(path))
                 {
                     TaggingUtil.DefaultConflictResolutionPath = path;

@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Windows;
+using LanceTools.IO;
 using Unosquare.FFME;
 using WallpaperFlux.Core.IoC;
 using WallpaperFlux.Core.Util;
@@ -29,7 +30,7 @@ namespace WallpaperFlux.WPF.IoC
                 });
                 */
 
-                if (File.Exists(elementPath) && !WallpaperUtil.IsSupportedVideoType(elementPath))
+                if (FileUtil.Exists(elementPath) && !WallpaperUtil.IsSupportedVideoType(elementPath))
                 {
                     _internalMediaElement.Open(new Uri(elementPath));
                 }

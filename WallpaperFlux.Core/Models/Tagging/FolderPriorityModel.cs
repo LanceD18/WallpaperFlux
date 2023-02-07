@@ -207,7 +207,7 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         public void AssignConflictResolutionFolder()
         {
-            string path = FolderUtil.GetValidFolderPath();
+            string path = FolderUtil.PromptValidFolderPath();
             if (!string.IsNullOrEmpty(path))
             {
                 ConflictResolutionFolder = path;

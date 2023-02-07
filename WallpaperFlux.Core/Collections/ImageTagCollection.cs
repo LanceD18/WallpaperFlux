@@ -34,9 +34,11 @@ namespace WallpaperFlux.Core.Collections
         {
             _tags.Add(tag); // we're using a hashset, no need to worry about duplicate tags
             tag.LinkImage(this);
-            TaggingUtil.HighlightTags();
+            if (highlightTags) TaggingUtil.HighlightTags();
 
             WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.InspectedImageTags);
+
+            ParentImage.UpdateEnabledState(); // may have added a disabled tag
         }
 
         public void Remove(TagModel tag, bool highlightTags)
@@ -47,6 +49,8 @@ namespace WallpaperFlux.Core.Collections
             _tagNamingExceptions.Remove(tag); // the naming exception status will be reset on re-add, also, this reduces potential JSON bloat
 
             WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.InspectedImageTags);
+
+            ParentImage.UpdateEnabledState(); // may have added a disabled tag
         }
 
         /// <summary>
@@ -170,5 +174,18 @@ namespace WallpaperFlux.Core.Collections
 
         // not checking if this tag is in the collection will allow us to remove rogue / leftover tags in the naming exceptions
         public void RemoveNamingException(TagModel tag) => _tagNamingExceptions.Remove(tag);
+
+        public bool AreTagsEnabled()
+        {
+            foreach (TagModel tag in _tags)
+            {
+                if (!tag.IsEnabled())
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 }

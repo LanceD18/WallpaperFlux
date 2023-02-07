@@ -371,7 +371,7 @@ namespace WallpaperFlux.WPF
             */
         }
 
-        private void DisableMpv()
+        public void DisableMpv()
         {
             ConnectedForm.Enabled = false;
             ConnectedForm.Visible = false;

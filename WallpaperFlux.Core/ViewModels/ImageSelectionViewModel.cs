@@ -165,7 +165,7 @@ namespace WallpaperFlux.Core.ViewModels
 
         private void PromptFolder()
         {
-            RebuildImageSelectorWithOptions(FilterImages(FolderUtil.GetValidFolderModel()?.GetImageModels()));
+            RebuildImageSelectorWithOptions(FilterImages(FolderUtil.PromptValidFolderModel()?.GetImageModels()));
         }
 
         private void SelectActiveWallpapers()

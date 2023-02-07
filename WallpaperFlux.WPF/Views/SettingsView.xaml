@@ -232,7 +232,7 @@
         <!-- ? Other Settings -->
         <StackPanel Grid.Row="5" Grid.Column="1">
 
-            <CheckBox Content="Enable Detection of Inactive Images" ToolTip="This allows inactive images to appear in the image selector" Margin="3"
+            <CheckBox Content="Enable Detection of Disabled Images" ToolTip="This allows disabled images to appear in the image selector" Margin="3"
                       IsChecked="{Binding Settings.ThemeSettings.EnableDetectionOfInactiveImages}"/>
 
             <Button Width="175" Content="Rank Distribution Graph" Margin="3" Command="{Binding ToggleRankGraphCommand}" HorizontalAlignment="Left"/>

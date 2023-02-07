@@ -59,14 +59,14 @@
 
                 <MenuItem Header="Toggle Tag-Adder" IsCheckable="True" IsChecked="{Binding TagAdderToggle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                     <MenuItem.ToolTip>
-                        While this toggle is active every tag you click will be added to or removed from the selected image. The tags of the selected image will be highlighted
+                        While this toggle is enabled every tag you click will be added to or removed from the selected image. The tags of the selected image will be highlighted
                     </MenuItem.ToolTip>
                 </MenuItem>
                 <MenuItem Header="Toggle Tag-Linker" IsCheckable="True"
                           IsChecked="{Binding TagLinkerToggle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                           IsEnabled="{Binding CanUseTagLinker, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
                     <MenuItem.ToolTip>
-                        While this toggle is active every tag you click will be linked to or unlinked from the selected tag. The already linked tags will be highlighted
+                        While this toggle is enabled every tag you click will be linked to or unlinked from the selected tag. The already linked tags will be highlighted
                     </MenuItem.ToolTip>
                 </MenuItem>
             </MenuItem>

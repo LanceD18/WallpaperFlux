@@ -16,6 +16,8 @@ namespace WallpaperFlux.Core.Util
 {
     public static class FolderUtil
     {
+        public static bool IsValidatingFolders { get; private set; } // without this RankController's verifications will bog down the system if a large number of images are disabled (from constantly setting a rank to 0)
+
         /*x
         public static MvxObservableCollection<FolderModel> ThemeImageFolders { get; private set; }
 
@@ -41,15 +43,19 @@ namespace WallpaperFlux.Core.Util
         // TODO or just cater to the only one that's likely to exist: ImageFolders from WallpaperFluxVieWModel
 
         //? This serves a dual purpose, enabling/disabling images within a folder AND detecting new images upon validation (But for ALL folders)
-        public static void ValidateImageFolders(this MvxObservableCollection<FolderModel> imageFolders)
+        public static void ValidateImageFolders(this MvxObservableCollection<FolderModel> imageFolders, bool updateEnabledState)
         {
+            IsValidatingFolders = true;
+
             foreach (FolderModel imageFolder in imageFolders)
             {
-                imageFolder.ValidateImages();
+                imageFolder.ValidateImages(updateEnabledState);
             }
+
+            IsValidatingFolders = false;
         }
 
-        public static bool ContainsImageFolder(this MvxObservableCollection<FolderModel> imageFolders, string imageFolderPath)
+        public static bool ContainsFolderPath(this MvxObservableCollection<FolderModel> imageFolders, string imageFolderPath)
         {
             foreach (FolderModel imageFolder in imageFolders)
             {
@@ -66,7 +72,7 @@ namespace WallpaperFlux.Core.Util
         /// Uses the CommonOpenFileDialog to retrieve a valid folder path
         /// </summary>
         /// <returns>Returns string.Empty if the folder is invalid, otherwise, returns the folder path</returns>
-        public static string GetValidFolderPath()
+        public static string PromptValidFolderPath()
         {
             using (CommonOpenFileDialog dialog = new CommonOpenFileDialog())
             {
@@ -125,9 +131,9 @@ namespace WallpaperFlux.Core.Util
             return new[] { string.Empty };
         }
 
-        public static FolderModel GetValidFolderModel()
+        public static FolderModel PromptValidFolderModel()
         {
-            string folderPath = GetValidFolderPath();
+            string folderPath = PromptValidFolderPath();
 
             if (folderPath != string.Empty)
             {
@@ -140,7 +146,7 @@ namespace WallpaperFlux.Core.Util
                 }
             }
             
-            //? We don't need an error message here because GetValidFolderPath handles this for us
+            //? We don't need an error message here because PromptValidFolderPath handles this for us
 
             return null;
         }
@@ -177,7 +183,7 @@ namespace WallpaperFlux.Core.Util
                 }
             }
 
-            //? We don't need an error message here because GetValidFolderPath handles this for us
+            //? We don't need an error message here because PromptValidFolderPath handles this for us
 
             return validFolderModels.ToArray();
 

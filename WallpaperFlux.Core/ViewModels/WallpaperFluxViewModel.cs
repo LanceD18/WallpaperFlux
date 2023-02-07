@@ -17,6 +17,7 @@ using System.Xml;
 using AdonisUI.Controls;
 using HandyControl.Controls;
 using LanceTools;
+using LanceTools.IO;
 using LanceTools.WPF.Adonis.Util;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Microsoft.WindowsAPICodePack.Shell.PropertySystem;
@@ -150,8 +151,6 @@ namespace WallpaperFlux.Core.ViewModels
             {
                 _selectedImageCount = value;
                 RaisePropertyChanged(() => SelectedImagePathText);
-                
-                TaggingUtil.HighlightTags();
             }
         }
 
@@ -265,6 +264,8 @@ namespace WallpaperFlux.Core.ViewModels
 
         public IMvxCommand SyncCommand { get; set; }
 
+        public IMvxCommand DeRenderWinformCommand { get; set; }
+
         #region Image Selector
 
         public IMvxCommand ClearImagesCommand { get; set; }
@@ -361,6 +362,7 @@ namespace WallpaperFlux.Core.ViewModels
             AddFolderCommand = new MvxCommand(PromptAddFolder);
             RemoveFolderCommand = new MvxCommand(PromptRemoveFolder);
             SyncCommand = new MvxCommand(SyncDisplaySettings);
+            DeRenderWinformCommand = new MvxCommand(DeRenderWinform);
 
             // Image Selector
             ClearImagesCommand = new MvxCommand(ClearImages);
@@ -452,7 +454,7 @@ namespace WallpaperFlux.Core.ViewModels
             {
                 ThemeUtil.Theme.WallpaperRandomizer.NextWallpapers[index] = ThemeUtil.Theme.WallpaperRandomizer.PreviousWallpapers[index].Pop();
 
-                if (File.Exists(ThemeUtil.Theme.WallpaperRandomizer.NextWallpapers[index]))
+                if (FileUtil.Exists(ThemeUtil.Theme.WallpaperRandomizer.NextWallpapers[index]))
                 {
                     WallpaperUtil.SetWallpaper(index, true, true); // ignoreRandomization = true since there is no need to randomize wallpapers that have previously existed
                 }
@@ -494,6 +496,8 @@ namespace WallpaperFlux.Core.ViewModels
                     foreach (Action action in JsonUtil.ActionsPendingLoad) action?.Invoke();
                     JsonUtil.ActionsPendingLoad.Clear();
 
+                    ImageFolders.ValidateImageFolders(true); // validation was cancelled beforehand
+
                     //! this is also called by UpdateImageTypeWeights(), keeping this here regardless however to avoid complications in a future refactor since it is critical
                     ThemeUtil.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence();
                     //! this is also called by UpdateImageTypeWeights(), keeping this here regardless however to avoid complications in a future refactor since it is critical
@@ -512,8 +516,8 @@ namespace WallpaperFlux.Core.ViewModels
         {
             Debug.WriteLine("Updating theme...");
             // TODO This check will only matter once you use 'Update Theme' to check for the existence of new images
-            //x DataUtil.Theme.Settings.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence();
-            JsonUtil.QuickSave();
+            //xThemeUtil.Theme.Settings.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence();
+            //xJsonUtil.QuickSave();
         }
 
         public void PromptSaveTheme()
@@ -547,7 +551,7 @@ namespace WallpaperFlux.Core.ViewModels
 
                 if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
                 {
-                    if (!ImageFolders.ContainsImageFolder(dialog.FileName))
+                    if (!ImageFolders.ContainsFolderPath(dialog.FileName))
                     {
                         AddFolder(dialog.FileName);
                     }
@@ -620,7 +624,7 @@ namespace WallpaperFlux.Core.ViewModels
             RaisePropertyChanged(() => CanNextWallpaper);
             RaisePropertyChanged(() => CanSelectImages);
 
-            UpdateTheme();
+            //xUpdateTheme();
         }
 
         public void PromptRemoveFolder()
@@ -639,19 +643,10 @@ namespace WallpaperFlux.Core.ViewModels
             ImageFolders.Remove(SelectedImageFolder);
             //xImageFolders.ValidateImageFolders();
 
-            UpdateTheme();
+            //xUpdateTheme();
         }
 
-        public bool ContainsFolder(string path) => ImageFolders.ContainsImageFolder(path);
-
-        /*x
-            foreach (FolderModel folder in ImageFolders)
-            {
-                if (folder.Path == path) return true;
-            }
-
-            return false;
-            */
+        public bool ContainsFolder(string path) => ImageFolders.ContainsFolderPath(path);
 
         #endregion
 
@@ -725,6 +720,9 @@ namespace WallpaperFlux.Core.ViewModels
         private readonly string INVALID_IMAGE_STRING_DEFAULT = "The following selected images do not exist in your theme:\n(Please add the folder that they reside in to include them)";
         private readonly string INVALID_IMAGE_STRING_ALL_INVALID = "None of the selected images exist in your theme. Please add the folder that they reside in to include them.";
 
+        //! THIS ONLY APPLIES TO STRING ARRAYS OF IMAGES, TYPICALLY USED BY FOLDER SELECTION
+        //! THIS ONLY APPLIES TO STRING ARRAYS OF IMAGES, TYPICALLY USED BY FOLDER SELECTION
+        //! THIS ONLY APPLIES TO STRING ARRAYS OF IMAGES, TYPICALLY USED BY FOLDER SELECTION
         public void RebuildImageSelector(string[] selectedImages, bool randomize = false, bool reverseOrder = false)
         {
             List<ImageModel> selectedImageModels = new List<ImageModel>();
@@ -734,7 +732,9 @@ namespace WallpaperFlux.Core.ViewModels
 
             foreach (string imagePath in selectedImages)
             {
-                if (ThemeUtil.Theme.Images.ContainsImage(imagePath))
+                ImageModel image = ThemeUtil.Theme.Images.GetImage(imagePath);
+
+                if (image != null)
                 {
                     selectedImageModels.Add(ThemeUtil.Theme.Images.GetImage(imagePath));
                 }
@@ -766,30 +766,6 @@ namespace WallpaperFlux.Core.ViewModels
             if (selectedImages == null || selectedImages.Length == 0)
             {
                 MessageBoxUtil.ShowError("No images were selected");
-                return;
-            }
-
-            // Check for null images (The EnableDetectionOfInactiveImages function is handled further down)
-            int nullCounter = 0;
-            string nullImageString = "The following selected images do not exist:";
-            foreach (ImageModel image in selectedImages)
-            {
-                if (image == null)
-                {
-                    nullCounter++;
-                    nullImageString += "\n" + image;
-                }
-            }
-
-            if (nullCounter == selectedImages.Length)
-            {
-                MessageBoxUtil.ShowError("All selected images do not exist");
-                return;
-            }
-
-            if (nullCounter > 0)
-            {
-                MessageBoxUtil.ShowError(nullImageString);
                 return;
             }
 
@@ -825,46 +801,77 @@ namespace WallpaperFlux.Core.ViewModels
                     if (j + imageIndex < selectedImages.Length)
                     {
                         ImageModel image = selectedImages[j + imageIndex];
-                        if (ThemeUtil.Theme.Images.ContainsImage(image.Path, image.ImageType))
+
+                        bool success = false;
+
+                        //! KEEP IN MIND, if we check ContainsImage with the image object itself, then folder searches will fail to work!!!
+                        //! KEEP IN MIND, if we check ContainsImage with the image object itself, then folder searches will fail to work!!!
+                        if (image != null && ThemeUtil.Theme.Images.ContainsImage(image.Path, image.ImageType)) 
                         {
-                            tabModel.Items.Add(image);
+                            if (ThemeUtil.ThemeSettings.EnableDetectionOfInactiveImages || image.Active) //? we don't need to send an error message for user-disabled images
+                            {
+                                tabModel.Items.Add(image);
+                                success = true;
+                            }
                         }
                         else
                         {
                             invalidCounter++;
-                            invalidImageString += "\n" + image.Path;
+
+                            invalidImageString += "\n";
+                            invalidImageString += image != null ? image.Path : "[NULL]";
+                        }
+
+                        if (!success) // prevents creating null space
+                        {
+                            j--;
+                            imageIndex++;
                         }
                     }
                     else
                     {
-                        break;
+                        break; // we've reached the cutoff, stop producing pages
                     }
                 }
 
                 imageIndex += IMAGES_PER_PAGE; // ensures that we traverse through selectedImages[] properly
 
                 //x tabModel.RaisePropertyChangedImages();
-                ImageSelectorTabs.Add(tabModel);
+
+                if (tabModel.GetAllItems().Length > 0) // don't add the page if there's nothing there
+                {
+                    ImageSelectorTabs.Add(tabModel);
+                }
+            }
+            
+            RaisePropertyChanged(() => ImageSelectorTabs);
+            if (ImageSelectorTabs.Count > 0) SelectedImageSelectorTab = ImageSelectorTabs[0];
+            SelectedImageCount = 0; // without this the count will jump up to the number of images in the previous selection and be unable to reset
+
+            // ----- Final Validations -----
+            if (ImageSelectorTabs.Count == 0)
+            {
+                MessageBoxUtil.ShowError("No valid images were selected");
+                return;
             }
 
-            if (invalidCounter == selectedImages.Length)
+            if (invalidCounter == selectedImages.Length) // TODO Pretty sure this is inaccessible now, decide what to do with it
             {
                 MessageBoxUtil.ShowError(INVALID_IMAGE_STRING_ALL_INVALID);
-                //? we don't return here because the collection was modified
+                //x //? we don't return here because the collection was modified
+                return;
             }
 
             if (invalidCounter > 0)
             {
                 MessageBoxUtil.ShowError(invalidImageString);
+                return;
             }
-
-            RaisePropertyChanged(() => ImageSelectorTabs);
-            SelectedImageSelectorTab = ImageSelectorTabs[0];
-            SelectedImageCount = 0; // without this the count will jump up to the number of images in the previous selection and be unable to reset
         }
 
         private void ClearImages()
         {
+            DeselectAllImages();
             ImageSelectorTabs.Clear();
         }
 
@@ -901,6 +908,8 @@ namespace WallpaperFlux.Core.ViewModels
             {
                 selectorTab.SelectAllItems();
             }
+
+            TaggingUtil.HighlightTags();
         }
 
         public void DeselectAllImages()
@@ -909,6 +918,8 @@ namespace WallpaperFlux.Core.ViewModels
             {
                 selectorTab.DeselectAllItems();
             }
+
+            TaggingUtil.HighlightTags();
         }
 
         // pastes the current tagBoard selection to all highlighted images
@@ -918,7 +929,7 @@ namespace WallpaperFlux.Core.ViewModels
             {
                 foreach (TagModel tag in TagViewModel.Instance.TagBoardTags)
                 {
-                    image.AddTag(tag, false);
+                    image.AddTag(tag, false); //! TAG HIGHLIGHT DONE BELOW
                 }
             }
 
@@ -944,6 +955,9 @@ namespace WallpaperFlux.Core.ViewModels
         #endregion
 
         #endregion
+
+        public void DeRenderWinform() => WallpaperUtil.WallpaperHandler.DisableMpv();
+
         #endregion
     }
 }

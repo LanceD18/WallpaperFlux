@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using CSCore.CoreAudioAPI;
+using LanceTools.IO;
 using LanceTools.WindowsUtil;
 using MvvmCross;
 using WallpaperFlux.Core.IoC;
@@ -147,11 +148,11 @@ namespace WallpaperFlux.Core.Tools
                     List<string> potentialNames = new List<string>();
                     foreach (string wallpaper in ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers)
                     {
-                        if (File.Exists(wallpaper))
+                        if (FileUtil.Exists(wallpaper))
                         {
                             if (WallpaperUtil.IsSupportedVideoType(wallpaper)) // only videos should be checked
                             {
-                                //xDebug.WriteLine("Active: " + new FileInfo(wallpaper).Name);
+                                //xDebug.WriteLine("Enabled: " + new FileInfo(wallpaper).Name);
                                 potentialNames.Add(new FileInfo(wallpaper).Name);
                             }
                         }

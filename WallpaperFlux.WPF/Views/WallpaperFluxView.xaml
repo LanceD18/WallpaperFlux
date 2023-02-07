@@ -98,6 +98,9 @@
             <!-- Tools -->
             <MenuItem Header="Tools">
                 <MenuItem Header="Inspect Rank Distribution [Not Implemented]"/>
+                <!--
+                <MenuItem Header="De-Render Misc Video Types (Experimental)" Command="{Binding DeRenderWinformCommand}"/>
+                -->
             </MenuItem>
 
             <!-- Help -->
@@ -181,7 +184,7 @@
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
-                                    <CheckBox VerticalAlignment="Center" Margin="0 0 5 0" IsChecked="{Binding Active}"/>
+                                    <CheckBox VerticalAlignment="Center" Margin="0 0 5 0" IsChecked="{Binding Enabled}"/>
                                     <TextBlock Text="{Binding Path}" FontSize="14">
                                         <TextBlock.ContextMenu>
                                             <ContextMenu>
@@ -462,6 +465,9 @@
                                                                             <MenuItem Header="Delete" Command="{Binding DeleteImageCommand}"/>
                                                                             <MenuItem Header="Rank" Command="{Binding RankImageCommand}"/>
                                                                             <MenuItem Header="Paste Tagboard" Command="{Binding PasteTagBoardCommand}"/>
+                                                                            <Separator/>
+                                                                            <MenuItem Header="Enabled" StaysOpenOnClick="True" IsCheckable="True"
+                                                                                IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                                         </ContextMenu>
                                                                     </Image.ContextMenu>
                                                                 </Image>
@@ -527,6 +533,11 @@
                                                                             <MenuItem Header="Delete" Command="{Binding DeleteImageCommand}"/>
                                                                             <MenuItem Header="Rank" Command="{Binding RankImageCommand}"/>
                                                                             <MenuItem Header="Paste Tagboard" Command="{Binding PasteTagBoardCommand}"/>
+                                                                            <Separator/>
+                                                                            <MenuItem Header="Enabled" StaysOpenOnClick="True" IsCheckable="True"
+                                                                                IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                                                ToolTip="Disabling an image will stop it from appearing here, 
+                                                                                      if you want to see the image again select Enable Detection of Inactive Images"/>
                                                                             <Separator/>
                                                                             <MenuItem Header="Volume" mvx:Bi.nd="Command SetVolumeCommand"/>
                                                                             <MenuItem Header="Speed" mvx:Bi.nd="Command SetSpeedCommand"/>

@@ -172,7 +172,7 @@ namespace WallpaperFlux.Core.Util
 
         public static void QuickSave()
         {
-            if (!File.Exists(LoadedThemePath)) return;
+            if (!FileUtil.Exists(LoadedThemePath)) return;
 
             SaveData(LoadedThemePath);
         }
@@ -277,7 +277,7 @@ namespace WallpaperFlux.Core.Util
 
             foreach (FolderModel folder in folders)
             {
-                simplifiedFolders.Add(new SimplifiedFolder(folder.Path, folder.Active, folder.PriorityName));
+                simplifiedFolders.Add(new SimplifiedFolder(folder.Path, folder.PriorityName, folder.Enabled));
             }
 
             return simplifiedFolders.ToArray();
@@ -291,9 +291,7 @@ namespace WallpaperFlux.Core.Util
             {
                 simplifiedCategories.Add(new SimplifiedCategory(
                     category.Name,
-                    category.Enabled,
-                    category.UseForNaming,
-                    ConvertToSimplifiedTags(category.GetTags())));
+                    ConvertToSimplifiedTags(category.GetTags()), category.Enabled, category.UseForNaming));
             }
 
             return simplifiedCategories.ToArray();
@@ -308,12 +306,9 @@ namespace WallpaperFlux.Core.Util
 
                 simplifiedTags.Add(new SimplifiedTag(
                     tag.Name,
-                    tag.Enabled,
-                    tag.UseForNaming,
                     tag.ParentCategory.Name,
                     ConvertToParentTagArray(tag.GetParentTags()),
-                    tag.RenameFolderPath
-                ));
+                    tag.RenameFolderPath, tag.Enabled, tag.UseForNaming));
             }
 
             return simplifiedTags.ToArray();
@@ -346,7 +341,7 @@ namespace WallpaperFlux.Core.Util
                     image.MaximumTime,
                     image.OverrideMinimumLoops,
                     image.OverrideMaximumTime,
-                    image.Volume));
+                    image.Enabled, image.Volume));
             }
 
             return simplifiedImages.ToArray();
@@ -356,7 +351,7 @@ namespace WallpaperFlux.Core.Util
         private static string BackupData(string path, string backupNameExtension = "_BACKUP")
         {
             // only need to create a backup is the file actually exists
-            if (!File.Exists(path)) return null;
+            if (!FileUtil.Exists(path)) return null;
 
             FileInfo pathFile = new FileInfo(path);
             string tempPathName = pathFile.DirectoryName + "\\" + Path.GetFileNameWithoutExtension(pathFile.Name) + backupNameExtension;
@@ -368,7 +363,7 @@ namespace WallpaperFlux.Core.Util
             SortedList<DateTime, string> dateSortedFilePaths = new SortedList<DateTime, string>();
 
             string newTempPath = tempPath;
-            while (File.Exists(newTempPath))
+            while (FileUtil.Exists(newTempPath))
             {
                 DateTime dt = new FileInfo(newTempPath).LastWriteTime;
                 if (!dateSortedFilePaths.ContainsKey(dt)) // sometimes files can be saved too closely together, the initial file will be the oldest out of the two
@@ -401,7 +396,7 @@ namespace WallpaperFlux.Core.Util
         {
             Debug.WriteLine("Loading Data");
 
-            if (File.Exists(path))
+            if (FileUtil.Exists(path))
             {
                 Debug.WriteLine("Loading JSON Data");
                 //? RankData and ActiveImages will both be automatically set when jsonWallpaperData is loaded as the constructors for ImageData is what sets them
@@ -558,7 +553,7 @@ namespace WallpaperFlux.Core.Util
                     continue;
                 }
 
-                ImageModel image = new ImageModel(simpleImage.Path, simpleImage.Rank, volume: simpleImage.Volume, 
+                ImageModel image = new ImageModel(simpleImage.Path, simpleImage.Rank, simpleImage.Enabled, volume: simpleImage.Volume, 
                     minimumLoops: simpleImage.MinLoops, overrideMinimumLoops: simpleImage.OverrideMinLoops, maximumTime: simpleImage.MaxTime, overrideMaximumTime: simpleImage.OverrideMaxTime);
                 ImageTagCollection tags = new ImageTagCollection(image);
 
@@ -566,23 +561,13 @@ namespace WallpaperFlux.Core.Util
                 ConvertSimpleImageTagsToTagCollection(simpleImage, tags, false);
                 ConvertSimpleImageTagsToTagCollection(simpleImage, tags, true);
 
-                ThemeUtil.Theme.Images.AddImage(image);
+                ThemeUtil.Theme.Images.AddImage(image, null);
                 
-                /*x
-                //! Debug ; used to test image load times
-                imagesLoaded++;
-
-                if (imagesLoaded % 1000 == 0)
-                {
-                    Debug.WriteLine("Loaded Images: " + imagesLoaded);
-                }
-                //! Debug ; used to test image load times
-                */
             }
 
             //? ----- Converting Folders -----
             //! FOLDERS NEED TO BE ADDED AFTER!!!! images are added so that they don't have to be verified twice
-            //! (The folders will add all images as their default if added first, if added second they'll just find that the image already exists)
+            //! (The folders will add all images as if they were new if added first, however, we still need this functionality to find *actually* new images)
             Debug.WriteLine("Adding folders...");
             WallpaperFluxViewModel.Instance.AddFolderRange(wallpaperData.ImageFolders);
             Debug.WriteLine("Folders Created");

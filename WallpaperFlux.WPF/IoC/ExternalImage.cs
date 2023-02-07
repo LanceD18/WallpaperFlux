@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Threading;
+using LanceTools.IO;
 using WallpaperFlux.Core.IoC;
 using WallpaperFlux.Core.Util;
 
@@ -27,7 +28,7 @@ namespace WallpaperFlux.WPF.IoC
             {
                 if (_internalImage == null)
                 {
-                    if (File.Exists(imagePath) && !WallpaperUtil.IsSupportedVideoType(imagePath))
+                    if (FileUtil.Exists(imagePath) && !WallpaperUtil.IsSupportedVideoType(imagePath))
                     {
                         try
                         {

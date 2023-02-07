@@ -38,7 +38,7 @@ namespace WallpaperFlux.Core.JSON.Temp
                 //xif (value <= GetMaxRank() && value >= 0) // prevents stepping out of valid rank bounds
                 //x{
                     /*
-                    if (Active) // Rank Data does not include inactive images
+                    if (Enabled) // Rank Data does not include inactive images
                     {
                         RankData[_Rank].Remove(Path);
                         RankData[value].Add(Path);
@@ -53,7 +53,7 @@ namespace WallpaperFlux.Core.JSON.Temp
             }
         }
 
-        [DataMember(Name = "Active")] private bool _Active;
+        [DataMember(Name = "Enabled")] private bool _Active;
 
         public bool Active
         {

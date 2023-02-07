@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using LanceTools.IO;
 using LanceTools.WPF.Adonis.Util;
 
 namespace WallpaperFlux.Core.Util
@@ -10,7 +11,7 @@ namespace WallpaperFlux.Core.Util
     {
         public static bool FileExists(string path)
         {
-            if (!File.Exists(path))
+            if (!FileUtil.Exists(path))
             {
                 MessageBoxUtil.ShowError("This file does not exist");
                 return false;
@@ -32,7 +33,7 @@ namespace WallpaperFlux.Core.Util
 
         public static bool PathExists(string path)
         {
-            if (File.Exists(path) || Directory.Exists(path))
+            if (FileUtil.Exists(path) || Directory.Exists(path))
             {
                 return true;
             }

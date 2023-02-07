@@ -60,21 +60,11 @@ namespace WallpaperFlux.Core.Models.Tagging
             set
             {
                 SetProperty(ref _enabled, value);
-                // TODO Hopefully you won't need all the extra code below and stuff can be handled more dynamically
-                /*x
-                if (_Enabled != value) // prevents unnecessary calls
-                {
-                    _Enabled = value;
 
-                    foreach (TagData tag in Tags)
-                    {
-                        if (!WallpaperData.IsLoadingData)
-                        {
-                            WallpaperData.EvaluateImageActiveStates(tag.GetLinkedImages(), !value); // will forceDisable if the value is set to false
-                        }
-                    }
+                foreach (TagModel tag in Tags)
+                {
+                    tag.UpdateLinkedImagesEnabledState();
                 }
-                */
             }
         }
 

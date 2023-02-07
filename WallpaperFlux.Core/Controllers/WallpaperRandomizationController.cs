@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using LanceTools;
+using LanceTools.IO;
 using LanceTools.WPF.Adonis.Util;
 using MvvmCross;
 using WallpaperFlux.Core.IoC;
@@ -36,8 +37,8 @@ namespace WallpaperFlux.Core.Controllers
         {
             foreach (string wallpaperPath in wallpapers)
             {
-                //xif (!File.Exists(wallpaperPath))
-                if (!ThemeUtil.Theme.Images.ContainsImage(wallpaperPath) || !File.Exists(wallpaperPath))
+                //xif (!FileUtil.Exists(wallpaperPath))
+                if (!ThemeUtil.Theme.Images.ContainsImage(wallpaperPath) || !FileUtil.Exists(wallpaperPath))
                 {
                     Debug.WriteLine("Invalid Wallpaper Found: " + wallpaperPath);
                     return false;
@@ -116,7 +117,7 @@ namespace WallpaperFlux.Core.Controllers
                     Debug.WriteLine("Setting Wallpaper: " + i);
                     potentialWallpapers[i] =  ThemeUtil.Theme.RankController.GetRandomImageOfRank(randomRank, ref rand, imageTypeToSearchFor).Path;
 
-                    if (!ThemeUtil.Theme.Images.GetImage(potentialWallpapers[i]).Active)
+                    if (!ThemeUtil.Theme.Images.GetImage(potentialWallpapers[i]).Enabled)
                     {
                         //! This shouldn't happen, if this does you have a bug to fix
                         MessageBoxUtil.ShowError("Attempted to set display " + i + " to an inactive wallpaper | A new wallpaper has been chosen");
@@ -125,7 +126,7 @@ namespace WallpaperFlux.Core.Controllers
                 }
                 else
                 {
-                    Debug.WriteLine("-1 rank selected | Fix Code | This will occur if all ranks are 0");
+                    Debug.WriteLine("-1 rank selected | Either all ranks are 0 or all images are disabled");
                 }
             }
 
@@ -148,6 +149,8 @@ namespace WallpaperFlux.Core.Controllers
             }
 
             Dictionary<int, double> modifiedRankPercentiles = ThemeUtil.Theme.RankController.PercentileController.GetRankPercentiles(imageType);
+
+            if (modifiedRankPercentiles.Count <= 0) return -1; // no ranks were valid (all had 0 images)
 
             return rand.NextInWeightedArray(modifiedRankPercentiles.Keys.ToArray(), modifiedRankPercentiles.Values.ToArray());
         }

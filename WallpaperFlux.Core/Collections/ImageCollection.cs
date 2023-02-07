@@ -28,21 +28,21 @@ namespace WallpaperFlux.Core.Collections
         //x public delegate void ImageCollectionChanged(object sender, ImageCollectionChangedEventArgs e);
         //x public event ImageCollectionChanged OnListRemoveItem;
         
-        public ImageModel AddImage(string path)
+        public ImageModel AddImage(string path, FolderModel parentFolder)
         {
             if (ContainsImage(path)) return null;
 
             ImageModel addedImage = new ImageModel(path, volume: ThemeUtil.VideoSettings.DefaultVideoVolume);
-            AddImage(addedImage);
+            AddImage(addedImage, parentFolder);
             return addedImage;
         }
 
-        public ImageModel[] AddImageRange(string[] paths)
+        public ImageModel[] AddImageRange(string[] paths, FolderModel parentFolder)
         {
             List<ImageModel> images = new List<ImageModel>();
             foreach (string path in paths)
             {
-                ImageModel newImage = AddImage(path);
+                ImageModel newImage = AddImage(path, parentFolder);
 
                 if (newImage != null) images.Add(newImage);
             }
@@ -50,19 +50,21 @@ namespace WallpaperFlux.Core.Collections
             return images.ToArray();
         }
 
-        public void AddImage(ImageModel image)
+        public void AddImage(ImageModel image, FolderModel parentFolder)
         {
             //xif (ContainsImage(image)) return;
             if (ImageContainer[image.ImageType].ContainsKey(image.Path)) return; //? an image with the same path may not necessarily have the same object, can occur on re-load
 
             ImageContainer[image.ImageType].Add(image.Path, image);
+
+            image.ParentFolder = parentFolder;
         }
 
-        public void AddImageRange(ImageModel[] images)
+        public void AddImageRange(ImageModel[] images, FolderModel parentFolder)
         {
             foreach (ImageModel image in images)
             {
-                AddImage(image);
+                AddImage(image, parentFolder);
             }
         }
 
@@ -79,6 +81,8 @@ namespace WallpaperFlux.Core.Collections
             // TODO YOU FORGOT TO UPDATE THE RANK CONTROLLER (Might want to do this in the ImageModel instead)
             ImageContainer[image.ImageType].Remove(oldPath);
             ImageContainer[image.ImageType].Add(newPath, image);
+
+            image.UpdateParentFolder();
         }
 
         //? Keep in mind that all Remove methods trace back to this method, so sweeping changes that should apply to all of them should be placed here

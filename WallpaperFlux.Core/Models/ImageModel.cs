@@ -56,6 +56,8 @@ namespace WallpaperFlux.Core.Models
 
         [JsonIgnore] public string PathFolder => new FileInfo(Path).DirectoryName;
 
+        public FolderModel ParentFolder;
+
         private int _rank;
         [DataMember(Name = "Rank")]
         public int Rank
@@ -82,31 +84,20 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
-        [JsonIgnore] public Action<int, int> OnRankChange; //! Don't think you'll be using this, remove it at some point
-        
-        // TODO This should become a non-saved variable, the saved variable should be 'Enabled' while this Active variables just determines if the image can be used as a wallpaper
-        // TODO Active would factor in more than just the image's Enabled state, but the Enabled state of every tag it uses, the categories of those tags, and the folder it's in
-        // Note: A rank 0 image is still active if able, it just has a 0% chance of being selected
-        [DataMember(Name = "Active")]
-        public bool Active { get; set; }
-
-        // TODO The original ImageData also had an independent enabled boolean for the image itself, I think it would be better to have these overriding enables merged into 1 boolean
-        // TODO Folders can be checked as active elsewhere, same with tags, this could potentially just be the original "Enabled" from imageData
-        // TODO Remember that this had to remove the image from RankData on disabling for calculation purposes, may need to do this again (As opposed to looping the RankData each time)
-        /*x
         [DataMember(Name = "Enabled")]
-        private bool _Enabled = true;
+        private bool _enabled = true;
         public bool Enabled // this is the image's individual enabled state, if this is false then nothing else can make the image active
         {
-            get => _Enabled;
+            get => _enabled;
 
             set
             {
-                _Enabled = value;
-                Active = value;
+                SetProperty(ref _enabled, value);
+                UpdateEnabledState();
             }
         }
-        */
+
+        public bool Active { get; private set; } //? so that we don't have to check IsEnabled() every time we want to see if the image is available
 
         [DataMember(Name = "Tags")] public ImageTagCollection Tags;
 
@@ -131,7 +122,6 @@ namespace WallpaperFlux.Core.Models
                             WallpaperUtil.WallpaperHandler.UpdateVolume(i);
                         }
                     }
-                   
                 }
             }
         }
@@ -264,7 +254,7 @@ namespace WallpaperFlux.Core.Models
 
         #endregion
 
-        public ImageModel(string path, int rank = 0, ImageTagCollection tags = null, double volume = 50,
+        public ImageModel(string path, int rank = 0, bool enabled = true, ImageTagCollection tags = null, double volume = 50,
             int minimumLoops = 0, bool overrideMinimumLoops = false, int maximumTime = 0, bool overrideMaximumTime = false)
         {
             Path = _hashPath = path;
@@ -275,12 +265,17 @@ namespace WallpaperFlux.Core.Models
                     ? ImageType.GIF 
                     : ImageType.Video;
 
-            //! Must be set *AFTER* the ImageType is set !!!!!!!!!!
-            //! Must be set *AFTER* the ImageType is set !!!!!!!!!!
-            //! Must be set *AFTER* the ImageType is set !!!!!!!!!!
-            Rank = _hashRank = rank;
+            Enabled = enabled;
 
             Tags = tags ?? new ImageTagCollection(this); // create a new tag collection if the given one is null
+
+            //! Must be set *AFTER* the ImageType is set !!!!!!!!!!
+            //! Must be set *AFTER* the ImageType is set !!!!!!!!!!
+            //! Must be set *AFTER* the ImageType is set !!!!!!!!!!
+            //! Must also be set *AFTER* tags are created to handle checking IsEnabled() !!!!!!
+            //! Must also be set *AFTER* tags are created to handle checking IsEnabled() !!!!!!
+            //! Must also be set *AFTER* tags are created to handle checking IsEnabled() !!!!!!
+            Rank = _hashRank = rank;
 
             Volume = volume;
 
@@ -349,6 +344,32 @@ namespace WallpaperFlux.Core.Models
 
         public void UpdatePath(string newPath) => Path = newPath; //? UPDATES TO OTHER PROPERTIES DONE IN THE SETTER OF PATH
 
+        public bool IsEnabled()
+        {
+            if (JsonUtil.IsLoadingData) return false;
+
+            Active = false; // recheck this every time IsEnabled is called
+
+            if (!Enabled) return false;
+            
+            if (!ParentFolder.Enabled) return false;
+
+            if (!Tags.AreTagsEnabled()) return false;
+
+            Active = true; // if we reach this point, then the image is in fact Active
+            return true;
+        }
+
+        public void UpdateEnabledState()
+        {
+            if (!JsonUtil.IsLoadingData)
+            {
+                //? Modifying the image's rank will check if the image is enabled, re-adding or removing the image as needed
+                ThemeUtil.RankController.ModifyRank(this, _rank, ref _rank);
+            }
+        }
+
+        public void UpdateParentFolder() => ParentFolder = FolderUtil.GetFolderModel(PathFolder);
 
         #region Tags
         public void AddTag(TagModel tag, bool highlightTags) => Tags.Add(tag, highlightTags);
@@ -361,7 +382,7 @@ namespace WallpaperFlux.Core.Models
         {
             foreach (TagModel tag in TagViewModel.Instance.TagBoardTags)
             {
-                AddTag(tag, false);
+                AddTag(tag, false); //! TAG HIGHLIGHT DONE BELOW
             }
 
             TaggingUtil.HighlightTags();

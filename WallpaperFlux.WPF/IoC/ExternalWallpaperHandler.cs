@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
+using System.Windows.Interop;
 using WallpaperFlux.Core;
 using WallpaperFlux.Core.IoC;
 using WallpaperFlux.Core.Models;
@@ -43,6 +45,14 @@ namespace WallpaperFlux.WPF.IoC
             foreach (WallpaperWindow wallpaper in MainWindow.Instance.Wallpapers)
             {
                 wallpaper.UpdateSize();
+            }
+        }
+
+        public void DisableMpv()
+        {
+            foreach (WallpaperWindow wallpaper in MainWindow.Instance.Wallpapers)
+            {
+                wallpaper.DisableMpv();
             }
         }
     }

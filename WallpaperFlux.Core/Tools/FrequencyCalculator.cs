@@ -43,6 +43,7 @@ namespace WallpaperFlux.Core.Tools
         public void VerifyImageTypeExistence(ImageModel imageToVerify = null)
         {
             if (JsonUtil.IsLoadingData) return;
+            if (FolderUtil.IsValidatingFolders) return;
 
             bool staticExists = ThemeUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.Static);
             bool gifExists = ThemeUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.GIF);
