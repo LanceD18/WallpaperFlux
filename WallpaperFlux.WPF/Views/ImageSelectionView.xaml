@@ -84,8 +84,15 @@
             </Grid>
         </GroupBox>
 
-        <Button Grid.Row="3" Grid.Column="1"  Content="Select Active Wallpapers" Margin="5" HorizontalAlignment="Center" Command="{Binding SelectActiveWallpapersCommand}"
-                adonisExtensions:LayerExtension.Layer="3" BorderBrush="DimGray"/>
+        <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Content="Select Active Wallpapers" Margin="5" HorizontalAlignment="Center" Command="{Binding SelectActiveWallpapersCommand}"
+                    adonisExtensions:LayerExtension.Layer="3" BorderBrush="DimGray"/>
+
+            <Button Content="Select Disabled Images" Margin="5" HorizontalAlignment="Center" Command="{Binding SelectDisabledImagesCommand}" 
+                    Visibility="{Binding ShowDisabledSelector, Converter={StaticResource BooleanToVisibilityConverter}}"
+                    adonisExtensions:LayerExtension.Layer="3" BorderBrush="DimGray" ToolTip="Requires [Enable Detection of Disabled Images] to be enabled"/>
+        </StackPanel>
+
 
     </Grid>
 </views:MvxWpfView>

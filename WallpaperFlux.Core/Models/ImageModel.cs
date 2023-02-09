@@ -254,7 +254,7 @@ namespace WallpaperFlux.Core.Models
 
         #endregion
 
-        public ImageModel(string path, int rank = 0, bool enabled = true, ImageTagCollection tags = null, double volume = 50,
+        public ImageModel(string path, int rank = 0, bool enabled = true, ImageTagCollection tags = null, FolderModel parentFolder = null, double volume = 50,
             int minimumLoops = 0, bool overrideMinimumLoops = false, int maximumTime = 0, bool overrideMaximumTime = false)
         {
             Path = _hashPath = path;
@@ -265,7 +265,23 @@ namespace WallpaperFlux.Core.Models
                     ? ImageType.GIF 
                     : ImageType.Video;
 
-            Enabled = enabled;
+            //!ParentFolder must be set before Enabled is set and after Path is set
+            if (parentFolder != null)
+            {
+                ParentFolder = parentFolder;
+            }
+            else
+            {
+                if (!JsonUtil.IsLoadingData)
+                {
+                    UpdateParentFolder();
+                }
+                else
+                {
+                    ParentFolder = null;
+                }
+            }
+
 
             Tags = tags ?? new ImageTagCollection(this); // create a new tag collection if the given one is null
 
@@ -276,6 +292,9 @@ namespace WallpaperFlux.Core.Models
             //! Must also be set *AFTER* tags are created to handle checking IsEnabled() !!!!!!
             //! Must also be set *AFTER* tags are created to handle checking IsEnabled() !!!!!!
             Rank = _hashRank = rank;
+
+            //! Tags & ParentFolder & Rank need to be set before enabled is called
+            Enabled = enabled;
 
             Volume = volume;
 
@@ -352,6 +371,7 @@ namespace WallpaperFlux.Core.Models
 
             if (!Enabled) return false;
             
+            if (ParentFolder == null) UpdateParentFolder();
             if (!ParentFolder.Enabled) return false;
 
             if (!Tags.AreTagsEnabled()) return false;
@@ -362,11 +382,10 @@ namespace WallpaperFlux.Core.Models
 
         public void UpdateEnabledState()
         {
-            if (!JsonUtil.IsLoadingData)
-            {
-                //? Modifying the image's rank will check if the image is enabled, re-adding or removing the image as needed
-                ThemeUtil.RankController.ModifyRank(this, _rank, ref _rank);
-            }
+            if (JsonUtil.IsLoadingData) return;
+
+            //? Modifying the image's rank will check if the image is enabled, re-adding or removing the image as needed
+            ThemeUtil.RankController.ModifyRank(this, _rank, ref _rank);
         }
 
         public void UpdateParentFolder() => ParentFolder = FolderUtil.GetFolderModel(PathFolder);

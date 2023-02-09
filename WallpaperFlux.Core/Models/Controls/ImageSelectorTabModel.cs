@@ -37,12 +37,15 @@ namespace WallpaperFlux.Core.Models.Controls
                     WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.IsImageSelected);
                     WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.InspectedImageTags);
                     
+                    //! Handled by WallpaperFluxView.xaml.cs now
+                    /*x
                     if (value != null) // allows us to see what tags this image has if the TagView is open
                     {
                         TaggingUtil.HighlightTags();
                     }
+                    */
 
-                    WallpaperFluxViewModel.Instance.MuteIfInspectorHasAudio();
+                    WallpaperFluxViewModel.Instance.MuteIfInspectorHasAudio(); // changing the selected image may change the inspector to a video with audio, in this case, mute wallpapers with audio
                 }
             }
         }
@@ -68,6 +71,8 @@ namespace WallpaperFlux.Core.Models.Controls
             {
                 image.IsSelected = true;
             }
+
+            //! TaggingUtil.HighlightTags(); [THIS IS HANDLED IN WallpaperFluxViewModel!!!]
         }
 
         public void DeselectAllItems()
@@ -80,7 +85,7 @@ namespace WallpaperFlux.Core.Models.Controls
                 }
             }
 
-            //xSelectedImage = null;
+            //! TaggingUtil.HighlightTags(); [THIS IS HANDLED IN WallpaperFluxViewModel!!!]
         }
 
         public void RemoveImage(ImageModel image) => RemoveImageRange(new ImageModel[] { image });

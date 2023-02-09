@@ -151,6 +151,8 @@ namespace WallpaperFlux.Core.ViewModels
             {
                 _selectedImageCount = value;
                 RaisePropertyChanged(() => SelectedImagePathText);
+
+                //xTaggingUtil.HighlightTags();
             }
         }
 
@@ -167,6 +169,8 @@ namespace WallpaperFlux.Core.ViewModels
         }
 
         public ImageModel SelectedImage => SelectedImageSelectorTab?.SelectedImage; //? for the xaml
+
+        public bool TogglingAllSelections = false;
 
         #region Inspector
 
@@ -366,7 +370,7 @@ namespace WallpaperFlux.Core.ViewModels
 
             // Image Selector
             ClearImagesCommand = new MvxCommand(ClearImages);
-            SelectImagesCommand = new MvxCommand(SelectImages);
+            SelectImagesCommand = new MvxCommand(PromptImageSelectorRebuild);
             PasteTagBoardCommand = new MvxCommand(PasteTagBoard);
             SelectAllImagesCommand = new MvxCommand(SelectAllImages);
             DeselectImagesCommand = new MvxCommand(DeselectAllImages);
@@ -493,18 +497,12 @@ namespace WallpaperFlux.Core.ViewModels
 
                     // TODO Clean this up, especially the ViewModel.Instance actions
 
+                    //! currently unused
                     foreach (Action action in JsonUtil.ActionsPendingLoad) action?.Invoke();
                     JsonUtil.ActionsPendingLoad.Clear();
+                    //! currently unused
 
                     ImageFolders.ValidateImageFolders(true); // validation was cancelled beforehand
-
-                    //! this is also called by UpdateImageTypeWeights(), keeping this here regardless however to avoid complications in a future refactor since it is critical
-                    ThemeUtil.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence();
-                    //! this is also called by UpdateImageTypeWeights(), keeping this here regardless however to avoid complications in a future refactor since it is critical
-
-                    ThemeUtil.Theme.RankController.UpdateImageTypeWeights(); //? this is disabled during the loading process and needs to be called once loading is finished to update frequencies & weights
-
-                    TaggingUtil.HighlightTags();
 
                     SettingsViewModel.Instance.Settings = ThemeUtil.Theme.Settings;
                 }
@@ -672,7 +670,7 @@ namespace WallpaperFlux.Core.ViewModels
         private const string EXPLORER_BUTTON_ID = "explorer";
         private const string OTHER_BUTTON_ID = "other";
         private const string CANCEL_BUTTON_ID = "cancel";
-        public void SelectImages()
+        public void PromptImageSelectorRebuild()
         {
             if (_imageSelectorTabs == null) _imageSelectorTabs = new MvxObservableCollection<ImageSelectorTabModel>();
 
@@ -904,20 +902,24 @@ namespace WallpaperFlux.Core.ViewModels
 
         private void SelectAllImages()
         {
+            TogglingAllSelections = true;
             foreach (ImageSelectorTabModel selectorTab in ImageSelectorTabs)
             {
                 selectorTab.SelectAllItems();
             }
+            TogglingAllSelections = false;
 
             TaggingUtil.HighlightTags();
         }
 
         public void DeselectAllImages()
         {
+            TogglingAllSelections = true;
             foreach (ImageSelectorTabModel selectorTab in ImageSelectorTabs)
             {
                 selectorTab.DeselectAllItems();
             }
+            TogglingAllSelections = false;
 
             TaggingUtil.HighlightTags();
         }

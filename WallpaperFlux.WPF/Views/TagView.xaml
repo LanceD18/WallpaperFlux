@@ -8,7 +8,6 @@
              xmlns:adonisExtensions="clr-namespace:AdonisUI.Extensions;assembly=AdonisUI"
              xmlns:tagging="clr-namespace:WallpaperFlux.Core.Models.Tagging;assembly=WallpaperFlux.Core"
              xmlns:controls="clr-namespace:WallpaperFlux.Core.Models.Controls;assembly=WallpaperFlux.Core"
-             xmlns:converters="clr-namespace:LanceTools.WPF.Converters;assembly=LanceTools.WPF"
              xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              xmlns:hc="https://handyorg.github.io/handycontrol"
              xmlns:viewModels="clr-namespace:WallpaperFlux.Core.ViewModels;assembly=WallpaperFlux.Core"

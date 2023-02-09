@@ -123,6 +123,8 @@
             <MenuItem Header="Tagging">
                 <MenuItem Header="Open Tag View" Click="MenuItem_OpenTagWindow_Click"/>
             </MenuItem>
+
+            <MenuItem Header="Pagination Test" Click="MenuItem_OpenPaginationTest_Click"/>
         </Menu>
 
         <Separator Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="10"/>
@@ -332,10 +334,10 @@
                 <TextBlock x:Name="SelectedImageDimensionsTextBox" Text="{Binding SelectedImageDimensionsText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
                            Grid.Row="3" Grid.Column="1" HorizontalAlignment="Center" />
 
-                <!--? Image Selector Tab Control -->
-                <!-- !<GroupBox Grid.Row="4" Grid.Column="1" Width="650" Height="525" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="3">-->
-                <GroupBox Grid.Row="4" Grid.Column="1" 
+                <!--? Image Selector -->
+                <GroupBox Grid.Row="4" Grid.Column="1"
                           adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="3">
+
                     <TabControl x:Name="ImageSelectorTabControl" ItemsSource="{Binding ImageSelectorTabs}"
                                 SizeChanged="ImageSelectorTabControl_OnSizeChanged" SelectionChanged="ImageSelectorTabControl_OnSelectionChanged"
                                 SelectedItem="{Binding SelectedImageSelectorTab, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
@@ -370,7 +372,7 @@
                                 <ListBox ItemsSource="{Binding Items}" 
                                          SelectedItem="{Binding SelectedImage}"
                                          SelectionMode="Extended" SelectionChanged="ImageSelectorTabListBox_SelectionChanged"
-                                         PreviewMouseDown="ImageSelector_ListBoxItem_OnPreviewMouseDown">
+                                         PreviewMouseUp="ImageSelector_ListBoxItem_OnPreviewMouseUp">
 
                                     <!-- Wrap Setup -->
                                     <ListBox.ItemsPanel>

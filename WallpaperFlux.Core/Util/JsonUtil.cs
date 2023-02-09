@@ -190,7 +190,7 @@ namespace WallpaperFlux.Core.Util
             string backupPath = BackupData(path);
 
             //? ----- Write to JSON file -----
-            //x using a regular Task.Run process here will cause the program to crash (and save to be incomplete)
+            //x using a regular await Task.Run process here will cause the program to crash (and save to be incomplete)
             //x if this method is accessed too rapidly this allows this method to only be accessed if the thread is done
             //xSavingThread = new Thread(() =>
             //x{

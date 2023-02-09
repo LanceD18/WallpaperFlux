@@ -41,6 +41,8 @@ namespace WallpaperFlux.Core.ViewModels
             set => SetProperty(ref _maxSpecifiedRank, ThemeUtil.Theme.RankController.ClampValueToRankRange(value));
         }
 
+        public bool ShowDisabledSelector => ThemeUtil.ThemeSettings.EnableDetectionOfInactiveImages;
+
         #region Checkboxes & Radio Buttons
 
         public bool Randomize { get; set; }
@@ -69,6 +71,8 @@ namespace WallpaperFlux.Core.ViewModels
         
         public IMvxCommand SelectActiveWallpapersCommand { get; set; }
 
+        public IMvxCommand SelectDisabledImagesCommand { get; set; }
+
         #endregion
 
         public ImageSelectionViewModel()
@@ -77,6 +81,7 @@ namespace WallpaperFlux.Core.ViewModels
             SelectImagesOfTypeCommand = new MvxCommand(PromptImageType);
             SelectImagesInFolderCommand = new MvxCommand(PromptFolder);
             SelectActiveWallpapersCommand = new MvxCommand(SelectActiveWallpapers);
+            SelectDisabledImagesCommand = new MvxCommand(SelectDisabledImages);
         }
 
         private void RebuildImageSelectorWithOptions(ImageModel[] images)
@@ -173,6 +178,13 @@ namespace WallpaperFlux.Core.ViewModels
             ImageModel[] activeImages = ThemeUtil.Theme.Images.GetImageRange(ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers);
 
             RebuildImageSelectorWithOptions(activeImages);
+        }
+
+        private void SelectDisabledImages()
+        {
+            ImageModel[] disabledImages = ThemeUtil.Theme.Images.GetAllImages().Where(f => !f.Active).ToArray();
+
+            RebuildImageSelectorWithOptions(disabledImages);
         }
     }
 }

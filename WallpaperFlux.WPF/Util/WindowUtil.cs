@@ -26,7 +26,10 @@ namespace WallpaperFlux.WPF.Util
 
         private const float IMAGE_SELECTION_WINDOW_WIDTH = 410;
         private const float IMAGE_SELECTION_WINDOW_HEIGHT = 265;
-        
+
+        public const float PAGINATION_TEST_WINDOW_WIDTH = 900;
+        public const float PAGINATION_TEST_WINDOW_HEIGHT = 800;
+
         public static void InitializeViewModels()
         {
             TagViewModel.Instance = InitializeViewModel(TagViewModel.Instance);

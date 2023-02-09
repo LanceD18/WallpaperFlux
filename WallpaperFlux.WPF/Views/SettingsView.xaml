@@ -311,7 +311,13 @@
                                             <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
                                         </TextBlock.Style>
                                     </TextBlock>
-                                    <TextBlock Text="{Binding UnrankedText}" FontStyle="Normal">
+                                    <TextBlock Text="{Binding UnrankedText}" Margin="0 0 10 0"  FontStyle="Normal">
+                                        <TextBlock.Style>
+                                            <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+
+                                    <TextBlock Text="{Binding DisabledText}" FontStyle="Normal">
                                         <TextBlock.Style>
                                             <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
                                         </TextBlock.Style>

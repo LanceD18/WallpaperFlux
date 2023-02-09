@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using LanceTools.WPF.Adonis.Util;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using MvvmCross;
@@ -45,6 +46,8 @@ namespace WallpaperFlux.Core.Util
         //? This serves a dual purpose, enabling/disabling images within a folder AND detecting new images upon validation (But for ALL folders)
         public static void ValidateImageFolders(this MvxObservableCollection<FolderModel> imageFolders, bool updateEnabledState)
         {
+            //? asyncing this has the potential to cause issues if the completion of folder validation isn't checked for, in the meantime, easier to just hold up the program
+
             IsValidatingFolders = true;
 
             foreach (FolderModel imageFolder in imageFolders)
@@ -53,6 +56,14 @@ namespace WallpaperFlux.Core.Util
             }
 
             IsValidatingFolders = false;
+
+            //! this is also called by UpdateImageTypeWeights(), keeping this here regardless however to avoid complications in a future refactor since it is critical
+            ThemeUtil.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence();
+            //! this is also called by UpdateImageTypeWeights(), keeping this here regardless however to avoid complications in a future refactor since it is critical
+
+            ThemeUtil.Theme.RankController.UpdateImageTypeWeights(); //? this is disabled during the loading process and needs to be called once loading is finished to update frequencies & weights
+
+            TaggingUtil.HighlightTags();
         }
 
         public static bool ContainsFolderPath(this MvxObservableCollection<FolderModel> imageFolders, string imageFolderPath)

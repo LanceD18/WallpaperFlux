@@ -483,7 +483,7 @@ namespace WallpaperFlux.WPF
 
         private async void UpdateVolume(ImageModel image)
         {
-            Dispatcher.Invoke(() =>
+            await Dispatcher.Invoke(async () =>
             {
                 if (!AudioManager.IsWallpapersMuted)
                 {
@@ -501,7 +501,7 @@ namespace WallpaperFlux.WPF
                                 WallpaperVlc.MediaPlayer.Volume = (int)image.Volume;
 
                                 //? Debug fix to volume failing to update
-                                Task.Run(() =>
+                                await Task.Run(() =>
                                 {
                                     Thread.Sleep(repeatInterval);
 
@@ -528,7 +528,7 @@ namespace WallpaperFlux.WPF
                                 WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = image.Volume;
 
                                 //? Debug fix to volume failing to update
-                                Task.Run(() =>
+                                await Task.Run(() =>
                                 {
                                     Thread.Sleep(repeatInterval);
 

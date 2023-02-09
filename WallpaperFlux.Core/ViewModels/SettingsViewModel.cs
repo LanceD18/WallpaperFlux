@@ -78,6 +78,22 @@ namespace WallpaperFlux.Core.ViewModels
 
         public string UnrankedText => "Unranked: " + ThemeUtil.RankController.GetRankCount(0);
 
+        public string DisabledText
+        {
+            get
+            {
+                int diff = ThemeUtil.Theme.Images.GetAllImages().Length - (ThemeUtil.RankController.GetRankCountTotal() + ThemeUtil.RankController.GetRankCount(0));
+                Debug.WriteLine("Diff: All: " + ThemeUtil.Theme.Images.GetAllImages().Length + " | 99: " + ThemeUtil.RankController.GetRankCountTotal() + " | 0: " + ThemeUtil.RankController.GetRankCount(0));
+
+                if (diff > 0)
+                {
+                    return "Disabled: " + diff;
+                }
+
+                return "";
+            }
+        }
+
         private bool _allColumnToggle = true;
         public bool AllColumnToggle
         {

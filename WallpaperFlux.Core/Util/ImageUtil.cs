@@ -9,6 +9,13 @@ using WallpaperFlux.Core.Models;
 
 namespace WallpaperFlux.Core.Util
 {
+    public enum RelatedImageType
+    {
+        AltRanker,
+        Merger,
+        Animator
+    }
+
     public static class ImageUtil
     {
         public static Thread SetImageThread = new Thread(() => { }); // dummy null state to avoid error checking

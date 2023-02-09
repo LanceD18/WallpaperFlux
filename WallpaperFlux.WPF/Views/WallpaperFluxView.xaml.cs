@@ -37,11 +37,13 @@ using Unosquare.FFME.Common;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Models.Controls;
 using WallpaperFlux.Core.Models.Theme;
+using WallpaperFlux.Core.Util;
 using WallpaperFlux.Core.ViewModels;
 using WallpaperFlux.WPF.Util;
 using WallpaperFlux.WPF.Windows;
 using WpfAnimatedGif;
 using WpfScreenHelper;
+using ControlUtil = WallpaperFlux.WPF.Util.ControlUtil;
 using Image = System.Windows.Controls.Image;
 using Point = System.Windows.Point;
 using Size = System.Windows.Size;
@@ -58,6 +60,7 @@ namespace WallpaperFlux.WPF.Views
     {
         public ViewPresenter TagPresenter;
         public ViewPresenter SettingsPresenter;
+        public ViewPresenter PaginationTestPresenter;
 
         private List<Thread> _ActiveThumbnailThreads = new List<Thread>(); //? kills thumbnail threads on page load, intended to stop videos from clogging the task runners
 
@@ -92,11 +95,11 @@ namespace WallpaperFlux.WPF.Views
             }
         }
 
-        private void LoadImage(Image image, bool highQuality)
+        private async void LoadImage(Image image, bool highQuality)
         {
             if (image.DataContext is ImageModel imageModel)
             {
-                Task.Run(() =>
+                await Task.Run(() =>
                 {
                     if (!FileUtil.Exists(imageModel.Path)) return;
 
@@ -110,7 +113,7 @@ namespace WallpaperFlux.WPF.Views
                     {
                         Debug.WriteLine("ERROR: Image Loading Failed: " + e);
                     }
-                });
+                }).ConfigureAwait(false);
             }
         }
 
@@ -185,7 +188,7 @@ namespace WallpaperFlux.WPF.Views
                 bitmap.Freeze(); // prevents unnecessary copying: https://stackoverflow.com/questions/799911/in-what-scenarios-does-freezing-wpf-objects-benefit-performance-greatly
                 // --- End Init (Freeze) ---
 
-                //! Task.Run() will be used outside of this method to capture the Bitmap within the 'calling thread'
+                //! await Task.Run() will be used outside of this method to capture the Bitmap within the 'calling thread'
                 Dispatcher.Invoke(() => // the image must be called on the UI thread which the dispatcher helps us do under this other thread
                 {
                     if (isGif)
@@ -234,7 +237,7 @@ namespace WallpaperFlux.WPF.Views
 
                 try // for just in case the casting fails, we can just use the normal size
                 {
-                    void AttemptSetSize(int retries = 0)
+                    async void AttemptSetSize(int retries = 0)
                     {
                         if (retries > 10) return;
 
@@ -279,7 +282,7 @@ namespace WallpaperFlux.WPF.Views
                         {
                             Debug.WriteLine("Potential invalid image source, try again");
 
-                            Task.Run(() =>
+                            await Task.Run(() =>
                             {
                                 Thread.Sleep(10);
 
@@ -482,6 +485,12 @@ namespace WallpaperFlux.WPF.Views
             SettingsPresenter.ViewWindow.Closing += SettingsPresenter_ViewWindow_Closed_DrawerFix;
         }
 
+        private void MenuItem_OpenPaginationTest_Click(object sender, RoutedEventArgs e)
+        {
+            WindowUtil.PresentWindow(ref PaginationTestPresenter, typeof(PaginationTestView), typeof(PaginationTestViewModel),
+                WindowUtil.PAGINATION_TEST_WINDOW_WIDTH, WindowUtil.PAGINATION_TEST_WINDOW_HEIGHT, "Pagination Test", false);
+        }
+
         /// <summary>
         /// Disables the TagBoard on closing the view
         /// </summary>
@@ -512,7 +521,12 @@ namespace WallpaperFlux.WPF.Views
         //? Now that the window scales dynamically you probably won't need font scaling but keep this consideration in mind
         private void ImageSelectorTabListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            Debug.WriteLine("Selection changed");
+            //x Debug.WriteLine("Image Selection changed"); [This debug statement will cause lag on large selections]
+            if (!WallpaperFluxViewModel.Instance.TogglingAllSelections)
+            {
+                TaggingUtil.HighlightTags();
+            }
+
             return;
             // Font Scaling
             if (e.AddedItems.Count > 0)
@@ -602,7 +616,7 @@ namespace WallpaperFlux.WPF.Views
         }
 
         // this captures the selection range of the entire listbox item
-        private void ImageSelector_ListBoxItem_OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
+        private void ImageSelector_ListBoxItem_OnPreviewMouseUp(object sender, MouseButtonEventArgs e)
         {
             ControlUtil.EnsureSingularSelection<ImageSelectorTabModel, ImageModel>(ImageSelectorTabControl.Items, ImageSelectorTabControl.SelectedItem as ITabModel<ImageModel>);
         }

@@ -8,8 +8,10 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using HandyControl.Tools.Extension;
+using LanceTools;
 using LanceTools.WPF.Adonis.Util;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
@@ -495,74 +497,101 @@ namespace WallpaperFlux.Core.ViewModels
 
         #region Tag Highlighting
 
-        public void HighlightTags()
+        private Thread highlightTagThread;
+        public async void HighlightTags()
         {
             if (JsonUtil.IsLoadingData) return;
+            if (FolderUtil.IsValidatingFolders) return;
+            if (SelectedCategory == null) return; // can't show any highlights or unhighlight anything if a category isn't selected
 
-            Debug.WriteLine("Highlighting tags...");
-            foreach (TagModel tag in previouslyHighlightedTags) tag.IsHighlightedInSomeImages = false; //? this should be undone on each re-run in one way or another
-
-            if (WallpaperFluxViewModel.Instance.SelectedImage != null && !WallpaperFluxViewModel.Instance.SelectedImage.IsSelected
-                                                                      && !TagLinkerToggle) return; // one of these need to be true to highlight anything
-            if (SelectedCategory == null) return;
-
-            HashSet<TagModel> tagsToHighlight = new HashSet<TagModel>();
-
-            if (TagLinkerToggle) // has priority of if an image is selected
+            await Task.Run(() =>
             {
-                tagsToHighlight = new HashSet<TagModel>(TagLinkingSource.GetParentChildTagsUnion_IncludeSelf());
-            }
-            else if (WallpaperFluxViewModel.Instance.SelectedImage != null && WallpaperFluxViewModel.Instance.SelectedImage.IsSelected)
-            {
-                //? if multiple images are selected, only highlight tags that all images have
-                ImageModel[] selectedImages = WallpaperFluxViewModel.Instance.GetAllHighlightedImages();
+                Debug.WriteLine("Highlighting tags...");
 
-                if (selectedImages.Length <= 1) // highlight tags of 1 image
+                //? IsHighlightedInSomeImages is only set to true so we need to revert it back to false at some point
+                foreach (TagModel tag in previouslyHighlightedTags) tag.IsHighlightedInSomeImages = false;
+
+                HashSet<TagModel> tagsToHighlight = new HashSet<TagModel>();
+
+                if (TagLinkerToggle) // Linking has priority over image selection
                 {
-                    tagsToHighlight = new HashSet<TagModel>(WallpaperFluxViewModel.Instance.SelectedImage.Tags.GetTags());
+                    tagsToHighlight = new HashSet<TagModel>(TagLinkingSource.GetParentChildTagsUnion_IncludeSelf());
                 }
-                else // highlight tags of multiple images
+                else if (WallpaperFluxViewModel.Instance.SelectedImageCount == 0 && !TagLinkerToggle) // unhighlight all
                 {
-                    tagsToHighlight = new HashSet<TagModel>(); //? duplicate tags will be filtered out by HashSet
-                    foreach (ImageModel image in selectedImages)
-                    {
-                        tagsToHighlight.UnionWith(image.Tags.GetTags());
-                    }
+                    tagsToHighlight = new HashSet<TagModel>();
+                }
+                else if (WallpaperFluxViewModel.Instance.SelectedImage != null && WallpaperFluxViewModel.Instance.SelectedImage.IsSelected) // image(s) selected
+                {
+                    //? if multiple images are selected, only highlight tags that all images have
+                    ImageModel[] selectedImages = WallpaperFluxViewModel.Instance.GetAllHighlightedImages();
 
-                    foreach (ImageModel image in selectedImages)
+                    if (selectedImages.Length == 0) // no images actually selected, erroneous case
                     {
-                        // check for tags that do not exist in an image's tag-list, if so, make the tag classified as highlighted in only *some* images
-                        foreach (TagModel tag in tagsToHighlight)
+                        // TODO Theoretically, you should never reach this statement, double check this case
+                        tagsToHighlight = new HashSet<TagModel>(); // empty list
+                    }
+                    if (selectedImages.Length == 1) // highlight tags of 1 image
+                    {
+                        ImageModel targetImage = selectedImages[0];
+                        //! Using the SelectedImage from WallpaperFluxViewModel can cause null reference crashes due to the multi-threading used
+                        try
                         {
-                            if (!image.ContainsTag(tag))
+                            if (targetImage != null)
                             {
-                                tag.IsHighlightedInSomeImages = true;
+                                tagsToHighlight = new HashSet<TagModel>(targetImage.Tags.GetTags());
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            // async fail, the image doesn't exist but got past the null check, just make tagsToHighlight empty
+                            tagsToHighlight = new HashSet<TagModel>();
+                        }
+                    }
+                    else // highlight tags of multiple images
+                    {
+                        tagsToHighlight = new HashSet<TagModel>(); //? duplicate tags will be filtered out by HashSet
+                        foreach (ImageModel image in selectedImages)
+                        {
+                            tagsToHighlight.UnionWith(image.Tags.GetTags());
+                        }
+
+                        foreach (ImageModel image in selectedImages)
+                        {
+                            // check for tags that do not exist in an image's tag-list, if so, make the tag classified as highlighted in only *some* images
+                            foreach (TagModel tag in tagsToHighlight)
+                            {
+                                if (!tag.IsHighlightedInSomeImages && !image.ContainsTag(tag))
+                                {
+                                    tag.IsHighlightedInSomeImages = true; //? we only want to set this once, otherwise later images can overwrite this back to false
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            HashSet<TagModel> activeTags = SelectedCategory.GetTags();
+                HashSet<TagModel> visibleTags = SelectedCategory.SelectedTagTab.Items.ToHashSet();
 
-            foreach (TagModel tag in activeTags)
-            {
-                tag.IsHighlighted = tagsToHighlight.Contains(tag);
-
-                if (TagLinkingSource != null)
+                foreach (TagModel tag in visibleTags)
                 {
-                    tag.IsHighlightedInSomeImages = false; // this doesn't apply to this scenario so turn it off, unlike the selected images scenario it won't be automatically turned off
-                    tag.IsHighlightedParent = TagLinkingSource.HasParent(tag);
-                    tag.IsHighlightedChild = TagLinkingSource.HasChild(tag);
-                }
-                else // ensures that the highlights were turned off so that if we say, select an image, the parent & child highlights won't remain
-                {
-                    tag.IsHighlightedParent = false;
-                    tag.IsHighlightedChild = false;
-                }
-            }
+                    tag.IsHighlighted = tagsToHighlight.Contains(tag);
 
-            previouslyHighlightedTags = new List<TagModel>(tagsToHighlight);
+                    // handle tag control highlights
+                    if (TagLinkingSource != null)
+                    {
+                        tag.IsHighlightedInSomeImages = false; // this doesn't apply to this scenario so turn it off, unlike the selected images scenario it won't be automatically turned off
+                        tag.IsHighlightedParent = TagLinkingSource.HasParent(tag);
+                        tag.IsHighlightedChild = TagLinkingSource.HasChild(tag);
+                    }
+                    else // doesn't apply to this scenario, ensures that the highlights were turned off so that if we say, select an image, the parent & child highlights won't remain
+                    {
+                        tag.IsHighlightedParent = false;
+                        tag.IsHighlightedChild = false;
+                    }
+                }
+
+                previouslyHighlightedTags = new List<TagModel>(tagsToHighlight);
+            }).ConfigureAwait(false);
         }
 
         #endregion

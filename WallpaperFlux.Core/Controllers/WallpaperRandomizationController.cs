@@ -250,7 +250,7 @@ namespace WallpaperFlux.Core.Controllers
 
             for (var i = 0; i < images.Length; i++)
             {
-                Task.Run(() => images[i].SetImage(customFilePath[i]));
+                await Task.Run(() => images[i].SetImage(customFilePath[i]));
 
                 //? Note that the tag is empty beforehand | This is used to organize the images below based on their width and height
                 images[i].SetTag(customFilePath[i]);
