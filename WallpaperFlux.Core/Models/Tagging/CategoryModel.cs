@@ -442,6 +442,8 @@ namespace WallpaperFlux.Core.Models.Tagging
             }
 
             SelectedTagTab.Items.SwitchTo(pageTags);
+
+            TaggingUtil.HighlightTags();
         }
 
         public void SortTags()

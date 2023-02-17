@@ -115,8 +115,27 @@ namespace WallpaperFlux.WPF
         public void UpdateSize()
         {
             // Sets bounds of the form
-            Width = Display.Bounds.Width + ThemeUtil.Theme.Settings.WindowWidthOffset;
-            Height = Display.Bounds.Height + ThemeUtil.Theme.Settings.WindowHeightOffset;
+
+            try
+            {
+                Width = Display.Bounds.Width + ThemeUtil.Theme.Settings.WindowWidthOffset;
+            }
+            catch (Exception e) // invalid input, reset to 0
+            {
+                ThemeUtil.Theme.Settings.WindowWidthOffset = 0;
+                Width = Display.Bounds.Width + ThemeUtil.Theme.Settings.WindowWidthOffset;
+            }
+
+            try
+            {
+                Height = Display.Bounds.Width + ThemeUtil.Theme.Settings.WindowHeightOffset;
+            }
+            catch (Exception e) // invalid input, reset to 0
+            {
+                ThemeUtil.Theme.Settings.WindowHeightOffset = 0;
+                Height = Display.Bounds.Height + ThemeUtil.Theme.Settings.WindowHeightOffset;
+            }
+
             Left = Display.Bounds.X + DisplayUtil.DisplayXAdjustment;
             Top = Display.Bounds.Y + DisplayUtil.MinDisplayY;
 

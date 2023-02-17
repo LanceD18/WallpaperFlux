@@ -399,10 +399,18 @@ namespace WallpaperFlux.WPF.Views
 
                         if (FileUtil.Exists(outputFile.Filename))
                         {
-                            using (FileStream stream = File.OpenRead(outputFile.Filename))
+                            try
                             {
-                                LoadBitmapImage(image, false, false, stream: stream);
+                                using (FileStream stream = File.OpenRead(outputFile.Filename))
+                                {
+                                    LoadBitmapImage(image, false, false, stream: stream);
+                                }
                             }
+                            catch (Exception exception)
+                            {
+                                Debug.WriteLine("Failed to write thumbnail bitmap from output file | " + e);
+                            }
+
                         }
                         else
                         {
@@ -524,6 +532,11 @@ namespace WallpaperFlux.WPF.Views
             //x Debug.WriteLine("Image Selection changed"); [This debug statement will cause lag on large selections]
             if (!WallpaperFluxViewModel.Instance.TogglingAllSelections)
             {
+                if (e.AddedItems.Count >= 1) // TODO Make this apply to actually 1 image once you fix the other issues with selecting between pages
+                {
+                    ControlUtil.EnsureSingularSelection<ImageSelectorTabModel, ImageModel>(ImageSelectorTabControl.Items, ImageSelectorTabControl.SelectedItem as ITabModel<ImageModel>);
+                }
+
                 TaggingUtil.HighlightTags();
             }
 
@@ -618,7 +631,7 @@ namespace WallpaperFlux.WPF.Views
         // this captures the selection range of the entire listbox item
         private void ImageSelector_ListBoxItem_OnPreviewMouseUp(object sender, MouseButtonEventArgs e)
         {
-            ControlUtil.EnsureSingularSelection<ImageSelectorTabModel, ImageModel>(ImageSelectorTabControl.Items, ImageSelectorTabControl.SelectedItem as ITabModel<ImageModel>);
+            // TODO Remove me
         }
     }
 }

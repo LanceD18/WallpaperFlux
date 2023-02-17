@@ -605,7 +605,7 @@ namespace WallpaperFlux.Core.ViewModels
                     }
                     else
                     {
-                        alreadyExistsString += "\n" + folder;
+                        alreadyExistsString += "\n" + folder.Path;
                         alreadyExistsOccured = true;
                     }
                 }
