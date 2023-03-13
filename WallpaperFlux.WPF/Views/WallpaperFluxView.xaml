@@ -32,6 +32,7 @@
         <ResourceDictionary>
             <system:Double x:Key="InspectorWidth">375</system:Double>
             <system:Double x:Key="InspectorCategoryHeight">400</system:Double>
+            <system:Double x:Key="InspectorTagHeight">175</system:Double>
         </ResourceDictionary>
     </views:MvxWpfView.Resources>
 
@@ -190,7 +191,11 @@
                                     <TextBlock Text="{Binding Path}" FontSize="14">
                                         <TextBlock.ContextMenu>
                                             <ContextMenu>
-                                                <MenuItem Header="View Folder" mvx:Bi.nd="Command ViewFolderCommand"/> <!-- Command found in ImageFolderModel -->
+                                                <!-- Commands found in FolderModel -->
+                                                <MenuItem Header="View Folder" mvx:Bi.nd="Command ViewFolderCommand"/>
+                                                <Separator/>
+                                                <MenuItem Header="Select Images in Folder" mvx:Bi.nd="Command SelectFolderImagesCommand"/>
+                                                <MenuItem Header="Select Images in Folder (Selection Options Filter)" mvx:Bi.nd="Command SelectFolderImagesSelectionFilterCommand"/>
                                             </ContextMenu>
                                         </TextBlock.ContextMenu>
                                     </TextBlock>
@@ -409,7 +414,8 @@
                                                                        Height="{Binding ImageSelectorThumbnailHeight}"
                                                                        Margin="3"
                                                                        HorizontalAlignment="Center"
-                                                                       Loaded="Image_OnLoaded_LowQuality">
+                                                                       Loaded="Image_OnLoaded_LowQuality"
+                                                                       Unloaded="Image_OnUnloaded">
                                                                     <!--? ///// Image Tooltip /////-->
                                                                     <Image.ToolTip>
                                                                         <ContentControl Content="{Binding}">
@@ -418,6 +424,7 @@
                                                                                 <!-- Static -->
                                                                                 <DataTemplate x:Key="StaticTemplate">
                                                                                     <Image Loaded="Tooltip_Image_OnLoaded"
+                                                                                        Unloaded="Tooltip_Image_OnUnloaded"
                                                                                         Stretch="Uniform"
                                                                                         RenderOptions.BitmapScalingMode="HighQuality">
                                                                                         <!--
@@ -433,7 +440,7 @@
                                                                                 <!-- GIF -->
                                                                                 <DataTemplate x:Key="GIFTemplate">
                                                                                     <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"
-                                                                                        Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" />
+                                                                                        Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" />
                                                                                 </DataTemplate>
                                                                             </ContentControl.Resources>
                                                                             <!--? Template Control -->
@@ -466,10 +473,15 @@
                                                                             <MenuItem Header="Move" Command="{Binding MoveImageCommand}"/>
                                                                             <MenuItem Header="Delete" Command="{Binding DeleteImageCommand}"/>
                                                                             <MenuItem Header="Rank" Command="{Binding RankImageCommand}"/>
-                                                                            <MenuItem Header="Paste Tagboard" Command="{Binding PasteTagBoardCommand}"/>
+                                                                            <Separator/>
+                                                                            <MenuItem Header="Set Tags to Tagboard" Command="{Binding SetTagsToTagBoardCommand}"/>
+                                                                            <MenuItem Header="Paste Tagboard to Image" Command="{Binding PasteTagBoardCommand}"/>
+                                                                            <MenuItem Header="Paste Tags to Tagboard" Command="{Binding PasteTagsToTagBoardCommand}"/>
                                                                             <Separator/>
                                                                             <MenuItem Header="Enabled" StaysOpenOnClick="True" IsCheckable="True"
-                                                                                IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                                                IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                                ToolTip="Disabling an image will stop it from appearing here, 
+                                                                                      if you want to see the image again select Enable Detection of Inactive Images"/>
                                                                         </ContextMenu>
                                                                     </Image.ContextMenu>
                                                                 </Image>
@@ -485,7 +497,7 @@
 
                                                                     <!--? Thumbnail -->
                                                                     <!-- Displays the first frame/thumbnail of videos due to the Loaded event -->
-                                                                    <Image Loaded="MediaElement_OnLoaded_GenerateVideoThumbnail"/>
+                                                                    <Image Loaded="MediaElement_OnLoaded_GenerateVideoThumbnail" Unloaded="MediaElement_OnUnloaded"/>
 
                                                                     <!-- The media element will fail to process the Tooltip & Context Menu, so we used a GroupBox -->
                                                                     <!--? Media Element Tooltip-->
@@ -495,13 +507,13 @@
                                                                                 <!--? FFME -->
                                                                                 <DataTemplate x:Key="FFME">
                                                                                     <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"
-                                                                                        Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" 
+                                                                                        Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" 
                                                                                         Volume="{Binding ActualVolume, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                                                 </DataTemplate>
                                                                                 <!--? Windows -->
                                                                                 <DataTemplate x:Key="Windows">
                                                                                     <MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" MediaEnded="MediaElement_OnMediaEnded"
-                                                                                        Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" 
+                                                                                        Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" 
                                                                                         Volume="{Binding ActualVolume, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                                                 </DataTemplate>
                                                                             </ContentControl.Resources>
@@ -535,6 +547,11 @@
                                                                             <MenuItem Header="Delete" Command="{Binding DeleteImageCommand}"/>
                                                                             <MenuItem Header="Rank" Command="{Binding RankImageCommand}"/>
                                                                             <MenuItem Header="Paste Tagboard" Command="{Binding PasteTagBoardCommand}"/>
+                                                                            <Separator/>
+                                                                            <MenuItem Header="Set Tags to Tagboard" Command="{Binding SetTagsToTagBoardCommand}"/>
+                                                                            <MenuItem Header="Paste Tagboard to Image" Command="{Binding PasteTagBoardCommand}"/>
+                                                                            <MenuItem Header="Paste Tags to Tagboard" Command="{Binding PasteTagsToTagBoardCommand}"
+                                                                                ToolTip="Removes existing tags from the tagboard before pasting the current image's tags"/>
                                                                             <Separator/>
                                                                             <MenuItem Header="Enabled" StaysOpenOnClick="True" IsCheckable="True"
                                                                                 IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
@@ -647,7 +664,8 @@
                             <RowDefinition Height="0"/>
                             <RowDefinition Height="auto"/>
                             <RowDefinition Height="auto"/>
-                            <RowDefinition Height="175"/>
+                            <!-- TODO Create a converter from double to GridLength so that you can update this with the tag ListBox size -->
+                            <RowDefinition Height="200"/>
                             <RowDefinition Height="auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
@@ -684,7 +702,7 @@
                                                     <!-- GIF -->
                                                     <DataTemplate x:Key="GIFTemplate">
                                                         <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"
-                                                                           Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" />
+                                                                           Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" />
                                                     </DataTemplate>
                                                 </ContentControl.Resources>
                                                 <!-- Template Control -->
@@ -713,13 +731,13 @@
                                                         <!-- ? FFME -->
                                                         <DataTemplate x:Key="FFME">
                                                             <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"
-                                                                               Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded"
+                                                                               Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded"
                                                                                Volume="{Binding ActualVolume, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                         </DataTemplate>
                                                         <!-- ? Windows -->
                                                         <DataTemplate x:Key="Windows">
                                                             <MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" MediaEnded="MediaElement_OnMediaEnded"
-                                                                          Loaded="MediaElement_OnLoaded" Unloaded="MediaElement_OnUnloaded" 
+                                                                          Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" 
                                                                           Volume="{Binding ActualVolume, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                         </DataTemplate>
                                                     </ContentControl.Resources>
@@ -761,8 +779,74 @@
                             </StackPanel>
                         </GroupBox>
 
+                        <!--? Tags -->
+                        <GroupBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3"
+                              adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:LayerExtension.Layer="2">
+                            <!-- Header -->
+                            <GroupBox.Header>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="0"/>
+                                        <ColumnDefinition Width="auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="0"/>
+                                        <RowDefinition Height="auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" Text="Tags" FontWeight="Medium" Margin="0 0 0 5">
+                                        <TextBlock.Style>
+                                            <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </GroupBox.Header>
+
+                            <!--? ListBox  -->
+                            <ListBox ItemsSource="{Binding InspectedImageTags}" SelectionMode="Extended" Height="{StaticResource InspectorTagHeight}"
+                                 adonisExtensions:ScrollViewerExtension.HideScrollBarsUntilMouseOver="True"
+                                 adonisExtensions:ScrollViewerExtension.VerticalScrollBarPlacement="Overlay"
+                                 adonisExtensions:ScrollViewerExtension.VerticalScrollBarExpansionMode="ExpandOnHover"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+
+                                <!-- Wrap Setup -->
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel IsItemsHost="True" Width="{StaticResource InspectorWidth}"/>
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+
+                                <!-- Tags Item Template -->
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate DataType="tagging:TagModel">
+                                        <!-- The GroupBox adds a fitting adonis background to every tag -->
+                                        <GroupBox  adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:CornerRadiusExtension.CornerRadius="15">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button VerticalAlignment="Center" Content="{Binding ExceptionText}"
+                                                        Visibility="{Binding UseForNaming_IncludeCategory, Mode=OneWay, UpdateSourceTrigger=PropertyChanged,
+                                                            Converter={StaticResource BooleanToVisibilityInvertedConverter}}"
+                                                        Command="{Binding ToggleNamingExceptionCommand}" FontSize="10" FontWeight="Medium" 
+                                                        Foreground="{Binding ExceptionColor, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, 
+                                                    Converter={StaticResource ColorToBrushConverter}}"
+                                                        Margin="5 0 5 0" ToolTip="Toggles the Naming Exception status of this tag.
+                                                        Naming Exceptions are used in tag-based auto-naming regardless of restrictions"/>
+                                                <TextBlock VerticalAlignment="Center" Text="{Binding Name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                                                           Foreground="{Binding ExceptionColor, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, 
+                                                    Converter={StaticResource ColorToBrushConverter}}"/>
+                                                <Button VerticalAlignment="Center" Content="X"  Command="{Binding RemoveTagFromSelectedImageCommand}" 
+                                                    Foreground="Red" FontSize="10" FontWeight="Medium" Margin="5 0 5 0"/>
+                                            </StackPanel>
+                                        </GroupBox>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </GroupBox>
+
                         <!--? Settings -->
-                        <GroupBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" Height="{StaticResource InspectorCategoryHeight}"
+                        <GroupBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3" Height="{StaticResource InspectorCategoryHeight}"
                                   adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:LayerExtension.Layer="2">
                             <!-- Header -->
                             <GroupBox.Header>
@@ -908,73 +992,6 @@
                                 </ContentControl>
                             </StackPanel>
 
-                        </GroupBox>
-
-
-                        <!--? Tags -->
-                        <GroupBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3"
-                              adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:LayerExtension.Layer="2">
-                            <!-- Header -->
-                            <GroupBox.Header>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="0"/>
-                                        <ColumnDefinition Width="auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="0"/>
-                                        <RowDefinition Height="auto"/>
-                                        <RowDefinition Height="*"/>
-                                    </Grid.RowDefinitions>
-
-                                    <TextBlock Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" Text="Tags" FontWeight="Medium" Margin="0 0 0 5">
-                                        <TextBlock.Style>
-                                            <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                </Grid>
-                            </GroupBox.Header>
-
-                            <!--? ListBox  -->
-                            <ListBox ItemsSource="{Binding InspectedImageTags}" SelectionMode="Extended" Height="400"
-                                 adonisExtensions:ScrollViewerExtension.HideScrollBarsUntilMouseOver="True"
-                                 adonisExtensions:ScrollViewerExtension.VerticalScrollBarPlacement="Overlay"
-                                 adonisExtensions:ScrollViewerExtension.VerticalScrollBarExpansionMode="ExpandOnHover"
-                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-
-                                <!-- Wrap Setup -->
-                                <ListBox.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel IsItemsHost="True" Width="{StaticResource InspectorWidth}"/>
-                                    </ItemsPanelTemplate>
-                                </ListBox.ItemsPanel>
-
-                                <!-- Tags Item Template -->
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate DataType="tagging:TagModel">
-                                        <!-- The GroupBox adds a fitting adonis background to every tag -->
-                                        <GroupBox  adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:CornerRadiusExtension.CornerRadius="15">
-                                            <StackPanel Orientation="Horizontal">
-                                                <Button VerticalAlignment="Center" Content="{Binding ExceptionText}"
-                                                        Visibility="{Binding UseForNaming_IncludeCategory, Mode=OneWay, UpdateSourceTrigger=PropertyChanged,
-                                                            Converter={StaticResource BooleanToVisibilityInvertedConverter}}"
-                                                        Command="{Binding ToggleNamingExceptionCommand}" FontSize="10" FontWeight="Medium" 
-                                                        Foreground="{Binding ExceptionColor, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, 
-                                                    Converter={StaticResource ColorToBrushConverter}}"
-                                                        Margin="5 0 5 0" ToolTip="Toggles the Naming Exception status of this tag.
-                                                        Naming Exceptions are used in tag-based auto-naming regardless of restrictions"/>
-                                                <TextBlock VerticalAlignment="Center" Text="{Binding Name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
-                                                           Foreground="{Binding ExceptionColor, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, 
-                                                    Converter={StaticResource ColorToBrushConverter}}"/>
-                                                <Button VerticalAlignment="Center" Content="X"  Command="{Binding RemoveTagFromSelectedImageCommand}" 
-                                                    Foreground="Red" FontSize="10" FontWeight="Medium" Margin="5 0 5 0"/>
-                                            </StackPanel>
-                                        </GroupBox>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
                         </GroupBox>
 
                     </Grid>

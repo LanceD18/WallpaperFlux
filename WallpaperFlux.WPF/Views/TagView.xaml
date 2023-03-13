@@ -75,6 +75,7 @@
                 <MenuItem Header="View Folder Priority" Command="{Binding ViewFolderPriorityCommand}"/>
                 <MenuItem Header="Randomize Selection" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding RandomizeSelection, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 <MenuItem Header="Reverse Selection" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding ReverseSelection, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                <MenuItem Header="Hide Disabled Tags" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding HideDisabledTags, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
             </MenuItem>
         </Menu>
 

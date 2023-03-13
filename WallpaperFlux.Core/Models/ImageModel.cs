@@ -195,6 +195,10 @@ namespace WallpaperFlux.Core.Models
 
         public IMvxCommand PasteTagBoardCommand { get; set; }
 
+        public IMvxCommand PasteTagsToTagBoardCommand { get; set; }
+
+        public IMvxCommand SetTagsToTagBoardCommand { get; set; }
+
         public IMvxCommand DecreaseRankCommand { get; set; }
 
         public IMvxCommand IncreaseRankCommand { get; set; }
@@ -325,6 +329,12 @@ namespace WallpaperFlux.Core.Models
             IncreaseRankCommand = new MvxCommand(() => Rank++);
 
             PasteTagBoardCommand = new MvxCommand(PasteTagBoard);
+            PasteTagsToTagBoardCommand = new MvxCommand(() => TaggingUtil.AddTagsToTagboard(Tags.GetTags().ToArray()));
+            SetTagsToTagBoardCommand = new MvxCommand(() =>
+            {
+                TaggingUtil.ClearTagboard();
+                TaggingUtil.AddTagsToTagboard(Tags.GetTags().ToArray());
+            });
         }
 
         public Size GetSize()

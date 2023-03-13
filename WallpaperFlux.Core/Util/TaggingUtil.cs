@@ -259,6 +259,22 @@ namespace WallpaperFlux.Core.Util
 
         #region Tag Control
         public static bool RemoveTag(TagModel tag) => tag.ParentCategory.RemoveTag(tag);
+
+        public static void AddTagsToTagboard(TagModel[] tags)
+        {
+            if (InstanceExists)
+            {
+                TagViewModel.Instance.AddTagsToTagBoard(tags);
+            }
+        }
+
+        public static void ClearTagboard()
+        {
+            if (InstanceExists)
+            {
+                TagViewModel.Instance.ClearTagBoard();
+            }
+        }
         #endregion
 
         #region Tag Sorting

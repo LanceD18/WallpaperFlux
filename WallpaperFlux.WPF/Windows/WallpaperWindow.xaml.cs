@@ -128,7 +128,7 @@ namespace WallpaperFlux.WPF
 
             try
             {
-                Height = Display.Bounds.Width + ThemeUtil.Theme.Settings.WindowHeightOffset;
+                Height = Display.Bounds.Height + ThemeUtil.Theme.Settings.WindowHeightOffset;
             }
             catch (Exception e) // invalid input, reset to 0
             {

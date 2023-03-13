@@ -9,6 +9,7 @@ using LanceTools.IO;
 using MvvmCross.Commands;
 using MvvmCross.ViewModels;
 using WallpaperFlux.Core.Util;
+using WallpaperFlux.Core.ViewModels;
 
 namespace WallpaperFlux.Core.Models
 {
@@ -53,6 +54,11 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
+        public IMvxCommand ViewFolderCommand { get; set; }
+
+        public IMvxCommand SelectFolderImagesCommand { get; set; }
+        public IMvxCommand SelectFolderImagesSelectionFilterCommand { get; set; }
+
         public FolderModel(string path, bool enabled, string priorityName = "")
         {
             if (!Directory.Exists(path))
@@ -71,9 +77,10 @@ namespace WallpaperFlux.Core.Models
             PriorityName = priorityName;
 
             ViewFolderCommand = new MvxCommand(ViewFolder);
+            SelectFolderImagesCommand = new MvxCommand(() => WallpaperFluxViewModel.Instance.RebuildImageSelector(GetImageModels()));
+            SelectFolderImagesSelectionFilterCommand = new MvxCommand(() => 
+                ImageSelectionViewModel.Instance.RebuildImageSelectorWithOptions(ImageSelectionViewModel.Instance.FilterImages(GetImageModels()), false));
         }
-
-        public IMvxCommand ViewFolderCommand { get; set; }
 
         public void ViewFolder()
         {

@@ -194,14 +194,14 @@ namespace WallpaperFlux.Core.Models.Tagging
 
             ViewTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.ToggleTagBoard());
             AddSelectedTagsToTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.AddTagsToTagBoard(GetSelectedTags()));
-            ClearTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.ClearTagBoardTags());
+            ClearTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.ClearTagBoard());
 
             RenameCategoryCommand = new MvxCommand(PromptRename);
             RemoveCategoryCommand = new MvxCommand(PromptRemoveCategory);
             
-            SelectImagesWithEverySelTag = new MvxCommand(() => TagViewModel.Instance.RebuildImageSelector(SelectValidImages(TagSearchType.Mandatory, GetSelectedTags())));
-            SelectImagesWithAnySelTag = new MvxCommand(() => TagViewModel.Instance.RebuildImageSelector(SelectValidImages(TagSearchType.Optional, GetSelectedTags())));
-            SelectImagesWithAnyCategoryTag = new MvxCommand(() => TagViewModel.Instance.RebuildImageSelector(SelectValidImages(TagSearchType.Optional, Tags.ToArray())));
+            SelectImagesWithEverySelTag = new MvxCommand(() => TagViewModel.Instance.RebuildImageSelectorWithTagOptions(SelectValidImages(TagSearchType.Mandatory, GetSelectedTags())));
+            SelectImagesWithAnySelTag = new MvxCommand(() => TagViewModel.Instance.RebuildImageSelectorWithTagOptions(SelectValidImages(TagSearchType.Optional, GetSelectedTags())));
+            SelectImagesWithAnyCategoryTag = new MvxCommand(() => TagViewModel.Instance.RebuildImageSelectorWithTagOptions(SelectValidImages(TagSearchType.Optional, Tags.ToArray())));
 
             ClearSearchCommand = new MvxCommand(ClearSearchFilter);
         }
@@ -363,15 +363,7 @@ namespace WallpaperFlux.Core.Models.Tagging
 
             SortTags();
 
-            if (string.IsNullOrEmpty(SearchFilter))
-            {
-                _filteredTags = _sortedTags.ToArray();
-            }
-            else
-            {
-                string lowerCaseSearchFilter = SearchFilter.ToLower();
-                _filteredTags = _sortedTags.Where(f => f.Name.ToLower().Contains(lowerCaseSearchFilter)).ToArray(); //? applies search filter
-            }
+            _filteredTags = GetSortedTagsWithBaseFilter();
 
             int totalTagTabCount = (_filteredTags.Length / TaggingUtil.TagsPerPage) + 1; //? remember that this 'rounds' off the last page since it's an int
 
@@ -415,7 +407,8 @@ namespace WallpaperFlux.Core.Models.Tagging
                 SortTags();
             }
 
-            if (string.IsNullOrEmpty(SearchFilter)) _filteredTags = _sortedTags.ToArray();
+            //xif (string.IsNullOrEmpty(SearchFilter)) _filteredTags = _sortedTags;
+            _filteredTags = GetSortedTagsWithBaseFilter();
 
             int pageNumber = int.Parse(SelectedTagTab.TabIndex);
             int minIndex = TaggingUtil.TagsPerPage * (pageNumber - 1);
@@ -428,6 +421,12 @@ namespace WallpaperFlux.Core.Models.Tagging
             {
                 //xDebug.WriteLine("i: " + i + " | filterLength: " + _filteredTags.Length);
                 if (i > _filteredTags.Length - 1) break; // we're on the last page and we've run out of tags, break the loop to avoid an index error
+                if (TagViewModel.Instance.HideDisabledTags && !_filteredTags[i].IsEnabled())
+                {
+                    maxIndex++; // we have space for an additional tag
+                    continue;
+                }
+
                 pageTags.Add(_filteredTags[i]);
             }
 
@@ -469,6 +468,21 @@ namespace WallpaperFlux.Core.Models.Tagging
             }
 
             _sortedTags = sortedItems.ToArray();
+        }
+
+        public TagModel[] GetSortedTagsWithBaseFilter()
+        {
+            if (string.IsNullOrEmpty(SearchFilter))
+            {
+                return _sortedTags.Where(f => !TagViewModel.Instance.HideDisabledTags || f.IsEnabled()).ToArray();
+            }
+            else
+            {
+                string lowerCaseSearchFilter = SearchFilter.ToLower();
+                return _sortedTags.Where(f =>
+                    f.Name.ToLower().Contains(lowerCaseSearchFilter) &&
+                    (!TagViewModel.Instance.HideDisabledTags || f.IsEnabled())).ToArray(); //? applies search filter
+            }
         }
         #endregion
 

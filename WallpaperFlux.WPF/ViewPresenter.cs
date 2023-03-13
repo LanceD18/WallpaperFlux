@@ -1,21 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using MvvmCross.Platforms.Wpf.Presenters;
 using MvvmCross.Platforms.Wpf.Presenters.Attributes;
 using MvvmCross.Platforms.Wpf.Views;
 using MvvmCross.ViewModels;
-using WallpaperFlux.Core.ViewModels;
-using WallpaperFlux.WPF.Views;
-using WallpaperFlux.WPF.Windows;
 
 namespace WallpaperFlux.WPF
 {
-    /*
     public class ViewPresenter : MvxWpfViewPresenter
     {
         public Window ViewWindow;
@@ -30,7 +24,7 @@ namespace WallpaperFlux.WPF
 
         // For reference: https://github.com/MvvmCross/MvvmCross/blob/master/MvvmCross/Platforms/Wpf/Presenters/MvxWpfViewPresenter.cs
         public void Show(MvxWindowPresentationAttribute attribute, Type viewType, Type viewModelType, float width, float height, string title = "",
-        WindowStartupLocation startupLocation = WindowStartupLocation.CenterScreen)
+            WindowStartupLocation startupLocation = WindowStartupLocation.CenterScreen)
         {
             MvxViewModelRequest request = new MvxViewModelInstanceRequest(viewModelType);
             FrameworkElement viewElement = WpfViewLoader.CreateView(viewType);
@@ -65,7 +59,7 @@ namespace WallpaperFlux.WPF
                     Identifier = attribute.Identifier ?? element.GetType().Name
                 };
             }
-            
+
             //? Applies "default" styling, which in the case of this program is: AdonisUI
             window.Style = new Style(typeof(Window), (Style)window.FindResource(typeof(Window)));
 
@@ -101,6 +95,7 @@ namespace WallpaperFlux.WPF
         {
             var window = sender as Window;
             window.Closed -= Window_Closed;
+            (window.Parent as Window)?.Focus();
 
             if (FrameworkElementsDictionary.ContainsKey(window))
                 FrameworkElementsDictionary.Remove(window);
@@ -108,5 +103,4 @@ namespace WallpaperFlux.WPF
             ViewWindow = null;
         }
     }
-    */
 }

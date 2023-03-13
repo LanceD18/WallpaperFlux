@@ -33,6 +33,8 @@ namespace WallpaperFlux.Core.Models.Tagging
             {
                 SetProperty(ref _enabled, value);
                 UpdateLinkedImagesEnabledState();
+
+                if (!JsonUtil.IsLoadingData && TagViewModel.Instance.HideDisabledTags) ParentCategory.VerifyVisibleTags();
             }
         }
 
@@ -243,7 +245,18 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         public Color ExceptionColor => IsNamingSelectionOfSelectedImage ? Color.LimeGreen : UseForNaming_IncludeCategory ? Color.White :  Color.Red;
 
-        public bool IsNamingSelectionOfSelectedImage => WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.SelectedImage.Tags.GetTagNamingExceptions().Contains(this);
+        public bool IsNamingSelectionOfSelectedImage
+        {
+            get
+            {
+                if (WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.SelectedImage != null)
+                {
+                    return WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.SelectedImage.Tags.GetTagNamingExceptions().Contains(this);
+                }
+
+                return false;
+            }
+        }
 
         #endregion
 
@@ -299,7 +312,7 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         private void InitCommands()
         {
-            SelectImagesWithTag = new MvxCommand(() => TagViewModel.Instance.RebuildImageSelector(GetLinkedImages().ToArray()));
+            SelectImagesWithTag = new MvxCommand(() => TagViewModel.Instance.RebuildImageSelectorWithTagOptions(GetLinkedImages().ToArray()));
             RenameTagCommand = new MvxCommand(PromptRename);
             RemoveTagCommand = new MvxCommand(PromptRemoveTag);
             TagInteractCommand = new MvxCommand(InteractTag);

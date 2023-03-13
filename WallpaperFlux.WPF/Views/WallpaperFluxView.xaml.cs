@@ -220,6 +220,8 @@ namespace WallpaperFlux.WPF.Views
         {
             if (sender is Image image)
             {
+                //ximage.BeginInit();
+
                 LoadImage(image, true);
 
                 Point mousePos = PointToScreen(Mouse.GetPosition(this));
@@ -239,7 +241,7 @@ namespace WallpaperFlux.WPF.Views
                 {
                     async void AttemptSetSize(int retries = 0)
                     {
-                        if (retries > 10) return;
+                        if (retries > 3) return; // tried too many times, just return
 
                         if (wallpaperIndex != -1 && image.Source != null)
                         {
@@ -255,13 +257,12 @@ namespace WallpaperFlux.WPF.Views
                             bool oversizedHeight = pxHeight > wallHeight;
 
                             // dynamically resize based on the ratio of the oversized dimension
-                            if (oversizedWidth || oversizedHeight)
+                            if (oversizedWidth || oversizedHeight) //? ratios are only touched on if one size extends beyond the dimensions of the monitor screen
                             {
                                 double ratio;
 
-                                if (pxWidth > pxHeight) // the larger value will have the lower ratio, thus squishing down both sizes to the required size
+                                if (pxWidth > pxHeight) // the larger value indicates which direction the image will stretch, indicating which direction we need to shorten
                                 {
-                                    //? using the full size of the width will cause long wallpapers to get cut off
                                     ratio = wallHeight / pxWidth;
                                 }
                                 else
@@ -272,10 +273,10 @@ namespace WallpaperFlux.WPF.Views
                                 pxWidth = (int)(pxWidth * ratio);
                                 pxHeight = (int)(pxHeight * ratio);
                             }
-
+                            
                             image.Width = pxWidth;
                             image.Height = pxHeight;
-                            //xDebug.WriteLine("Image Width: " + image.Width);
+                            //xDebug.WriteLine("Image Width: " + image.Width); 
                             //xDebug.WriteLine("Image Height: " + image.Height);
                         }
                         else
@@ -284,26 +285,38 @@ namespace WallpaperFlux.WPF.Views
 
                             await Task.Run(() =>
                             {
-                                Thread.Sleep(10);
+                                Thread.Sleep((int)Math.Pow(10, retries + 1)); // increment the delay so that we don't spam retries
 
                                 Dispatcher.Invoke(() =>
                                 {
-                                    AttemptSetSize(retries++); //? sometimes the image source won't load fast enough and we'll need to try again
+                                    AttemptSetSize(++retries); //? sometimes the image source won't load fast enough and we'll need to try again
                                 });
                             });
                         }
                     }
 
+                    // start attempts
                     AttemptSetSize();
                 }
                 catch (Exception exception)
                 {
                     Debug.WriteLine("Tooltip Resizing Failed: " + exception);
                 }
+                
+                //ximage.EndInit();
+                //ximage.UpdateLayout();
             }
             else
             {
                 Debug.WriteLine("Image failed to send");
+            }
+        }
+
+        private void Tooltip_Image_OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is Image image)
+            {
+                UnloadImage(image);
             }
         }
 
@@ -345,6 +358,14 @@ namespace WallpaperFlux.WPF.Views
                 thread.IsBackground = true; // stops the thread from continuing to run on closing the application
                 thread.Start();
                 _ActiveThumbnailThreads.Add(thread);
+            }
+        }
+
+        private void Image_OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is Image image)
+            {
+                UnloadImage(image);
             }
         }
 
@@ -437,9 +458,17 @@ namespace WallpaperFlux.WPF.Views
             }
         }
 
-        private void MediaElement_OnLoaded(object sender, RoutedEventArgs e) => LoadImageOrMediaElementOrMpvPlayerHost(sender);
-
         private void MediaElement_OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is Image image)
+            {
+                UnloadImage(image);
+            }
+        }
+
+        private void Tooltip_MediaElement_OnLoaded(object sender, RoutedEventArgs e) => LoadImageOrMediaElementOrMpvPlayerHost(sender);
+
+        private void Tooltip_MediaElement_OnUnloaded(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -470,6 +499,22 @@ namespace WallpaperFlux.WPF.Views
             }
         }
         */
+
+        private void UnloadImage(Image image)
+        {
+            image.Source = null;
+            /*x
+            UpdateLayout();
+
+            Thread t = new Thread(new ThreadStart(delegate
+            {
+                Thread.Sleep(500);
+                GC.Collect(); //! This will cause delays regardless of the thread existing
+            }));
+            t.Start();
+            */
+        }
+
         #endregion
 
         #region Child Window Control

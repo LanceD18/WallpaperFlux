@@ -874,7 +874,7 @@ namespace WallpaperFlux.Core.ViewModels
         }
 
         // gathers all images across all image selector tabs
-        //? While initializing this in RebuildImageSelector() is an option, keep in mind that doing so will bring additional load times that don't always apply to the use case
+        //? While initializing this in RebuildImageSelectorWithTagOptions() is an option, keep in mind that doing so will bring additional load times that don't always apply to the use case
         //? each search, so it's best to just wait for when the user *actually* wants to select all selected images at once and perform a global action, which won't be common
         //? for large selection and does not have a performance impact on smaller selections, where this action will be more common
         public ImageModel[] GetImagesInAllTabs()

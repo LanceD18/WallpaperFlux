@@ -84,14 +84,17 @@ namespace WallpaperFlux.Core.ViewModels
             SelectDisabledImagesCommand = new MvxCommand(SelectDisabledImages);
         }
 
-        private void RebuildImageSelectorWithOptions(ImageModel[] images)
+        public void RebuildImageSelectorWithOptions(ImageModel[] images, bool closeWindow = true)
         {
             WallpaperFluxViewModel.Instance.RebuildImageSelector(images, Randomize, Reverse);
 
-            Mvx.IoCProvider.Resolve<IExternalViewPresenter>().CloseImageSelectionOptions();
+            if (closeWindow)
+            {
+                Mvx.IoCProvider.Resolve<IExternalViewPresenter>().CloseImageSelectionOptions();
+            }
         }
 
-        private ImageModel[] FilterImages(ImageModel[] images)
+        public ImageModel[] FilterImages(ImageModel[] images)
         {
             if (images == null) return new ImageModel[] { };
 

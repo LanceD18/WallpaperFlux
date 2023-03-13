@@ -278,6 +278,18 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
+        private bool _hideDisabledTags;
+        public bool HideDisabledTags
+        {
+            get => _hideDisabledTags;
+            set
+            {
+                SetProperty(ref _hideDisabledTags, value);
+
+                SelectedCategory?.VerifyTagTabs();
+            }
+        }
+
         // --- Drawers ---
         private bool _tagboardToggle;
         public bool TagboardToggle
@@ -430,7 +442,7 @@ namespace WallpaperFlux.Core.ViewModels
         {
             //? --- TagBoard ---
             CloseTagBoardCommand = new MvxCommand(CloseTagBoard); //? the open/toggle TagBoard is initially called by CategoryModel and sent to a method here
-            SelectImagesFromTagBoardCommand = new MvxCommand(() => RebuildImageSelector(SearchValidImagesWithTagBoard()));
+            SelectImagesFromTagBoardCommand = new MvxCommand(() => RebuildImageSelectorWithTagOptions(SearchValidImagesWithTagBoard()));
             SetMandatoryTagBoardSelectionCommand = new MvxCommand(() => SetAllTagBoardTagsSearchType(TagSearchType.Mandatory));
             SetOptionalTagBoardSelectionCommand = new MvxCommand(() => SetAllTagBoardTagsSearchType(TagSearchType.Optional));
             SetExcludedTagBoardSelectionCommand = new MvxCommand(() => SetAllTagBoardTagsSearchType(TagSearchType.Excluded));
@@ -493,7 +505,7 @@ namespace WallpaperFlux.Core.ViewModels
         /// Rebuilds the image selector using the randomization and reversal options of the TagView
         /// </summary>
         /// <param name="images">The images to rebuild the image selector with</param>
-        public void RebuildImageSelector(ImageModel[] images) => WallpaperFluxViewModel.Instance.RebuildImageSelector(images, RandomizeSelection, ReverseSelection);
+        public void RebuildImageSelectorWithTagOptions(ImageModel[] images) => WallpaperFluxViewModel.Instance.RebuildImageSelector(images, RandomizeSelection, ReverseSelection);
 
         #region Tag Highlighting
 
@@ -612,7 +624,7 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
-        public void ClearTagBoardTags() => TagBoardTags.Clear();
+        public void ClearTagBoard() => TagBoardTags.Clear();
 
         public void RemoveTagFromTagBoard(TagModel tag) => TagBoardTags.Remove(tag);
 
