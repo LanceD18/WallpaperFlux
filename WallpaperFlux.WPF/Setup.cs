@@ -30,6 +30,7 @@ namespace WallpaperFlux.WPF
             Mvx.IoCProvider.RegisterType<IExternalFileSystemUtil, ExternalFileSystemUtil>();
             Mvx.IoCProvider.RegisterType<IExternalViewPresenter, ExternalViewPresenter>();
             Mvx.IoCProvider.RegisterType<IExternalVideoUtil, ExternalVideoUtil>();
+            Mvx.IoCProvider.RegisterType<IExternalAppUtil, ExternalAppUtil>();
         }
 
         protected override ILoggerProvider CreateLogProvider()

@@ -61,6 +61,18 @@ namespace WallpaperFlux.WPF
             Closing += OnCloseApplication;
         }
 
+        // hide the application on minimize (will go to system tray)
+        protected override void OnStateChanged(EventArgs e)
+        {
+            if (WindowState == System.Windows.WindowState.Minimized)
+            {
+                this.Hide();
+                WindowUtil.HideAllWindows();
+            }
+
+            base.OnStateChanged(e);
+        }
+
         private void InitializeWallpapers()
         {
             IntPtr workerw = WallpaperUtil.GetDesktopWorkerW();

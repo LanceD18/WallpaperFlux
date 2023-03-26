@@ -1,0 +1,573 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="WallpaperFlux.Core.Collections.FolderCollection" Collapsed="true">
+    <Position X="25.25" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Collections\FolderCollection.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Collections.ImageCollection" Collapsed="true">
+    <Position X="21.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAQCAACkAAAAAECAAAQIAEAAAAABAAABAACAAA=</HashCode>
+      <FileName>Collections\ImageCollection.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Collections.ImageTagCollection" Collapsed="true">
+    <Position X="14.75" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAMQCBACQABAAAAgAAEABAAAAACAAAkAAAAAAAAUAAA=</HashCode>
+      <FileName>Collections\ImageTagCollection.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Controllers.LoggingController" Collapsed="true">
+    <Position X="21.75" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Controllers\LoggingController.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Controllers.PercentileController" Collapsed="true">
+    <Position X="25.25" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAgABgAAAAAAAAAkACAAAAREAAAAAAAAAAA=</HashCode>
+      <FileName>Controllers\PercentileController.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Controllers.RankController" Collapsed="true">
+    <Position X="14.75" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIIAIAAAAEAAAAIRAIA0AIlYAAEAAGAABCAIBQEcwQ=</HashCode>
+      <FileName>Controllers\RankController.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Controllers.WallpaperRandomizationController" Collapsed="true">
+    <Position X="23.5" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgEAAAABAAAEACAEEAAAKAAAgAEgAAAIAAAAAAAAAAA=</HashCode>
+      <FileName>Controllers\WallpaperRandomizationController.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.JSON.Temp.TempCategoryData" Collapsed="true">
+    <Position X="14.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAEBAAAAAAAIAQAAAAAAQAAAAEAEAAAAAAAAAAAIA=</HashCode>
+      <FileName>JSON\Temp\TempCategoryData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.JSON.Temp.TempImageData" Collapsed="true">
+    <Position X="16.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABAAAAAAAAAIIUAgAQAAEAAAAAAEAhAAAAIAAAAAA=</HashCode>
+      <FileName>JSON\Temp\TempImageData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.JSON.Temp.TempTagData" Collapsed="true">
+    <Position X="21.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAABAAAgAAAIYQAAAAAAwAAAAAAAAAAAAAJAAAAIA=</HashCode>
+      <FileName>JSON\Temp\TempTagData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Models.Controls.ImageSelectorTabModel" Collapsed="true">
+    <Position X="9.75" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAEEAAAAAAABgQAAEAAAAAQBAAAAAAAAIA=</HashCode>
+      <FileName>Models\Controls\ImageSelectorTabModel.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="WallpaperFlux.Core.Models.Controls.ListBoxItemModel" Collapsed="true">
+    <Position X="10" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAEAAAAAAAAACAAAAAAAAAIAAAAAAAAAA=</HashCode>
+      <FileName>Models\Controls\ListBoxItemModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Models.Controls.TabModel&lt;T&gt;" Collapsed="true">
+    <Position X="8.75" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAACIAAAAAAAAAAABAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\Controls\TabModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Models.Controls.TagTabModel" Collapsed="true">
+    <Position X="7.5" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAABAAAkAAAAAACAAgAAAEAAAAAAAAAAAAADAIA=</HashCode>
+      <FileName>Models\Controls\TagTabModel.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="WallpaperFlux.Core.Models.Tagging.CategoryModel" Collapsed="true">
+    <Position X="18.25" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>MkCA4ACAQACAAMFAUAsBABQBAIIABECQwQEAAAAwArE=</HashCode>
+      <FileName>Models\Tagging\CategoryModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Models.Tagging.FolderPriorityModel" Collapsed="true">
+    <Position X="7.75" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AApAIAAAAAAAAAAEIAIEBIQAAAECBAEAAAAEBAAQgkA=</HashCode>
+      <FileName>Models\Tagging\FolderPriorityModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Models.Tagging.TagModel" Collapsed="true">
+    <Position X="10" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>oxBJCABCOyQghsaAaYOikBQJYAIkAMgcCgSBgAghAqA=</HashCode>
+      <FileName>Models\Tagging\TagModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Models.Theme.FrequencyModel" Collapsed="true">
+    <Position X="20" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAQAAAAAAAACBABgAgAJAAAAAaGAAAACACQCAAAAI=</HashCode>
+      <FileName>Models\Theme\FrequencyModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Models.Theme.ThemeSettings" Collapsed="true">
+    <Position X="25.25" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABEEIAAAAQEAAAAAAAAAAAAAAgAEAAAAAQAAAQ=</HashCode>
+      <FileName>Models\Theme\SettingsModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Models.Theme.VideoSettings" Collapsed="true">
+    <Position X="20" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAABAAAIEAAACAAAAAAQAAAAAEAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\Theme\SettingsModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Models.Theme.DisplaySettings" Collapsed="true">
+    <Position X="23.5" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAA=</HashCode>
+      <FileName>Models\Theme\SettingsModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Models.Theme.SettingsModel" Collapsed="true">
+    <Position X="18.25" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAEAQAABAAEAABIAAAACAIAAAAgAAg=</HashCode>
+      <FileName>Models\Theme\SettingsModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Models.Theme.ThemeModel" Collapsed="true">
+    <Position X="23.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAEAAIAAAAEBAAgAACAIAAAAA=</HashCode>
+      <FileName>Models\Theme\ThemeModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Models.DisplayModel" Collapsed="true">
+    <Position X="21.75" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQIggAAIAQAAAAAAEAgAAIBEkhgAwIAAKAAAAAUAAA=</HashCode>
+      <FileName>Models\DisplayModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Models.FolderModel" Collapsed="true">
+    <Position X="14.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABIAAEEAAACAIIAAQAAABAAAACQAAAQAABAAAAAAAA=</HashCode>
+      <FileName>Models\FolderModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Models.ImageModel" Collapsed="true">
+    <Position X="12.25" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EgRhikFCAQCSCouGh4koKgIJAEAAMsowAEIAoACABAA=</HashCode>
+      <FileName>Models\ImageModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Models.RelatedImageModel" Collapsed="true">
+    <Position X="16.5" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAEA=</HashCode>
+      <FileName>Models\RelatedImageModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Models.TimerModel" Collapsed="true">
+    <Position X="16.5" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\TimerModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Tools.AudioManager" Collapsed="true">
+    <Position X="16.5" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAEAAAAAAAAQAAQAAAAAAAAAQKEAAAAJBABgAA=</HashCode>
+      <FileName>Tools\AudioManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Tools.FrequencyCalculator" Collapsed="true">
+    <Position X="18.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACIEAAGEAAAAAAAIgIAAAAAAAAAQAACAAQAABAABgA=</HashCode>
+      <FileName>Tools\FrequencyCalculator.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Tools.ImageRenamer" Collapsed="true">
+    <Position X="23.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIAAAZQAAAAAAQAgIgCAAAQAAAAAAAAAEAAAAgACAA=</HashCode>
+      <FileName>Tools\ImageRenamer.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Tools.SimilarityDetector" Collapsed="true">
+    <Position X="21.75" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Tools\SimilarityDetector.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Util.ControlUtil" Collapsed="true">
+    <Position X="20" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAA=</HashCode>
+      <FileName>Util\ControlUtil.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Util.FolderUtil" Collapsed="true">
+    <Position X="16.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAQAAAAAAEAAAAAAAAAEAAAAAEEAAACAAAIAIA=</HashCode>
+      <FileName>Util\FolderUtil.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Util.ImageUtil" Collapsed="true">
+    <Position X="16.5" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAgAAQAAAAAABAIAEAAABAAAAAAAAAAAAAAAAAgA=</HashCode>
+      <FileName>Util\ImageUtil.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Util.TemporaryJsonWallpaperData" Collapsed="true">
+    <Position X="20" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAQIAAAAAAAAAAAgAAAAAAAAAAAAAAAACAAAAEAAAA=</HashCode>
+      <FileName>Util\JsonUtil.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Util.TempMiscData" Collapsed="true">
+    <Position X="18.25" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAgAAAAARAAAAAAAAAAAAAAAAAAAACAAAAAAAAA=</HashCode>
+      <FileName>Util\JsonUtil.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Util.JsonWallpaperData" Collapsed="true">
+    <Position X="20" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAABAAAAAAAAACAAAAAAAAAAAEBAAgAAAAAQAEAA=</HashCode>
+      <FileName>Util\JsonUtil.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Util.JsonUtil" Collapsed="true">
+    <Position X="18.25" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAAAAAAIAIDQIQCAAAAAiAAQpCACAAAIAAEgAACAAAI=</HashCode>
+      <FileName>Util\JsonUtil.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Util.TaggingUtil" Collapsed="true">
+    <Position X="23.5" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EggAIEAAAgRBQAAMABAMIgAGAgiEkAFxAAAACEQAAEA=</HashCode>
+      <FileName>Util\TaggingUtil.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Util.ThemeUtil" Collapsed="true">
+    <Position X="14.75" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAABAUAAAAAAAAAAAAAAAACAAAAIAAAAA=</HashCode>
+      <FileName>Util\ThemeUtil.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Util.ValidationUtil" Collapsed="true">
+    <Position X="18.25" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAQAAABgAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Util\ValidationUtil.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.Util.WallpaperUtil" Collapsed="true">
+    <Position X="25.25" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACgAAQAEAQCAAQRAAQEAYYEIAAAAAAACAAAAAAAAg=</HashCode>
+      <FileName>Util\WallpaperUtil.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.ViewModels.ImageSelectionViewModel" Collapsed="true">
+    <Position X="25.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAABAIAASAQEAAAAKACAQCBAEgyEAAASAkCCAEkAAA=</HashCode>
+      <FileName>ViewModels\ImageSelectionViewModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.ViewModels.PaginationTestViewModel" Collapsed="true">
+    <Position X="23.5" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ViewModels\PaginationTestViewModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.ViewModels.SettingsViewModel" Collapsed="true">
+    <Position X="20" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IACAACAgAAAAQABAQAAAgAAAAAAGAAEA0FAQBAARBQw=</HashCode>
+      <FileName>ViewModels\SettingsViewModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.ViewModels.TagViewModel" Collapsed="true">
+    <Position X="25.25" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ONCGUDAoEFEQSAJCCBMEwMAAAqjfMQ9lUlOQTgwRRbg=</HashCode>
+      <FileName>ViewModels\TagViewModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.ViewModels.WallpaperFluxViewModel" Collapsed="true">
+    <Position X="21.75" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>hwJQniBEAYkSKACQNRAAJEoyGAwQopQUcMaxBTUgB6I=</HashCode>
+      <FileName>ViewModels\WallpaperFluxViewModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WallpaperFlux.Core.App" Collapsed="true">
+    <Position X="14.75" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>App.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="WallpaperFlux.Core.JSON.Temp.TempDisplaySettings" Collapsed="true">
+    <Position X="20" Y="8" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAgAQAAAAAAAAAAAAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>JSON\Temp\TempDisplaySettings.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="WallpaperFlux.Core.JSON.Temp.TempVideoSettings" Collapsed="true">
+    <Position X="25.25" Y="8" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAIAAAAAAAA=</HashCode>
+      <FileName>JSON\Temp\TempImageData.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="WallpaperFlux.Core.JSON.Temp.TempThemeOptions" Collapsed="true">
+    <Position X="21.75" Y="8" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAEAAEAAAAAQAAAIAAAAAAAAICAgAAAAAABAAAgQ=</HashCode>
+      <FileName>JSON\Temp\TempThemeOptions.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="WallpaperFlux.Core.JSON.Temp.TempVideoOptions" Collapsed="true">
+    <Position X="23.5" Y="8" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAABAAAAEAAAAAAAAAAAAAAAAAAAEAAEAAAAAAAA=</HashCode>
+      <FileName>JSON\Temp\TempThemeOptions.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="WallpaperFlux.Core.JSON.SimplifiedFolder" Collapsed="true">
+    <Position X="21.75" Y="7" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAIIAAAAAABAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>JSON\SimplifiedData.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="WallpaperFlux.Core.JSON.SimplifiedCategory" Collapsed="true">
+    <Position X="16.5" Y="7" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAIAAAAAAAAQAAAAAAEAAAAAAAAAAAIA=</HashCode>
+      <FileName>JSON\SimplifiedData.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="WallpaperFlux.Core.JSON.SimplifiedTag" Collapsed="true">
+    <Position X="18.25" Y="8" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAIQAAAAAAAwAAAAAAEAAAAAAAAAAAIA=</HashCode>
+      <FileName>JSON\SimplifiedData.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="WallpaperFlux.Core.JSON.SimplifiedParentTag" Collapsed="true">
+    <Position X="16.5" Y="8" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>JSON\SimplifiedData.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="WallpaperFlux.Core.JSON.SimplifiedImage" Collapsed="true">
+    <Position X="14.75" Y="8" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAABAAAAgAAAAIIAAAAAAAAAAEAAAEABAAIAAEAAAAA=</HashCode>
+      <FileName>JSON\SimplifiedData.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="WallpaperFlux.Core.JSON.SimplifiedDisplaySettings" Collapsed="true">
+    <Position X="20" Y="7" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>JSON\SimplifiedData.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="WallpaperFlux.Core.JSON.SimplifiedDisplaySetting" Collapsed="true">
+    <Position X="18.25" Y="7" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAgAAIAAAAAAAAAAAAAAAAQAAA=</HashCode>
+      <FileName>JSON\SimplifiedData.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="WallpaperFlux.Core.JSON.SimplifiedFrequencyModel" Collapsed="true">
+    <Position X="25.25" Y="7" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAABAAAAgAAAAAAAIAAgAAAAAAAAAAAA=</HashCode>
+      <FileName>JSON\SimplifiedData.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="WallpaperFlux.Core.JSON.SimplifiedFolderPriority" Collapsed="true">
+    <Position X="23.5" Y="7" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQAAAACBAAAAAAAAAAAAAA=</HashCode>
+      <FileName>JSON\SimplifiedData.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="WallpaperFlux.Core.Util.MiscData" Collapsed="true">
+    <Position X="14.75" Y="7" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAQEAAAAEAAAAAAAAAAAACAAAAAAAAEAAAAAAACCA=</HashCode>
+      <FileName>Util\JsonUtil.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Interface Name="WallpaperFlux.Core.IoC.IExternalBitmapImage" Collapsed="true">
+    <Position X="14.75" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>IoC\IExternalBitmapImage.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="WallpaperFlux.Core.IoC.IExternalDisplayUtil" Collapsed="true">
+    <Position X="16.5" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAIAAAAAAAAAAAAAQAAAAAABACAAAAAAAAAAAAA=</HashCode>
+      <FileName>IoC\IExternalDisplayUtil.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="WallpaperFlux.Core.IoC.IExternalFileSystemUtil" Collapsed="true">
+    <Position X="18.25" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>IoC\IExternalFileSystemUtil.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="WallpaperFlux.Core.IoC.IExternalImage" Collapsed="true">
+    <Position X="20" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IAAAAAAAAAAAAACAAAAAAAEAAAIAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>IoC\IExternalImage.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="WallpaperFlux.Core.IoC.IExternalMediaElement" Collapsed="true">
+    <Position X="21.75" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAACAAAAAAAAABAAAAAAAAAAAAABEAAAAA=</HashCode>
+      <FileName>IoC\IExternalMediaElement.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="WallpaperFlux.Core.IoC.IExternalTimer" Collapsed="true">
+    <Position X="23.5" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAAAAAIEAAAAAAAAAAAAAIAAAAAAAQAA=</HashCode>
+      <FileName>IoC\IExternalTimer.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="WallpaperFlux.Core.IoC.IExternalVideoUtil" Collapsed="true">
+    <Position X="25.25" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>IoC\IExternalVideoUtil.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="WallpaperFlux.Core.IoC.IExternalViewPresenter" Collapsed="true">
+    <Position X="14.75" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAEAA=</HashCode>
+      <FileName>IoC\IExternalViewPresenter.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="WallpaperFlux.Core.IoC.IExternalWallpaperHandler" Collapsed="true">
+    <Position X="16.5" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAgAAAAAAAAAAASAAAAAAAAAAAgAAAAgAgQAAAAAA=</HashCode>
+      <FileName>IoC\IExternalWallpaperHandler.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="WallpaperFlux.Core.Models.Controls.ITabModel&lt;T&gt;" Collapsed="true">
+    <Position X="18.25" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAEAAAAAAAAAgAAAEAAAAAAAAAAAAAAAIA=</HashCode>
+      <FileName>Models\Controls\ITabModel.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Enum Name="WallpaperFlux.Core.Util.RelatedImageType" Collapsed="true">
+    <Position X="20" Y="11" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAQAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAQAAAA=</HashCode>
+      <FileName>Util\ImageUtil.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="WallpaperFlux.Core.Util.TagSortType" Collapsed="true">
+    <Position X="25.25" Y="11" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Util\TaggingUtil.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="WallpaperFlux.Core.Util.TagSearchType" Collapsed="true">
+    <Position X="23.5" Y="11" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAg=</HashCode>
+      <FileName>Util\TaggingUtil.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="WallpaperFlux.Core.ImageType" Collapsed="true">
+    <Position X="16.5" Y="11" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAEAAAg=</HashCode>
+      <FileName>Enums.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="WallpaperFlux.Core.SelectionType" Collapsed="true">
+    <Position X="21.75" Y="11" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAIAAAAEAAAA=</HashCode>
+      <FileName>Enums.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="WallpaperFlux.Core.FrequencyType" Collapsed="true">
+    <Position X="14.75" Y="11" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQA=</HashCode>
+      <FileName>Enums.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="WallpaperFlux.Core.WallpaperStyle" Collapsed="true">
+    <Position X="14.75" Y="11.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAACAAAAAAAAAAAAACAAAAAAQAAAIAAA=</HashCode>
+      <FileName>Enums.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="WallpaperFlux.Core.IntervalType" Collapsed="true">
+    <Position X="18.25" Y="11" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAQAAAAQAAAAAAAAAAAAAAAAAABAAEAAAA=</HashCode>
+      <FileName>Enums.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

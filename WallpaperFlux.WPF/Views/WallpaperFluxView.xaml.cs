@@ -23,7 +23,6 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using HanumanInstitute.MediaPlayer.Wpf.Mpv;
 using LanceTools.IO;
-using LanceTools.WPF.MVVM;
 using MediaToolkit;
 using MediaToolkit.Model;
 using MediaToolkit.Options;
@@ -58,9 +57,7 @@ namespace WallpaperFlux.WPF.Views
     [MvxViewFor(typeof(WallpaperFluxViewModel))]
     public partial class WallpaperFluxView : MvxWpfView
     {
-        public ViewPresenter TagPresenter;
-        public ViewPresenter SettingsPresenter;
-        public ViewPresenter PaginationTestPresenter;
+
 
         private List<Thread> _ActiveThumbnailThreads = new List<Thread>(); //? kills thumbnail threads on page load, intended to stop videos from clogging the task runners
 
@@ -518,31 +515,11 @@ namespace WallpaperFlux.WPF.Views
         #endregion
 
         #region Child Window Control
-        private void MenuItem_OpenTagWindow_Click(object sender, RoutedEventArgs e)
-        {
-            WindowUtil.PresentWindow(ref TagPresenter, typeof(TagView), typeof(TagViewModel),
-                WindowUtil.TAGGING_WINDOW_WIDTH, WindowUtil.TAGGING_WINDOW_HEIGHT, "Tag View", false);
+        private void MenuItem_OpenTagWindow_Click(object sender, RoutedEventArgs e) => WindowUtil.PresentTagView(TagPresenter_ViewWindow_Closed_DrawerFix);
 
-            //! Keep in mind that the ViewWindow will be destroyed upon closing the TagView, so yes we need to add the event again
-            //? Prevents the TagBoard from causing a crash the next time the tag view is opened if the tag view is closed with the TagBoard open
-            TagPresenter.ViewWindow.Closing += TagPresenter_ViewWindow_Closed_DrawerFix;
-        }
+        private void MenuItem_MoreSettings_Click(object sender, RoutedEventArgs e) => WindowUtil.PresentSettingsView(SettingsPresenter_ViewWindow_Closed_DrawerFix);
 
-        private void MenuItem_MoreSettings_Click(object sender, RoutedEventArgs e)
-        {
-            WindowUtil.PresentWindow(ref SettingsPresenter, typeof(SettingsView), typeof(SettingsViewModel),
-                WindowUtil.SETTINGS_WINDOW_WIDTH, WindowUtil.SETTINGS_WINDOW_HEIGHT, "Settings", false);
-
-            //! Keep in mind that the ViewWindow will be destroyed upon closing the TagView, so yes we need to add the event again
-            //? Prevents the TagBoard from causing a crash the next time the tag view is opened if the tag view is closed with the TagBoard open
-            SettingsPresenter.ViewWindow.Closing += SettingsPresenter_ViewWindow_Closed_DrawerFix;
-        }
-
-        private void MenuItem_OpenPaginationTest_Click(object sender, RoutedEventArgs e)
-        {
-            WindowUtil.PresentWindow(ref PaginationTestPresenter, typeof(PaginationTestView), typeof(PaginationTestViewModel),
-                WindowUtil.PAGINATION_TEST_WINDOW_WIDTH, WindowUtil.PAGINATION_TEST_WINDOW_HEIGHT, "Pagination Test", false);
-        }
+        private void MenuItem_OpenPaginationTest_Click(object sender, RoutedEventArgs e) => WindowUtil.PresentPaginationTestView();
 
         /// <summary>
         /// Disables the TagBoard on closing the view

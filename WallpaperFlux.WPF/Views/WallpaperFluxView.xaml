@@ -21,6 +21,7 @@
     xmlns:tagging="clr-namespace:WallpaperFlux.Core.Models.Tagging;assembly=WallpaperFlux.Core"
     xmlns:media="https://github.com/mysteryx93/MediaPlayerUI.NET"
     xmlns:gif="http://wpfanimatedgif.codeplex.com"
+    xmlns:tb="http://www.hardcodet.net/taskbar"
     mc:Ignorable="d" FontSize="12" FontFamily="Segoe UI"
     d:DesignHeight="450" d:DesignWidth="800"
     SizeChanged="WallpaperFluxView_OnSizeChanged_UpdateInspectorHeight">
@@ -33,6 +34,37 @@
             <system:Double x:Key="InspectorWidth">375</system:Double>
             <system:Double x:Key="InspectorCategoryHeight">400</system:Double>
             <system:Double x:Key="InspectorTagHeight">175</system:Double>
+
+            <!--? Rank Handler Template -->
+            <DataTemplate x:Key="RankingHandlerTemplate" DataType="{x:Type models:ImageModel}">
+                    <StackPanel Orientation="Horizontal" Margin="3" Focusable="False" HorizontalAlignment="Center">
+                        <!-- Decrease Rank Button -->
+                        <Button mvx:Bi.nd = "Command DecreaseRankCommand" 
+                                                                Width="25" Height="{Binding ImageSelectorSettingsHeight}" Margin="3" 
+                                                                adonisExtensions:CursorSpotlightExtension.BorderBrush="Red"
+                                                                adonisExtensions:RippleExtension.BorderBrush="Red">
+                            <TextBlock Text="-" FontSize="{Binding ImageSelectorSettingsHeight}"
+                                                               Foreground="Red" FontWeight="Bold" Margin="0 -10 0  0"/>
+                        </Button>
+                        <!-- Rank TextBox -->
+                        <TextBox Text="{Binding Rank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                         Width="50" Height="{Binding ImageSelectorSettingsHeight}" Margin="3"
+                                                         HorizontalContentAlignment="Center">
+                            <TextBox.Style>
+                                <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                            </TextBox.Style>
+                        </TextBox>
+                        <!-- Increase Rank Button -->
+                        <Button mvx:Bi.nd = "Command IncreaseRankCommand"
+                                                                Width="25" Height="{Binding ImageSelectorSettingsHeight}" Margin="3" 
+                                                                adonisExtensions:CursorSpotlightExtension.BorderBrush="LimeGreen"
+                                                                adonisExtensions:RippleExtension.BorderBrush="LimeGreen">
+                            <TextBlock Text="+" FontSize="{Binding ImageSelectorSettingsHeight}"
+                                                               Foreground="LimeGreen" FontWeight="Bold" Margin="-5 -10 0  0"/>
+                        </Button>
+                    </StackPanel>
+            </DataTemplate>
+
         </ResourceDictionary>
     </views:MvxWpfView.Resources>
 
@@ -591,33 +623,7 @@
                                                         HorizontalAlignment="Center"/>
                                                     -->
 
-                                                    <!--? Rank Handler Panel -->
-                                                    <StackPanel Orientation="Horizontal" Margin="3" Focusable="False" HorizontalAlignment="Center" >
-                                                        <!-- Decrease Rank Button -->
-                                                        <Button mvx:Bi.nd = "Command DecreaseRankCommand" 
-                                                                Width="25" Height="{Binding ImageSelectorSettingsHeight}" Margin="3" 
-                                                                adonisExtensions:CursorSpotlightExtension.BorderBrush="Red"
-                                                                adonisExtensions:RippleExtension.BorderBrush="Red">
-                                                            <TextBlock Text="-" FontSize="{Binding ImageSelectorSettingsHeight}"
-                                                               Foreground="Red" FontWeight="Bold" Margin="0 -10 0  0"/>
-                                                        </Button>
-                                                        <!-- Rank TextBox -->
-                                                        <TextBox Text="{Binding Rank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                         Width="50" Height="{Binding ImageSelectorSettingsHeight}" Margin="3"
-                                                         HorizontalContentAlignment="Center">
-                                                            <TextBox.Style>
-                                                                <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
-                                                            </TextBox.Style>
-                                                        </TextBox>
-                                                        <!-- Increase Rank Button -->
-                                                        <Button mvx:Bi.nd = "Command IncreaseRankCommand"
-                                                                Width="25" Height="{Binding ImageSelectorSettingsHeight}" Margin="3" 
-                                                                adonisExtensions:CursorSpotlightExtension.BorderBrush="LimeGreen"
-                                                                adonisExtensions:RippleExtension.BorderBrush="LimeGreen">
-                                                            <TextBlock Text="+" FontSize="{Binding ImageSelectorSettingsHeight}"
-                                                               Foreground="LimeGreen" FontWeight="Bold" Margin="-5 -10 0  0"/>
-                                                        </Button>
-                                                    </StackPanel>
+                                                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource RankingHandlerTemplate}"/>
                                                 </StackPanel>
                                             </GroupBox>
                                         </DataTemplate>
@@ -998,6 +1004,118 @@
                 </GroupBox>
             </ScrollViewer>
         </hc:Drawer>
+
+        <!--? NotifyIcon -->
+        <tb:TaskbarIcon
+                        Visibility="Visible"
+                        ToolTipText="(Theme.json | Wallpaper Seconds Remaining [] [] [] [])"
+                        MenuActivation="RightClick"
+                        LeftClickCommand="{Binding OpenWindowsCommand}">
+            <tb:TaskbarIcon.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Open" Command="{Binding OpenWindowsCommand}"/>
+                    <MenuItem Header="Next Wallpaper" Command="{Binding NextWallpaperCommand}" IsEnabled="{Binding CanNextWallpaper}" StaysOpenOnClick="True"/>
+                    <MenuItem Header="Previous Wallpaper" Command="{Binding PreviousWallpaperCommand}" IsEnabled="{Binding CanPreviousWallpaper}" StaysOpenOnClick="True"/>
+                    <MenuItem Header="Set Default Theme"/>
+                    <Separator/>
+                    <MenuItem Header="Active Wallpapers" StaysOpenOnClick="True">
+                        <ListBox ItemsSource="{Binding ActiveWallpapers}" Focusable="False">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="models:ImageModel">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding PathName}" Foreground="White"/>
+                                        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource RankingHandlerTemplate}"/>
+                                        <!--? Tooltips -->
+                                        <!-- TODO Create a template for tooltips -->
+                                        <StackPanel.ToolTip>
+                                            <ContentControl Content="{Binding}">
+                                                <!-- Resources -->
+                                                <ContentControl.Resources>
+                                                    <!-- Static -->
+                                                    <DataTemplate x:Key="StaticTemplate">
+                                                        <Image Loaded="Tooltip_Image_OnLoaded"
+                                                                                        Unloaded="Tooltip_Image_OnUnloaded"
+                                                                                        Stretch="Uniform"
+                                                                                        RenderOptions.BitmapScalingMode="HighQuality">
+                                                            <!--
+                                                                                        <Image.Source>
+                                                                                            <BitmapImage
+                                                                                                CacheOption="OnLoad"
+                                                                                                UriSource="{Binding Path, Mode=OneWay}">
+                                                                                            </BitmapImage>
+                                                                                        </Image.Source>
+                                                                                        -->
+                                                        </Image>
+                                                    </DataTemplate>
+                                                    <!-- GIF -->
+                                                    <DataTemplate x:Key="GIFTemplate">
+                                                        <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"
+                                                                                        Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" />
+                                                    </DataTemplate>
+                                                    <!-- Video -->
+                                                    <DataTemplate x:Key="VideoTemplate">
+                                                        <ContentControl Content="{Binding }">
+                                                            <ContentControl.Resources>
+                                                                <!--? FFME -->
+                                                                <DataTemplate x:Key="FFME">
+                                                                    <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"
+                                                                                        Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" 
+                                                                                        Volume="{Binding ActualVolume, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                                </DataTemplate>
+                                                                <!--? Windows -->
+                                                                <DataTemplate x:Key="Windows">
+                                                                    <MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" MediaEnded="MediaElement_OnMediaEnded"
+                                                                                        Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" 
+                                                                                        Volume="{Binding ActualVolume, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                                </DataTemplate>
+                                                            </ContentControl.Resources>
+                                                            <ContentControl.ContentTemplate>
+                                                                <DataTemplate>
+                                                                    <!-- Default Template -->
+                                                                    <ContentControl Name="cc" Content="{Binding }" 
+                                                                                        ContentTemplate="{StaticResource Windows}"/>
+                                                                    <!-- Triggers -->
+                                                                    <DataTemplate.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsWebmOrGif}" Value="True">
+                                                                            <!-- Sets the ContentTemplate to be GIFTemplate instead of StaticTemplate -->
+                                                                            <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource FFME}"/>
+                                                                        </DataTrigger>
+                                                                    </DataTemplate.Triggers>
+                                                                </DataTemplate>
+                                                            </ContentControl.ContentTemplate>
+                                                        </ContentControl>
+                                                    </DataTemplate>
+                                                </ContentControl.Resources>
+                                                <!--? Template Control -->
+                                                <ContentControl.ContentTemplate>
+                                                    <DataTemplate>
+                                                        <!-- Default Template -->
+                                                        <ContentControl Name="cc" Content="{Binding }" 
+                                                                                ContentTemplate="{StaticResource StaticTemplate}"/>
+                                                        <!-- Triggers -->
+                                                        <DataTemplate.Triggers>
+                                                            <DataTrigger Binding="{Binding IsGif}" Value="True">
+                                                                <!-- Sets the ContentTemplate to be GIFTemplate instead of StaticTemplate -->
+                                                                <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource GIFTemplate}"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding IsVideo}" Value="True">
+                                                                <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource VideoTemplate}"/>
+                                                            </DataTrigger>
+                                                        </DataTemplate.Triggers>
+                                                    </DataTemplate>
+                                                </ContentControl.ContentTemplate>
+                                            </ContentControl>
+                                        </StackPanel.ToolTip>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </MenuItem>
+                    <Separator/>
+                    <MenuItem Header="Exit" Command="{Binding CloseAppCommand}"/>
+                </ContextMenu>
+            </tb:TaskbarIcon.ContextMenu>
+        </tb:TaskbarIcon>
 
     </Grid>
 </views:MvxWpfView>

@@ -102,6 +102,15 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
+        /// Active Wallpapers
+        private MvxObservableCollection<ImageModel> _activeWallpapers = new MvxObservableCollection<ImageModel>();
+
+        public MvxObservableCollection<ImageModel> ActiveWallpapers
+        {
+            get => _activeWallpapers;
+            set => SetProperty(ref _activeWallpapers, value);
+        }
+
         #region Image Selector
 
         private readonly int IMAGES_PER_PAGE = 20;
@@ -270,6 +279,10 @@ namespace WallpaperFlux.Core.ViewModels
 
         public IMvxCommand DeRenderWinformCommand { get; set; }
 
+        public IMvxCommand OpenWindowsCommand { get; set; }
+
+        public IMvxCommand CloseAppCommand { get; set; }
+
         #region Image Selector
 
         public IMvxCommand ClearImagesCommand { get; set; }
@@ -368,6 +381,9 @@ namespace WallpaperFlux.Core.ViewModels
             SyncCommand = new MvxCommand(SyncDisplaySettings);
             DeRenderWinformCommand = new MvxCommand(DeRenderWinform);
 
+            OpenWindowsCommand = new MvxCommand(WallpaperUtil.AppUtil.OpenWindows);
+            CloseAppCommand = new MvxCommand(WallpaperUtil.AppUtil.CloseApp);
+
             // Image Selector
             ClearImagesCommand = new MvxCommand(ClearImages);
             SelectImagesCommand = new MvxCommand(PromptImageSelectorRebuild);
@@ -397,6 +413,19 @@ namespace WallpaperFlux.Core.ViewModels
             {
                 WallpaperUtil.UnmuteWallpapers();
             }
+        }
+
+        public void UpdateActiveWallpapers(string wallpaperPath, int changedIndex)
+        {
+            if (ActiveWallpapers.Count != WallpaperUtil.DisplayUtil.GetDisplayCount())
+            {
+                for (int i = 0; i < WallpaperUtil.DisplayUtil.GetDisplayCount(); i++)
+                {
+                    ActiveWallpapers.Add(null);
+                }
+            }
+
+            ActiveWallpapers[changedIndex] = ThemeUtil.Theme.Images.GetImage(wallpaperPath);
         }
 
         #region Command Methods

@@ -49,6 +49,8 @@ namespace WallpaperFlux.Core.Models
                 } 
 
                 _path = value;
+                RaisePropertyChanged(() => PathName);
+                RaisePropertyChanged(() => PathFolder);
             }
         }
 

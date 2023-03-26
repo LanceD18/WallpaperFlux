@@ -1,23 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using LanceTools;
+using LanceTools.Collections.Reactive;
 using LanceTools.IO;
 using LanceTools.WPF.Adonis.Util;
 using MvvmCross;
 using WallpaperFlux.Core.IoC;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Util;
+using WallpaperFlux.Core.ViewModels;
 
 namespace WallpaperFlux.Core.Controllers
 {
     public class WallpaperRandomizationController
     {
-        public string[] ActiveWallpapers = new string[WallpaperUtil.DisplayUtil.GetDisplayCount()]; // holds paths of the currently active wallpapers
+        public ReactiveArray<string> ActiveWallpapers = new ReactiveArray<string>(WallpaperUtil.DisplayUtil.GetDisplayCount());  // holds paths of the currently active wallpapers
         public string[] NextWallpapers = new string[WallpaperUtil.DisplayUtil.GetDisplayCount()]; // derived from UpcomingWallpapers, holds the next set of wallpapers
         public Stack<string>[] PreviousWallpapers = new Stack<string>[WallpaperUtil.DisplayUtil.GetDisplayCount()]; // allows you to return back to every wallpaper encountered during the current session
         public Queue<string[]> UpcomingWallpapers = new Queue<string[]>(); // allows display-dependent wallpaper orders to be set without synced displays
@@ -25,6 +28,8 @@ namespace WallpaperFlux.Core.Controllers
         public WallpaperRandomizationController()
         {
             InitializePreviousWallpapers();
+
+            ActiveWallpapers.OnArrayChanged += (sender, args) => WallpaperFluxViewModel.Instance.UpdateActiveWallpapers(args.Item, args.Index);
         }
 
         private void InitializePreviousWallpapers()

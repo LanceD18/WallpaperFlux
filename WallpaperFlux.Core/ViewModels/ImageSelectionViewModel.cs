@@ -178,7 +178,7 @@ namespace WallpaperFlux.Core.ViewModels
 
         private void SelectActiveWallpapers()
         {
-            ImageModel[] activeImages = ThemeUtil.Theme.Images.GetImageRange(ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers);
+            ImageModel[] activeImages = ThemeUtil.Theme.Images.GetImageRange(ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers.ToArray());
 
             RebuildImageSelectorWithOptions(activeImages);
         }
