@@ -49,6 +49,8 @@ namespace WallpaperFlux.Core.ViewModels
 
         public bool Reverse { get; set; }
 
+        public bool DateTime { get; set; }
+
         public bool RadioAll { get; set; } = true;
         
         public bool RadioUnranked { get; set; }
@@ -86,7 +88,7 @@ namespace WallpaperFlux.Core.ViewModels
 
         public void RebuildImageSelectorWithOptions(ImageModel[] images, bool closeWindow = true)
         {
-            WallpaperFluxViewModel.Instance.RebuildImageSelector(images, Randomize, Reverse);
+            WallpaperFluxViewModel.Instance.RebuildImageSelector(images, Randomize, Reverse, DateTime);
 
             if (closeWindow)
             {

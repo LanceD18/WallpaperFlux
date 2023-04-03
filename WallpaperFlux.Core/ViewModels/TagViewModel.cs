@@ -516,6 +516,11 @@ namespace WallpaperFlux.Core.ViewModels
             if (FolderUtil.IsValidatingFolders) return;
             if (SelectedCategory == null) return; // can't show any highlights or unhighlight anything if a category isn't selected
 
+            // error control
+            if (SelectedCategory.SelectedTagTab == null) return;
+            if (SelectedCategory.SelectedTagTab.Items == null) return;
+            if (SelectedCategory.SelectedTagTab.Items.Count == 0) return;
+
             await Task.Run(() =>
             {
                 Debug.WriteLine("Highlighting tags...");

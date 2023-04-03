@@ -23,8 +23,9 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10 0 10 0">
-            <CheckBox Content="Randomize?" HorizontalAlignment="Center" Margin="5" adonisExtensions:LayerExtension.Layer="1" IsChecked="{Binding Randomize}"/>
-            <CheckBox Content="Reverse?" HorizontalAlignment="Center" Margin="5" adonisExtensions:LayerExtension.Layer="1" IsChecked="{Binding Reverse}"/>
+            <CheckBox Content="Randomize" HorizontalAlignment="Center" Margin="5" adonisExtensions:LayerExtension.Layer="1" IsChecked="{Binding Randomize}"/>
+            <CheckBox Content="Reverse" HorizontalAlignment="Center" Margin="5" adonisExtensions:LayerExtension.Layer="1" IsChecked="{Binding Reverse}"/>
+            <CheckBox Content="Date" HorizontalAlignment="Center" Margin="5" adonisExtensions:LayerExtension.Layer="1" IsChecked="{Binding DateTime}"/>
         </StackPanel>
 
         <GroupBox Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center" Margin="5">

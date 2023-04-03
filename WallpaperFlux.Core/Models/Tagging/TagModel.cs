@@ -439,15 +439,28 @@ namespace WallpaperFlux.Core.Models.Tagging
             RaisePropertyChanged(() => ImageCountStringTag);
             RaisePropertyChanged(() => ImageCountStringContextMenu);
 
-            // we need to update the image count of parent tags too
+            // we need to update the image count of parent tags too (and their parent tags)
             foreach (TagModel parentTag in ParentTags)
             {
-                parentTag.RaisePropertyChanged(() => parentTag.ImageCountStringTag);
-                parentTag.RaisePropertyChanged(() => parentTag.ImageCountStringContextMenu);
+                parentTag.RaisePropertyChangedImageCount();
             }
         }
 
-        public int GetLinkedImageCount() => GetLinkedImages().Count;
+        //xpublic int GetLinkedImageCount() => GetLinkedImages().Count;
+
+        public int GetLinkedImageCount(bool accountForInvalid = false)
+        {
+            if (accountForInvalid) return GetLinkedImages().Count; // no need to check for child tags in *this* method because GetLinkedImages() will handle that
+
+            int count = LinkedImages.Count;
+
+            foreach (TagModel childTag in ChildTags)
+            {
+                count += childTag.GetLinkedImageCount();
+            }
+
+            return count;
+        }
 
         //! Remember that we need to check for child tags too as references to linked child tags are included in references to the parent tag 
         //! (Prevents saving parent tag to JSON)

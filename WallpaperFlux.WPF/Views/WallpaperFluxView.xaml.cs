@@ -655,5 +655,11 @@ namespace WallpaperFlux.WPF.Views
         {
             // TODO Remove me
         }
+
+        private void ContextMenuListBox_OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            // Set the Handled property to true to prevent the context menu from closing
+            e.Handled = true;
+        }
     }
 }

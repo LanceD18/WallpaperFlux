@@ -750,7 +750,7 @@ namespace WallpaperFlux.Core.ViewModels
         //! THIS ONLY APPLIES TO STRING ARRAYS OF IMAGES, TYPICALLY USED BY FOLDER SELECTION
         //! THIS ONLY APPLIES TO STRING ARRAYS OF IMAGES, TYPICALLY USED BY FOLDER SELECTION
         //! THIS ONLY APPLIES TO STRING ARRAYS OF IMAGES, TYPICALLY USED BY FOLDER SELECTION
-        public void RebuildImageSelector(string[] selectedImages, bool randomize = false, bool reverseOrder = false)
+        public void RebuildImageSelector(string[] selectedImages, bool randomize = false, bool reverseOrder = false, bool dateTime = false)
         {
             List<ImageModel> selectedImageModels = new List<ImageModel>();
 
@@ -783,11 +783,11 @@ namespace WallpaperFlux.Core.ViewModels
                 MessageBoxUtil.ShowError(invalidImageString);
             }
 
-            RebuildImageSelector(selectedImageModels.ToArray(), randomize, reverseOrder);
+            RebuildImageSelector(selectedImageModels.ToArray(), randomize, reverseOrder, dateTime);
         }
 
         //? ----- Rebuild Image Selector (ImageModel) -----
-        public void RebuildImageSelector(ImageModel[] selectedImages, bool randomize = false, bool reverseOrder = false)
+        public void RebuildImageSelector(ImageModel[] selectedImages, bool randomize = false, bool reverseOrder = false, bool dateTime = false)
         {
             //-----Checking Validation Conditions-----
             if (selectedImages == null || selectedImages.Length == 0)
@@ -802,9 +802,20 @@ namespace WallpaperFlux.Core.ViewModels
             {
                 selectedImages = selectedImages.Randomize().ToArray();
             }
-            else if (reverseOrder) //? it is redundant to randomize and reverse the order at the same time as the randomization will end up being the only factor
+            else//? it is redundant to randomize and reverse the order at the same time as the randomization will end up being the only factor
             {
-                selectedImages = selectedImages.Reverse().ToArray();
+                // TODO Make the redundancy apparent in the interface by disabling everything else if random is picked
+                if (dateTime)
+                {
+                    selectedImages = selectedImages.OrderBy(f => new FileInfo(f.Path).CreationTime).ToArray();
+                }
+
+                //! order by date time before reversing
+
+                if (reverseOrder)
+                {
+                    selectedImages = selectedImages.Reverse().ToArray();
+                }
             }
 
             //-----Rebuild-----
