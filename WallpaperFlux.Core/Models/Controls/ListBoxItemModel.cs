@@ -20,6 +20,14 @@ namespace WallpaperFlux.Core.Models.Controls
             }
         }
 
+        private bool _isHidden;
+        [JsonIgnore]
+        public bool IsHidden
+        {
+            get => _isHidden;
+            set => SetProperty(ref _isHidden, value);
+        }
+
         protected Action<bool> OnIsSelectedChanged;
     }
 }

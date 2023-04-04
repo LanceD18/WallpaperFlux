@@ -33,19 +33,7 @@ namespace WallpaperFlux.Core.Models.Controls
             }
         }
 
-        public double TagWrapWidth { get; set; }
-
-        public double TagWrapHeight { get; set; }
-
         public TagTabModel(int index) : base(index) { }
-
-        public void SetTagWrapSize(double width, double height)
-        {
-            TagWrapWidth = width;
-            TagWrapHeight = height; // the bottom tends to be cut off
-            RaisePropertyChanged(() => TagWrapWidth);
-            RaisePropertyChanged(() => TagWrapHeight);
-        }
 
         public TagModel[] GetSelectedItems() => Items.Where(f => f.IsSelected).ToArray();
 

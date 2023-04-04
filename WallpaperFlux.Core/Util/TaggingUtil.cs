@@ -35,7 +35,7 @@ namespace WallpaperFlux.Core.Util
         public const float TAGGING_WINDOW_WIDTH = 950;
         public const float TAGGING_WINDOW_HEIGHT = 650;
 
-        public static int TagsPerPage = 50;
+        public static int TagsPerPage = 75;
 
         //? This was supposed to remove the static references to Instance all together but a complication with the view creation has made this into an issue I'll look into later
         // TODO I'd imagine that this can be handled nicely with WallpaperFluxViewModel, however

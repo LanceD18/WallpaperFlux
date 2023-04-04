@@ -409,7 +409,9 @@
                                 <ListBox ItemsSource="{Binding Items}" 
                                          SelectedItem="{Binding SelectedImage}"
                                          SelectionMode="Extended" SelectionChanged="ImageSelectorTabListBox_SelectionChanged"
-                                         PreviewMouseUp="ImageSelector_ListBoxItem_OnPreviewMouseUp">
+                                         PreviewMouseUp="ImageSelector_ListBoxItem_OnPreviewMouseUp"
+                                         VirtualizingPanel.IsVirtualizing="true" 
+                                         VirtualizingPanel.VirtualizationMode="Recycling">
 
                                     <!-- Wrap Setup -->
                                     <ListBox.ItemsPanel>

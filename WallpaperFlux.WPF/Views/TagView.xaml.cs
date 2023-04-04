@@ -49,21 +49,21 @@ namespace WallpaperFlux.WPF.Views
             Debug.WriteLine("Opened"); //? this constructor essentially acts an an on-open event, so we'll use it to select the first category on opening
         }
 
+        // TODO Refactor names, this is being used outside of CategoryTabControl now
         private void CategoryTabControl_OnSizeChanged(object sender, SizeChangedEventArgs e) => UpdateTagSelectorWrapperSize();
 
+        // TODO Refactor names, this is being used outside of CategoryTabControl now
         private void CategoryTabControl_OnSelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateTagSelectorWrapperSize();
 
         private void UpdateTagSelectorWrapperSize()
         {
-            TagViewModel viewModel = (TagViewModel)this.DataContext;
+            TagViewModel viewModel = (TagViewModel)DataContext;
 
-            if (viewModel.SelectedCategory?.SelectedTagTab != null)
-            {
-                double widthOffset = 25; // pushes the wrap cutoff closer as the right-side can also be cut off
-                double heightOffset = 170; // the bottom tends to be cut off so we need an offset
+            double widthOffset = 50; // pushes the wrap cutoff closer as the right-side can also be cut off
+            double heightOffset = 260; // the bottom tends to be cut off so we need an offset
 
-                viewModel.SelectedCategory.SelectedTagTab.SetTagWrapSize(CategoryTabControl.ActualWidth - widthOffset, CategoryTabControl.ActualHeight - heightOffset);
-            }
+            // including CategoryHeaderPanel.ActualHeight helps to account for the dynamic size change of the editor text
+            viewModel.SetTagWrapSize(ActualWidth - widthOffset, ActualHeight - heightOffset - CategoryHeaderPanel.ActualHeight);
         }
 
         private void SearchBar_OnKeyDown(object sender, KeyEventArgs e)
@@ -76,7 +76,11 @@ namespace WallpaperFlux.WPF.Views
             }
         }
 
-        private void TagView_OnSizeChanged_UpdateDrawerHeight(object sender, SizeChangedEventArgs e) => ((TagViewModel)this.DataContext).SetDrawerHeight(ActualHeight - 75);
+        private void TagView_OnSizeChanged_UpdateDrawerHeight(object sender, SizeChangedEventArgs e)
+        {
+            ((TagViewModel)this.DataContext).SetDrawerHeight(ActualHeight - 75);
+            UpdateTagSelectorWrapperSize();
+        }
 
         // this captures the selection range of the entire listbox item
         private void TagTabControl_ListBoxItem_OnPreviewMouseDown(object sender, MouseButtonEventArgs e)

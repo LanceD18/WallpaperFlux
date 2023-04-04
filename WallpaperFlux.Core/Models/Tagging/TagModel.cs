@@ -34,7 +34,7 @@ namespace WallpaperFlux.Core.Models.Tagging
                 SetProperty(ref _enabled, value);
                 UpdateLinkedImagesEnabledState();
 
-                if (!JsonUtil.IsLoadingData && TagViewModel.Instance.HideDisabledTags) ParentCategory.VerifyVisibleTags();
+                if (!JsonUtil.IsLoadingData && TagViewModel.Instance.HideDisabledTags) TagViewModel.Instance.VerifyVisibleTags();
             }
         }
 

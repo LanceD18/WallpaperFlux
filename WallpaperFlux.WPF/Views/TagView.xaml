@@ -85,7 +85,7 @@
         <GroupBox Grid.Row="3" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:LayerExtension.Layer="2">
             <!-- Header -->
             <GroupBox.Header>
-                <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Vertical" SizeChanged="CategoryTabControl_OnSizeChanged" x:Name="CategoryHeaderPanel">
                     <TextBlock Text="Right-Click a Category or Tag for more options" Margin="0 0 0 5">
                         <TextBlock.Style>
                             <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
@@ -101,318 +101,331 @@
                 </StackPanel>
             </GroupBox.Header>
 
-            <!--? Category TabControl -->
-            <TabControl x:Name="CategoryTabControl" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                        adonisExtensions:LayerExtension.IncreaseLayer="True" SizeChanged="CategoryTabControl_OnSizeChanged" SelectionChanged="CategoryTabControl_OnSelectionChanged">
+            <StackPanel Orientation="Vertical">
+                <!--? Category TabControl -->
+                <TabControl x:Name="CategoryTabControl" ItemsSource="{Binding Categories}" 
+                            SelectedItem="{Binding SelectedCategory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                            adonisExtensions:LayerExtension.IncreaseLayer="True">
 
-                <!-- Drag n' Drop Control -->
-                <TabControl.Resources>
-                    <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
-                        <Setter Property="AllowDrop" Value="True"/>
-                        <EventSetter Event="PreviewMouseMove" Handler="TabItem_PreviewMouseMove"/>
-                        <EventSetter Event="Drop" Handler="TabItem_Drop"/>
-                    </Style>
-                </TabControl.Resources>
+                    <!-- Drag n' Drop Control -->
+                    <TabControl.Resources>
+                        <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
+                            <Setter Property="AllowDrop" Value="True"/>
+                            <EventSetter Event="PreviewMouseMove" Handler="TabItem_PreviewMouseMove"/>
+                            <EventSetter Event="Drop" Handler="TabItem_Drop"/>
+                        </Style>
+                    </TabControl.Resources>
 
-                <!-- Category Item Template [Header] -->
-                <TabControl.ItemTemplate>
-                    <DataTemplate DataType="tagging:CategoryModel">
-                        <TextBlock Text="{Binding Name}">
-                            <TextBlock.ContextMenu>
-                                <ContextMenu>
-                                    <MenuItem Header="{Binding Name}" IsEnabled="False"/>
-                                    <Separator/>
-                                    <MenuItem Header="{Binding TagCountString, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="False"/>
-                                    <MenuItem Header="Rename" Command="{Binding RenameCategoryCommand}"/>
-                                    <MenuItem Header="Delete" Command="{Binding RemoveCategoryCommand}"/>
-                                    <MenuItem Header="Enabled" IsCheckable="True"  StaysOpenOnClick="True" 
+                    <!-- Category Item Template [Header] -->
+                    <TabControl.ItemTemplate>
+                        <DataTemplate DataType="tagging:CategoryModel">
+                            <TextBlock Text="{Binding Name}">
+                                <TextBlock.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="{Binding Name}" IsEnabled="False"/>
+                                        <Separator/>
+                                        <MenuItem Header="{Binding TagCountString, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="False"/>
+                                        <MenuItem Header="Rename" Command="{Binding RenameCategoryCommand}"/>
+                                        <MenuItem Header="Delete" Command="{Binding RemoveCategoryCommand}"/>
+                                        <MenuItem Header="Enabled" IsCheckable="True"  StaysOpenOnClick="True" 
                                               IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <MenuItem Header="Use For Naming" IsCheckable="True"  StaysOpenOnClick="True" 
+                                        <MenuItem Header="Use For Naming" IsCheckable="True"  StaysOpenOnClick="True" 
                                               IsChecked="{Binding UseForNaming, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                </ContextMenu>
-                            </TextBlock.ContextMenu>
-                        </TextBlock>
-                    </DataTemplate>
-                </TabControl.ItemTemplate>
+                                    </ContextMenu>
+                                </TextBlock.ContextMenu>
+                            </TextBlock>
+                        </DataTemplate>
+                    </TabControl.ItemTemplate>
 
-                <!-- Control Template [Enables Scrolling for the Tabs] -->
-                <TabControl.Template>
-                    <ControlTemplate TargetType="{x:Type TabControl}">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition/>
-                            </Grid.RowDefinitions>
-                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                                <TabPanel x:Name="HeaderPanel" IsItemsHost="True" Margin="0,4,0,0"/>
-                            </ScrollViewer>
-                            <ContentPresenter x:Name="PART_SelectedContentHost" Margin="4" ContentSource="SelectedContent" Grid.Row="1"/>
-                        </Grid>
-                    </ControlTemplate>
-                </TabControl.Template>
+                    <!-- Control Template [Enables Scrolling for the Tabs] -->
+                    <TabControl.Template>
+                        <ControlTemplate TargetType="{x:Type TabControl}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                                    <TabPanel x:Name="HeaderPanel" IsItemsHost="True" Margin="0,4,0,0"/>
+                                </ScrollViewer>
+                                <ContentPresenter x:Name="PART_SelectedContentHost" Margin="4" ContentSource="SelectedContent" Grid.Row="1"/>
+                            </Grid>
+                        </ControlTemplate>
+                    </TabControl.Template>
 
-                <!-- Content Template [Core Content/ListBox] -->
-                <!--? Category Header -->
-                <TabControl.ContentTemplate>
-                    <DataTemplate DataType="tagging:CategoryModel">
-                        <StackPanel Orientation="Vertical">
-                            <!-- Search & Sort -->
-                            <GroupBox>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="4"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="4"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="4"/>
-                                        <RowDefinition Height="auto"/>
-                                        <RowDefinition Height="auto"/>
-                                        <RowDefinition Height="4"/>
-                                    </Grid.RowDefinitions>
+                    <!-- Content Template [Core Content/ListBox] -->
+                    <!--? Category Header -->
+                    <TabControl.ContentTemplate>
+                        <DataTemplate DataType="tagging:CategoryModel">
+                            <StackPanel Orientation="Vertical">
+                                <!-- Search & Sort -->
+                                <GroupBox>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="4"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="4"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="4"/>
+                                            <RowDefinition Height="auto"/>
+                                            <RowDefinition Height="auto"/>
+                                            <RowDefinition Height="4"/>
+                                        </Grid.RowDefinitions>
 
-                                    <!-- Search Text -->
-                                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SearchFilter, Mode=TwoWay, UpdateSourceTrigger=Explicit}" 
-                                             adonisExtensions:WatermarkExtension.Watermark="Search Tag... (Press Enter to Confirm)" Margin="5 0 5 5"
+                                        <!-- Search Text -->
+                                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SearchFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                             adonisExtensions:WatermarkExtension.Watermark="Search Tag..." Margin="5 0 5 5"
                                              ToolTip="Press Enter to Confirm" KeyDown="SearchBar_OnKeyDown"/>
 
-                                    <!-- Clears the Search Text -->
-                                    <Button Grid.Row="1" Grid.Column="1"  Content="X" Foreground="Red" Width="25" Height="24" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                        <!-- Clears the Search Text -->
+                                        <Button Grid.Row="1" Grid.Column="1"  Content="X" Foreground="Red" Width="25" Height="24" HorizontalAlignment="Right" VerticalAlignment="Top"
                                             Command="{Binding ClearSearchCommand}"/>
 
-                                    <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="5 5 5 0">
-                                        <!-- Sorting -->
-                                        <TextBlock Text="Sort By: " VerticalAlignment="Center"/>
-                                        <Button Content="Name" Margin="5 0 5 0" Command="{Binding ToggleSortByNameCommand}"/>
-                                        <Button Content="Count" Margin="0 0 5 0" Command="{Binding ToggleSortByCountCommand}"/>
+                                        <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="5 5 5 0">
+                                            <!-- Sorting -->
+                                            <TextBlock Text="Sort By: " VerticalAlignment="Center"/>
+                                            <Button Content="Name" Margin="5 0 5 0" Command="{Binding ToggleSortByNameCommand}"/>
+                                            <Button Content="Count" Margin="0 0 5 0" Command="{Binding ToggleSortByCountCommand}"/>
 
-                                        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                                            <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
 
-                                        <!-- TagBoard -->
-                                        <TextBlock Text="Tagboard: " Margin="5 0 0 0" VerticalAlignment="Center"/>
-                                        <Button Content="View" Margin="5 0 5 0" Command="{Binding ViewTagBoardCommand}"/>
-                                        <Button Content="Add" Margin="0 0 5 0" Command="{Binding AddSelectedTagsToTagBoardCommand}"
+                                            <!-- TagBoard -->
+                                            <TextBlock Text="Tagboard: " Margin="5 0 0 0" VerticalAlignment="Center"/>
+                                            <Button Content="View" Margin="5 0 5 0" Command="{Binding ViewTagBoardCommand}"/>
+                                            <Button Content="Add" Margin="0 0 5 0" Command="{Binding AddSelectedTagsToTagBoardCommand}"
                                                 ToolTip="Add selected tags to the Tagboard"/>
-                                        <Button Content="Clear" Margin="0 0 5 0" Command="{Binding ClearTagBoardCommand}"/>
+                                            <Button Content="Clear" Margin="0 0 5 0" Command="{Binding ClearTagBoardCommand}"/>
 
-                                        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                                            <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
 
-                                        <!-- Image Selection -->
-                                        <TextBlock Text="Select Images With: " Margin="5 0 0 0" VerticalAlignment="Center"/>
-                                        <Button Content="Every Sel. Tag" Margin="5 0 5 0" Command="{Binding SelectImagesWithEverySelTag}"/>
-                                        <Button Content="Any Sel. Tag" Margin="0 0 5 0" Command="{Binding SelectImagesWithAnySelTag}"/>
-                                        <Button Content="Any Tag In Category" Margin="0 0 5 0" Command="{Binding SelectImagesWithAnyCategoryTag}"/>
+                                            <!-- Image Selection -->
+                                            <TextBlock Text="Select Images With: " Margin="5 0 0 0" VerticalAlignment="Center"/>
+                                            <Button Content="Every Sel. Tag" Margin="5 0 5 0" Command="{Binding SelectImagesWithEverySelTag}"/>
+                                            <Button Content="Any Sel. Tag" Margin="0 0 5 0" Command="{Binding SelectImagesWithAnySelTag}"/>
+                                            <Button Content="Any Tag In Category" Margin="0 0 5 0" Command="{Binding SelectImagesWithAnyCategoryTag}"/>
 
-                                    </StackPanel>
-                                </Grid>
-                            </GroupBox>
+                                        </StackPanel>
+                                    </Grid>
+                                </GroupBox>
 
-                            <!-- TODO Consider adding this and the complementary Category header at some point to clear up the info of a 'blank' (no categories) page -->
-                            <!-- <TextBlock Text="Tags" Margin="5">
+                                <!-- TODO Consider adding this and the complementary Category header at some point to clear up the info of a 'blank' (no categories) page -->
+                                <!-- <TextBlock Text="Tags" Margin="5">
                                 <TextBlock.Style>
                                     <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
                                 </TextBlock.Style>
                             </TextBlock> -->
 
-                            <!--? Tag Tab Control -->
-                            <!--x<GroupBox>-->
-                            <TabControl ItemsSource="{Binding TagTabs, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
+                                <!--? Tag Tab Control -->
+                                <!--x<GroupBox>-->
+                                <TabControl ItemsSource="{Binding TagTabs, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
                                 SelectedItem="{Binding SelectedTagTab, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
 
-                                <!-- Item Template [Index] -->
-                                <!--? Page Index -->
-                                <TabControl.ItemTemplate>
-                                    <DataTemplate DataType="controls:TagTabModel">
-                                        <TextBlock Text="{Binding TabIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                    </DataTemplate>
-                                </TabControl.ItemTemplate>
+                                    <!-- Item Template [Index] -->
+                                    <!--? Page Index -->
+                                    <TabControl.ItemTemplate>
+                                        <DataTemplate DataType="controls:TagTabModel">
+                                            <TextBlock Text="{Binding TabIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        </DataTemplate>
+                                    </TabControl.ItemTemplate>
 
-                                <!-- Control Template [Enables Scrolling for the Tabs] -->
-                                <TabControl.Template>
-                                    <ControlTemplate TargetType="{x:Type TabControl}">
-                                        <Grid>
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto"/>
-                                                <RowDefinition/>
-                                            </Grid.RowDefinitions>
-                                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                                                <TabPanel x:Name="HeaderPanel" IsItemsHost="True" Margin="0,4,0,0"/>
-                                            </ScrollViewer>
-                                            <ContentPresenter x:Name="PART_SelectedContentHost" Margin="4" ContentSource="SelectedContent" Grid.Row="1"/>
-                                        </Grid>
-                                    </ControlTemplate>
-                                </TabControl.Template>
+                                    <!-- Control Template [Enables Scrolling for the Tabs] -->
+                                    <TabControl.Template>
+                                        <ControlTemplate TargetType="{x:Type TabControl}">
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition/>
+                                                </Grid.RowDefinitions>
+                                                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                                                    <TabPanel x:Name="HeaderPanel" IsItemsHost="True" Margin="0,4,0,0"/>
+                                                </ScrollViewer>
+                                                <ContentPresenter x:Name="PART_SelectedContentHost" Margin="4" ContentSource="SelectedContent" Grid.Row="1"/>
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </TabControl.Template>
 
-                                <!-- Tag List Content Template [Core Content/ListBox] -->
-                                <TabControl.ContentTemplate>
-                                    <DataTemplate DataType="controls:TagTabModel">
-                                        <!--? Keep the option to scroll since we're still allowing the window to be resized -->
-                                        <ListBox ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedTag}" SelectionMode="Extended"
+                                    <!-- Tag List Content Template [Core Content/ListBox] -->
+                                    <TabControl.ContentTemplate>
+                                        <DataTemplate>
+                                            <!-- This is just here to ease Tab selection, placing the Listbox for tags here would significantly slow down selection -->
+                                        </DataTemplate>
+                                    </TabControl.ContentTemplate>
+                                    
+                                </TabControl>
+                                <!--x</GroupBox>-->
+                            </StackPanel>
+                        </DataTemplate>
+                    </TabControl.ContentTemplate>
+                </TabControl>
+
+                <!--!<DataTemplate DataType="controls:TagTabModel">-->
+                <!--? Keep the option to scroll since we're still allowing the window to be resized -->
+                <ListBox x:Name="VisibleTagsListBox" ItemsSource="{Binding VisibleTags}" SelectedItem="{Binding SelectedTag}" SelectionMode="Extended"
                                                  Height="{Binding TagWrapHeight, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
                                                  adonisExtensions:ScrollViewerExtension.HideScrollBarsUntilMouseOver="True"
                                                  adonisExtensions:ScrollViewerExtension.VerticalScrollBarPlacement="Overlay"
                                                  adonisExtensions:ScrollViewerExtension.VerticalScrollBarExpansionMode="ExpandOnHover"
                                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                                 PreviewMouseDown="TagTabControl_ListBoxItem_OnPreviewMouseDown">
+                                                 PreviewMouseDown="TagTabControl_ListBoxItem_OnPreviewMouseDown"
+                                                 VirtualizingPanel.IsVirtualizing="true"
+                                                 VirtualizingPanel.VirtualizationMode="Recycling"
+                                                 SelectionChanged="CategoryTabControl_OnSelectionChanged">
 
-                                            <!-- Wrap Setup -->
-                                            <ListBox.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <WrapPanel IsItemsHost="True" Width="{Binding TagWrapWidth, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
-                                                </ItemsPanelTemplate>
-                                            </ListBox.ItemsPanel>
+                    <!-- Wrap Setup -->
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel IsItemsHost="True" Width="{Binding TagWrapWidth, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
 
-                                            <!-- Item Container Style [Handles Selection of multiple items by binding to the IsSelected property of the object] -->
-                                            <ListBox.ItemContainerStyle>
-                                                <Style TargetType="{x:Type ListBoxItem}">
-                                                    <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                </Style>
-                                            </ListBox.ItemContainerStyle>
+                    <!-- Item Container Style [Handles Selection of multiple items by binding to the IsSelected property of the object] -->
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="{x:Type ListBoxItem}">
+                            <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                            <Setter Property="Visibility" Value="{Binding IsHidden, Mode=OneWay, UpdateSourceTrigger=PropertyChanged,
+                                                            Converter={StaticResource BooleanToVisibilityInvertedConverter}}"/>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
 
-                                            <!--? Tags Item Template -->
-                                            <ListBox.ItemTemplate>
-                                                <DataTemplate DataType="tagging:TagModel">
-                                                    <!-- The GroupBox adds a fitting adonis background to every tag -->
-                                                    <GroupBox  adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:CornerRadiusExtension.CornerRadius="15">
-                                                        <!-- This interaction trigger allows us to highlight images used by a given tag when the tag is clicked on -->
-                                                        <i:Interaction.Triggers>
-                                                            <i:EventTrigger EventName="MouseUp">
-                                                                <i:InvokeCommandAction Command="{Binding TagInteractCommand}"/>
-                                                            </i:EventTrigger>
-                                                        </i:Interaction.Triggers>
+                    <!--? Tags Item Template -->
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="tagging:TagModel">
+                            <!-- The GroupBox adds a fitting adonis background to every tag -->
+                            <GroupBox  adonisExtensions:LayerExtension.IncreaseLayer="True" adonisExtensions:CornerRadiusExtension.CornerRadius="15">
+                                <!-- This interaction trigger allows us to highlight images used by a given tag when the tag is clicked on -->
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="MouseUp">
+                                        <i:InvokeCommandAction Command="{Binding TagInteractCommand}"/>
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
 
-                                                        <!--? Tag Text Block -->
-                                                        <TextBlock>
-                                                            <Run Text="{Binding Name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                            <Run Text="{Binding ImageCountStringTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <!--? Tag Text Block -->
+                                <TextBlock>
+                                    <Run Text="{Binding Name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <Run Text="{Binding ImageCountStringTag, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
 
-                                                            <!-- ! Trying to use RaisePropertyChanged() for this would be improbable -->
-                                                            <!-- ! Trying to use RaisePropertyChanged() for this would be improbable -->
-                                                            <!-- ! Trying to use RaisePropertyChanged() for this would be improbable -->
-                                                            <TextBlock.Style>
-                                                                <Style TargetType="TextBlock">
-                                                                    <Style.Triggers>
-                                                                        <!-- In Selected Image(s) Tag Highlight -->
-                                                                        <MultiDataTrigger>
-                                                                            <MultiDataTrigger.Conditions>
-                                                                                <Condition Binding="{Binding IsHighlighted, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="True"/>
-                                                                                <Condition Binding="{Binding IsHighlightedInSomeImages, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="False"/>
-                                                                                <Condition Binding="{Binding IsHighlightedParent, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="False"/>
-                                                                                <Condition Binding="{Binding IsHighlightedChild, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="False"/>
-                                                                            </MultiDataTrigger.Conditions>
-                                                                            <MultiDataTrigger.Setters>
-                                                                                <Setter Property="Foreground" Value="LimeGreen"/>
-                                                                            </MultiDataTrigger.Setters>
-                                                                        </MultiDataTrigger>
-                                                                        <!-- In Some Selected Images Tag Highlight -->
-                                                                        <MultiDataTrigger>
-                                                                            <MultiDataTrigger.Conditions>
-                                                                                <Condition Binding="{Binding IsHighlighted, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="True"/>
-                                                                                <Condition Binding="{Binding IsHighlightedInSomeImages, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="True"/>
-                                                                                <Condition Binding="{Binding IsHighlightedParent, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="False"/>
-                                                                                <Condition Binding="{Binding IsHighlightedChild, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="False"/>
-                                                                            </MultiDataTrigger.Conditions>
-                                                                            <MultiDataTrigger.Setters>
-                                                                                <Setter Property="Foreground" Value="YellowGreen"/>
-                                                                            </MultiDataTrigger.Setters>
-                                                                        </MultiDataTrigger>
-                                                                        <!-- Parent Tag Highlight -->
-                                                                        <MultiDataTrigger>
-                                                                            <MultiDataTrigger.Conditions>
-                                                                                <Condition Binding="{Binding IsHighlighted, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="True"/>
-                                                                                <Condition Binding="{Binding IsHighlightedInSomeImages, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="False"/>
-                                                                                <Condition Binding="{Binding IsHighlightedParent, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="True"/>
-                                                                                <Condition Binding="{Binding IsHighlightedChild, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="False"/>
-                                                                            </MultiDataTrigger.Conditions>
-                                                                            <MultiDataTrigger.Setters>
-                                                                                <Setter Property="Foreground" Value="Yellow"/>
-                                                                            </MultiDataTrigger.Setters>
-                                                                        </MultiDataTrigger>
-                                                                        <!-- Child Tag Highlight -->
-                                                                        <MultiDataTrigger>
-                                                                            <MultiDataTrigger.Conditions>
-                                                                                <Condition Binding="{Binding IsHighlighted, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="True"/>
-                                                                                <Condition Binding="{Binding IsHighlightedInSomeImages, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="False"/>
-                                                                                <Condition Binding="{Binding IsHighlightedParent, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="False"/>
-                                                                                <Condition Binding="{Binding IsHighlightedChild, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="True"/>
-                                                                            </MultiDataTrigger.Conditions>
-                                                                            <MultiDataTrigger.Setters>
-                                                                                <Setter Property="Foreground" Value="Blue"/>
-                                                                            </MultiDataTrigger.Setters>
-                                                                        </MultiDataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </TextBlock.Style>
-                                                        </TextBlock>
+                                    <!-- ! Trying to use RaisePropertyChanged() for this would be improbable -->
+                                    <!-- ! Trying to use RaisePropertyChanged() for this would be improbable -->
+                                    <!-- ! Trying to use RaisePropertyChanged() for this would be improbable -->
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <!-- In Selected Image(s) Tag Highlight -->
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding IsHighlighted, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="True"/>
+                                                        <Condition Binding="{Binding IsHighlightedInSomeImages, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="False"/>
+                                                        <Condition Binding="{Binding IsHighlightedParent, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="False"/>
+                                                        <Condition Binding="{Binding IsHighlightedChild, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="False"/>
+                                                    </MultiDataTrigger.Conditions>
+                                                    <MultiDataTrigger.Setters>
+                                                        <Setter Property="Foreground" Value="LimeGreen"/>
+                                                    </MultiDataTrigger.Setters>
+                                                </MultiDataTrigger>
+                                                <!-- In Some Selected Images Tag Highlight -->
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding IsHighlighted, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="True"/>
+                                                        <Condition Binding="{Binding IsHighlightedInSomeImages, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="True"/>
+                                                        <Condition Binding="{Binding IsHighlightedParent, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="False"/>
+                                                        <Condition Binding="{Binding IsHighlightedChild, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="False"/>
+                                                    </MultiDataTrigger.Conditions>
+                                                    <MultiDataTrigger.Setters>
+                                                        <Setter Property="Foreground" Value="YellowGreen"/>
+                                                    </MultiDataTrigger.Setters>
+                                                </MultiDataTrigger>
+                                                <!-- Parent Tag Highlight -->
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding IsHighlighted, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="True"/>
+                                                        <Condition Binding="{Binding IsHighlightedInSomeImages, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="False"/>
+                                                        <Condition Binding="{Binding IsHighlightedParent, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="True"/>
+                                                        <Condition Binding="{Binding IsHighlightedChild, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="False"/>
+                                                    </MultiDataTrigger.Conditions>
+                                                    <MultiDataTrigger.Setters>
+                                                        <Setter Property="Foreground" Value="Yellow"/>
+                                                    </MultiDataTrigger.Setters>
+                                                </MultiDataTrigger>
+                                                <!-- Child Tag Highlight -->
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding IsHighlighted, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="True"/>
+                                                        <Condition Binding="{Binding IsHighlightedInSomeImages, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="False"/>
+                                                        <Condition Binding="{Binding IsHighlightedParent, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="False"/>
+                                                        <Condition Binding="{Binding IsHighlightedChild, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Value="True"/>
+                                                    </MultiDataTrigger.Conditions>
+                                                    <MultiDataTrigger.Setters>
+                                                        <Setter Property="Foreground" Value="Blue"/>
+                                                    </MultiDataTrigger.Setters>
+                                                </MultiDataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
 
-                                                        <!--? Tag Context Menu -->
-                                                        <GroupBox.ContextMenu>
-                                                            <ContextMenu>
-                                                                <!-- Core -->
-                                                                <MenuItem Header="{Binding Name}" IsEnabled="False"/>
-                                                                <MenuItem Header="{Binding ImageCountStringContextMenu}" IsEnabled="False"/>
-                                                                <Separator/>
-                                                                <MenuItem Header="Rename" Command="{Binding RenameTagCommand}"/>
-                                                                <MenuItem Header="Delete" Command="{Binding RemoveTagCommand}"/>
-                                                                <MenuItem Header="Frequencies">
-                                                                    <MenuItem Header="Relative Frequency: 100%"/>
-                                                                    <MenuItem Header="Exact Frequency: 100%"/>
-                                                                </MenuItem>
+                                <!--? Tag Context Menu -->
+                                <GroupBox.ContextMenu>
+                                    <ContextMenu>
+                                        <!-- Core -->
+                                        <MenuItem Header="{Binding Name}" IsEnabled="False"/>
+                                        <MenuItem Header="{Binding ImageCountStringContextMenu}" IsEnabled="False"/>
+                                        <Separator/>
+                                        <MenuItem Header="Rename" Command="{Binding RenameTagCommand}"/>
+                                        <MenuItem Header="Delete" Command="{Binding RemoveTagCommand}"/>
+                                        <MenuItem Header="Frequencies">
+                                            <MenuItem Header="Relative Frequency: 100%"/>
+                                            <MenuItem Header="Exact Frequency: 100%"/>
+                                        </MenuItem>
 
-                                                                <Separator/>
+                                        <Separator/>
 
-                                                                <!-- Image Control & Linking-->
-                                                                <MenuItem Header="Image Control">
-                                                                    <MenuItem Header="Select Images with Tag" Command="{Binding SelectImagesWithTag}"/>
-                                                                    <MenuItem Header="Add To">
-                                                                        <MenuItem Header="Selected Image(s)" Command="{Binding AddTagToSelectedImagesCommand}"/>
-                                                                        <MenuItem Header="Entire Image Group" Command="{Binding AddTagToEntireImageGroupCommand}"/>
-                                                                    </MenuItem>
-                                                                    <MenuItem Header="Remove From">
-                                                                        <MenuItem Header="Selected Image(s)" Command="{Binding RemoveTagFromSelectedImagesCommand}"/>
-                                                                        <MenuItem Header="Entire Image Group" Command="{Binding RemoveTagFromEntireImageGroupCommand}"/>
-                                                                    </MenuItem>
-                                                                </MenuItem>
-                                                                <MenuItem Header="Tag Linking">
-                                                                    <!--x<MenuItem Header="Link to Tag" Command="{Binding LinkTagCommand}"/>-->
-                                                                    <MenuItem Header="Show Parent Tags"/>
-                                                                    <MenuItem Header="Show Child Tags"/>
-                                                                </MenuItem>
+                                        <!-- Image Control & Linking-->
+                                        <MenuItem Header="Image Control">
+                                            <MenuItem Header="Select Images with Tag" Command="{Binding SelectImagesWithTag}"/>
+                                            <MenuItem Header="Add To">
+                                                <MenuItem Header="Selected Image(s)" Command="{Binding AddTagToSelectedImagesCommand}"/>
+                                                <MenuItem Header="Entire Image Group" Command="{Binding AddTagToEntireImageGroupCommand}"/>
+                                            </MenuItem>
+                                            <MenuItem Header="Remove From">
+                                                <MenuItem Header="Selected Image(s)" Command="{Binding RemoveTagFromSelectedImagesCommand}"/>
+                                                <MenuItem Header="Entire Image Group" Command="{Binding RemoveTagFromEntireImageGroupCommand}"/>
+                                            </MenuItem>
+                                        </MenuItem>
+                                        <MenuItem Header="Tag Linking">
+                                            <!--x<MenuItem Header="Link to Tag" Command="{Binding LinkTagCommand}"/>-->
+                                            <MenuItem Header="Show Parent Tags"/>
+                                            <MenuItem Header="Show Child Tags"/>
+                                        </MenuItem>
 
-                                                                <Separator/>
+                                        <Separator/>
 
-                                                                <MenuItem Header="{Binding RenameFolderContextMenuString, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="False"
+                                        <MenuItem Header="{Binding RenameFolderContextMenuString, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="False"
                                                                           ToolTip="The rename folder helps to determine what folder an image will be assigned to upon renaming"/>
-                                                                <MenuItem Header="Assign Rename Folder" Command="{Binding AssignRenameFolderCommand}"
+                                        <MenuItem Header="Assign Rename Folder" Command="{Binding AssignRenameFolderCommand}"
                                                                           ToolTip="The rename folder helps to determine what folder an image will be assigned to upon renaming"/>
-                                                                <MenuItem Header="Remove Rename Folder" Command="{Binding RemoveRenameFolderCommand}"
+                                        <MenuItem Header="Remove Rename Folder" Command="{Binding RemoveRenameFolderCommand}"
                                                                           ToolTip="The rename folder helps to determine what folder an image will be assigned to upon renaming"/>
 
-                                                                <Separator/>
+                                        <Separator/>
 
-                                                                <!-- Checkboxes -->
-                                                                <MenuItem Header="Enabled" IsCheckable="True" StaysOpenOnClick="True" 
+                                        <!-- Checkboxes -->
+                                        <MenuItem Header="Enabled" IsCheckable="True" StaysOpenOnClick="True" 
                                                                               IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                                <MenuItem Header="Use For Naming" IsCheckable="True" StaysOpenOnClick="True" 
+                                        <MenuItem Header="Use For Naming" IsCheckable="True" StaysOpenOnClick="True" 
                                                                               IsChecked="{Binding UseForNaming, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-                                                                <Separator/>
+                                        <Separator/>
 
-                                                                <MenuItem Header="Show Rank Distribution Graph" Command="{Binding ToggleRankGraphCommand}"/>
-                                                            </ContextMenu>
-                                                        </GroupBox.ContextMenu>
-                                                    </GroupBox>
-                                                </DataTemplate>
-                                            </ListBox.ItemTemplate>
-                                        </ListBox>
-                                    </DataTemplate>
-                                </TabControl.ContentTemplate>
-                            </TabControl>
-                            <!--x</GroupBox>-->
-                        </StackPanel>
-                    </DataTemplate>
-                </TabControl.ContentTemplate>
-            </TabControl>
+                                        <MenuItem Header="Show Rank Distribution Graph" Command="{Binding ToggleRankGraphCommand}"/>
+                                    </ContextMenu>
+                                </GroupBox.ContextMenu>
+                            </GroupBox>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <!--!</DataTemplate>-->
+            </StackPanel>
         </GroupBox>
 
         <!--? Tagboard Drawer -->

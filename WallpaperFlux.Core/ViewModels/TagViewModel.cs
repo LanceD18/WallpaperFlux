@@ -56,7 +56,7 @@ namespace WallpaperFlux.Core.ViewModels
                 SetProperty(ref _selectedCategory, value);
 
                 //? needed to ensure that we can see the tags on swapping to a category
-                SelectedCategory.VerifyTagTabs(); //! Do NOT call this from TagView.xaml.cs, after a few attempts an error will be thrown complaining about modifications during generation!
+                SelectedCategory?.VerifyTagTabs(); //! Do NOT call this from TagView.xaml.cs, after a few attempts an error will be thrown complaining about modifications during generation!
 
                 HighlightTags();
                 RaisePropertyChanged(() => CategoryIsSelected);
@@ -72,6 +72,34 @@ namespace WallpaperFlux.Core.ViewModels
                 if (SelectedCategory.SelectedTagTab.SelectedTag == null) return "";
 
                 return SelectedCategory.SelectedTagTab.SelectedTag.Name;
+            }
+        }
+
+        private MvxObservableCollection<TagModel> _visibleTags = new MvxObservableCollection<TagModel>();
+
+        public MvxObservableCollection<TagModel> VisibleTags
+        {
+            get => _visibleTags;
+            set => SetProperty(ref _visibleTags, value);
+        }
+
+        private TagModel _selectedTag;
+        public TagModel SelectedTag
+        {
+            get => _selectedTag;
+            set
+            {
+                SetProperty(ref _selectedTag, value);
+                Instance.RaisePropertyChanged(() => Instance.CanUseTagLinker);
+                Instance.RaisePropertyChanged(() => Instance.SelectedTagName);
+
+                if (Instance.RankGraphToggle) // if the rank graph drawer is open, update the graph
+                {
+                    Instance.UpdateRankGraph();
+                }
+
+                //x // The selected tag will become the linking source when the linker is turned on, but shouldn't be modified while it is on
+                //x if (!TaggingUtil.GetTagLinkerToggle()) TagViewModel.Instance.TagLinkingSource = value;
             }
         }
 
@@ -507,6 +535,97 @@ namespace WallpaperFlux.Core.ViewModels
         /// <param name="images">The images to rebuild the image selector with</param>
         public void RebuildImageSelectorWithTagOptions(ImageModel[] images) => WallpaperFluxViewModel.Instance.RebuildImageSelector(images, RandomizeSelection, ReverseSelection);
 
+        #region Visible Tags
+        public double TagWrapWidth { get; set; }
+
+        public double TagWrapHeight { get; set; }
+
+
+
+        public void SetTagWrapSize(double width, double height)
+        {
+            TagWrapWidth = width;
+            TagWrapHeight = height; // the bottom tends to be cut off
+            RaisePropertyChanged(() => TagWrapWidth);
+            RaisePropertyChanged(() => TagWrapHeight);
+        }
+
+
+        /// <summary>
+        /// verifies what tags are visible based on the given search
+        /// </summary>
+        public void VerifyVisibleTags()
+        {
+            if (SelectedCategory == null)
+            {
+                Debug.WriteLine("Null Selected Category");
+                return;
+            }
+
+            if (SelectedCategory.SelectedTagTab == null)
+            {
+                Debug.WriteLine("Null Selected Tab");
+                return;
+            }
+
+            if (SelectedCategory.SortedTags == null)
+            {
+                Debug.WriteLine("Null Sorted Tags");
+                SelectedCategory.SortTags();
+            }
+
+            // adjust the indexes to the page tag limit
+            while (VisibleTags.Count < TaggingUtil.TagsPerPage /*x&& VisibleTags.Count < SelectedCategory.FilteredTags.Length*/)
+            {
+                // hiding instead of setting to null since removing and adding controls adds significant processing time
+                VisibleTags.Add(new TagModel("null", null) { IsHidden = true });
+            }
+            
+            // adjust the indexes to the page tag limit
+            if (SelectedCategory.FilteredTags.Length < TaggingUtil.TagsPerPage)
+            {
+                for (int i = TaggingUtil.TagsPerPage - 1; i > SelectedCategory.FilteredTags.Length; i--)
+                {
+                    VisibleTags[i].IsHidden = true;
+                }
+            }
+
+            SelectedCategory.FilteredTags = SelectedCategory.GetSortedTagsWithBaseFilter();
+
+            int pageNumber = int.Parse(SelectedCategory.SelectedTagTab.TabIndex);
+            int minIndex = TaggingUtil.TagsPerPage * (pageNumber - 1);
+            int maxIndex = TaggingUtil.TagsPerPage * pageNumber;
+
+            for (int i = minIndex; i < maxIndex; i++)
+            {
+                if (i > SelectedCategory.FilteredTags.Length - 1) break; // we're on the last page and we've run out of tags, break the loop to avoid an index error
+
+                if (HideDisabledTags && !SelectedCategory.FilteredTags[i].IsEnabled())
+                {
+                    maxIndex++; // this tag is hidden, skip it, we now have space for an additional tag so increase the max index
+                    continue;
+                }
+
+                VisibleTags[i - minIndex] = SelectedCategory.FilteredTags[i];
+                VisibleTags[i - minIndex].IsHidden = false;
+            }
+            
+            SelectedCategory.SelectedTagTab.Items.SwitchTo(VisibleTags); // TODO should probably remove this duplication at some point
+
+            //? prevents tags from remaining selected out of view whenever we search or change the sort option
+            //? and unlike images, tags already deselect on every page swap
+            foreach (TagModel tag in SelectedCategory.GetSelectedTags())
+            {
+                if (!VisibleTags.Contains(tag))
+                {
+                    tag.IsSelected = false;
+                }
+            }
+
+            HighlightTags();
+        }
+        #endregion
+
         #region Tag Highlighting
 
         private Thread highlightTagThread;
@@ -515,11 +634,7 @@ namespace WallpaperFlux.Core.ViewModels
             if (JsonUtil.IsLoadingData) return;
             if (FolderUtil.IsValidatingFolders) return;
             if (SelectedCategory == null) return; // can't show any highlights or unhighlight anything if a category isn't selected
-
-            // error control
-            if (SelectedCategory.SelectedTagTab == null) return;
-            if (SelectedCategory.SelectedTagTab.Items == null) return;
-            if (SelectedCategory.SelectedTagTab.Items.Count == 0) return;
+            if (VisibleTags == null) return;
 
             await Task.Run(() =>
             {
@@ -587,9 +702,9 @@ namespace WallpaperFlux.Core.ViewModels
                     }
                 }
 
-                HashSet<TagModel> visibleTags = SelectedCategory.SelectedTagTab.Items.ToHashSet();
+                //xHashSet<TagModel> visibleTags = SelectedCategory.SelectedTagTab.Items.ToHashSet();
 
-                foreach (TagModel tag in visibleTags)
+                foreach (TagModel tag in VisibleTags)
                 {
                     tag.IsHighlighted = tagsToHighlight.Contains(tag);
 

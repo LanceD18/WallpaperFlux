@@ -7,10 +7,12 @@ using HandyControl.Controls;
 using LanceTools.WPF.Adonis.Util;
 using MvvmCross.Commands;
 using MvvmCross.ViewModels;
+using MvvmCross.Views;
 using Newtonsoft.Json;
 using WallpaperFlux.Core.Models.Controls;
 using WallpaperFlux.Core.Util;
 using WallpaperFlux.Core.ViewModels;
+using MessageBox = AdonisUI.Controls.MessageBox;
 
 namespace WallpaperFlux.Core.Models.Tagging
 {
@@ -22,34 +24,7 @@ namespace WallpaperFlux.Core.Models.Tagging
         public string Name
         {
             get => _name;
-
-            set
-            {
-                /*x
-                if (Tags != null)
-                {
-                    HashSet<string> alteredImages = new HashSet<string>();
-
-                    foreach (TagData tag in Tags)
-                    {
-                        tag.ParentCategoryName = value;
-
-                        foreach (string image in tag.GetLinkedImages())
-                        {
-                            //? while the HashSet itself prevents duplicates, this contains reference is also done fastest through HashSet
-                            //? which the rename category section needs
-                            if (!alteredImages.Contains(image))
-                            {
-                                WallpaperData.GetImageData(image).RenameCategory(name, value);
-                                alteredImages.Add(image);
-                            }
-                        }
-                    }
-                }
-                */
-
-                SetProperty(ref _name, value);
-            }
+            set => SetProperty(ref _name, value);
         }
 
         private bool _enabled;
@@ -140,12 +115,12 @@ namespace WallpaperFlux.Core.Models.Tagging
                 //! Workaround to the EnsureSingularSelection() methods from WPF ControlUtil ; ideally we'd look for a less brute force solution
 
                 SetProperty(ref _selectedTagTab, value);
-                VerifyVisibleTags();
+                TagViewModel.Instance.VerifyVisibleTags();
             }
         }
 
-        private TagModel[] _sortedTags;
-        private TagModel[] _filteredTags;
+        public TagModel[] SortedTags;
+        public TagModel[] FilteredTags;
 
         #endregion
 
@@ -363,9 +338,12 @@ namespace WallpaperFlux.Core.Models.Tagging
 
             SortTags();
 
-            _filteredTags = GetSortedTagsWithBaseFilter();
+            FilteredTags = GetSortedTagsWithBaseFilter();
 
-            int totalTagTabCount = (_filteredTags.Length / TaggingUtil.TagsPerPage) + 1; //? remember that this 'rounds' off the last page since it's an int
+            //! we take the length - 1 so that we don't get a miscellaneous extra page when on exactly the tag limit
+            //! if the tag amount per page is 25, then while we are at 25 tags we will get (25/25) + 1, leading to 2 pages instead of 1
+            //! so subtracting by 1 would gives us (24/25) + 1 instead, fixing the issue
+            int totalTagTabCount = ((FilteredTags.Length - 1) / TaggingUtil.TagsPerPage) + 1; //? remember that this 'rounds' off the last page since it's an int
 
             if (TagTabs.Count != totalTagTabCount)
             {
@@ -387,62 +365,7 @@ namespace WallpaperFlux.Core.Models.Tagging
                 RaisePropertyChanged(() => SelectedTagTab);
             }
 
-            VerifyVisibleTags();
-        }
-        
-        /// <summary>
-        /// verifies what tags are visible based on the given search
-        /// </summary>
-        public void VerifyVisibleTags()
-        {
-            if (SelectedTagTab == null)
-            {
-                Debug.WriteLine("Null Selected Tab");
-                return;
-            }
-
-            if (_sortedTags == null)
-            {
-                Debug.WriteLine("Null Sorted Tags");
-                SortTags();
-            }
-
-            //xif (string.IsNullOrEmpty(SearchFilter)) _filteredTags = _sortedTags;
-            _filteredTags = GetSortedTagsWithBaseFilter();
-
-            int pageNumber = int.Parse(SelectedTagTab.TabIndex);
-            int minIndex = TaggingUtil.TagsPerPage * (pageNumber - 1);
-            int maxIndex = TaggingUtil.TagsPerPage * pageNumber;
-
-            //xDebug.WriteLine("minIndex: " + minIndex + " | maxIndex: " + maxIndex);
-
-            List<TagModel> pageTags = new List<TagModel>();
-            for (int i = minIndex; i < maxIndex; i++)
-            {
-                //xDebug.WriteLine("i: " + i + " | filterLength: " + _filteredTags.Length);
-                if (i > _filteredTags.Length - 1) break; // we're on the last page and we've run out of tags, break the loop to avoid an index error
-                if (TagViewModel.Instance.HideDisabledTags && !_filteredTags[i].IsEnabled())
-                {
-                    maxIndex++; // we have space for an additional tag
-                    continue;
-                }
-
-                pageTags.Add(_filteredTags[i]);
-            }
-
-            //? prevents tags from remaining selected out of view whenever we search or change the sort option
-            //? and unlike images, tags already deselect on every page swap
-            foreach (TagModel tag in GetSelectedTags())
-            {
-                if (!pageTags.Contains(tag))
-                {
-                    tag.IsSelected = false;
-                }
-            }
-
-            SelectedTagTab.Items.SwitchTo(pageTags);
-
-            TaggingUtil.HighlightTags();
+            TagViewModel.Instance.VerifyVisibleTags();
         }
 
         public void SortTags()
@@ -450,7 +373,7 @@ namespace WallpaperFlux.Core.Models.Tagging
             // Sort
             IEnumerable<TagModel> sortedItems = string.IsNullOrEmpty(SearchFilter)
                 ? Tags.ToArray()
-                : _filteredTags.ToArray();
+                : FilteredTags.ToArray();
 
             switch (TaggingUtil.GetActiveSortType())
             {
@@ -467,19 +390,19 @@ namespace WallpaperFlux.Core.Models.Tagging
                     break;
             }
 
-            _sortedTags = sortedItems.ToArray();
+            SortedTags = sortedItems.ToArray();
         }
 
         public TagModel[] GetSortedTagsWithBaseFilter()
         {
             if (string.IsNullOrEmpty(SearchFilter))
             {
-                return _sortedTags.Where(f => !TagViewModel.Instance.HideDisabledTags || f.IsEnabled()).ToArray();
+                return SortedTags.Where(f => !TagViewModel.Instance.HideDisabledTags || f.IsEnabled()).ToArray();
             }
             else
             {
                 string lowerCaseSearchFilter = SearchFilter.ToLower();
-                return _sortedTags.Where(f =>
+                return SortedTags.Where(f =>
                     f.Name.ToLower().Contains(lowerCaseSearchFilter) &&
                     (!TagViewModel.Instance.HideDisabledTags || f.IsEnabled())).ToArray(); //? applies search filter
             }
@@ -548,14 +471,34 @@ namespace WallpaperFlux.Core.Models.Tagging
         #endregion
 
         // ----- Operators -----
+        // not the most secure but serviceable for now (categories should not be able to have the same name)
+        //! do not use the auto-generated operators & equals, they will clash with the xaml and cause indescribable errors (you won't be pointed to the cause)
         public static bool operator ==(CategoryModel category1, CategoryModel category2)
         {
-            return category1?.Name == category2?.Name;
+            return category1?._name == category2?._name;
         }
 
         public static bool operator !=(CategoryModel category1, CategoryModel category2)
         {
-            return category1?.Name != category2?.Name;
+            return category1?._name != category2?._name;
+        }
+
+        protected bool Equals(CategoryModel other)
+        {
+            return _name == other._name;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((CategoryModel)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (_name != null ? _name.GetHashCode() : 0);
         }
     }
 }
