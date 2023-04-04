@@ -574,23 +574,24 @@ namespace WallpaperFlux.Core.ViewModels
                 SelectedCategory.SortTags();
             }
 
+            TagModel nullTag = new TagModel("null", null) { IsHidden = true };
             // adjust the indexes to the page tag limit
             while (VisibleTags.Count < TaggingUtil.TagsPerPage /*x&& VisibleTags.Count < SelectedCategory.FilteredTags.Length*/)
             {
                 // hiding instead of setting to null since removing and adding controls adds significant processing time
-                VisibleTags.Add(new TagModel("null", null) { IsHidden = true });
+                VisibleTags.Add(nullTag);
             }
             
             // adjust the indexes to the page tag limit
             if (SelectedCategory.FilteredTags.Length < TaggingUtil.TagsPerPage)
             {
-                for (int i = TaggingUtil.TagsPerPage - 1; i > SelectedCategory.FilteredTags.Length; i--)
+                for (int i = TaggingUtil.TagsPerPage - 1; i >= SelectedCategory.FilteredTags.Length; i--)
                 {
-                    VisibleTags[i].IsHidden = true;
+                    VisibleTags[i] = nullTag; //! do NOT directly set a tag to IsHidden here, this does not remove the reference to the original tag and can cause duplicates!
                 }
             }
 
-            SelectedCategory.FilteredTags = SelectedCategory.GetSortedTagsWithBaseFilter();
+            SelectedCategory.FilteredTags = SelectedCategory.GetSortedTagsWithSearchFilter();
 
             int pageNumber = int.Parse(SelectedCategory.SelectedTagTab.TabIndex);
             int minIndex = TaggingUtil.TagsPerPage * (pageNumber - 1);

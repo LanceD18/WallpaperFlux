@@ -338,7 +338,7 @@ namespace WallpaperFlux.Core.Models.Tagging
 
             SortTags();
 
-            FilteredTags = GetSortedTagsWithBaseFilter();
+            FilteredTags = GetSortedTagsWithSearchFilter();
 
             //! we take the length - 1 so that we don't get a miscellaneous extra page when on exactly the tag limit
             //! if the tag amount per page is 25, then while we are at 25 tags we will get (25/25) + 1, leading to 2 pages instead of 1
@@ -393,7 +393,7 @@ namespace WallpaperFlux.Core.Models.Tagging
             SortedTags = sortedItems.ToArray();
         }
 
-        public TagModel[] GetSortedTagsWithBaseFilter()
+        public TagModel[] GetSortedTagsWithSearchFilter()
         {
             if (string.IsNullOrEmpty(SearchFilter))
             {
