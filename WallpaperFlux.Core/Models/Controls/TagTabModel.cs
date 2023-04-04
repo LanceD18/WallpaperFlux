@@ -13,6 +13,7 @@ namespace WallpaperFlux.Core.Models.Controls
     //? Represents a page (tab) within a categories' tag Tab View
     public class TagTabModel : TabModel<TagModel>, ITabModel<TagModel>
     {
+        /*x
         private TagModel _selectedTag;
         public TagModel SelectedTag
         {
@@ -32,6 +33,7 @@ namespace WallpaperFlux.Core.Models.Controls
                 //x if (!TaggingUtil.GetTagLinkerToggle()) TagViewModel.Instance.TagLinkingSource = value;
             }
         }
+        */
 
         public TagTabModel(int index) : base(index) { }
 

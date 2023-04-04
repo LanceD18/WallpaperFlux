@@ -111,6 +111,7 @@ namespace WallpaperFlux.Core.Models.Tagging
             set
             {
                 //! Workaround to the EnsureSingularSelection() methods from WPF ControlUtil ; ideally we'd look for a less brute force solution
+                // TODO Apply this to the new VisibleTags collection
                 SelectedTagTab?.DeselectAllItems(); //? this is the previously selected tab as we are calling this before the value is set
                 //! Workaround to the EnsureSingularSelection() methods from WPF ControlUtil ; ideally we'd look for a less brute force solution
 

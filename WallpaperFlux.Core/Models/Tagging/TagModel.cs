@@ -5,6 +5,8 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using LanceTools;
 using LanceTools.IO;
 using LanceTools.WPF.Adonis.Util;
@@ -108,9 +110,11 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         #region View Variables
 
-        public string ImageCountStringTag => "(" + GetLinkedImageCount() + ")";
+        public int LinkedImageCount { get; private set; }
 
-        public string ImageCountStringContextMenu => "Found in " + GetLinkedImageCount() + " image(s)";
+        public string ImageCountStringTag => "(" + LinkedImageCount + ")";
+
+        public string ImageCountStringContextMenu => "Found in " + LinkedImageCount + " image(s)";
 
         public string RenameFolderContextMenuString
         {
@@ -433,34 +437,22 @@ namespace WallpaperFlux.Core.Models.Tagging
 
             RaisePropertyChangedImageCount(); //? Not really needed for THIS tag but would ideally still exist here and IS NEEDED for the parent tags
         }
-
+        
         private void RaisePropertyChangedImageCount()
         {
-            RaisePropertyChanged(() => ImageCountStringTag);
-            RaisePropertyChanged(() => ImageCountStringContextMenu);
 
-            // we need to update the image count of parent tags too (and their parent tags)
-            foreach (TagModel parentTag in ParentTags)
-            {
-                parentTag.RaisePropertyChangedImageCount();
-            }
+                    LinkedImageCount = GetLinkedImageCount(); // we want to call this as few times as possible
+                    RaisePropertyChanged(() => ImageCountStringTag);
+                    RaisePropertyChanged(() => ImageCountStringContextMenu);
+
+                    // we need to update the image count of parent tags too (and their parent tags)
+                    foreach (TagModel parentTag in ParentTags)
+                    {
+                        parentTag.RaisePropertyChangedImageCount();
+                    }
         }
 
-        //xpublic int GetLinkedImageCount() => GetLinkedImages().Count;
-
-        public int GetLinkedImageCount(bool accountForInvalid = false)
-        {
-            if (accountForInvalid) return GetLinkedImages().Count; // no need to check for child tags in *this* method because GetLinkedImages() will handle that
-
-            int count = LinkedImages.Count;
-
-            foreach (TagModel childTag in ChildTags)
-            {
-                count += childTag.GetLinkedImageCount();
-            }
-
-            return count;
-        }
+        public int GetLinkedImageCount(bool accountForInvalid = false) => GetLinkedImages(accountForInvalid).Count;
 
         //! Remember that we need to check for child tags too as references to linked child tags are included in references to the parent tag 
         //! (Prevents saving parent tag to JSON)
@@ -468,15 +460,22 @@ namespace WallpaperFlux.Core.Models.Tagging
         /// Gets all linked images of this tag and its child tags
         /// </summary>
         /// <returns></returns>
-        public HashSet<ImageModel> GetLinkedImages()
+        public HashSet<ImageModel> GetLinkedImages(bool accountForInvalid = true)
         {
             //? Only include images that actually exist (helps to detect and remove deleted images)
-            HashSet<ImageModel> images = new HashSet<ImageModel>(
-                LinkedImages.Where(f => FileUtil.Exists(f.Path)));
+            HashSet<ImageModel> images;
+            if (accountForInvalid) // accounting for invalid can add significant processing time when this is accessed multiple times by a tag that has a large number of children
+            {
+                images = new HashSet<ImageModel>(LinkedImages.Where(f => FileUtil.Exists(f.Path)));
+            }
+            else
+            {
+                images = new HashSet<ImageModel>(LinkedImages);
+            }
 
             foreach (TagModel tag in ChildTags)
             {
-                images.UnionWith(tag.GetLinkedImages());
+                images.UnionWith(tag.GetLinkedImages(accountForInvalid));
             }
 
             return images;

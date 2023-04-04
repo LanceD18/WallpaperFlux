@@ -63,17 +63,7 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
-        public string SelectedTagName
-        {
-            get
-            {
-                if (SelectedCategory == null) return "";
-                if (SelectedCategory.SelectedTagTab == null) return "";
-                if (SelectedCategory.SelectedTagTab.SelectedTag == null) return "";
-
-                return SelectedCategory.SelectedTagTab.SelectedTag.Name;
-            }
-        }
+        public string SelectedTagName => SelectedTag.Name;
 
         private MvxObservableCollection<TagModel> _visibleTags = new MvxObservableCollection<TagModel>();
 
@@ -104,6 +94,10 @@ namespace WallpaperFlux.Core.ViewModels
         }
 
         private List<TagModel> previouslyHighlightedTags = new List<TagModel>();
+
+        public double TagWrapWidth { get; set; }
+
+        public double TagWrapHeight { get; set; }
 
         #region ----- Filters [Tag-Adder & Tag-Linker] -----
         //? utilizes the TagInteractCommand from TagModel to function
@@ -144,7 +138,7 @@ namespace WallpaperFlux.Core.ViewModels
                     TagAdderToggle = false;
                     RaisePropertyChanged(() => TagAdderToggle);
 
-                    TagLinkingSource = SelectedCategory.SelectedTagTab.SelectedTag; // update the linking source to the currently selected tag on activating the tag linker
+                    TagLinkingSource = SelectedTag; // update the linking source to the currently selected tag on activating the tag linker
                     //xTaggingUtil.HighlightTags(TagLinkingSource.ParentChildTagsUnion_IncludeSelf()); // since the selected tag only changes when the tag-linker is off, we will highlight here
                 }
                 else
@@ -280,7 +274,7 @@ namespace WallpaperFlux.Core.ViewModels
         public bool CategoriesExist => Categories.Count > 0;
 
         // need to also check if the tag-linking source is null for just in case the selected tag is deselected
-        public bool CanUseTagLinker => SelectedCategory?.SelectedTagTab?.SelectedTag != null || TagLinkingSource != null;
+        public bool CanUseTagLinker => SelectedTag != null || TagLinkingSource != null;
 
         private bool _randomizeSelection;
         public bool RandomizeSelection
@@ -536,11 +530,6 @@ namespace WallpaperFlux.Core.ViewModels
         public void RebuildImageSelectorWithTagOptions(ImageModel[] images) => WallpaperFluxViewModel.Instance.RebuildImageSelector(images, RandomizeSelection, ReverseSelection);
 
         #region Visible Tags
-        public double TagWrapWidth { get; set; }
-
-        public double TagWrapHeight { get; set; }
-
-
 
         public void SetTagWrapSize(double width, double height)
         {
@@ -583,6 +572,7 @@ namespace WallpaperFlux.Core.ViewModels
             }
             
             // adjust the indexes to the page tag limit
+            // for when searching
             if (SelectedCategory.FilteredTags.Length < TaggingUtil.TagsPerPage)
             {
                 for (int i = TaggingUtil.TagsPerPage - 1; i >= SelectedCategory.FilteredTags.Length; i--)
@@ -599,7 +589,12 @@ namespace WallpaperFlux.Core.ViewModels
 
             for (int i = minIndex; i < maxIndex; i++)
             {
-                if (i > SelectedCategory.FilteredTags.Length - 1) break; // we're on the last page and we've run out of tags, break the loop to avoid an index error
+                int pageIndex = i - minIndex;
+                if (i > SelectedCategory.FilteredTags.Length - 1) // we're on the last page and we've run out of tags, fill the rest with null tags to hide them
+                {
+                    VisibleTags[pageIndex] = nullTag;
+                    continue;
+                }
 
                 if (HideDisabledTags && !SelectedCategory.FilteredTags[i].IsEnabled())
                 {
@@ -607,8 +602,8 @@ namespace WallpaperFlux.Core.ViewModels
                     continue;
                 }
 
-                VisibleTags[i - minIndex] = SelectedCategory.FilteredTags[i];
-                VisibleTags[i - minIndex].IsHidden = false;
+                VisibleTags[pageIndex] = SelectedCategory.FilteredTags[i];
+                VisibleTags[pageIndex].IsHidden = false;
             }
             
             SelectedCategory.SelectedTagTab.Items.SwitchTo(VisibleTags); // TODO should probably remove this duplication at some point
@@ -853,10 +848,6 @@ namespace WallpaperFlux.Core.ViewModels
 
         public void UpdateRankGraph()
         {
-            if (SelectedCategory == null) return;
-            if (SelectedCategory.SelectedTagTab == null) return;
-            if (SelectedCategory.SelectedTagTab.SelectedTag == null) return;
-
             List<int> allValues = new List<int>();
             List<int> staticValues = new List<int>();
             List<int> gifValues = new List<int>();
@@ -871,10 +862,10 @@ namespace WallpaperFlux.Core.ViewModels
 
             for (int i = 1; i <= ThemeUtil.ThemeSettings.MaxRank; i++) //? not including un-ranked, those will take over the majority of the graph
             {
-                allValues.Add(ThemeUtil.RankController.GetRankCountOfTag(i, SelectedCategory.SelectedTagTab.SelectedTag));
-                staticValues.Add(ThemeUtil.RankController.GetImagesOfTypeRankCountOfTag(ImageType.Static, i, SelectedCategory.SelectedTagTab.SelectedTag));
-                gifValues.Add(ThemeUtil.RankController.GetImagesOfTypeRankCountOfTag(ImageType.GIF, i, SelectedCategory.SelectedTagTab.SelectedTag));
-                videoValues.Add(ThemeUtil.RankController.GetImagesOfTypeRankCountOfTag(ImageType.Video, i, SelectedCategory.SelectedTagTab.SelectedTag));
+                allValues.Add(ThemeUtil.RankController.GetRankCountOfTag(i, SelectedTag));
+                staticValues.Add(ThemeUtil.RankController.GetImagesOfTypeRankCountOfTag(ImageType.Static, i, SelectedTag));
+                gifValues.Add(ThemeUtil.RankController.GetImagesOfTypeRankCountOfTag(ImageType.GIF, i, SelectedTag));
+                videoValues.Add(ThemeUtil.RankController.GetImagesOfTypeRankCountOfTag(ImageType.Video, i, SelectedTag));
             }
 
             AllColumnSeries.Values = allValues;
