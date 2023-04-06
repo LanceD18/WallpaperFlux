@@ -63,7 +63,7 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
-        public string SelectedTagName => SelectedTag.Name;
+        public string SelectedTagName => SelectedTag?.Name;
 
         private MvxObservableCollection<TagModel> _visibleTags = new MvxObservableCollection<TagModel>();
 
@@ -632,6 +632,8 @@ namespace WallpaperFlux.Core.ViewModels
             if (SelectedCategory == null) return; // can't show any highlights or unhighlight anything if a category isn't selected
             if (VisibleTags == null) return;
 
+            HashSet<TagModel> visibleTags = new HashSet<TagModel>(VisibleTags);
+
             await Task.Run(() =>
             {
                 Debug.WriteLine("Highlighting tags...");
@@ -700,7 +702,8 @@ namespace WallpaperFlux.Core.ViewModels
 
                 //xHashSet<TagModel> visibleTags = SelectedCategory.SelectedTagTab.Items.ToHashSet();
 
-                foreach (TagModel tag in VisibleTags)
+                //? we are using new HashSet<TagModel>(VisibleTags) to avoid a collection modified error, remember that this is in a thread
+                foreach (TagModel tag in visibleTags)
                 {
                     tag.IsHighlighted = tagsToHighlight.Contains(tag);
 

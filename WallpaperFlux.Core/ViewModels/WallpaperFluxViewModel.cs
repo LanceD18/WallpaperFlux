@@ -520,20 +520,6 @@ namespace WallpaperFlux.Core.ViewModels
                     JsonUtil.ConvertTheme(JsonUtil.LoadData(dialog.FileName));
 
                     JsonUtil.SetIsLoadingData(false);
-
-                    // ? Call methods / actions that were disabled doing the loading process but need to be called once loading is finished
-                    // ? (Many were disabled for being called too frequently or improperly)
-
-                    // TODO Clean this up, especially the ViewModel.Instance actions
-
-                    //! currently unused
-                    foreach (Action action in JsonUtil.ActionsPendingLoad) action?.Invoke();
-                    JsonUtil.ActionsPendingLoad.Clear();
-                    //! currently unused
-
-                    ImageFolders.ValidateImageFolders(true); // validation was cancelled beforehand
-
-                    SettingsViewModel.Instance.Settings = ThemeUtil.Theme.Settings;
                 }
             }
         }

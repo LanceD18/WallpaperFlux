@@ -412,14 +412,16 @@ namespace WallpaperFlux.Core.Models.Tagging
         {
             LinkedImages.Add(imageTags.ParentImage);
 
-            RaisePropertyChangedImageCount();
+            //! Calling property changed here risked a considerable performance drop when tagging multiple images at once, use interact tag instead
+            //xRaisePropertyChangedImageCount();
         }
 
         public void UnlinkImage(ImageTagCollection imageTags)
         {
             LinkedImages.Remove(imageTags.ParentImage);
 
-            RaisePropertyChangedImageCount();
+            //! Calling property changed here risked a considerable performance drop when tagging multiple images at once, use interact tag instead
+            //xRaisePropertyChangedImageCount();
         }
 
         public void UnlinkAllImages(bool highlightTags) // for removing/resetting a tag
@@ -438,18 +440,20 @@ namespace WallpaperFlux.Core.Models.Tagging
             RaisePropertyChangedImageCount(); //? Not really needed for THIS tag but would ideally still exist here and IS NEEDED for the parent tags
         }
         
-        private void RaisePropertyChangedImageCount()
+        public void RaisePropertyChangedImageCount()
         {
+            // this is going to be called an enormous number of times while loading since images & tag linking is being loaded
+            if (JsonUtil.IsLoadingData) return;
 
-                    LinkedImageCount = GetLinkedImageCount(); // we want to call this as few times as possible
-                    RaisePropertyChanged(() => ImageCountStringTag);
-                    RaisePropertyChanged(() => ImageCountStringContextMenu);
+            LinkedImageCount = GetLinkedImageCount(); // we want to call this as few times as possible
+            RaisePropertyChanged(() => ImageCountStringTag);
+            RaisePropertyChanged(() => ImageCountStringContextMenu);
 
-                    // we need to update the image count of parent tags too (and their parent tags)
-                    foreach (TagModel parentTag in ParentTags)
-                    {
-                        parentTag.RaisePropertyChangedImageCount();
-                    }
+            // we need to update the image count of parent tags too (and their parent tags)
+            foreach (TagModel parentTag in ParentTags)
+            {
+                parentTag.RaisePropertyChangedImageCount();
+            }
         }
 
         public int GetLinkedImageCount(bool accountForInvalid = false) => GetLinkedImages(accountForInvalid).Count;
@@ -612,10 +616,14 @@ namespace WallpaperFlux.Core.Models.Tagging
                     ToggleTagWithImages(WallpaperFluxViewModel.Instance.GetAllHighlightedImages());
                     IsHighlightedInSomeImages = false; // after calling this there's no way for the tag to still be highlighted in only some images
                 }
+
+                RaisePropertyChangedImageCount();
             }
             else if (TaggingUtil.GetTagLinkerToggle()) // we should only be doing one of these at a time
             {
                 ToggleTagLink(TagViewModel.Instance.TagLinkingSource);
+
+                RaisePropertyChangedImageCount();
             }
         }
 

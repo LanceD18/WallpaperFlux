@@ -334,6 +334,8 @@ namespace WallpaperFlux.Core.Models.Tagging
         /// </summary>
         public void VerifyTagTabs()
         {
+            if (JsonUtil.IsLoadingData) return;
+
             //? this also covers the case where the theme is being loaded
             if (!TaggingUtil.InstanceExists) return; // no need to do this if the instance does not exist
 
