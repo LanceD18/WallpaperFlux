@@ -113,7 +113,7 @@ namespace WallpaperFlux.Core.ViewModels
 
         #region Image Selector
 
-        private readonly int IMAGES_PER_PAGE = 20;
+        public readonly int IMAGES_PER_PAGE = 20;
 
         private MvxObservableCollection<ImageSelectorTabModel> _imageSelectorTabs = new MvxObservableCollection<ImageSelectorTabModel>();
 
@@ -136,16 +136,64 @@ namespace WallpaperFlux.Core.ViewModels
             set => SetProperty(ref _selectedImageSelectorTab, value);
         }
 
+        /// Visible Images
+        private MvxObservableCollection<ImageModel> _visibleImages = new MvxObservableCollection<ImageModel>();
+
+        public MvxObservableCollection<ImageModel> VisibleImages
+        {
+            get => _visibleImages;
+            set => SetProperty(ref _visibleImages, value);
+        }
+
+        private ImageModel _selectedImage;
+        public ImageModel SelectedImage
+        {
+            get
+            {
+                if (_selectedImage != null && !_selectedImage.IsSelected)
+                {
+                    SelectedImage = null; //? Deselecting the image won't ensure that this is nullified
+                }
+
+                return _selectedImage;
+            }
+
+            set
+            {
+                SetProperty(ref _selectedImage, value);
+
+                // no need to do any of this if it's not the active tab (Which can cause delays on large selections)
+                if (SelectedImageSelectorTab.GetAllItems().Contains(value))
+                {
+                    RaisePropertyChanged(() => SelectedImage);
+                    RaisePropertyChanged(() => SelectedImagePathText);
+                    RaisePropertyChanged(() => SelectedImageDimensionsText);
+                    RaisePropertyChanged(() => IsImageSelected);
+                    RaisePropertyChanged(() => InspectedImageTags);
+
+                    //! Handled by WallpaperFluxView.xaml.cs now
+                    /*x
+                    if (value != null) // allows us to see what tags this image has if the TagView is open
+                    {
+                        TaggingUtil.HighlightTags();
+                    }
+                    */
+
+                    MuteIfInspectorHasAudio(); // changing the selected image may change the inspector to a video with audio, in this case, mute wallpapers with audio
+                }
+            }
+        }
+
         //? Updated by RaisePropertyChanged() calls in references
         public string SelectedImagePathText
         {
             get
             {
-                if (SelectedImageSelectorTab == null || SelectedImageSelectorTab.SelectedImage == null) return "";
+                if (SelectedImageSelectorTab == null || SelectedImage == null) return "";
 
                 if (SelectedImageCount <= 1)
                 {
-                    return SelectedImageSelectorTab.SelectedImage?.Path;
+                    return SelectedImage?.Path;
                 }
 
                 return "Selected Images: " + SelectedImageCount;
@@ -170,16 +218,19 @@ namespace WallpaperFlux.Core.ViewModels
         {
             get
             {
-                if (SelectedImageSelectorTab == null || SelectedImageSelectorTab.SelectedImage == null) return "";
+                if (SelectedImageSelectorTab == null || SelectedImage == null) return "";
 
-                Size size = SelectedImageSelectorTab.SelectedImage.GetSize();
+                Size size = SelectedImage.GetSize();
                 return size.Width + "x" + size.Height;
             }
         }
 
-        public ImageModel SelectedImage => SelectedImageSelectorTab?.SelectedImage; //? for the xaml
-
         public bool TogglingAllSelections = false;
+
+        //? Set through WallpaperFluxView.xaml.cs
+        public double ImageSelectorWrapWidth { get; set; }
+
+        public double ImageSelectorWrapHeight { get; set; }
 
         #region Inspector
 
@@ -188,9 +239,9 @@ namespace WallpaperFlux.Core.ViewModels
         {
             get
             {
-                if (SelectedImageSelectorTab == null || SelectedImageSelectorTab.SelectedImage == null) return null;
+                if (SelectedImage == null) return null;
 
-                HashSet<TagModel> tags = SelectedImageSelectorTab.SelectedImage.Tags.GetTags();
+                HashSet<TagModel> tags = SelectedImage.Tags.GetTags();
 
                 foreach (TagModel tag in tags)
                 {
@@ -302,6 +353,8 @@ namespace WallpaperFlux.Core.ViewModels
         public IMvxCommand DeleteImagesCommand { get; set; }
 
         public IMvxCommand RankImagesCommand { get; set; }
+
+        public IMvxCommand ChangeImageSelectorPageCommand { get; set; }
 
         #endregion
 
@@ -733,9 +786,7 @@ namespace WallpaperFlux.Core.ViewModels
         private readonly string INVALID_IMAGE_STRING_DEFAULT = "The following selected images do not exist in your theme:\n(Please add the folder that they reside in to include them)";
         private readonly string INVALID_IMAGE_STRING_ALL_INVALID = "None of the selected images exist in your theme. Please add the folder that they reside in to include them.";
 
-        //! THIS ONLY APPLIES TO STRING ARRAYS OF IMAGES, TYPICALLY USED BY FOLDER SELECTION
-        //! THIS ONLY APPLIES TO STRING ARRAYS OF IMAGES, TYPICALLY USED BY FOLDER SELECTION
-        //! THIS ONLY APPLIES TO STRING ARRAYS OF IMAGES, TYPICALLY USED BY FOLDER SELECTION
+        //! Typically used by folder selection
         public void RebuildImageSelector(string[] selectedImages, bool randomize = false, bool reverseOrder = false, bool dateTime = false)
         {
             List<ImageModel> selectedImageModels = new List<ImageModel>();
@@ -846,7 +897,7 @@ namespace WallpaperFlux.Core.ViewModels
                             invalidImageString += image != null ? image.Path : "[NULL]";
                         }
 
-                        if (!success) // prevents creating null space
+                        if (!success) // prevents creating null space when we have invalid images
                         {
                             j--;
                             imageIndex++;
@@ -854,7 +905,7 @@ namespace WallpaperFlux.Core.ViewModels
                     }
                     else
                     {
-                        break; // we've reached the cutoff, stop producing pages
+                        break; // we've reached the cutoff, stop producing pages (we should be at the tabCount, so the next iteration should end)
                     }
                 }
 
@@ -891,6 +942,43 @@ namespace WallpaperFlux.Core.ViewModels
                 MessageBoxUtil.ShowError(invalidImageString);
                 return;
             }
+        }
+
+        public void UpdateImageSelectorPage()
+        {
+            ImageModel nullImage = new ImageModel("") { IsHidden = true };
+            // adjust the indexes to the page limit
+            while (VisibleImages.Count < IMAGES_PER_PAGE)
+            {
+                // hiding instead of setting to null since removing and adding controls adds significant processing time
+                VisibleImages.Add(nullImage);
+            }
+
+            while (VisibleImages.Count > TaggingUtil.TagsPerPage)
+            {
+                VisibleImages.Remove(VisibleImages.Last());
+            }
+
+            ImageModel[] tabItems = SelectedImageSelectorTab.GetAllItems();
+            for (int i = 0; i < IMAGES_PER_PAGE; i++)
+            {
+                if (i < tabItems.Length)
+                {
+                    VisibleImages[i] = tabItems[i];
+                }
+                else
+                {
+                    VisibleImages[i] = nullImage;
+                }
+            }
+        }
+
+        public void SetImageSelectorWrapSize(double width, double height)
+        {
+            ImageSelectorWrapWidth = width - 50;
+            ImageSelectorWrapHeight = height;
+            RaisePropertyChanged(() => ImageSelectorWrapWidth);
+            RaisePropertyChanged(() => ImageSelectorWrapHeight);
         }
 
         private void ClearImages()
@@ -968,7 +1056,11 @@ namespace WallpaperFlux.Core.ViewModels
         /// Checks for potentially deleted images and removes them accordingly
         /// </summary>
         /// <param name="tab">the Image Selector Tab to be scanned</param>
-        public void VerifyImageSelectorTab(ImageSelectorTabModel tab) => tab.VerifyImages();
+        public void VerifyImageSelectorTab(ImageSelectorTabModel tab)
+        {
+            tab.VerifyImages();
+            UpdateImageSelectorPage();
+        }
 
         #region Inspector
 

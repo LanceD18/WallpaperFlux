@@ -563,7 +563,7 @@ namespace WallpaperFlux.Core.ViewModels
                 SelectedCategory.SortTags();
             }
 
-            TagModel nullTag = new TagModel("null", null) { IsHidden = true };
+            TagModel nullTag = new TagModel(string.Empty, null) { IsHidden = true };
             // adjust the indexes to the page tag limit
             while (VisibleTags.Count < TaggingUtil.TagsPerPage /*x&& VisibleTags.Count < SelectedCategory.FilteredTags.Length*/)
             {
@@ -571,6 +571,11 @@ namespace WallpaperFlux.Core.ViewModels
                 VisibleTags.Add(nullTag);
             }
             
+            while (VisibleTags.Count > TaggingUtil.TagsPerPage)
+            {
+                VisibleTags.Remove(VisibleTags.Last());
+            }
+
             // adjust the indexes to the page tag limit
             // for when searching
             if (SelectedCategory.FilteredTags.Length < TaggingUtil.TagsPerPage)

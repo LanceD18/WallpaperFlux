@@ -17,7 +17,7 @@
              d:DesignHeight="450" d:DesignWidth="800"
              BorderBrush="{Binding WindowBorderBrushColor, Converter={StaticResource ColorToBrushConverter}, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
              BorderThickness="{Binding WindowBorderThickness, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
-             SizeChanged="TagView_OnSizeChanged_UpdateDrawerHeight">
+             SizeChanged="TagView_OnSizeChanged_UpdateControlSizes">
 
     <views:MvxWpfView.Resources>
         <ResourceDictionary>
@@ -275,7 +275,7 @@
                     <!-- Wrap Setup -->
                     <ListBox.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <WrapPanel IsItemsHost="True" Width="{Binding TagWrapWidth, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <WrapPanel IsItemsHost="True" Width="{Binding TagWrapWidth, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
                         </ItemsPanelTemplate>
                     </ListBox.ItemsPanel>
 

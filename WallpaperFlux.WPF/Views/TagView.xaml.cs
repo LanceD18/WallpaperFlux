@@ -76,7 +76,7 @@ namespace WallpaperFlux.WPF.Views
             }
         }
 
-        private void TagView_OnSizeChanged_UpdateDrawerHeight(object sender, SizeChangedEventArgs e)
+        private void TagView_OnSizeChanged_UpdateControlSizes(object sender, SizeChangedEventArgs e)
         {
             ((TagViewModel)this.DataContext).SetDrawerHeight(ActualHeight - 75);
             UpdateTagSelectorWrapperSize();

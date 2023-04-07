@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Configuration.Internal;
 using System.Diagnostics;
@@ -38,6 +39,7 @@ using WallpaperFlux.Core.Models.Controls;
 using WallpaperFlux.Core.Models.Theme;
 using WallpaperFlux.Core.Util;
 using WallpaperFlux.Core.ViewModels;
+using WallpaperFlux.WPF.CustomControl;
 using WallpaperFlux.WPF.Util;
 using WallpaperFlux.WPF.Windows;
 using WpfAnimatedGif;
@@ -57,16 +59,22 @@ namespace WallpaperFlux.WPF.Views
     [MvxViewFor(typeof(WallpaperFluxViewModel))]
     public partial class WallpaperFluxView : MvxWpfView
     {
+        private BitmapImage[] _visibleBitmapImages = new BitmapImage[WallpaperFluxViewModel.Instance.IMAGES_PER_PAGE];
+        private Action<ImageModel, Image> _onImageSelectorPageUpdate;
 
-
-        private List<Thread> _ActiveThumbnailThreads = new List<Thread>(); //? kills thumbnail threads on page load, intended to stop videos from clogging the task runners
+        // TODO Is this still needed?
+        private List<Thread> _activeThumbnailThreads = new List<Thread>(); //? kills thumbnail threads on page load, intended to stop videos from clogging the task runners
 
         public WallpaperFluxView()
         {
             InitializeComponent();
         }
 
-        private void WallpaperFluxView_OnSizeChanged_UpdateInspectorHeight(object sender, SizeChangedEventArgs e) => WallpaperFluxViewModel.Instance.SetInspectorHeight(ActualHeight - 75);
+        private void WallpaperFluxView_OnSizeChanged_UpdateControlSizes(object sender, SizeChangedEventArgs e)
+        {
+            WallpaperFluxViewModel.Instance.SetInspectorHeight(ActualHeight - 75);
+            UpdateImageSelectorTabWrapperSize();
+        }
 
         #region MediaElement & Images
 
@@ -211,6 +219,42 @@ namespace WallpaperFlux.WPF.Views
             }
         }
 
+        private void LoadBitmapImageLowQuality(Image image, ImageModel imageModel)
+        {
+            Thread thread = new Thread(() => //? this cannot thread over the if statement while the Image object is present
+            {
+                try //x? this can accidentally fire off multiple times and cause crashes when trying to load videos (Who still need this for some reason?)
+                {
+                    BitmapImage bitmap = new BitmapImage();
+                    //xstring path = imageModel.Path;
+                    //xFileStream stream = File.OpenRead(path);
+
+                    bitmap.BeginInit();
+                    RenderOptions.SetBitmapScalingMode(bitmap, BitmapScalingMode.LowQuality);
+                    bitmap.DecodePixelHeight = imageModel.ImageSelectorThumbnailHeight; //! Only set either Height or Width (preferably the larger variant?) to prevent awful stretching!
+                    //x bitmap.DecodePixelWidth = imageModel.ImageSelectorThumbnailWidth;
+                    bitmap.CreateOptions = BitmapCreateOptions.IgnoreColorProfile; // to help with performance
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmap.UriSource = new Uri(imageModel.Path);
+                    bitmap.EndInit();
+                    bitmap.Freeze(); // prevents unnecessary copying: https://stackoverflow.com/questions/799911/in-what-scenarios-does-freezing-wpf-objects-benefit-performance-greatly
+                    //xstream.Close();
+                    //xstream.Dispose();
+
+                    Dispatcher.Invoke(() => image.Source = bitmap); // the image must be called on the UI thread which the dispatcher helps us do under this other thread
+                }
+                catch (Exception exception)
+                {
+                    Console.WriteLine("ERROR: Bitmap Creation Failed: " + exception);
+                    //x throw;
+                }
+            });
+
+            thread.IsBackground = true; // stops the thread from continuing to run on closing the application
+            thread.Start();
+            _activeThumbnailThreads.Add(thread);
+        }
+
         //? by default the image's DPI is used, causing some tooltips to be incredibly small
         //? this fix uses the pixel size instead, bypassing the DPI issue
         private void Tooltip_Image_OnLoaded(object sender, RoutedEventArgs e)
@@ -317,44 +361,62 @@ namespace WallpaperFlux.WPF.Views
             }
         }
 
+        private void ListBoxImage_ChangeAwareContentControl_OnContentChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            //xe.NewValue
+            
+            if (sender is ChangeAwareContentControl { Content: ImageModel imageModel } control)
+            {
+                if (!imageModel.IsVideo)
+                {
+                    if ((control.TryFindResource("StaticOrGifTemplate") as DataTemplate)?.LoadContent() is FrameworkElement dataTemplateContent)
+                    {
+                        if (dataTemplateContent.FindName("StaticOrGifThumbnail") is Image staticOrGifThumbnail)
+                        {
+                            LoadBitmapImageLowQuality(staticOrGifThumbnail, imageModel);
+                        }
+                    }
+                    else
+                    {
+                        Debug.WriteLine("INVALID LIST BOX IMAGE DATA TEMPLATE");
+                    }
+                }
+                else
+                {
+                    if ((control.TryFindResource("VideoTemplate") as DataTemplate)?.LoadContent() is FrameworkElement dataTemplateContent)
+                    {
+                        if (dataTemplateContent.FindName("VideoGroupBox") is GroupBox videoGroupBox)
+                        {
+                            if (videoGroupBox.FindName("VideoThumbnail") is Image image)
+                            {
+
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Debug.WriteLine("INVALID LIST BOX IMAGE DATA TEMPLATE");
+                    }
+                }
+
+
+                foreach (DictionaryEntry resource in control.Resources)
+                {
+                    if (resource.Value is DataTemplate dataTemplate)
+                    {
+
+                    }
+                }
+            }
+        }
+
         private void Image_OnLoaded(object sender, RoutedEventArgs e) => LoadImageOrMediaElementOrMpvPlayerHost(sender);
         
-        private void Image_OnLoaded_LowQuality(object sender, RoutedEventArgs e)
+        private void Image_OnLoaded_LowQuality_ImageSelector(object sender, RoutedEventArgs e)
         {
             if (sender is Image { DataContext: ImageModel imageModel } image)
             {
-                Thread thread = new Thread(() => //? this cannot thread over the if statement while the Image object is present
-                {
-                    try //? this can accidentally fire off multiple times and cause crashes when trying to load videos (Who still need this for some reason?)
-                    {
-                        BitmapImage bitmap = new BitmapImage();
-                        //xstring path = imageModel.Path;
-                        //xFileStream stream = File.OpenRead(path);
-
-                        bitmap.BeginInit();
-                        RenderOptions.SetBitmapScalingMode(bitmap, BitmapScalingMode.LowQuality);
-                        bitmap.DecodePixelHeight = imageModel.ImageSelectorThumbnailHeight; //! Only set either Height or Width (preferably the larger variant?) to prevent awful stretching!
-                        //x bitmap.DecodePixelWidth = imageModel.ImageSelectorThumbnailWidth;
-                        bitmap.CreateOptions = BitmapCreateOptions.IgnoreColorProfile; // to help with performance
-                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                        bitmap.UriSource = new Uri(imageModel.Path);
-                        bitmap.EndInit();
-                        bitmap.Freeze(); // prevents unnecessary copying: https://stackoverflow.com/questions/799911/in-what-scenarios-does-freezing-wpf-objects-benefit-performance-greatly
-                        //xstream.Close();
-                        //xstream.Dispose();
-
-                        Dispatcher.Invoke(() => image.Source = bitmap); // the image must be called on the UI thread which the dispatcher helps us do under this other thread
-                    }
-                    catch (Exception exception)
-                    {
-                        Console.WriteLine("ERROR: Bitmap Creation Failed: " + exception);
-                        //x throw;
-                    }
-                });
-
-                thread.IsBackground = true; // stops the thread from continuing to run on closing the application
-                thread.Start();
-                _ActiveThumbnailThreads.Add(thread);
+                LoadBitmapImageLowQuality(image, imageModel);
             }
         }
 
@@ -451,7 +513,7 @@ namespace WallpaperFlux.WPF.Views
 
                 thread.IsBackground = true; // stops the thread from continuing to run on closing the application
                 thread.Start();
-                _ActiveThumbnailThreads.Add(thread);
+                _activeThumbnailThreads.Add(thread);
             }
         }
 
@@ -598,27 +660,24 @@ namespace WallpaperFlux.WPF.Views
                 }
             }
         }
-
-        //? it's a bit clunky to introduce a variable for the width of each individual window  but it works
-        //? alternative options were hard to find due to the structure of this segment
-        private void ImageSelectorTabControl_OnSizeChanged(object sender, SizeChangedEventArgs e) => UpdateImageSelectorTabWrapperWidth();
+        
+        private void ImageSelectorTabControl_OnSizeChanged(object sender, SizeChangedEventArgs e) => UpdateImageSelectorTabWrapperSize();
 
         private void ImageSelectorTabControl_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            Debug.WriteLine(sender.GetType());
             if (sender is TabControl { SelectedItem: ImageSelectorTabModel tab })
             {
                 WallpaperFluxViewModel.Instance.VerifyImageSelectorTab(tab);
             }
 
-            UpdateImageSelectorTabWrapperWidth();
+            UpdateImageSelectorTabWrapperSize();
 
             /*x
             // close all active thumbnail threads
-            while (_ActiveThumbnailThreads.Count > 0)
+            while (_activeThumbnailThreads.Count > 0)
             {
-                Thread thread = _ActiveThumbnailThreads[0];
-                _ActiveThumbnailThreads.Remove(thread);
+                Thread thread = _activeThumbnailThreads[0];
+                _activeThumbnailThreads.Remove(thread);
                 if (thread.IsAlive)
                 {
                     //? create an empty thread to force the thread to stop on restart | works better than Abort() or Interrupt()
@@ -630,14 +689,11 @@ namespace WallpaperFlux.WPF.Views
             */
         }
 
-        private void UpdateImageSelectorTabWrapperWidth()
+        private void UpdateImageSelectorTabWrapperSize()
         {
-            WallpaperFluxViewModel viewModel = (WallpaperFluxViewModel)this.DataContext;
-            if (viewModel.SelectedImageSelectorTab != null)
-            {
-                viewModel.SelectedImageSelectorTab.ImageSelectorTabWrapWidth = ImageSelectorTabControl.ActualWidth;
-                viewModel.SelectedImageSelectorTab.RaisePropertyChanged(() => viewModel.SelectedImageSelectorTab.ImageSelectorTabWrapWidth);
-            }
+            WallpaperFluxViewModel viewModel = (WallpaperFluxViewModel)DataContext;
+
+            viewModel.SetImageSelectorWrapSize(ImageSelectorTabControl.ActualWidth, GroupBoxSelectorBody.ActualHeight - ImageSelectorTabControl.ActualHeight);
         }
         #endregion
 

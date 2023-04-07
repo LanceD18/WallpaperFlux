@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using AdonisUI.Controls;
 using LanceTools;
 using LanceTools.DiagnosticsUtil;
+using LanceTools.IO;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using MvvmCross;
 using MvvmCross.Commands;
@@ -56,7 +57,7 @@ namespace WallpaperFlux.Core.Models
 
         [JsonIgnore] public string PathName => new FileInfo(Path).Name;
 
-        [JsonIgnore] public string PathFolder => new FileInfo(Path).DirectoryName;
+        [JsonIgnore] public string PathFolder => FileUtil.Exists(Path) ? new FileInfo(Path)?.DirectoryName : "";
 
         public FolderModel ParentFolder;
 
@@ -265,6 +266,8 @@ namespace WallpaperFlux.Core.Models
         {
             Path = _hashPath = path;
 
+            if (Path == string.Empty) return; // null path, if this is used intentionally then we are likely creating a dummy image model, making any further processing unnecessary
+
             ImageType = IsStatic 
                 ? ImageType.Static 
                 : IsGif 
@@ -384,7 +387,9 @@ namespace WallpaperFlux.Core.Models
             if (!Enabled) return false;
             
             if (ParentFolder == null) UpdateParentFolder();
-            if (!ParentFolder.Enabled) return false;
+            // can still be null regardless of update
+            // and additionally, if the ParentFolder is null we want to set IsEnabled() to false so that nothing invalid ends up in the RankController
+            if (ParentFolder == null || !ParentFolder.Enabled) return false; 
 
             if (!Tags.AreTagsEnabled()) return false;
 
