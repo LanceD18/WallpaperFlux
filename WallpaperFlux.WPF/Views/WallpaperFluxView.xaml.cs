@@ -43,7 +43,6 @@ using WallpaperFlux.WPF.Util;
 using WallpaperFlux.WPF.Windows;
 using WpfAnimatedGif;
 using WpfScreenHelper;
-using Xabe.FFmpeg;
 using ControlUtil = WallpaperFlux.WPF.Util.ControlUtil;
 using Image = System.Windows.Controls.Image;
 using Point = System.Windows.Point;
