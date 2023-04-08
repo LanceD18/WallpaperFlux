@@ -27,6 +27,7 @@ using MediaToolkit;
 using MediaToolkit.Model;
 using MediaToolkit.Options;
 using Microsoft.VisualBasic.FileIO;
+using Microsoft.WindowsAPICodePack.Shell;
 using MvvmCross.Base;
 using MvvmCross.Binding.Extensions;
 using MvvmCross.Platforms.Wpf.Presenters.Attributes;
@@ -42,6 +43,7 @@ using WallpaperFlux.WPF.Util;
 using WallpaperFlux.WPF.Windows;
 using WpfAnimatedGif;
 using WpfScreenHelper;
+using Xabe.FFmpeg;
 using ControlUtil = WallpaperFlux.WPF.Util.ControlUtil;
 using Image = System.Windows.Controls.Image;
 using Point = System.Windows.Point;
@@ -59,7 +61,13 @@ namespace WallpaperFlux.WPF.Views
     {
 
 
-        private List<Thread> _ActiveThumbnailThreads = new List<Thread>(); //? kills thumbnail threads on page load, intended to stop videos from clogging the task runners
+        private List<Thread> _activeThumbnailThreads = new List<Thread>(); //? kills thumbnail threads on page load, intended to stop videos from clogging the task runners
+        //! don't actually outright kill the thread, find a more graceful solutions:
+        //! https://stackoverflow.com/questions/14817427/how-to-stop-threads
+        //! https://josipmisko.com/posts/c-sharp-stop-thread
+        //! https://stackoverflow.com/questions/7834351/gracefully-shutdown-a-thread
+        //! https://stackoverflow.com/questions/17095696/how-do-i-end-a-thread-gracefully-at-the-point-when-the-calling-process-exits-or
+
 
         public WallpaperFluxView()
         {
@@ -354,7 +362,7 @@ namespace WallpaperFlux.WPF.Views
 
                 thread.IsBackground = true; // stops the thread from continuing to run on closing the application
                 thread.Start();
-                _ActiveThumbnailThreads.Add(thread);
+                _activeThumbnailThreads.Add(thread);
             }
         }
 
@@ -363,6 +371,27 @@ namespace WallpaperFlux.WPF.Views
             if (sender is Image image)
             {
                 UnloadImage(image);
+            }
+        }
+        
+        public static BitmapImage ConvertBitmapToThumbnailBitmapImage(Bitmap bitmap, ImageModel imageModel)
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
+                BitmapImage image = new BitmapImage();
+
+                image.BeginInit();
+                ms.Seek(0, SeekOrigin.Begin);
+                RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.LowQuality);
+                image.DecodePixelHeight = imageModel.ImageSelectorThumbnailHeight; //! Only set either Height or Width (preferably the larger variant?) to prevent awful stretching!
+                image.CreateOptions = BitmapCreateOptions.IgnoreColorProfile; // to help with performance
+                image.CacheOption = BitmapCacheOption.OnLoad;
+                image.StreamSource = ms;
+                image.EndInit();
+                image.Freeze();
+
+                return image;
             }
         }
 
@@ -374,84 +403,23 @@ namespace WallpaperFlux.WPF.Views
             {
                 Thread thread = new Thread(() =>
                 {
-                    using (Engine engine = new Engine())
+                    using (ShellFile shellFile = ShellFile.FromFilePath(imageModel.Path))
                     {
-                        if (!FileUtil.Exists(imageModel.Path))
+                        using (Bitmap bm = shellFile.Thumbnail.Bitmap)
                         {
-                            Debug.WriteLine("Thumbnail creation failed ; video path does not exist");
-                            return;
-                        }
-
-                        MediaFile video = new MediaFile(imageModel.Path);
-                        engine.GetMetadata(video);
-
-                        if (video.Metadata == null)
-                        {
-                            Debug.WriteLine("Metadata failed to generate");
-                            return;
-                        }
-                        
-                        //? several videos show nothing on second 0, creating an empty thumbnail
-                        ConversionOptions options = new ConversionOptions { Seek = TimeSpan.FromSeconds(video.Metadata.Duration.Seconds * 0.05) };
-
-                        string vidThumbnailPath = AppDomain.CurrentDomain.BaseDirectory + "vidThumbnail.jpg";
-                        int collisions = 0;
-                        
-                        //? in most cases the files will be generated fast enough to avoid needing this, but in some rare cases videos will end up with the wrong thumbnail file
-                        while (FileUtil.Exists(vidThumbnailPath))
-                        {
-                            vidThumbnailPath = AppDomain.CurrentDomain.BaseDirectory + "vidThumbnail" + collisions + ".jpg";
-                            collisions++;
-                        }
-
-                        MediaFile outputFile = new MediaFile(vidThumbnailPath);
-
-                        try
-                        {
-                            engine.GetThumbnail(video, outputFile, options);
-                        }
-                        catch(Exception e)
-                        {
-                            Debug.WriteLine("Engine failed to get thumbnail from output file | " + e);
-                        }
-
-                        if (FileUtil.Exists(outputFile.Filename))
-                        {
-                            try
+                            BitmapImage bitmapImage = ConvertBitmapToThumbnailBitmapImage(bm, imageModel);
+                            Dispatcher.Invoke(() =>
                             {
-                                using (FileStream stream = File.OpenRead(outputFile.Filename))
-                                {
-                                    LoadBitmapImage(image, false, false, stream: stream);
-                                }
-                            }
-                            catch (Exception exception)
-                            {
-                                Debug.WriteLine("Failed to write thumbnail bitmap from output file | " + e);
-                            }
-
-                        }
-                        else
-                        {
-                            Debug.WriteLine("Output File Failed to generate thumbnail");
-                        }
-
-                        if (FileUtil.Exists(vidThumbnailPath))
-                        {
-                            try
-                            {
-                                FileSystem.DeleteFile(vidThumbnailPath);
-                            }
-                            catch (Exception exception)
-                            {
-                                Debug.WriteLine("Thumbnail Deletion Fail: " + exception);
-                            }
+                                return image.Source = bitmapImage;
+                            }); // the image must be called on the UI thread which the dispatcher helps us do under this other thread
                         }
                     }
                 });
 
-                thread.IsBackground = true; // stops the thread from continuing to run on closing the application
+                // TODO Apply IsBackground to more threads
+                thread.IsBackground = true; //? stops the thread from continuing to run on closing the application
                 thread.Start();
-                _ActiveThumbnailThreads.Add(thread);
+                _activeThumbnailThreads.Add(thread);
             }
         }
 
@@ -469,8 +437,20 @@ namespace WallpaperFlux.WPF.Views
         {
             try
             {
-                if (sender is MediaElement element) element.Close();
-                if (sender is Unosquare.FFME.MediaElement elementFFME) elementFFME.Close();
+                if (sender is MediaElement element)
+                {
+                    element.Stop();
+                    element.Close();
+                    element.ClearValue(MediaElement.SourceProperty);
+                    element.Source = null;
+                }
+
+                if (sender is Unosquare.FFME.MediaElement elementFFME)
+                {
+                    elementFFME.Stop();
+                    elementFFME.Close();
+                    elementFFME.ClearValue(MediaElement.SourceProperty);
+                }
                 //! Dispose() will freeze the program
                 //xelement?.Dispose();
             }
@@ -615,10 +595,10 @@ namespace WallpaperFlux.WPF.Views
 
             /*x
             // close all active thumbnail threads
-            while (_ActiveThumbnailThreads.Count > 0)
+            while (_activeThumbnailThreads.Count > 0)
             {
-                Thread thread = _ActiveThumbnailThreads[0];
-                _ActiveThumbnailThreads.Remove(thread);
+                Thread thread = _activeThumbnailThreads[0];
+                _activeThumbnailThreads.Remove(thread);
                 if (thread.IsAlive)
                 {
                     //? create an empty thread to force the thread to stop on restart | works better than Abort() or Interrupt()
@@ -653,7 +633,7 @@ namespace WallpaperFlux.WPF.Views
         // this captures the selection range of the entire listbox item
         private void ImageSelector_ListBoxItem_OnPreviewMouseUp(object sender, MouseButtonEventArgs e)
         {
-            // TODO Remove me
+            // TODO Remove me (initially intended for killing thumbnail threads on page swap)
         }
 
         private void ContextMenuListBox_OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)

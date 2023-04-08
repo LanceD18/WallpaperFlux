@@ -11,7 +11,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using LanceTools.IO;
 using LanceTools.Util;
+using Microsoft.VisualBasic.FileIO;
 using MvvmCross;
 using MvvmCross.Core;
 using MvvmCross.Platforms.Wpf.Views;
@@ -34,6 +36,8 @@ namespace WallpaperFlux.WPF
             LibVLCSharp.Shared.Core.Initialize();
 
             base.OnStartup(e);
+
+            //xRemoveFailedVideoThumbnailDeletions();
         }
 
         // called before OnStartup
@@ -54,6 +58,46 @@ namespace WallpaperFlux.WPF
             MpvUtil.MpvPath = wallpaperFluxApplicationDataFolder + "\\mpv\\mpv-1.dll";
 
             MediaElement.FFmpegMessageLogged += (s, ev) => Debug.WriteLine(ev.Message);
+        }
+
+        //! if an error occurs, these files will fail to delete, remove them on the next launch
+        // TODO No longer needed with the current implementation
+        private void RemoveFailedVideoThumbnailDeletions()
+        {
+            string vidThumbnailPath = AppDomain.CurrentDomain.BaseDirectory + "vidThumbnail.jpg";
+            string tmpVidThumbnailPath = vidThumbnailPath + ".tmp"; // this sometimes also spawns
+            int collisions = 0;
+            
+            while (FileUtil.Exists(vidThumbnailPath))
+            {
+                try
+                {
+                    FileSystem.DeleteFile(vidThumbnailPath);
+                }
+                catch (Exception exception)
+                {
+                    Debug.WriteLine("Thumbnail Deletion Fail: " + exception);
+                }
+
+                vidThumbnailPath = AppDomain.CurrentDomain.BaseDirectory + "vidThumbnail" + collisions + ".jpg";
+                collisions++;
+            }
+
+            collisions = 0;
+            while (FileUtil.Exists(tmpVidThumbnailPath))
+            {
+                try
+                {
+                    FileSystem.DeleteFile(tmpVidThumbnailPath);
+                }
+                catch (Exception exception)
+                {
+                    Debug.WriteLine("Thumbnail Deletion Fail: " + exception);
+                }
+
+                tmpVidThumbnailPath = AppDomain.CurrentDomain.BaseDirectory + "vidThumbnail" + collisions + ".jpg.tmp";
+                collisions++;
+            }
         }
 
         #region Generic Control
