@@ -87,16 +87,17 @@ namespace WallpaperFlux.WPF.Views
         {
             if (ControlUtil.UsingSingularSelection()) //? Placing this check ahead of time to avoid the additional processing time
             {
-                CategoryModel selectedCategory = CategoryTabControl.SelectedItem as CategoryModel;
-
-                // get all tabs in all categories
-                List<TagTabModel> tagTabs = new List<TagTabModel>();
-                foreach (CategoryModel category in CategoryTabControl.Items)
+                if (CategoryTabControl.SelectedItem is CategoryModel selectedCategory)
                 {
-                    tagTabs.AddRange(category.TagTabs.ToList());
-                }
+                    // get all tabs in all categories
+                    List<TagTabModel> tagTabs = new List<TagTabModel>();
+                    foreach (CategoryModel category in CategoryTabControl.Items)
+                    {
+                        tagTabs.AddRange(category.TagTabs.ToList());
+                    }
 
-                ControlUtil.EnsureSingularSelection(tagTabs.ToArray(), selectedCategory.SelectedTagTab);
+                    ControlUtil.EnsureSingularSelection(tagTabs.ToArray(), selectedCategory.SelectedTagTab);
+                }
             }
         }
 

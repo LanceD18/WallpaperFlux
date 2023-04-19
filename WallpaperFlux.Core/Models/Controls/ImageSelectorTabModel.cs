@@ -31,21 +31,7 @@ namespace WallpaperFlux.Core.Models.Controls
                 // no need to do any of this if it's not the active tab (Which can cause delays on large selections)
                 if (WallpaperFluxViewModel.Instance.SelectedImageSelectorTab == this)
                 {
-                    WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.SelectedImage);
-                    WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.SelectedImagePathText);
-                    WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.SelectedImageDimensionsText);
-                    WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.IsImageSelected);
-                    WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.InspectedImageTags);
-                    
-                    //! Handled by WallpaperFluxView.xaml.cs now
-                    /*x
-                    if (value != null) // allows us to see what tags this image has if the TagView is open
-                    {
-                        TaggingUtil.HighlightTags();
-                    }
-                    */
-
-                    WallpaperFluxViewModel.Instance.MuteIfInspectorHasAudio(); // changing the selected image may change the inspector to a video with audio, in this case, mute wallpapers with audio
+                    WallpaperFluxViewModel.Instance.SelectedImage = value; //! do not change this in WallpaperFluxViewModel to allow for changes from other sources
                 }
             }
         }

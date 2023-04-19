@@ -185,6 +185,8 @@ namespace WallpaperFlux.Core.Models
 
         public IMvxCommand OpenFileCommand { get; set; }
 
+        public IMvxCommand InspectCommand { get; set; }
+
         public IMvxCommand SetWallpaperCommand { get; set; }
 
         public IMvxCommand RenameImageCommand { get; set; }
@@ -206,23 +208,6 @@ namespace WallpaperFlux.Core.Models
         public IMvxCommand IncreaseRankCommand { get; set; }
         #endregion
 
-        /*x
-        // IoC Property
-        private IExternalImageSource _imageSource;
-
-        public IExternalImageSource ImageSource
-        {
-            get
-            {
-                _imageSource.InitCompressedSource(Path, 200, 200);
-                return _imageSource;
-            }
-            set { _imageSource = value; }
-        }
-        */
-
-        //xpublic IExternalImageSource ImageSource { get; set; }
-
         // ----- XAML Values -----
         // TODO Replace this section with ResourceDictionaries at some point
         #region XAML Values
@@ -236,25 +221,6 @@ namespace WallpaperFlux.Core.Models
         #endregion
 
         #region UI Control
-
-        //? Replaced by ListBoxItemModel
-        /*
-        private bool _isSelected;
-        [JsonIgnore]
-        public bool IsSelected
-        {
-            get => _isSelected;
-            set
-            {
-                if (IsSelected != value) // this should only update if there's actually a change
-                {
-                    WallpaperFluxViewModel.Instance.SelectedImageCount += value ? 1 : -1;
-                }
-                
-                SetProperty(ref _isSelected, value);
-            }
-        }
-        */
 
         private Size _imageSize = Size.Empty; //! Do NOT save this to JSON unless you devise an efficient way to detect size changes
 
@@ -320,6 +286,7 @@ namespace WallpaperFlux.Core.Models
         {
             ViewFileCommand = new MvxCommand(ViewFile);
             OpenFileCommand = new MvxCommand(OpenFile);
+            InspectCommand = new MvxCommand(Inspect);
             SetWallpaperCommand = new MvxCommand(SetWallpaper);
 
             RenameImageCommand = new MvxCommand(() => ImageRenamer.AutoRenameImage(this));
@@ -337,6 +304,16 @@ namespace WallpaperFlux.Core.Models
                 TaggingUtil.ClearTagboard();
                 TaggingUtil.AddTagsToTagboard(Tags.GetTags().ToArray());
             });
+        }
+
+        public void Inspect()
+        {
+            WallpaperFluxViewModel.Instance.DeselectAllImages();
+
+            this.IsSelected = true;
+            WallpaperFluxViewModel.Instance.SelectedImage = this;
+
+            WallpaperFluxViewModel.Instance.OpenInspector();
         }
 
         public Size GetSize()

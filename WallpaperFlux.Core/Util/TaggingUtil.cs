@@ -33,7 +33,7 @@ namespace WallpaperFlux.Core.Util
         //x private static TagViewModel Instance;
 
         public const float TAGGING_WINDOW_WIDTH = 950;
-        public const float TAGGING_WINDOW_HEIGHT = 650;
+        public const float TAGGING_WINDOW_HEIGHT = 680;
 
         public static int TagsPerPage = 75;
 

@@ -692,7 +692,7 @@
                             <StackPanel Focusable="False">
 
                                 <!-- //// Binding to ImageModel //// -->
-                                <ContentControl Content="{Binding SelectedImageSelectorTab.SelectedImage}" HorizontalAlignment="Center">
+                                <ContentControl Content="{Binding SelectedImage}" HorizontalAlignment="Center">
                                     <!-- Resources -->
                                     <ContentControl.Resources>
                                         <!-- Remember that the Binding context here refers to what's given in the Content of the ContentTemplate, not what ReSharper says -->
@@ -884,7 +884,7 @@
                                 <!-- ! Any universal settings go here -->
 
                                 <!-- //// Binding to ImageModel //// -->
-                                <ContentControl Content="{Binding SelectedImageSelectorTab.SelectedImage}" HorizontalAlignment="Center">
+                                <ContentControl Content="{Binding SelectedImage}" HorizontalAlignment="Center">
                                     <!-- Resources -->
                                     <ContentControl.Resources>
                                         <!-- Remember that the Binding context here refers to what's given in the Content of the ContentTemplate, not what ReSharper says -->
@@ -1119,6 +1119,7 @@
                                             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource RankingHandlerTemplate}"/>
                                             <Button Content="Open" Command="{Binding OpenFileCommand}" Margin="5"/>
                                             <Button Content="View" Command="{Binding ViewFileCommand}" Margin="5"/>
+                                            <Button Content="Inspect" Command="{Binding InspectCommand}" Margin="5"/>
                                         </StackPanel>
                                     </GroupBox>
                                 </DataTemplate>

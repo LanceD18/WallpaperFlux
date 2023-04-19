@@ -189,7 +189,7 @@ namespace WallpaperFlux.WPF
                 {
                     ConnectedForm.Enabled = true;
                     ConnectedForm.Visible = true;
-                    ConnectedForm.BringToFront();
+                    //xConnectedForm.BringToFront();
                     ConnectedForm.SetWallpaper(image);
                     DisableUnusedElements(UsedElement.Mpv);
                 }

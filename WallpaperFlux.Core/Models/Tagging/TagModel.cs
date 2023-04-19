@@ -253,9 +253,9 @@ namespace WallpaperFlux.Core.Models.Tagging
         {
             get
             {
-                if (WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.SelectedImage != null)
+                if (WallpaperFluxViewModel.Instance.SelectedImage != null)
                 {
-                    return WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.SelectedImage.Tags.GetTagNamingExceptions().Contains(this);
+                    return WallpaperFluxViewModel.Instance.SelectedImage.Tags.GetTagNamingExceptions().Contains(this);
                 }
 
                 return false;
@@ -324,7 +324,7 @@ namespace WallpaperFlux.Core.Models.Tagging
             // Image Control
             AddTagToSelectedImagesCommand = new MvxCommand(() => AddTagToImages(WallpaperFluxViewModel.Instance.GetAllHighlightedImages(), false));
             AddTagToEntireImageGroupCommand = new MvxCommand(() => AddTagToImages(WallpaperFluxViewModel.Instance.GetImagesInAllTabs(), true));
-            RemoveTagFromSelectedImageCommand = new MvxCommand(() => RemoveTagFromImages(new[] { WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.SelectedImage }, false));
+            RemoveTagFromSelectedImageCommand = new MvxCommand(() => RemoveTagFromImages(new[] { WallpaperFluxViewModel.Instance.SelectedImage }, false));
             RemoveTagFromSelectedImagesCommand = new MvxCommand(() => RemoveTagFromImages(WallpaperFluxViewModel.Instance.GetAllHighlightedImages(), false));
             RemoveTagFromEntireImageGroupCommand = new MvxCommand(() => RemoveTagFromImages(WallpaperFluxViewModel.Instance.GetImagesInAllTabs(), true));
 
@@ -664,13 +664,15 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         public void ToggleNamingException()
         {
+            if (WallpaperFluxViewModel.Instance.SelectedImage == null) return;
+
             if (!IsNamingSelectionOfSelectedImage)
             {
-                WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.SelectedImage.Tags.AddNamingException(this);
+                WallpaperFluxViewModel.Instance.SelectedImage.Tags.AddNamingException(this);
             }
             else
             {
-                WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.SelectedImage.Tags.RemoveNamingException(this);
+                WallpaperFluxViewModel.Instance.SelectedImage.Tags.RemoveNamingException(this);
             }
 
             RaisePropertyChanged(() => ExceptionText);

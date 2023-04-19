@@ -141,11 +141,11 @@ namespace WallpaperFlux.Core.ViewModels
         {
             get
             {
-                if (SelectedImageSelectorTab == null || SelectedImageSelectorTab.SelectedImage == null) return "";
+                if (SelectedImage == null) return "";
 
                 if (SelectedImageCount <= 1)
                 {
-                    return SelectedImageSelectorTab.SelectedImage?.Path;
+                    return SelectedImage?.Path;
                 }
 
                 return "Selected Images: " + SelectedImageCount;
@@ -170,14 +170,29 @@ namespace WallpaperFlux.Core.ViewModels
         {
             get
             {
-                if (SelectedImageSelectorTab == null || SelectedImageSelectorTab.SelectedImage == null) return "";
+                if (SelectedImage == null) return "";
 
-                Size size = SelectedImageSelectorTab.SelectedImage.GetSize();
+                Size size = SelectedImage.GetSize();
                 return size.Width + "x" + size.Height;
             }
         }
 
-        public ImageModel SelectedImage => SelectedImageSelectorTab?.SelectedImage; //? for the xaml
+        private ImageModel _selectedImage;
+        public ImageModel SelectedImage
+        {
+            get => _selectedImage;
+            set
+            {
+                SetProperty(ref _selectedImage, value);
+
+                RaisePropertyChanged(() => SelectedImagePathText);
+                RaisePropertyChanged(() => SelectedImageDimensionsText);
+                RaisePropertyChanged(() => IsImageSelected);
+                RaisePropertyChanged(() => InspectedImageTags);
+
+                MuteIfInspectorHasAudio(); // changing the selected image may change the inspector to a video with audio, in this case, mute wallpapers with audio
+            }
+        } //? for the xaml
 
         public bool TogglingAllSelections = false;
 
@@ -188,9 +203,9 @@ namespace WallpaperFlux.Core.ViewModels
         {
             get
             {
-                if (SelectedImageSelectorTab == null || SelectedImageSelectorTab.SelectedImage == null) return null;
+                if (SelectedImage == null) return null;
 
-                HashSet<TagModel> tags = SelectedImageSelectorTab.SelectedImage.Tags.GetTags();
+                HashSet<TagModel> tags = SelectedImage.Tags.GetTags();
 
                 foreach (TagModel tag in tags)
                 {
@@ -972,11 +987,11 @@ namespace WallpaperFlux.Core.ViewModels
 
         #region Inspector
 
-        private void ToggleInspector() => InspectorToggle = !InspectorToggle;
+        public void ToggleInspector() => InspectorToggle = !InspectorToggle;
 
-        private void OpenInspector() => InspectorToggle = true;
+        public void OpenInspector() => InspectorToggle = true;
 
-        private void CloseInspector() => InspectorToggle = false;
+        public void CloseInspector() => InspectorToggle = false;
 
         public void SetInspectorHeight(double newHeight) => InspectorHeight = newHeight;
 
