@@ -45,6 +45,9 @@
     <Reference Include="LanceTools.WPF">
       <HintPath>..\..\..\..\Code Library\C#\LanceTools\LanceTools\LanceTools.WPF\bin\Release\netcoreapp3.1\LanceTools.WPF.dll</HintPath>
     </Reference>
+    <Reference Include="LanceTools.WPF.Adonis">
+      <HintPath>..\..\..\..\Code Library\C#\LanceTools\LanceTools\LanceTools.WPF.Adonis\bin\Release\netcoreapp3.1\LanceTools.WPF.Adonis.dll</HintPath>
+    </Reference>
     <Reference Include="LanceTools.WPF.MVVM">
       <HintPath>..\..\..\..\Code Library\C#\LanceTools\LanceTools\LanceTools.WPF.MVVM\bin\Release\netcoreapp3.1\LanceTools.WPF.MVVM.dll</HintPath>
     </Reference>

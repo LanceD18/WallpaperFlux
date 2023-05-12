@@ -307,12 +307,15 @@ namespace WallpaperFlux.Core.Models.Tagging
         {
             Name = name;
             ParentCategory = parentCategory;
+            if (parentCategory == null) return;
+
             UseForNaming = useForNaming;
             Enabled = enabled;
             RenameFolderPath = renameFolderPath;
 
             InitCommands();
         }
+        
 
         private void InitCommands()
         {

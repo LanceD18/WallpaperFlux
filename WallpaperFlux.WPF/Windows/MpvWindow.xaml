@@ -6,14 +6,14 @@
         xmlns:local="clr-namespace:WallpaperFlux.WPF.Windows"
         xmlns:media="https://github.com/mysteryx93/MediaPlayerUI.NET"
         mc:Ignorable="d"
-        Title="MpvWindow" Height="450" Width="800">
+        Title="MpvWindow" Height="450" Width="800" Focusable="False">
     <Grid>
         <!--
         <media:MpvPlayerHost x:Name="MpvHost" Width="auto" Height="auto" Loop="True" AutoPlay="True"/>
         -->
 
-        <media:MediaPlayer x:Name="MpvMediaPlayer">
-            <media:MpvPlayerHost x:Name="MpvHost" Width="auto" Height="auto" Loop="True" AutoPlay="True"/>
+        <media:MediaPlayer x:Name="MpvMediaPlayer" Focusable="False">
+            <media:MpvPlayerHost x:Name="MpvHost" Width="auto" Height="auto" Loop="True" AutoPlay="True" Focusable="False"/>
         </media:MediaPlayer>
     </Grid>
 </Window>

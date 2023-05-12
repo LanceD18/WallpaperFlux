@@ -44,6 +44,7 @@ namespace WallpaperFlux.WPF
     {
         private enum UsedElement
         {
+            None,
             Image,
             MediaElement,
             FFME,
@@ -55,15 +56,17 @@ namespace WallpaperFlux.WPF
 
         private int LoopCount;
 
-        private LibVLC _libVlc = new LibVLC(true, "--input-repeat=65545");
+        //xprivate LibVLC _libVlc = new LibVLC(true, "--input-repeat=65545");
 
-        private Stopwatch vlcStopwatch = new Stopwatch();
+        //xprivate Stopwatch vlcStopwatch = new Stopwatch();
 
         public int DisplayIndex;
 
-        public Window MpvWindow;
+        //xpublic Window MpvWindow;
 
         public Screen Display;
+
+        private IntPtr _workerw;
 
         public WallpaperForm ConnectedForm => MainWindow.Instance.WallpaperForms[DisplayIndex];
 
@@ -73,43 +76,55 @@ namespace WallpaperFlux.WPF
 
             Display = display;
 
+            _workerw = workerw;
+
             DisplayIndex = displayIndex;
 
             //xMpvHost.DllPath = MpvUtil.MpvPath;
 
-            Loaded += (s, e) =>
-            {
-                // Sets bounds of the form
-                Width = display.Bounds.Width + ThemeUtil.Theme.Settings.WindowWidthOffset;
-                Height = display.Bounds.Height + ThemeUtil.Theme.Settings.WindowHeightOffset;
-                Left = display.Bounds.X + DisplayUtil.DisplayXAdjustment;
-                Top = display.Bounds.Y + DisplayUtil.MinDisplayY;
+            Loaded += OnLoaded;
 
-                //? Default, should match what's stated on the WPF
-                WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = WallpaperVlcViewBox.Stretch = Stretch.Fill; // this is actually stretch
+            Closed += OnClosed;
+        }
 
-                // This line makes the form a child of the WorkerW window, thus putting it behind the desktop icons and out of reach 
-                // of any user input. The form will just be rendered, no keyboard or mouse input will reach it.
-                //? (Would have to use WH_KEYBOARD_LL and WH_MOUSE_LL hooks to capture mouse and keyboard input)
-                Win32.SetParent(new WindowInteropHelper(this).Handle, workerw);
+        void OnLoaded(object s, RoutedEventArgs e)
+        {
+            // Sets bounds of the form
+            Width = Display.Bounds.Width + ThemeUtil.Theme.Settings.WindowWidthOffset;
+            Height = Display.Bounds.Height + ThemeUtil.Theme.Settings.WindowHeightOffset;
+            Left = Display.Bounds.X + DisplayUtil.DisplayXAdjustment;
+            Top = Display.Bounds.Y + DisplayUtil.MinDisplayY;
 
-                /*!
-                WallpaperVlc.MediaPlayer = new LibVLCSharp.Shared.MediaPlayer(_libVlc);
-                WallpaperVlc.Width = Width; // auto doesn't work for vlc (will receive an improper size)
-                WallpaperVlc.Height = Height; // auto doesn't work for vlc (will receive an improper size)
-                */
-                DisableVlc();
+            //? Default, should match what's stated on the WPF
+            WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = WallpaperVlcViewBox.Stretch = Stretch.Fill; // this is actually stretch
 
-                /*x
-                MpvWindow = new MpvWindow(this, DisplayIndex, workerw);
-                MpvWindow.Width = Width;
-                MpvWindow.Height = Height;
-                MpvWindow.Show();
-                */
+            // This line makes the form a child of the WorkerW window, thus putting it behind the desktop icons and out of reach 
+            // of any user input. The form will just be rendered, no keyboard or mouse input will reach it.
+            //? (Would have to use WH_KEYBOARD_LL and WH_MOUSE_LL hooks to capture mouse and keyboard input)
+            Win32.SetParent(new WindowInteropHelper(this).Handle, _workerw);
 
-                MainWindow.Instance.OpenWinform(display, workerw, displayIndex, IncrementLoopCount);
-                DisableMpv();
-            };
+            /*!
+            WallpaperVlc.MediaPlayer = new LibVLCSharp.Shared.MediaPlayer(_libVlc);
+            WallpaperVlc.Width = Width; // auto doesn't work for vlc (will receive an improper size)
+            WallpaperVlc.Height = Height; // auto doesn't work for vlc (will receive an improper size)
+            */
+            DisableVlc();
+
+            /*x
+            MpvWindow = new MpvWindow(this, DisplayIndex, workerw);
+            MpvWindow.Width = Width;
+            MpvWindow.Height = Height;
+            MpvWindow.Show();
+            */
+
+            MainWindow.Instance.OpenWinform(Display, _workerw, DisplayIndex, IncrementLoopCount);
+            DisableMpv();
+        }
+
+        private void OnClosed(object sender, EventArgs e)
+        {
+            DisableUnusedElements(UsedElement.None);
+            ConnectedForm.Close();
         }
 
         public void UpdateSize()
@@ -169,7 +184,7 @@ namespace WallpaperFlux.WPF
                 wallpaperInfo = new FileInfo(wallpaperPath);
             }
             else
-            {
+            {   
                 Debug.WriteLine("Null Wallpaper Path found when calling OnWallpaperChange");
                 return;
             }
@@ -345,7 +360,7 @@ namespace WallpaperFlux.WPF
                 }
             }
 
-            vlcStopwatch.Reset(); // for situations where the next wallpaper is not a VLC wallpaper
+            //xvlcStopwatch.Reset(); // for situations where the next wallpaper is not a VLC wallpaper
             return false;
         }
 
@@ -401,6 +416,14 @@ namespace WallpaperFlux.WPF
         {
             switch (usedElement)
             {
+                case UsedElement.None: // disable all
+                    DisableImage();
+                    DisableMediaElement();
+                    DisableFFME();
+                    DisableVlc();
+                    DisableMpv();
+                    break;
+
                 case UsedElement.Image:
                     DisableMediaElement();
                     DisableFFME();

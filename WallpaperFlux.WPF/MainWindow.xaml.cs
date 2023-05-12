@@ -23,6 +23,7 @@ using WallpaperFlux.Core.Tools;
 using WallpaperFlux.Core.Util;
 using WallpaperFlux.Winform;
 using WallpaperFlux.Winform.Util;
+using WallpaperFlux.WPF.Tools;
 using WallpaperFlux.WPF.Util;
 using WallpaperFlux.WPF.Views;
 using WallpaperFlux.WPF.Windows;
@@ -48,6 +49,11 @@ namespace WallpaperFlux.WPF
         public WallpaperWindow[] Wallpapers;
         public WallpaperForm[] WallpaperForms;
 
+        private HotkeyManager _hotkeyManager;
+        //xprivate HwndSource _source;
+
+        private WindowInteropHelper _interopHelper;
+        
         public MainWindow()
         {
             Debug.WriteLine("------------------------------------" +
@@ -59,6 +65,21 @@ namespace WallpaperFlux.WPF
             WindowUtil.InitializeViewModels();
 
             Closing += OnCloseApplication;
+        }
+
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+
+            _interopHelper = new WindowInteropHelper(this);
+            _hotkeyManager = new HotkeyManager(_interopHelper.Handle);
+
+            /*
+            _source = HwndSource.FromHwnd(helper.Handle);
+            _source.AddHook(HwndHook);
+            RegisterHotKey();
+            */
+
         }
 
         // hide the application on minimize (will go to system tray)
@@ -105,6 +126,8 @@ namespace WallpaperFlux.WPF
 
         private void OnCloseApplication(object s, CancelEventArgs e)
         {
+            _hotkeyManager.UnregisterKeys();
+
             SystemParametersInfo(SetDeskWallpaper, 0, null, UpdateIniFile | SendWinIniChange);
 
             foreach (WallpaperWindow wallpaper in Wallpapers)
