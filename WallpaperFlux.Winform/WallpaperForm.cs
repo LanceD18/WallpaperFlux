@@ -30,7 +30,6 @@ namespace WallpaperFlux.Winform
         public int Loops { get; private set; }
 
         public Stopwatch WallpaperUptime { get; private set; } = new Stopwatch();
-
         public bool IsPlayingVideo { get; private set; }
 
         private ImageModel _activeImage;
@@ -46,8 +45,7 @@ namespace WallpaperFlux.Winform
         }
 
         public int DisplayIndex;
-
-        // TODO Check why this is claiming that it's functioning on a different thread yet no thread is made when calling this? Finding this out will determine if the Invokes remain
+        
         public WallpaperForm(WpfScreenHelper.Screen display, IntPtr workerw, int displayIndex, Action onVideoEnd)
         {
             this.SetStyle(ControlStyles.SupportsTransparentBackColor, true);
@@ -55,6 +53,8 @@ namespace WallpaperFlux.Winform
             InitializeComponent();
 
             DisplayIndex = displayIndex;
+
+            this.TabStop = false; // minimizes likelihood of mpv stealing focus
 
             Load += (s, e) =>
             {
@@ -98,6 +98,17 @@ namespace WallpaperFlux.Winform
                 Controls.Remove(panelWallpaper);
             };
         }
+        
+        /*
+        // https://www.codeproject.com/Questions/400115/How-to-prevent-a-form-from-receiving-focus-on-mous
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == (int)0x84)
+                m.Result = (IntPtr)(-1);
+            else
+                base.WndProc(ref m);
+        }
+        */
 
         //? Using this will cause old wallpapers to remain visible if you aren't filling the entire screen
         /*
@@ -113,6 +124,8 @@ namespace WallpaperFlux.Winform
         // TODO style readjustment when changing wallpapers by *locking* the previous wallpaper in place
         public void SetWallpaper(ImageModel image)
         {
+            if (IsDisposed) return; // for uses of this.<>
+
             Loops = 0;
             WallpaperUptime.Stop();
 
@@ -185,11 +198,12 @@ namespace WallpaperFlux.Winform
         public void SetWallpaperStyle(WallpaperStyle wallpaperStyle)
         {
             if (!IsHandleCreated) return;
+            if (IsDisposed) return; // for uses of this.<>
 
             Debug.WriteLine("Setting Style");
             if (InvokeRequired)
             {
-                this.Invoke((MethodInvoker)SetWallpaperStyleInternal);
+                this?.Invoke((MethodInvoker)SetWallpaperStyleInternal);
             }
             else
             {

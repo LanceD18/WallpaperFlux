@@ -175,9 +175,9 @@ namespace WallpaperFlux.Core.Models.Tagging
             RenameCategoryCommand = new MvxCommand(PromptRename);
             RemoveCategoryCommand = new MvxCommand(PromptRemoveCategory);
             
-            SelectImagesWithEverySelTag = new MvxCommand(() => TagViewModel.Instance.RebuildImageSelectorWithTagOptions(SelectValidImages(TagSearchType.Mandatory, GetSelectedTags())));
-            SelectImagesWithAnySelTag = new MvxCommand(() => TagViewModel.Instance.RebuildImageSelectorWithTagOptions(SelectValidImages(TagSearchType.Optional, GetSelectedTags())));
-            SelectImagesWithAnyCategoryTag = new MvxCommand(() => TagViewModel.Instance.RebuildImageSelectorWithTagOptions(SelectValidImages(TagSearchType.Optional, Tags.ToArray())));
+            SelectImagesWithEverySelTag = new MvxCommand(() => TaggingUtil.RebuildImageSelectorWithTagOptions(SelectValidImages(TagSearchType.Mandatory, GetSelectedTags())));
+            SelectImagesWithAnySelTag = new MvxCommand(() => TaggingUtil.RebuildImageSelectorWithTagOptions(SelectValidImages(TagSearchType.Optional, GetSelectedTags())));
+            SelectImagesWithAnyCategoryTag = new MvxCommand(() => TaggingUtil.RebuildImageSelectorWithTagOptions(SelectValidImages(TagSearchType.Optional, Tags.ToArray())));
 
             ClearSearchCommand = new MvxCommand(ClearSearchFilter);
         }

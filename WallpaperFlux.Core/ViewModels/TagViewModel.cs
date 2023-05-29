@@ -276,30 +276,6 @@ namespace WallpaperFlux.Core.ViewModels
         // need to also check if the tag-linking source is null for just in case the selected tag is deselected
         public bool CanUseTagLinker => SelectedTag != null || TagLinkingSource != null;
 
-        private bool _randomizeSelection;
-        public bool RandomizeSelection
-        {
-            get => _randomizeSelection;
-            set
-            {
-                SetProperty(ref _randomizeSelection, value);
-
-                if (value) ReverseSelection = false; //? you cannot randomize and reverse the selection at the same time
-            }
-        }
-
-        private bool _reverseSelection;
-        public bool ReverseSelection
-        {
-            get => _reverseSelection;
-            set
-            {
-                SetProperty(ref _reverseSelection, value);
-
-                if (value) RandomizeSelection = false; //? you cannot randomize and reverse the selection at the same time
-            }
-        }
-
         private bool _hideDisabledTags;
         public bool HideDisabledTags
         {
@@ -310,6 +286,13 @@ namespace WallpaperFlux.Core.ViewModels
 
                 SelectedCategory?.VerifyTagTabs();
             }
+        }
+
+        private bool _selectionOptionsFilter;
+        public bool SelectionOptionsFilter
+        {
+            get => _selectionOptionsFilter;
+            set => SetProperty(ref _selectionOptionsFilter, value);
         }
 
         // --- Drawers ---
@@ -464,7 +447,7 @@ namespace WallpaperFlux.Core.ViewModels
         {
             //? --- TagBoard ---
             CloseTagBoardCommand = new MvxCommand(CloseTagBoard); //? the open/toggle TagBoard is initially called by CategoryModel and sent to a method here
-            SelectImagesFromTagBoardCommand = new MvxCommand(() => RebuildImageSelectorWithTagOptions(SearchValidImagesWithTagBoard()));
+            SelectImagesFromTagBoardCommand = new MvxCommand(() => TaggingUtil.RebuildImageSelectorWithTagOptions(SearchValidImagesWithTagBoard()));
             SetMandatoryTagBoardSelectionCommand = new MvxCommand(() => SetAllTagBoardTagsSearchType(TagSearchType.Mandatory));
             SetOptionalTagBoardSelectionCommand = new MvxCommand(() => SetAllTagBoardTagsSearchType(TagSearchType.Optional));
             SetExcludedTagBoardSelectionCommand = new MvxCommand(() => SetAllTagBoardTagsSearchType(TagSearchType.Excluded));
@@ -522,12 +505,6 @@ namespace WallpaperFlux.Core.ViewModels
 
             CloseRankGraphCommand = new MvxCommand(CloseRankGraph);
         }
-
-        /// <summary>
-        /// Rebuilds the image selector using the randomization and reversal options of the TagView
-        /// </summary>
-        /// <param name="images">The images to rebuild the image selector with</param>
-        public void RebuildImageSelectorWithTagOptions(ImageModel[] images) => WallpaperFluxViewModel.Instance.RebuildImageSelector(images, RandomizeSelection, ReverseSelection);
 
         #region Visible Tags
 
@@ -755,33 +732,45 @@ namespace WallpaperFlux.Core.ViewModels
         /// <returns></returns>
         public ImageModel[] SearchValidImagesWithTagBoard()
         {
-            HashSet<ImageModel> validImages = new HashSet<ImageModel>(); //? we don't want the same image to appear twice, so we'll use a HashSet
+            HashSet<ImageModel> imagesToScan = new HashSet<ImageModel>();
 
-            foreach (TagModel tag in TagBoardTags)
+            foreach (TagModel tag in TagBoardTags) // performing a union on all tag images now prevents us from scanning the same image twice later
             {
-                foreach (ImageModel image in tag.GetLinkedImages())
+                imagesToScan.UnionWith(tag.GetLinkedImages());
+            }
+
+            HashSet<ImageModel> validImages = new HashSet<ImageModel>(); // and for just in case, using a hash set on valid images will prevent an image from appearing twice regardless
+
+            bool optionalTagExists = false;
+
+            foreach (ImageModel image in imagesToScan)
+            {
+                bool validImage = true;
+                bool hasOptionalTag = false;
+
+                foreach (TagModel tagToCheck in TagBoardTags)
                 {
-                    bool validImage = true;
-                    foreach (TagModel tagToCheck in TagBoardTags)
+                    switch (tagToCheck.SearchType)
                     {
-                        if (tagToCheck.SearchType == TagSearchType.Optional) continue; // if optional, do nothing
+                        case TagSearchType.Mandatory: // if mandatory, not containing this tag will set validity to false
+                            if (!tagToCheck.ContainsLinkedImage(image)) validImage = false;
+                            break;
 
-                        switch (tagToCheck.SearchType)
-                        {
-                            case TagSearchType.Mandatory: // if mandatory, not containing this tag will set validity to false
-                                if (!tagToCheck.ContainsLinkedImage(image)) validImage = false; 
-                                break;
+                        case TagSearchType.Excluded: // if excluded, containing this tag will set validity to false
+                            if (tagToCheck.ContainsLinkedImage(image)) validImage = false;
+                            break;
 
-                            case TagSearchType.Excluded: // if excluded, containing this tag will set validity to false
-                                if (tagToCheck.ContainsLinkedImage(image)) validImage = false;
-                                break;
-                        }
-
-                        if (validImage == false) break; // if validity is falsified, no need to continue checking
+                        case TagSearchType.Optional: // if optional, make sure that the image has at least one optional tag
+                            optionalTagExists = true;
+                            if (tagToCheck.ContainsLinkedImage(image)) hasOptionalTag = true;
+                            break;
                     }
 
-                    if (validImage) validImages.Add(image); // if it's still a valid image by now we can add it
+                    if (validImage == false) break; // if validity is falsified, no need to continue checking
                 }
+
+                if (validImage) validImage = optionalTagExists == hasOptionalTag; // need to have at least one optional tag if an optional tag exists
+                if (validImage) validImages.Add(image); // if it's still a valid image by now we can add it
             }
 
             return validImages.ToArray();

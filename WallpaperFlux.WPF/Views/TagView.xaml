@@ -73,9 +73,9 @@
             <MenuItem Header="Options">
                 <!-- Open a drawer menu that shows priorities -->
                 <MenuItem Header="View Folder Priority" Command="{Binding ViewFolderPriorityCommand}"/>
-                <MenuItem Header="Randomize Selection" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding RandomizeSelection, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                <MenuItem Header="Reverse Selection" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding ReverseSelection, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 <MenuItem Header="Hide Disabled Tags" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding HideDisabledTags, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                <MenuItem Header="Use Selection Options Filter" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding SelectionOptionsFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                          ToolTip="Filters your selection to the options set in the image selector"/>
             </MenuItem>
         </Menu>
 

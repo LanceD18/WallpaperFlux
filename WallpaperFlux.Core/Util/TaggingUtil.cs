@@ -262,19 +262,32 @@ namespace WallpaperFlux.Core.Util
 
         public static void AddTagsToTagboard(TagModel[] tags)
         {
-            if (InstanceExists)
-            {
-                TagViewModel.Instance.AddTagsToTagBoard(tags);
-            }
+            if (InstanceExists) TagViewModel.Instance.AddTagsToTagBoard(tags);
         }
 
         public static void ClearTagboard()
         {
-            if (InstanceExists)
+            if (InstanceExists) TagViewModel.Instance.ClearTagBoard();
+        }
+
+        /// <summary>
+        /// Rebuilds the image selector using the randomization and reversal options of the TagView
+        /// </summary>
+        /// <param name="images">The images to rebuild the image selector with</param>
+        public static void RebuildImageSelectorWithTagOptions(ImageModel[] images)
+        {
+            if (!InstanceExists) return;
+
+            if (!TagViewModel.Instance.SelectionOptionsFilter)
             {
-                TagViewModel.Instance.ClearTagBoard();
+                WallpaperFluxViewModel.Instance.RebuildImageSelector(images);
+            }
+            else
+            {
+                ImageSelectionViewModel.Instance.RebuildImageSelectorWithOptions(ImageSelectionViewModel.Instance.FilterImages(images), false);
             }
         }
+
         #endregion
 
         #region Tag Sorting

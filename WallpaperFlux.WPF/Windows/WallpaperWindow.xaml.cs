@@ -570,7 +570,7 @@ namespace WallpaperFlux.WPF
                                 WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = image.Volume;
 
                                 //? Debug fix to volume failing to update
-                                await Task.Run(() =>
+                                await Task.Factory.StartNew(() =>
                                 {
                                     Thread.Sleep(repeatInterval);
 
@@ -584,7 +584,7 @@ namespace WallpaperFlux.WPF
                                             Math.Abs(WallpaperMediaElementFFME.Volume - (image.Volume / 100)) > 0.00001)
                                             UpdateVolume();
                                     });
-                                });
+                                }, TaskCreationOptions.LongRunning);
                             }
                         }
                     }
