@@ -29,6 +29,7 @@ using LibVLCSharp.Shared;
 using MvvmCross.Platforms.Wpf.Presenters.Attributes;
 using MvvmCross.ViewModels;
 using Unosquare.FFME;
+using WallpaperFlux.Core.Managers;
 using WallpaperFlux.Core.Tools;
 using WallpaperFlux.Core.ViewModels;
 using WallpaperFlux.Winform;

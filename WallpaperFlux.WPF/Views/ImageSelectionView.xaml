@@ -19,6 +19,7 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
             <RowDefinition Height="4"/>
         </Grid.RowDefinitions>
 
@@ -42,46 +43,61 @@
                     <RowDefinition Height="0"/>
                 </Grid.RowDefinitions>
 
-                <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center" Margin="10 0 10 0">
-                    <Button Content="Select Images" Margin="0 3 0 3" Command="{Binding SelectImagesCommand}"/>
+                <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center"  Margin="10 0 10 0">
+                    <Button Content="Select Images" Margin="5" Command="{Binding SelectImagesCommand}"/>
+                    <!--x
                     <Button Content="Select Images of Type" Margin="0 3 0 3" Command="{Binding SelectImagesOfTypeCommand}"/>
-                    <Button Content="Select Images in Folder" Margin="0 3 0 3" Command="{Binding SelectImagesInFolderCommand}"/>
+                    -->
+                    <Button Content="Select Images in Folder" Margin="5" Command="{Binding SelectImagesInFolderCommand}"/>
+                    <CheckBox HorizontalAlignment="Center" Margin="5" Content="Tagboard Filter" ToolTip="Filters based on the current Tagboard selection" IsChecked="{Binding TagboardFilter}"/>
                 </StackPanel>
 
                 <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Vertical" VerticalAlignment="Center" Margin="10 0 10 0">
                     <!-- TODO Perhaps keep track of the last checked RadioButton and save to theme (or globally) [Would use IsChecked property to set that here] -->
-                    <RadioButton Content="All" GroupName="SelectionType" Margin="0 5 0 5" IsChecked="{Binding RadioAll}"/>
-                    <RadioButton Content="Unranked" GroupName="SelectionType" Margin="0 5 0 5" IsChecked="{Binding RadioUnranked}"/>
-                    <RadioButton Content="Ranked" GroupName="SelectionType" Margin="0 5 0 5" IsChecked="{Binding RadioRanked}"/>
-                    <StackPanel Orientation="Horizontal" Margin="0 5 0 5">
-                        <!-- Specific Rank -->
-                        <RadioButton Content="Specific Rank" GroupName="SelectionType" Margin="5 0 5 0" IsChecked="{Binding RadioSpecificRank}"/>
-                        <TextBox Margin="5 0 5 0" Text="{Binding SpecifiedRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                 adonisExtensions:WatermarkExtension.IsWatermarkVisible="True" adonisExtensions:WatermarkExtension.Watermark="Rank">
-                            <TextBox.Style>
-                                <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
-                            </TextBox.Style>
-                        </TextBox>
-                    </StackPanel>
                     <StackPanel Orientation="Horizontal">
-                        <!-- Rank Range -->
-                        <RadioButton Content="Rank Range" GroupName="SelectionType" Margin="5 0 5 0" IsChecked="{Binding RadioRankRange}"/>
-                        <TextBox Margin="5 0 5 0"  Text="{Binding MinSpecifiedRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        <!--? Rank Type -->
+                        <StackPanel Orientation="Vertical" Margin="0 0 5 0" VerticalAlignment="Center">
+                            <RadioButton Content="All Ranks" GroupName="SelectionType" Margin="0 5 0 5" IsChecked="{Binding RadioAllRanks}"/>
+                            <RadioButton Content="Unranked" GroupName="SelectionType" Margin="0 5 0 5" IsChecked="{Binding RadioUnranked}"/>
+                            <RadioButton Content="Ranked" GroupName="SelectionType" Margin="0 5 0 5" IsChecked="{Binding RadioRanked}"/>
+                            <!--? Additional Rank Types -->
+                            <StackPanel Orientation="Horizontal" Margin="0 5 0 5">
+                                <!-- Specific Rank -->
+                                <RadioButton Content="Specific Rank" GroupName="SelectionType" Margin="0 0 5 0" IsChecked="{Binding RadioSpecificRank}"/>
+                                <TextBox Margin="5 0 5 0" Text="{Binding SpecifiedRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 adonisExtensions:WatermarkExtension.IsWatermarkVisible="True" adonisExtensions:WatermarkExtension.Watermark="Rank">
+                                    <TextBox.Style>
+                                        <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                                    </TextBox.Style>
+                                </TextBox>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <!-- Rank Range -->
+                                <RadioButton Content="Rank Range" GroupName="SelectionType" Margin="0 0 5 0" IsChecked="{Binding RadioRankRange}"/>
+                                <TextBox Margin="5 0 5 0"  Text="{Binding MinSpecifiedRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                  adonisExtensions:WatermarkExtension.IsWatermarkVisible="True" adonisExtensions:WatermarkExtension.Watermark="Min">
-                            <TextBox.Style>
-                                <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
-                            </TextBox.Style>
-                        </TextBox>
-                        <TextBlock Text="-" VerticalAlignment="Center"/>
-                        <TextBox Margin="5 0 5 0"  Text="{Binding MaxSpecifiedRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                    <TextBox.Style>
+                                        <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                                    </TextBox.Style>
+                                </TextBox>
+                                <TextBlock Text="-" VerticalAlignment="Center"/>
+                                <TextBox Margin="5 0 5 0"  Text="{Binding MaxSpecifiedRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                  adonisExtensions:WatermarkExtension.IsWatermarkVisible="True" adonisExtensions:WatermarkExtension.Watermark="Max">
-                            <TextBox.Style>
-                                <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
-                            </TextBox.Style>
-                        </TextBox>
+                                    <TextBox.Style>
+                                        <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                                    </TextBox.Style>
+                                </TextBox>
+                            </StackPanel>
+                        </StackPanel>
+                        <!--? Image Type -->
+                        <StackPanel Orientation="Vertical" Margin="10 0 0 0" VerticalAlignment="Center">
+                            <RadioButton Content="All Types" GroupName="ImageType" Margin="0 5 0 5" IsChecked="{Binding RadioAllTypes}"/>
+                            <RadioButton Content="Static" GroupName="ImageType" Margin="0 5 0 5" IsChecked="{Binding RadioStatic}"/>
+                            <RadioButton Content="Gif" GroupName="ImageType" Margin="0 5 0 5" IsChecked="{Binding RadioGif}"/>
+                            <RadioButton Content="Video" GroupName="ImageType" Margin="0 5 0 5" IsChecked="{Binding RadioVideo}"/>
+                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
-
             </Grid>
         </GroupBox>
 
@@ -93,7 +109,6 @@
                     Visibility="{Binding ShowDisabledSelector, Converter={StaticResource BooleanToVisibilityConverter}}"
                     adonisExtensions:LayerExtension.Layer="3" BorderBrush="DimGray" ToolTip="Requires [Enable Detection of Disabled Images] to be enabled"/>
         </StackPanel>
-
 
     </Grid>
 </views:MvxWpfView>

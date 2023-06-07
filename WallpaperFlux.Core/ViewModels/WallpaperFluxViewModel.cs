@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
@@ -31,6 +32,7 @@ using WallpaperFlux.Core.Collections;
 using WallpaperFlux.Core.IoC;
 using WallpaperFlux.Core.JSON;
 using WallpaperFlux.Core.JSON.Temp;
+using WallpaperFlux.Core.Managers;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Models.Controls;
 using WallpaperFlux.Core.Models.Tagging;
@@ -343,6 +345,8 @@ namespace WallpaperFlux.Core.ViewModels
             InitializeDisplaySettings();
 
             InitializeCommands();
+
+            ImageFolders.CollectionChanged += ImageFoldersOnCollectionChanged;
         }
 
         /*x
@@ -675,6 +679,17 @@ namespace WallpaperFlux.Core.ViewModels
         }
 
         public bool ContainsFolder(string path) => ImageFolders.ContainsFolderPath(path);
+
+        private void ImageFoldersOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (!JsonUtil.IsLoadingData) //! the order of operations done while loading prevents this from being needed
+            {
+                foreach (FolderModel newFolders in e.NewItems) //? re-validate newly added folders
+                {
+                    newFolders.ValidateImages(true); // the images won't be able to find the folder until it is added
+                }
+            }
+        }
 
         #endregion
 

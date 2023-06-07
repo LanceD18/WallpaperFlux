@@ -27,7 +27,7 @@ namespace WallpaperFlux.WPF.Util
         public const float SETTINGS_WINDOW_WIDTH = 700;
         public const float SETTINGS_WINDOW_HEIGHT = 615;
 
-        private const float IMAGE_SELECTION_WINDOW_WIDTH = 410;
+        private const float IMAGE_SELECTION_WINDOW_WIDTH = 465;
         private const float IMAGE_SELECTION_WINDOW_HEIGHT = 265;
 
         public const float PAGINATION_TEST_WINDOW_WIDTH = 900;

@@ -95,6 +95,13 @@ namespace WallpaperFlux.Core.Models
             set
             {
                 SetProperty(ref _enabled, value);
+
+                if (ParentFolder == null) //! this should be updated elsewhere, 'hacky' move to reduce IsEnabled() calls
+                {
+                    Active = false;
+                    return;
+                }
+
                 UpdateEnabledState();
             }
         }
@@ -231,7 +238,7 @@ namespace WallpaperFlux.Core.Models
         {
             Path = _hashPath = path;
 
-            ImageType = IsStatic 
+            ImageType = IsStatic // ideally this won't be changing later
                 ? ImageType.Static 
                 : IsGif 
                     ? ImageType.GIF 
@@ -254,13 +261,10 @@ namespace WallpaperFlux.Core.Models
                 }
             }
 
-
             Tags = tags ?? new ImageTagCollection(this); // create a new tag collection if the given one is null
 
             //! Must be set *AFTER* the ImageType is set !!!!!!!!!!
             //! Must be set *AFTER* the ImageType is set !!!!!!!!!!
-            //! Must be set *AFTER* the ImageType is set !!!!!!!!!!
-            //! Must also be set *AFTER* tags are created to handle checking IsEnabled() !!!!!!
             //! Must also be set *AFTER* tags are created to handle checking IsEnabled() !!!!!!
             //! Must also be set *AFTER* tags are created to handle checking IsEnabled() !!!!!!
             Rank = _hashRank = rank;
@@ -359,8 +363,15 @@ namespace WallpaperFlux.Core.Models
             Active = false; // recheck this every time IsEnabled is called
 
             if (!Enabled) return false;
-            
-            if (ParentFolder == null) UpdateParentFolder();
+
+            if (ParentFolder == null)
+            {
+                if (!UpdateParentFolder())
+                {
+                    return false; //! this indicates that we weren't able to find a parent folder, ideally this means that the folder is currently being added, otherwise, this shouldn't happen
+                }
+            }
+
             if (!ParentFolder.Enabled) return false;
 
             if (!Tags.AreTagsEnabled()) return false;
@@ -377,7 +388,12 @@ namespace WallpaperFlux.Core.Models
             ThemeUtil.RankController.ModifyRank(this, _rank, ref _rank);
         }
 
-        public void UpdateParentFolder() => ParentFolder = FolderUtil.GetFolderModel(PathFolder);
+        public bool UpdateParentFolder()
+        {
+            ParentFolder = FolderUtil.GetFolderModel(PathFolder);
+
+            return ParentFolder != null;
+        }
 
         #region Tags
         public void AddTag(TagModel tag, bool highlightTags) => Tags.Add(tag, highlightTags);

@@ -673,7 +673,7 @@
                             <RowDefinition Height="auto"/>
                             <RowDefinition Height="auto"/>
                             <!-- TODO Create a converter from double to GridLength so that you can update this with the tag ListBox size -->
-                            <RowDefinition Height="200"/>
+                            <RowDefinition Height="auto"/>
                             <RowDefinition Height="auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>

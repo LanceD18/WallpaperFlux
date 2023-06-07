@@ -8,7 +8,5 @@ namespace WallpaperFlux.Core.Models
     public class RelatedImageModel
     {
         public ImageModel[] RelatedImages;
-
-        public RelatedImageType RelatedImageType;
     }
 }

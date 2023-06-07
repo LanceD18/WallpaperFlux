@@ -51,11 +51,21 @@ namespace WallpaperFlux.Core.ViewModels
 
         public bool DateTime { get; set; }
 
-        public bool RadioAll { get; set; } = true;
+        public bool TagboardFilter { get; set; }
+
+        public bool RadioAllRanks { get; set; } = true;
         
         public bool RadioUnranked { get; set; }
         
         public bool RadioRanked { get; set; }
+
+        public bool RadioAllTypes { get; set; } = true;
+
+        public bool RadioStatic { get; set; }
+
+        public bool RadioGif { get; set; }
+
+        public bool RadioVideo { get; set; }
 
         public bool RadioSpecificRank { get; set; }
 
@@ -102,41 +112,73 @@ namespace WallpaperFlux.Core.ViewModels
 
             List<ImageModel> filteredImages = new List<ImageModel>();
 
-            if (RadioAll) // if we're specifying a rank then we're be 
+            ImageModel[] filteredImagesArr;
+
+            Func<ImageModel, bool> rankFilter = null;
+
+            if (RadioAllRanks && RadioAllTypes) // if we're specifying a rank then we're be 
             {
                 // no changes needed
-                return images;
+                filteredImagesArr = images;
             }
-            else if (RadioUnranked) // filter down to all unranked images
+            else
             {
+                if (RadioAllRanks && !RadioAllTypes)
+                {
+                    rankFilter = image => true;
+                }
+                else if (RadioUnranked) // filter down to all unranked images
+                {
+                    rankFilter = image => image.Rank == 0;
+                }
+                else if (RadioRanked) // filter down to all ranked images
+                {
+                    rankFilter = image => image.Rank != 0;
+                }
+                else if (RadioSpecificRank)
+                {
+                    rankFilter = image => image.Rank == SpecifiedRank;
+                }
+                else if (RadioRankRange)
+                {
+                    rankFilter = image => image.Rank >= MinSpecifiedRank && image.Rank <= MaxSpecifiedRank;
+                }
+
+                if (rankFilter == null) return null;
+
                 foreach (ImageModel image in images)
                 {
-                    if (image.Rank == 0) filteredImages.Add(image);
+                    if (rankFilter(image) && VerifyImageType(image))
+                    {
+                        filteredImages.Add(image);
+                    }
                 }
-            }
-            else if (RadioRanked) // filter down to all ranked images
-            {
-                foreach (ImageModel image in images)
-                {
-                    if (image.Rank != 0) filteredImages.Add(image);
-                }
-            }
-            else if (RadioSpecificRank)
-            {
-                foreach (ImageModel image in images)
-                {
-                    if (image.Rank == SpecifiedRank) filteredImages.Add(image);
-                }
-            }
-            else if (RadioRankRange)
-            {
-                foreach (ImageModel image in images)
-                {
-                    if (image.Rank >= MinSpecifiedRank && image.Rank <= MaxSpecifiedRank) filteredImages.Add(image);
-                }
+
+                filteredImagesArr = filteredImages.ToArray();
             }
 
-            return filteredImages.ToArray();
+            if (TagboardFilter)
+            {
+                return TagViewModel.Instance.SearchValidImagesWithTagBoard(filteredImagesArr);
+            }
+
+            return filteredImagesArr;
+        }
+
+        private bool VerifyImageType(ImageModel image)
+        {
+            if (!RadioAllTypes)
+            {
+                ImageType validImageType = ImageType.None;
+
+                if (RadioStatic) validImageType = ImageType.Static;
+                if (RadioGif) validImageType = ImageType.GIF;
+                if (RadioVideo) validImageType = ImageType.Video;
+
+                return image.ImageType == validImageType;
+            }
+
+            return true;
         }
 
         private const string STATIC_BUTTON_ID = "static";

@@ -730,13 +730,20 @@ namespace WallpaperFlux.Core.ViewModels
         /// Check all potential images for validity then select the valid images. Use the tag's search type for validity comparisons.
         /// </summary>
         /// <returns></returns>
-        public ImageModel[] SearchValidImagesWithTagBoard()
+        public ImageModel[] SearchValidImagesWithTagBoard(ImageModel[] images = null)
         {
             HashSet<ImageModel> imagesToScan = new HashSet<ImageModel>();
 
-            foreach (TagModel tag in TagBoardTags) // performing a union on all tag images now prevents us from scanning the same image twice later
+            if (images == null)
             {
-                imagesToScan.UnionWith(tag.GetLinkedImages());
+                foreach (TagModel tag in TagBoardTags) // performing a union on all tag images now prevents us from scanning the same image twice later
+                {
+                    imagesToScan.UnionWith(tag.GetLinkedImages());
+                }
+            }
+            else
+            {
+                imagesToScan = images.ToHashSet();
             }
 
             HashSet<ImageModel> validImages = new HashSet<ImageModel>(); // and for just in case, using a hash set on valid images will prevent an image from appearing twice regardless

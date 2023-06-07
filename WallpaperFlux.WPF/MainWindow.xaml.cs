@@ -19,6 +19,7 @@ using System.Windows.Shapes;
 using HanumanInstitute.MediaPlayer.Wpf.Mpv;
 using Mpv.NET.Player;
 using MvvmCross.Platforms.Wpf.Views;
+using WallpaperFlux.Core.Managers;
 using WallpaperFlux.Core.Tools;
 using WallpaperFlux.Core.Util;
 using WallpaperFlux.Winform;
