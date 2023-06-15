@@ -355,7 +355,7 @@ namespace WallpaperFlux.WPF
                         vlcPosition <= maxTime)
                     {
                         // keep the current wallpaper
-                        ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[WallpaperWindowUtil.GetWallpaperIndex(this)] = ActiveImage.Path;
+                        ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[WallpaperWindowUtil.GetWallpaperIndex(this)] = ActiveImage;
                         return true;
                     }
                 }

@@ -77,7 +77,16 @@ namespace WallpaperFlux.WPF.Views
 
         #region MediaElement & Images
 
-        private void Inspector_OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e) => LoadImageOrMediaElementOrMpvPlayerHost(sender);
+        private void Inspector_OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            UnloadMediaElement(sender);
+
+            LoadImageOrMediaElementOrMpvPlayerHost(sender);
+        }
+
+        private void Tooltip_MediaElement_OnLoaded(object sender, RoutedEventArgs e) => LoadImageOrMediaElementOrMpvPlayerHost(sender);
+
+        private void Tooltip_MediaElement_OnUnloaded(object sender, RoutedEventArgs e) => UnloadMediaElement(sender);
 
         private void LoadImageOrMediaElementOrMpvPlayerHost(object sender)
         {
@@ -99,26 +108,62 @@ namespace WallpaperFlux.WPF.Views
             }
         }
 
+        private void UnloadMediaElement(object sender)
+        {
+            try
+            {
+                if (sender is MediaElement element)
+                {
+                    element.Stop();
+                    element.Close();
+                    element.ClearValue(MediaElement.SourceProperty);
+                    element.Source = null;
+                }
+
+                if (sender is Unosquare.FFME.MediaElement elementFFME)
+                {
+                    elementFFME.Stop();
+                    elementFFME.Close();
+                    elementFFME.ClearValue(MediaElement.SourceProperty);
+                }
+                //! Dispose() will freeze the program
+                //xelement?.Dispose();
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine("ERROR: Element Unload Failed: " + exception);
+            }
+        }
+
         private async void LoadImage(Image image, bool highQuality)
         {
+            ImageModel thumbnailSource = null;
+
             if (image.DataContext is ImageModel imageModel)
             {
-                await Task.Run(() =>
-                {
-                    if (!FileUtil.Exists(imageModel.Path)) return;
-
-                    try
-                    {
-                        //xFileStream stream = File.OpenRead(path);
-
-                        LoadBitmapImage(image, imageModel.IsGif, highQuality, path: imageModel.Path);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.WriteLine("ERROR: Image Loading Failed: " + e);
-                    }
-                }).ConfigureAwait(false);
+                thumbnailSource = imageModel;
             }
+
+            if (image.DataContext is ImageSetModel imageSet)
+            {
+                thumbnailSource = imageSet.RelatedImages[0];
+            }
+
+            if (thumbnailSource == null) return;
+
+            await Task.Run(() =>
+            {
+                if (!FileUtil.Exists(thumbnailSource.Path)) return;
+
+                try
+                {
+                    LoadBitmapImage(image, thumbnailSource.IsGif, highQuality, path: thumbnailSource.Path);
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine("ERROR: Image Loading Failed: " + e);
+                }
+            }).ConfigureAwait(false);
         }
 
         private void LoadMediaElement(MediaElement element)
@@ -430,35 +475,6 @@ namespace WallpaperFlux.WPF.Views
             }
         }
 
-        private void Tooltip_MediaElement_OnLoaded(object sender, RoutedEventArgs e) => LoadImageOrMediaElementOrMpvPlayerHost(sender);
-
-        private void Tooltip_MediaElement_OnUnloaded(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (sender is MediaElement element)
-                {
-                    element.Stop();
-                    element.Close();
-                    element.ClearValue(MediaElement.SourceProperty);
-                    element.Source = null;
-                }
-
-                if (sender is Unosquare.FFME.MediaElement elementFFME)
-                {
-                    elementFFME.Stop();
-                    elementFFME.Close();
-                    elementFFME.ClearValue(MediaElement.SourceProperty);
-                }
-                //! Dispose() will freeze the program
-                //xelement?.Dispose();
-            }
-            catch (Exception exception)
-            {
-                Console.WriteLine("ERROR: Element Unload Failed: " + exception);
-            }
-        }
-
         /*x
         private void MpvPlayerHost_OnLoaded(object sender, RoutedEventArgs e) => LoadImageOrMediaElementOrMpvPlayerHost(sender);
 
@@ -535,13 +551,14 @@ namespace WallpaperFlux.WPF.Views
             {
                 if (e.AddedItems.Count >= 1) // TODO Make this apply to actually 1 image once you fix the other issues with selecting between pages
                 {
-                    ControlUtil.EnsureSingularSelection<ImageSelectorTabModel, ImageModel>(ImageSelectorTabControl.Items, ImageSelectorTabControl.SelectedItem as ITabModel<ImageModel>);
+                    ControlUtil.EnsureSingularSelection<ImageSelectorTabModel, BaseImageModel>(ImageSelectorTabControl.Items, ImageSelectorTabControl.SelectedItem as ITabModel<BaseImageModel>);
                 }
 
                 TaggingUtil.HighlightTags();
             }
 
             return;
+
             // Font Scaling
             if (e.AddedItems.Count > 0)
             {

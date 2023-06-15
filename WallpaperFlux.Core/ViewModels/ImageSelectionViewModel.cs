@@ -96,7 +96,7 @@ namespace WallpaperFlux.Core.ViewModels
             SelectDisabledImagesCommand = new MvxCommand(SelectDisabledImages);
         }
 
-        public void RebuildImageSelectorWithOptions(ImageModel[] images, bool closeWindow = true)
+        public void RebuildImageSelectorWithOptions(BaseImageModel[] images, bool closeWindow = true)
         {
             WallpaperFluxViewModel.Instance.RebuildImageSelector(images, Randomize, Reverse, DateTime);
 
@@ -106,15 +106,15 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
-        public ImageModel[] FilterImages(ImageModel[] images)
+        public BaseImageModel[] FilterImages(BaseImageModel[] images)
         {
-            if (images == null) return new ImageModel[] { };
+            if (images == null) return new BaseImageModel[] { };
 
-            List<ImageModel> filteredImages = new List<ImageModel>();
+            List<BaseImageModel> filteredImages = new List<BaseImageModel>();
 
-            ImageModel[] filteredImagesArr;
+            BaseImageModel[] filteredImagesArr;
 
-            Func<ImageModel, bool> rankFilter = null;
+            Func<BaseImageModel, bool> rankFilter = null;
 
             if (RadioAllRanks && RadioAllTypes) // if we're specifying a rank then we're be 
             {
@@ -129,19 +129,19 @@ namespace WallpaperFlux.Core.ViewModels
                 }
                 else if (RadioUnranked) // filter down to all unranked images
                 {
-                    rankFilter = image => image.Rank == 0;
+                    rankFilter = image => ImageUtil.GetRank(image) == 0;
                 }
                 else if (RadioRanked) // filter down to all ranked images
                 {
-                    rankFilter = image => image.Rank != 0;
+                    rankFilter = image => ImageUtil.GetRank(image) != 0;
                 }
                 else if (RadioSpecificRank)
                 {
-                    rankFilter = image => image.Rank == SpecifiedRank;
+                    rankFilter = image => ImageUtil.GetRank(image) == SpecifiedRank;
                 }
                 else if (RadioRankRange)
                 {
-                    rankFilter = image => image.Rank >= MinSpecifiedRank && image.Rank <= MaxSpecifiedRank;
+                    rankFilter = image => ImageUtil.GetRank(image) >= MinSpecifiedRank && ImageUtil.GetRank(image) <= MaxSpecifiedRank;
                 }
 
                 if (rankFilter == null) return null;
@@ -222,14 +222,14 @@ namespace WallpaperFlux.Core.ViewModels
 
         private void SelectActiveWallpapers()
         {
-            ImageModel[] activeImages = ThemeUtil.Theme.Images.GetImageRange(ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers.ToArray());
+            BaseImageModel[] activeImages = ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers.ToArray();
 
             RebuildImageSelectorWithOptions(activeImages);
         }
 
         private void SelectDisabledImages()
         {
-            ImageModel[] disabledImages = ThemeUtil.Theme.Images.GetAllImages().Where(f => !f.Active).ToArray();
+            BaseImageModel[] disabledImages = ThemeUtil.Theme.Images.GetAllImages().Where(f => !f.Active).ToArray();
 
             RebuildImageSelectorWithOptions(disabledImages);
         }

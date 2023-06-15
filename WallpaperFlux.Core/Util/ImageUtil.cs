@@ -1,24 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using LanceTools.WPF.Adonis.Util;
 using MvvmCross;
 using WallpaperFlux.Core.IoC;
 using WallpaperFlux.Core.Models;
+using WallpaperFlux.Core.Models.Controls;
+using WallpaperFlux.Core.ViewModels;
 
 namespace WallpaperFlux.Core.Util
 {
     public enum RelatedImageType
     {
-        AltRanker,
-        Merger,
-        Animator
+        None,
+        Alt,
+        Merge,
+        Animate
     }
 
     public static class ImageUtil
     {
         public static Thread SetImageThread = new Thread(() => { }); // dummy null state to avoid error checking
+
+        public static readonly string INVALID_IMAGE_SET_MESSAGE = "Mixed image types found, image set creation failed";
 
         public static void PromptRankImage(ImageModel image)
         {
@@ -67,6 +73,131 @@ namespace WallpaperFlux.Core.Util
                 ThemeUtil.Theme.Images.RemoveImage(image);
                 Mvx.IoCProvider.Resolve<IExternalFileSystemUtil>().RecycleFile(image.Path);
             }
+        }
+
+        public static void CreateRelatedImageSet(ImageModel[] images)
+        {
+            //? Having mixed image types in an image set is currently invalid, may implement in the future
+            HashSet<ImageType> encounteredImageTypes = new HashSet<ImageType>();
+
+            foreach (ImageModel image in images)
+            {
+                encounteredImageTypes.Add(image.ImageType);
+
+                if (encounteredImageTypes.Count > 1)
+                {
+                    MessageBoxUtil.ShowError(INVALID_IMAGE_SET_MESSAGE);
+                    return;
+                }
+            }
+
+            // TODO Create a Related Image Set Model out of the selected images
+            ImageSetModel relatedImages = new ImageSetModel(images, encounteredImageTypes.First());
+            if (relatedImages.InvalidSet) return; // if the set becomes invalid, cancel the process
+
+            // TODO Remove the selected images from the image selector
+            //xImageSelectorTabModel initialTab = WallpaperFluxViewModel.Instance.GetSelectorTabOfImage(images[0]);
+
+            ImageSelectorTabModel tabToAddTo = WallpaperFluxViewModel.Instance.GetSelectorTabOfImage(images[0]); // for use later
+            WallpaperFluxViewModel.Instance.RemoveImageRangeFromTabs(images);
+
+            // TODO Technical Debt ; Handle adjusting the image selector to account for image removal (applies to deletion as well)
+
+            // TODO Devise a way for the individual images to no longer be accessible by the wallpaper randomization, the image set will take their place
+            // TODO - This implies that we know that the given images are part of an image set, or a check is performed that finds the images existing in an image set ; Find the most optimal option
+
+            // TODO Add the Related Image Set to the Image selector
+            ThemeUtil.Theme.Images.AddImageSet(relatedImages);
+            tabToAddTo.Items.Add(relatedImages);
+        }
+
+        public static void PerformImageAction(BaseImageModel image, Action<ImageModel> action)
+        {
+            if (image is ImageModel imageModel)
+            {
+                action.Invoke(imageModel);
+            }
+
+            if (image is ImageSetModel imageSet)
+            {
+                foreach (ImageModel relatedImage in imageSet.RelatedImages)
+                {
+                    action.Invoke(relatedImage);
+                }
+            }
+        }
+
+        public static bool PerformImageCheck(BaseImageModel image, Func<ImageModel, bool> func)
+        {
+            if (image is ImageModel imageModel)
+            {
+                return func.Invoke(imageModel);
+            }
+
+            if (image is ImageSetModel imageSet)
+            {
+                foreach (ImageModel relatedImage in imageSet.RelatedImages)
+                {
+                    if (func.Invoke(relatedImage)) //? end on success
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Returns an ImageModel from the given BaseImageModel, if a RelatedImageModel is given, the first ImageModel in the set will be returned
+        /// </summary>
+        /// <param name="image"></param>
+        /// <returns></returns>
+        public static ImageModel GetImageModel(BaseImageModel image)
+        {
+            if (image is ImageModel imageModel)
+            {
+                return imageModel;
+            }
+
+            if (image is ImageSetModel imageSet)
+            {
+                return imageSet.RelatedImages[0];
+            }
+
+            return null;
+        }
+
+        public static ImageModel[] GetImageSet(BaseImageModel image)
+        {
+            if (image is ImageModel imageModel)
+            {
+                return new ImageModel[] { imageModel };
+            }
+
+            if (image is ImageSetModel imageSet)
+            {
+                return imageSet.RelatedImages;
+            }
+
+            return null;
+        }
+
+        public static int GetRank(BaseImageModel image)
+        {
+            if (image is ImageModel imageModel)
+            {
+                return imageModel.Rank;
+            }
+
+            if (image is ImageSetModel imageSet)
+            {
+                return imageSet.UsingAverageRank ? imageSet.AverageRank : imageSet.OverrideRank;
+            }
+
+            return -1;
         }
     }
 }

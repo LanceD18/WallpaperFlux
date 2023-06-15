@@ -17,12 +17,12 @@ namespace WallpaperFlux.Core.Controllers
         // int = rank, double = percentile
         private Dictionary<int, double> ModifiedRankPercentiles = new Dictionary<int, double>();
 
-        private VariableRef<Dictionary<ImageType, ReactiveList<ReactiveHashSet<ImageModel>>>> RankData;
+        private VariableRef<Dictionary<ImageType, ReactiveList<ReactiveHashSet<BaseImageModel>>>> RankData;
 
         public bool PotentialWeightedRankUpdate;
         public bool PotentialRegularRankUpdate;
 
-        public PercentileController(VariableRef<Dictionary<ImageType, ReactiveList<ReactiveHashSet<ImageModel>>>> rankData)
+        public PercentileController(VariableRef<Dictionary<ImageType, ReactiveList<ReactiveHashSet<BaseImageModel>>>> rankData)
         {
             RankData = rankData;
         }

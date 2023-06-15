@@ -20,10 +20,10 @@ namespace WallpaperFlux.Core.Controllers
 {
     public class WallpaperRandomizationController
     {
-        public ReactiveArray<string> ActiveWallpapers = new ReactiveArray<string>(WallpaperUtil.DisplayUtil.GetDisplayCount());  // holds paths of the currently active wallpapers
-        public string[] NextWallpapers = new string[WallpaperUtil.DisplayUtil.GetDisplayCount()]; // derived from UpcomingWallpapers, holds the next set of wallpapers
-        public Stack<string>[] PreviousWallpapers = new Stack<string>[WallpaperUtil.DisplayUtil.GetDisplayCount()]; // allows you to return back to every wallpaper encountered during the current session
-        public Queue<string[]> UpcomingWallpapers = new Queue<string[]>(); // allows display-dependent wallpaper orders to be set without synced displays
+        public ReactiveArray<BaseImageModel> ActiveWallpapers = new ReactiveArray<BaseImageModel>(WallpaperUtil.DisplayUtil.GetDisplayCount());  // holds paths of the currently active wallpapers
+        public BaseImageModel[] NextWallpapers = new BaseImageModel[WallpaperUtil.DisplayUtil.GetDisplayCount()]; // derived from UpcomingWallpapers, holds the next set of wallpapers
+        public Stack<BaseImageModel>[] PreviousWallpapers = new Stack<BaseImageModel>[WallpaperUtil.DisplayUtil.GetDisplayCount()]; // allows you to return back to every wallpaper encountered during the current session
+        public Queue<BaseImageModel[]> UpcomingWallpapers = new Queue<BaseImageModel[]>(); // allows display-dependent wallpaper orders to be set without synced displays
 
         public WallpaperRandomizationController()
         {
@@ -34,18 +34,17 @@ namespace WallpaperFlux.Core.Controllers
 
         private void InitializePreviousWallpapers()
         {
-            for (int i = 0; i < PreviousWallpapers.Length; i++) PreviousWallpapers[i] = new Stack<string>();
+            for (int i = 0; i < PreviousWallpapers.Length; i++) PreviousWallpapers[i] = new Stack<BaseImageModel>();
         }
         
         // The wallpaper must both exist within the theme and exist as a file to be valid
-        public static bool IsWallpapersValid(string[] wallpapers)
+        public static bool IsWallpapersValid(BaseImageModel[] wallpapers)
         {
-            foreach (string wallpaperPath in wallpapers)
+            foreach (BaseImageModel wallpaper in wallpapers)
             {
-                //xif (!FileUtil.Exists(wallpaperPath))
-                if (!ThemeUtil.Theme.Images.ContainsImage(wallpaperPath) || !FileUtil.Exists(wallpaperPath))
+                if (!ThemeUtil.Theme.Images.ContainsImage(wallpaper) || (wallpaper is ImageModel imageModel && !FileUtil.Exists(imageModel.Path)))
                 {
-                    Debug.WriteLine("Invalid Wallpaper Found: " + wallpaperPath);
+                    Debug.WriteLine("Invalid Wallpaper Found: " + wallpaper);
                     return false;
                 }
             }
@@ -82,7 +81,7 @@ namespace WallpaperFlux.Core.Controllers
 
             // Gather potential wallpapers
 
-            string[] potentialWallpapers = new string[WallpaperUtil.DisplayUtil.GetDisplayCount()];
+            BaseImageModel[] potentialWallpapers = new BaseImageModel[WallpaperUtil.DisplayUtil.GetDisplayCount()];
             for (int i = 0; i < WallpaperUtil.DisplayUtil.GetDisplayCount(); i++)
             {
                 // Determine random image type
@@ -120,9 +119,9 @@ namespace WallpaperFlux.Core.Controllers
                 if (randomRank != -1)
                 {
                     Debug.WriteLine("Setting Wallpaper: " + i);
-                    potentialWallpapers[i] =  ThemeUtil.Theme.RankController.GetRandomImageOfRank(randomRank, ref rand, imageTypeToSearchFor).Path;
+                    potentialWallpapers[i] =  ThemeUtil.Theme.RankController.GetRandomImageOfRank(randomRank, ref rand, imageTypeToSearchFor);
 
-                    if (!ThemeUtil.Theme.Images.GetImage(potentialWallpapers[i]).Enabled)
+                    if (!potentialWallpapers[i].Enabled)
                     {
                         //! This shouldn't happen, if this does you have a bug to fix
                         MessageBoxUtil.ShowError("Attempted to set display " + i + " to an inactive wallpaper | A new wallpaper has been chosen");
@@ -161,7 +160,7 @@ namespace WallpaperFlux.Core.Controllers
         }
 
         #region Wallpaper Order Modifiers
-        private void ModifyWallpaperOrder(ref string[] wallpapersToModify)
+        private void ModifyWallpaperOrder(ref BaseImageModel[] wallpapersToModify)
         {
             // TODO
             // request next 3 wallpapers, determine their preferred setting
@@ -176,7 +175,7 @@ namespace WallpaperFlux.Core.Controllers
 
             if (IsWallpapersValid(wallpapersToModify))
             {
-                string[] reorderedWallpapers = new string[0];
+                BaseImageModel[] reorderedWallpapers = Array.Empty<BaseImageModel>();
                 // if looking for HigherRankedImage
                 if (ThemeUtil.Theme.Settings.ThemeSettings.HigherRankedImagesOnLargerDisplays || ThemeUtil.Theme.Settings.ThemeSettings.LargerImagesOnLargerDisplays)
                 {
@@ -184,7 +183,7 @@ namespace WallpaperFlux.Core.Controllers
 
                     if (ThemeUtil.Theme.Settings.ThemeSettings.HigherRankedImagesOnLargerDisplays)
                     {
-                        reorderedWallpapers = (from f in wallpapersToModify orderby ThemeUtil.Theme.Images.GetImage(f).Rank descending select f).ToArray();
+                        reorderedWallpapers = (from f in wallpapersToModify orderby ImageUtil.GetRank(f) descending select f).ToArray();
 
                         // both ranking and size are now a factor so first an image's rank will determine their index and then afterwards
                         // any ranking conflicts have their indexes determined by size rather than being random
@@ -195,7 +194,7 @@ namespace WallpaperFlux.Core.Controllers
                     }
                     else if (ThemeUtil.Theme.Settings.ThemeSettings.LargerImagesOnLargerDisplays)
                     {
-                        reorderedWallpapers = LargestImagesWithCustomFilePath(wallpapersToModify);
+                        reorderedWallpapers = LargestImages(wallpapersToModify);
                     }
 
                     //? Applies the final modification
@@ -204,16 +203,16 @@ namespace WallpaperFlux.Core.Controllers
             }
         }
 
-        private void ConflictResolveIdenticalRanks(ref string[] reorderedWallpapers)
+        private void ConflictResolveIdenticalRanks(ref BaseImageModel[] reorderedWallpapers)
         {
             bool conflictFound = false;
-            Dictionary<int, List<string>> rankConflicts = new Dictionary<int, List<string>>();
-            foreach (string wallpaper in reorderedWallpapers)
+            Dictionary<int, List<BaseImageModel>> rankConflicts = new Dictionary<int, List<BaseImageModel>>();
+            foreach (BaseImageModel wallpaper in reorderedWallpapers)
             {
-                int wallpaperRank = ThemeUtil.Theme.Images.GetImage(wallpaper).Rank;
+                int wallpaperRank = ImageUtil.GetRank(wallpaper);
                 if (!rankConflicts.ContainsKey(wallpaperRank))
                 {
-                    rankConflicts.Add(wallpaperRank, new List<string> { wallpaper });
+                    rankConflicts.Add(wallpaperRank, new List<BaseImageModel> { wallpaper });
                 }
                 else // more than one wallpaper contains the same rank, they'll have to have their conflicts resolved below
                 {
@@ -224,13 +223,13 @@ namespace WallpaperFlux.Core.Controllers
 
             if (conflictFound) // if this is false then nothing will happen and the original reorderedWallpapers value will persist
             {
-                List<string> conflictResolvedOrder = new List<string>();
+                List<BaseImageModel> conflictResolvedOrder = new List<BaseImageModel>();
                 foreach (int rank in rankConflicts.Keys)
                 {
                     if (rankConflicts[rank].Count > 1) // conflict present, fix it by comparing image sizes and placing the largest image first
                     {
-                        string[] conflictResolvedRank = LargestImagesWithCustomFilePath(rankConflicts[rank].ToArray());
-                        foreach (string wallpaper in conflictResolvedRank)
+                        BaseImageModel[] conflictResolvedRank = LargestImages(rankConflicts[rank].ToArray());
+                        foreach (BaseImageModel wallpaper in conflictResolvedRank)
                         {
                             conflictResolvedOrder.Add(wallpaper);
                         }
@@ -248,20 +247,20 @@ namespace WallpaperFlux.Core.Controllers
         // the speed of this can be improved by not loading the image at all and instead using alternative options:
         // https://www.codeproject.com/Articles/35978/Reading-Image-Headers-to-Get-Width-and-Height
         // however doing so is not needed for such a small array (doubt anyone will have hundreds of monitors)
-        private string[] LargestImagesWithCustomFilePath(string[] customFilePath)
+        private BaseImageModel[] LargestImages(BaseImageModel[] baseImages)
         {
             /*x
-            IExternalImage[] images = new IExternalImage[customFilePath.Length];
+            IExternalImage[] images = new IExternalImage[baseImages.Length];
 
             for (var i = 0; i < images.Length; i++)
             {
-                await Task.Run(() => images[i].SetImage(customFilePath[i]));
+                await Task.Run(() => images[i].SetImage(baseImages[i]));
 
                 //? Note that the tag is empty beforehand | This is used to organize the images below based on their width and height
-                images[i].SetTag(customFilePath[i]);
+                images[i].SetTag(baseImages[i]);
             }
 
-            customFilePath = (
+            baseImages = (
                 from f
                     in images 
                 orderby f.GetSize().Width + f.GetSize().Height 
@@ -272,26 +271,26 @@ namespace WallpaperFlux.Core.Controllers
             foreach (IExternalImage image in images) image.Dispose();
             */
 
-            ImageModel[] images = new ImageModel[customFilePath.Length];
+            ImageModel[] images = new ImageModel[baseImages.Length];
 
-            for (var i = 0; i < customFilePath.Length; i++)
+            for (var i = 0; i < baseImages.Length; i++)
             {
-                images[i] = ThemeUtil.Theme.Images.GetImage(customFilePath[i]);
+                images[i] = ImageUtil.GetImageModel(baseImages[i]);
             }
 
-            customFilePath = (
+            baseImages = (
                 from f 
                     in images 
                 orderby f.GetSize().Width + f.GetSize().Height 
                     descending 
-                select f.Path).ToArray();
+                select f).ToArray();
 
-            return customFilePath;
+            return baseImages;
         }
 
-        private static string[] ApplyModifiedPathOrder(string[] reorderedWallpapers, int[] reorderedIndexes)
+        private static BaseImageModel[] ApplyModifiedPathOrder(BaseImageModel[] reorderedWallpapers, int[] reorderedIndexes)
         {
-            string[] newOrder = new string[reorderedWallpapers.Length];
+            BaseImageModel[] newOrder = new BaseImageModel[reorderedWallpapers.Length];
             for (int i = 0; i < newOrder.Length; i++)
             {
                 newOrder[reorderedIndexes[i]] = reorderedWallpapers[i];

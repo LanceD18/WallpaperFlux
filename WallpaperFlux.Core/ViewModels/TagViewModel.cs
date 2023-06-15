@@ -730,9 +730,9 @@ namespace WallpaperFlux.Core.ViewModels
         /// Check all potential images for validity then select the valid images. Use the tag's search type for validity comparisons.
         /// </summary>
         /// <returns></returns>
-        public ImageModel[] SearchValidImagesWithTagBoard(ImageModel[] images = null)
+        public BaseImageModel[] SearchValidImagesWithTagBoard(BaseImageModel[] images = null)
         {
-            HashSet<ImageModel> imagesToScan = new HashSet<ImageModel>();
+            HashSet<BaseImageModel> imagesToScan = new HashSet<BaseImageModel>();
 
             if (images == null)
             {
@@ -746,11 +746,11 @@ namespace WallpaperFlux.Core.ViewModels
                 imagesToScan = images.ToHashSet();
             }
 
-            HashSet<ImageModel> validImages = new HashSet<ImageModel>(); // and for just in case, using a hash set on valid images will prevent an image from appearing twice regardless
+            HashSet<BaseImageModel> validImages = new HashSet<BaseImageModel>(); // and for just in case, using a hash set on valid images will prevent an image from appearing twice regardless
 
             bool optionalTagExists = false;
 
-            foreach (ImageModel image in imagesToScan)
+            foreach (BaseImageModel image in imagesToScan)
             {
                 bool validImage = true;
                 bool hasOptionalTag = false;

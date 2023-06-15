@@ -18,7 +18,6 @@ using MvvmCross.ViewModels;
 using Newtonsoft.Json;
 using WallpaperFlux.Core.Collections;
 using WallpaperFlux.Core.IoC;
-using WallpaperFlux.Core.Models.Controls;
 using WallpaperFlux.Core.Models.Tagging;
 using WallpaperFlux.Core.Tools;
 using WallpaperFlux.Core.Util;
@@ -27,7 +26,7 @@ using WallpaperFlux.Core.ViewModels;
 namespace WallpaperFlux.Core.Models
 {
     //TODO You should verify if the extension is valid (Look into the methods you used for this in WallpaperManager to determine said extensions)
-    public class ImageModel : ListBoxItemModel
+    public class ImageModel : BaseImageModel
     {
         //? without making these readonly the hashcode could possibly be modified and the image's reference in various Dictionaries or HashSets would be lost
         private readonly string _hashPath;
@@ -86,9 +85,9 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
-        [DataMember(Name = "Enabled")]
-        private bool _enabled = true;
-        public bool Enabled // this is the image's individual enabled state, if this is false then nothing else can make the image active
+        [DataMember(Name = "Tags")] public ImageTagCollection Tags;
+
+        public sealed override bool Enabled // this is the image's individual enabled state, if this is false then nothing else can make the image active
         {
             get => _enabled;
 
@@ -106,11 +105,9 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
-        public bool Active { get; private set; } //? so that we don't have to check IsEnabled() every time we want to see if the image is available
+        public ImageSetModel ParentRelatedImageModel;
 
-        [DataMember(Name = "Tags")] public ImageTagCollection Tags;
-
-        [DataMember(Name = "Image Type")] public ImageType ImageType { get; set; }
+        public bool IsInRelatedImageSet => ParentRelatedImageModel != null;
 
         // Video Properties
         private double _volume = 50;
@@ -126,9 +123,12 @@ namespace WallpaperFlux.Core.Models
                 {
                     for (int i = 0; i < WallpaperUtil.DisplayUtil.GetDisplayCount(); i++) 
                     {
-                        if (WallpaperUtil.WallpaperHandler.GetWallpaperPath(i) == ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[i])
+                        if (ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[i] is ImageModel imageModel)
                         {
-                            WallpaperUtil.WallpaperHandler.UpdateVolume(i);
+                            if (WallpaperUtil.WallpaperHandler.GetWallpaperPath(i) == imageModel.Path)
+                            {
+                                WallpaperUtil.WallpaperHandler.UpdateVolume(i);
+                            }
                         }
                     }
                 }
@@ -164,7 +164,7 @@ namespace WallpaperFlux.Core.Models
 
         public bool IsGif => WallpaperUtil.IsGif(Path);
 
-        public bool IsVideo => WallpaperUtil.IsVideo(Path);
+        public override bool IsVideo => WallpaperUtil.IsVideo(Path);
 
         public bool IsWebmOrGif
         {
@@ -213,18 +213,6 @@ namespace WallpaperFlux.Core.Models
         public IMvxCommand DecreaseRankCommand { get; set; }
 
         public IMvxCommand IncreaseRankCommand { get; set; }
-        #endregion
-
-        // ----- XAML Values -----
-        // TODO Replace this section with ResourceDictionaries at some point
-        #region XAML Values
-        [JsonIgnore] public int ImageSelectorSettingsHeight => 25;
-
-        [JsonIgnore] public int ImageSelectorThumbnailHeight => 150;
-
-        [JsonIgnore] public int ImageSelectorThumbnailWidth => 150;
-
-        [JsonIgnore] public int ImageSelectorThumbnailWidthVideo => ImageSelectorThumbnailWidth - 20; // until the GroupBox is no longer needed this will account for it
         #endregion
 
         #region UI Control
@@ -356,13 +344,25 @@ namespace WallpaperFlux.Core.Models
 
         public void UpdatePath(string newPath) => Path = newPath; //? UPDATES TO OTHER PROPERTIES DONE IN THE SETTER OF PATH
 
-        public bool IsEnabled()
+        public void UpdateEnabledState()
         {
-            if (JsonUtil.IsLoadingData) return false;
+            if (JsonUtil.IsLoadingData) return;
+
+            //? Modifying the image's rank will check if the image is enabled, re-adding or removing the image as needed
+            ThemeUtil.RankController.ModifyRank(this, _rank, ref _rank);
+        }
+
+        public override bool IsEnabled()
+        {
+            if (!base.IsEnabled())
+            {
+                Active = false;
+                return false;
+            }
 
             Active = false; // recheck this every time IsEnabled is called
 
-            if (!Enabled) return false;
+            if (IsInRelatedImageSet) return false;
 
             if (ParentFolder == null)
             {
@@ -372,20 +372,18 @@ namespace WallpaperFlux.Core.Models
                 }
             }
 
+            if (ParentFolder == null) 
+            {
+                Debug.Write("Error: Parent Folder still null after updating on image: " + Path);
+                return false; // if still null, return false
+            }
+
             if (!ParentFolder.Enabled) return false;
 
             if (!Tags.AreTagsEnabled()) return false;
 
             Active = true; // if we reach this point, then the image is in fact Active
             return true;
-        }
-
-        public void UpdateEnabledState()
-        {
-            if (JsonUtil.IsLoadingData) return;
-
-            //? Modifying the image's rank will check if the image is enabled, re-adding or removing the image as needed
-            ThemeUtil.RankController.ModifyRank(this, _rank, ref _rank);
         }
 
         public bool UpdateParentFolder()
@@ -489,7 +487,7 @@ namespace WallpaperFlux.Core.Models
                 }
             }
 
-            WallpaperUtil.SetWallpaper(displayIndex, Path, true, true); // no randomization required here
+            WallpaperUtil.SetWallpaper(displayIndex, true, true, this); // no randomization required here
         }
         #endregion
 

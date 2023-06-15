@@ -5,12 +5,6 @@ using System.Text;
 namespace WallpaperFlux.Core
 {
     // TODO Consider splitting this to namespaces more closely associated with each particular enum
-    // TODO Consider splitting this to namespaces more closely associated with each particular enum
-    // TODO Consider splitting this to namespaces more closely associated with each particular enum
-    // TODO Consider splitting this to namespaces more closely associated with each particular enum
-    // TODO Consider splitting this to namespaces more closely associated with each particular enum
-    // TODO Consider splitting this to namespaces more closely associated with each particular enum
-
     // TODO Do the above *especially* for enums that are only used by 1 class
     
     public enum ImageType

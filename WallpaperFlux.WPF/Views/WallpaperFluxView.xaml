@@ -344,16 +344,18 @@
                 <!-- Header Controls -->
                 <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
                     <!-- TODO Standardize the Height, Margin, and maybe the Width here (Give them variables) -->
-                    <Button Width="115" Height="25" Content="Select Image(s)" IsEnabled="{Binding CanSelectImages}" Margin="5 0 5 0" Command="{Binding SelectImagesCommand}" />
-                    <Button Width="60" Height="25" Content="Inspect" Margin="5 0 5 0" Command="{Binding ToggleInspectorCommand}" IsEnabled="{Binding IsImageSelected}"/>
-                    <Button Width="60" Height="25" Content="Clear" Margin="5 0 5 0" Command="{Binding ClearImagesCommand}"/>
+                    <Button Width="105" Height="25" Content="Select Image(s)" IsEnabled="{Binding CanSelectImages}" Margin="5 0 5 0" Command="{Binding SelectImagesCommand}" />
+                    <Button Width="60" Height="25" Content="Inspect" Margin="3 0 3 0" Command="{Binding ToggleInspectorCommand}" IsEnabled="{Binding IsImageSelected}"/>
+                    <Button Width="60" Height="25" Content="Clear" Margin="3 0 3 0" Command="{Binding ClearImagesCommand}"/>
                     <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
-                    <Button Width="75" Height="25" Content="Rename" Margin="5 0 5 0" Command="{Binding RenameImagesCommand}"  IsEnabled="{Binding IsImageSelected}"/>
-                    <Button Width="75" Height="25" Content="Move" Margin="5 0 5 0" Command="{Binding MoveImagesCommand}"  IsEnabled="{Binding IsImageSelected}"/>
-                    <Button Width="75" Height="25" Content="Delete" Margin="5 0 5 0" Command="{Binding DeleteImagesCommand}"  IsEnabled="{Binding IsImageSelected}"/>
-                    <Button Width="75" Height="25" Content="Rank" Margin="5 0 5 0" Command="{Binding RankImagesCommand}"  IsEnabled="{Binding IsImageSelected}"/>
-                    <Button Width="115" Height="25" Content="Paste Tagboard" Margin="5 0 5 0" Command="{Binding PasteTagBoardCommand}"  IsEnabled="{Binding IsImageSelected}"/>
-                    <CheckBox Content="Group Renamed Images" Margin="5" IsChecked="{Binding GroupRenamed}"
+                    <Button Width="60" Height="25" Content="Rename" Margin="3 0 3 0" Command="{Binding RenameImagesCommand}"  IsEnabled="{Binding IsImageSelected}"/>
+                    <Button Width="60" Height="25" Content="Move" Margin="3 0 3 0" Command="{Binding MoveImagesCommand}"  IsEnabled="{Binding IsImageSelected}"/>
+                    <Button Width="60" Height="25" Content="Delete" Margin="3 0 3 0" Command="{Binding DeleteImagesCommand}"  IsEnabled="{Binding IsImageSelected}"/>
+                    <Button Width="60" Height="25" Content="Rank" Margin="3 0 3 0" Command="{Binding RankImagesCommand}"  IsEnabled="{Binding IsImageSelected}"/>
+                    <Button Width="75" Height="25" Content="Create Set" Margin="3 0 3 0 " Command="{Binding CreateRelatedImageSetCommand}"  IsEnabled="{Binding IsImageSelected}"
+                            ToolTip="Builds a 'related image set' out of the selected images"/>
+                    <Button Width="105" Height="25" Content="Paste Tagboard" Margin="3 0 3 0" Command="{Binding PasteTagBoardCommand}"  IsEnabled="{Binding IsImageSelected}"/>
+                    <CheckBox Content="Rename Grouping" Margin="3" IsChecked="{Binding GroupRenamed}"
                               ToolTip="While this is checked, if multiple images with the same tags are renamed simultaneously, their numbering will be grouped together"/>
                     <!--! Not really much of a point to Apply To All when SelectAllImages() exists -->
                     <!--x
@@ -361,8 +363,8 @@
                               ToolTip="Will apply the given modification to all images in this selection. Like 'Select All' without the selection"/>
                     -->
                     <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
-                    <Button Width="75" Height="25" Content="Select All" Margin="5 0 5 0" Command="{Binding SelectAllImagesCommand}"/>
-                    <Button Width="75" Height="25" Content="Deselect" Margin="5 0 5 0" Command="{Binding DeselectImagesCommand}"/>
+                    <Button Width="70" Height="25" Content="Select All" Margin="3 0 3 0" Command="{Binding SelectAllImagesCommand}"/>
+                    <Button Width="70" Height="25" Content="Deselect" Margin="3 0 3 0" Command="{Binding DeselectImagesCommand}"/>
                 </StackPanel>
 
                 <!-- Selection Info -->
@@ -430,7 +432,7 @@
 
                                     <!--? // Image Info Item Template // -->
                                     <ListBox.ItemTemplate>
-                                        <DataTemplate DataType="models:ImageModel">
+                                        <DataTemplate DataType="{x:Type models:BaseImageModel}">
                                             <GroupBox HorizontalAlignment="Center">
                                                 <StackPanel Focusable="False">
 
@@ -441,7 +443,7 @@
                                                             <!-- Remember that the Binding context here refers to what's given in the Content of the ContentTemplate, not what ReSharper says -->
 
                                                             <!--? //// StaticOrGIFTemplate //// -->
-                                                            <DataTemplate x:Key="StaticOrGIFTemplate">
+                                                            <DataTemplate x:Key="StaticOrGIFTemplate" DataType="{x:Type models:ImageModel}">
                                                                 <!--? Thumbnail -->
                                                                 <Image ToolTipService.ShowDuration="{StaticResource MaxInt32}"
                                                                        Width="{Binding ImageSelectorThumbnailWidth}"
@@ -521,8 +523,8 @@
                                                                 </Image>
                                                             </DataTemplate>
 
-                                                            <!--? // VideoTemplate // -->
-                                                            <DataTemplate x:Key="VideoTemplate">
+                                                            <!--? //// VideoTemplate //// -->
+                                                            <DataTemplate x:Key="VideoTemplate" DataType="{x:Type models:ImageModel}">
                                                                 <GroupBox adonisExtensions:LayerExtension.IncreaseLayer="False"
                                                                   Width="{Binding ImageSelectorThumbnailWidthVideo}"
                                                                   Height="{Binding ImageSelectorThumbnailHeight}" 
@@ -600,6 +602,36 @@
                                                                     </GroupBox.ContextMenu>
                                                                 </GroupBox>
                                                             </DataTemplate>
+
+                                                            <!--? //// RelatedImageTemplate //// -->
+                                                            <DataTemplate x:Key="RelatedImageTemplate" DataType="{x:Type models:ImageSetModel}">
+                                                                <GroupBox adonisExtensions:LayerExtension.IncreaseLayer="False"
+                                                                          Width="{Binding ImageSelectorThumbnailWidthVideo}"
+                                                                          Height="{Binding ImageSelectorThumbnailHeight}" 
+                                                                          ToolTipService.ShowDuration="{StaticResource MaxInt32}"
+                                                                          HorizontalAlignment="Center"
+                                                                          Background="DarkRed">
+
+                                                                    <!--? Thumbnail -->
+                                                                    <Image ToolTipService.ShowDuration="{StaticResource MaxInt32}"
+                                                                           Width="{Binding ImageSelectorThumbnailWidth}"
+                                                                           Height="{Binding ImageSelectorThumbnailHeight}"
+                                                                           Margin="3"
+                                                                           HorizontalAlignment="Center"
+                                                                           Loaded="Image_OnLoaded_LowQuality"
+                                                                           Unloaded="Image_OnUnloaded">
+                                                                        <Image.ContextMenu>
+                                                                            <ContextMenu>
+                                                                                <MenuItem Header="Enabled" StaysOpenOnClick="True" IsCheckable="True"
+                                                                                    IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                                    ToolTip="Disabling a set will stop it from appearing here, 
+                                                                                      if you want to see the set again select Enable Detection of Inactive Images"/>
+                                                                            </ContextMenu>
+                                                                        </Image.ContextMenu>
+                                                                    </Image>
+
+                                                                </GroupBox>
+                                                            </DataTemplate>
                                                         </ContentControl.Resources>
 
                                                         <!-- // Template Control // -->
@@ -612,6 +644,9 @@
                                                                     <!-- If IsVideo, use the VideoTemplate instead -->
                                                                     <DataTrigger Binding="{Binding IsVideo}" Value="True">
                                                                         <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource VideoTemplate}"/>
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding IsRelatedImageSet}" Value="True">
+                                                                        <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource RelatedImageTemplate}"/>
                                                                     </DataTrigger>
                                                                 </DataTemplate.Triggers>
                                                             </DataTemplate>
@@ -688,11 +723,11 @@
 
                         <!--? Image Viewer -->
                         <GroupBox  Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3"
-                               Margin="0 5 0 0" HorizontalAlignment="Center">
+                                   Margin="0 5 0 0" HorizontalAlignment="Center">
                             <StackPanel Focusable="False">
 
                                 <!-- //// Binding to ImageModel //// -->
-                                <ContentControl Content="{Binding SelectedImage}" HorizontalAlignment="Center">
+                                <ContentControl Content="{Binding SelectedImageModel}" HorizontalAlignment="Center">
                                     <!-- Resources -->
                                     <ContentControl.Resources>
                                         <!-- Remember that the Binding context here refers to what's given in the Content of the ContentTemplate, not what ReSharper says -->
@@ -709,8 +744,8 @@
                                                     </DataTemplate>
                                                     <!-- GIF -->
                                                     <DataTemplate x:Key="GIFTemplate">
-                                                        <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"
-                                                                           Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" />
+                                                        <MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play"
+                                                                      Loaded="Tooltip_MediaElement_OnLoaded" DataContextChanged="Inspector_OnDataContextChanged"  MediaEnded="MediaElement_OnMediaEnded"/>
                                                     </DataTemplate>
                                                 </ContentControl.Resources>
                                                 <!-- Template Control -->
@@ -739,13 +774,13 @@
                                                         <!-- ? FFME -->
                                                         <DataTemplate x:Key="FFME">
                                                             <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"
-                                                                               Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded"
+                                                                               Loaded="Tooltip_MediaElement_OnLoaded" DataContextChanged="Inspector_OnDataContextChanged"
                                                                                Volume="{Binding ActualVolume, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                         </DataTemplate>
                                                         <!-- ? Windows -->
                                                         <DataTemplate x:Key="Windows">
-                                                            <MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" MediaEnded="MediaElement_OnMediaEnded"
-                                                                          Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" 
+                                                            <MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play"
+                                                                          Loaded="Tooltip_MediaElement_OnLoaded" DataContextChanged="Inspector_OnDataContextChanged"  MediaEnded="MediaElement_OnMediaEnded"
                                                                           Volume="{Binding ActualVolume, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                         </DataTemplate>
                                                     </ContentControl.Resources>

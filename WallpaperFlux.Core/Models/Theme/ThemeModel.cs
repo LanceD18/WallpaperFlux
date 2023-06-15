@@ -43,11 +43,6 @@ namespace WallpaperFlux.Core.Models.Theme
             Settings.ThemeSettings.FrequencyModel.Init();
         }
 
-        public string GetRandomImagePath(int displayIndex)
-        {
-            return WallpaperRandomizer.NextWallpapers[displayIndex];
-        }
-
         /*x
         public string GetRandomImagePath()
         {

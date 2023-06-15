@@ -245,17 +245,17 @@ namespace WallpaperFlux.Core.Models.Tagging
         }
         #endregion
         
-        public string ExceptionText => IsNamingSelectionOfSelectedImage ? "+" : "-";
+        public string ExceptionText => IsNamingExceptionOfSelectedImage ? "+" : "-";
 
-        public Color ExceptionColor => IsNamingSelectionOfSelectedImage ? Color.LimeGreen : UseForNaming_IncludeCategory ? Color.White :  Color.Red;
+        public Color ExceptionColor => IsNamingExceptionOfSelectedImage ? Color.LimeGreen : UseForNaming_IncludeCategory ? Color.White :  Color.Red;
 
-        public bool IsNamingSelectionOfSelectedImage
+        public bool IsNamingExceptionOfSelectedImage
         {
             get
             {
-                if (WallpaperFluxViewModel.Instance.SelectedImage != null)
+                if (WallpaperFluxViewModel.Instance.SelectedImage is ImageModel imageModel)
                 {
-                    return WallpaperFluxViewModel.Instance.SelectedImage.Tags.GetTagNamingExceptions().Contains(this);
+                    return imageModel.Tags.GetTagNamingExceptions().Contains(this);
                 }
 
                 return false;
@@ -327,7 +327,7 @@ namespace WallpaperFlux.Core.Models.Tagging
             // Image Control
             AddTagToSelectedImagesCommand = new MvxCommand(() => AddTagToImages(WallpaperFluxViewModel.Instance.GetAllHighlightedImages(), false));
             AddTagToEntireImageGroupCommand = new MvxCommand(() => AddTagToImages(WallpaperFluxViewModel.Instance.GetImagesInAllTabs(), true));
-            RemoveTagFromSelectedImageCommand = new MvxCommand(() => RemoveTagFromImages(new[] { WallpaperFluxViewModel.Instance.SelectedImage }, false));
+            RemoveTagFromSelectedImageCommand = new MvxCommand(() => RemoveTagFromImages( ImageUtil.GetImageSet(WallpaperFluxViewModel.Instance.SelectedImage), false));
             RemoveTagFromSelectedImagesCommand = new MvxCommand(() => RemoveTagFromImages(WallpaperFluxViewModel.Instance.GetAllHighlightedImages(), false));
             RemoveTagFromEntireImageGroupCommand = new MvxCommand(() => RemoveTagFromImages(WallpaperFluxViewModel.Instance.GetImagesInAllTabs(), true));
 
@@ -495,6 +495,11 @@ namespace WallpaperFlux.Core.Models.Tagging
         /// </summary>
         /// <param name="image"></param>
         /// <returns></returns>
+        public bool ContainsLinkedImage(BaseImageModel image)
+        {
+            return ImageUtil.PerformImageCheck(image, ContainsLinkedImage); // we only need one valid image to verify an image set
+        }
+
         public bool ContainsLinkedImage(ImageModel image)
         {
             if (LinkedImages.Contains(image)) return true;
@@ -667,19 +672,20 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         public void ToggleNamingException()
         {
-            if (WallpaperFluxViewModel.Instance.SelectedImage == null) return;
-
-            if (!IsNamingSelectionOfSelectedImage)
+            if (WallpaperFluxViewModel.Instance.SelectedImage is ImageModel imageModel)
             {
-                WallpaperFluxViewModel.Instance.SelectedImage.Tags.AddNamingException(this);
-            }
-            else
-            {
-                WallpaperFluxViewModel.Instance.SelectedImage.Tags.RemoveNamingException(this);
-            }
+                if (!IsNamingExceptionOfSelectedImage)
+                {
+                    imageModel.Tags.AddNamingException(this);
+                }
+                else
+                {
+                    imageModel.Tags.RemoveNamingException(this);
+                }
 
-            RaisePropertyChanged(() => ExceptionText);
-            RaisePropertyChanged(() => ExceptionColor);
+                RaisePropertyChanged(() => ExceptionText);
+                RaisePropertyChanged(() => ExceptionColor);
+            }
         }
 
         #endregion

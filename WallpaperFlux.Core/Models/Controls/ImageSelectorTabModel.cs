@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Linq;
@@ -9,10 +10,10 @@ using WallpaperFlux.Core.ViewModels;
 namespace WallpaperFlux.Core.Models.Controls
 {
     //? Represents a tab within the Image Selector
-    public class ImageSelectorTabModel : TabModel<ImageModel>, ITabModel<ImageModel>
+    public class ImageSelectorTabModel : TabModel<BaseImageModel>, ITabModel<BaseImageModel>
     {
-        private ImageModel _selectedImage;
-        public ImageModel SelectedImage
+        private BaseImageModel _selectedImage;
+        public BaseImageModel SelectedImage
         {
             get
             {
@@ -36,7 +37,49 @@ namespace WallpaperFlux.Core.Models.Controls
             }
         }
 
-        public ImageSelectorTabModel(int index) : base(index) { }
+        public HashSet<ImageModel> ImageItems = new HashSet<ImageModel>();
+
+        public HashSet<ImageSetModel> ImageSetItems = new HashSet<ImageSetModel>();
+
+        public ImageSelectorTabModel(int index) : base(index)
+        {
+            Items.CollectionChanged += ItemsOnCollectionChanged_SplitImagesAndSets;
+        }
+
+        private void ItemsOnCollectionChanged_SplitImagesAndSets(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.OldItems != null)
+            {
+                foreach (var item in e.OldItems)
+                {
+                    if (item is ImageModel imageModel)
+                    {
+                        ImageItems.Remove(imageModel);
+                    }
+
+                    if (item is ImageSetModel imageSet)
+                    {
+                        ImageSetItems.Remove(imageSet);
+                    }
+                }
+            }
+
+            if (e.NewItems != null)
+            {
+                foreach (var item in e.NewItems)
+                {
+                    if (item is ImageModel imageModel)
+                    {
+                        ImageItems.Add(imageModel);
+                    }
+
+                    if (item is ImageSetModel imageSet)
+                    {
+                        ImageSetItems.Add(imageSet);
+                    }
+                }
+            }
+        }
 
         //? Set through the View.xaml.cs
         public double ImageSelectorTabWrapWidth { get; set; }
@@ -44,16 +87,24 @@ namespace WallpaperFlux.Core.Models.Controls
         //x//? The items won't on time without this (tags won't be properyl added)
         //xpublic void RaisePropertyChangedImages() => RaisePropertyChanged(() => Items);
 
-        public ImageModel[] GetSelectedItems() => Items.Where(f => f.IsSelected).ToArray();
+        public BaseImageModel[] GetSelectedItems() => Items.Where(f => f.IsSelected).ToArray();
 
-        public ImageModel[] GetAllItems() => Items.ToArray();
+        public ImageModel[] GetSelectedImages() => ImageItems.Where(f => f.IsSelected).ToArray();
+
+        public ImageSetModel[] GetSelectedSets() => ImageSetItems.Where(f => f.IsSelected).ToArray();
+
+        public BaseImageModel[] GetAllItems() => Items.ToArray();
+
+        public ImageModel[] GetAllImages() => ImageItems.ToArray();
+
+        public ImageSetModel[] GetAllSets() => ImageSetItems.ToArray();
 
         public void SelectAllItems()
         {
             // so that methods such as DeselectItems() can function as intended to images being selected in tabs that are not visible
             if (SelectedImage == null) SelectedImage = Items[0];
 
-            foreach (ImageModel image in Items)
+            foreach (BaseImageModel image in Items)
             {
                 image.IsSelected = true;
             }
@@ -65,7 +116,7 @@ namespace WallpaperFlux.Core.Models.Controls
         {
             if (SelectedImage != null) // if this is null, then no images have been selected here so we have no need to deselect
             {
-                foreach (ImageModel image in Items)
+                foreach (BaseImageModel image in Items)
                 {
                     image.IsSelected = false;
                 }
@@ -74,11 +125,11 @@ namespace WallpaperFlux.Core.Models.Controls
             //! TaggingUtil.HighlightTags(); [THIS IS HANDLED IN WallpaperFluxViewModel!!!]
         }
 
-        public void RemoveImage(ImageModel image) => RemoveImageRange(new ImageModel[] { image });
+        public void RemoveImage(BaseImageModel image) => RemoveImageRange(new BaseImageModel[] { image });
 
-        public void RemoveImageRange(ImageModel[] images)
+        public void RemoveImageRange(BaseImageModel[] images)
         {
-            foreach (ImageModel image in images)
+            foreach (BaseImageModel image in images)
             {
                 image.IsSelected = false;
             }
@@ -93,7 +144,7 @@ namespace WallpaperFlux.Core.Models.Controls
         {
             for (var i = 0; i < Items.Count; i++)
             {
-                ImageModel image = Items[i];
+                BaseImageModel image = Items[i];
                 if (!ThemeUtil.Theme.Images.ContainsImage(image))
                 {
                     Items.RemoveAt(i);

@@ -22,6 +22,8 @@ namespace WallpaperFlux.Core.Collections
             {ImageType.Video, new Dictionary<string, ImageModel>()}
         };
 
+        private HashSet<ImageSetModel> ImageSets = new HashSet<ImageSetModel>();
+
         // TODO Consider removing this Action
         public Action<ImageModel> OnRemove; //? If you need multiple OnRemove events, use/re-purpose the delegate format used by ReactiveList
 
@@ -76,6 +78,11 @@ namespace WallpaperFlux.Core.Collections
             return images;
         }
 
+        public void AddImageSet(ImageSetModel imageSet)
+        {
+            ImageSets.Add(imageSet);
+        }
+
         public void UpdateImageCollectionPath(ImageModel image, string oldPath, string newPath)
         {
             // TODO YOU FORGOT TO UPDATE THE RANK CONTROLLER (Might want to do this in the ImageModel instead)
@@ -88,7 +95,7 @@ namespace WallpaperFlux.Core.Collections
         //? Keep in mind that all Remove methods trace back to this method, so sweeping changes that should apply to all of them should be placed here
         public bool RemoveImage(ImageModel image)
         {
-            ThemeUtil.Theme.RankController.RemoveRankedImage(image);
+            ThemeUtil.Theme.RankController.RemoveRankedImage(image, true);
 
             image.RemoveAllTags();
             WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.RemoveImage(image);
@@ -145,7 +152,24 @@ namespace WallpaperFlux.Core.Collections
             return GetImage(path) != null;
         }
 
+        public bool ContainsImage(BaseImageModel image)
+        {
+            if (image is ImageModel imageModel)
+            {
+                return ContainsImage(imageModel);
+            }
+
+            if (image is ImageSetModel relatedImageModel)
+            {
+                return ContainsImage(relatedImageModel);
+            }
+
+            return false;
+        }
+
         public bool ContainsImage(ImageModel image) => ImageContainer[image.ImageType].ContainsValue(image);
+
+        public bool ContainsImage(ImageSetModel image) => ImageSets.Contains(image);
 
         public ImageModel GetImage(string path)
         {
@@ -192,16 +216,16 @@ namespace WallpaperFlux.Core.Collections
 
         public ImageModel[] GetAllImages()
         {
-            List<ImageModel> imagePaths = new List<ImageModel>();
+            List<ImageModel> images = new List<ImageModel>();
             foreach (ImageType imageType in ImageContainer.Keys)
             {
-                imagePaths.AddRange(GetAllImages(imageType));
+                images.AddRange(GetAllImages(imageType));
             }
 
-            return imagePaths.ToArray();
+            return images.ToArray();
         }
 
         //? RankController classifies images by images type by default, so performing this action there is much easier
-        public ImageModel[] GetAllImagesOfType(ImageType imageType) => ThemeUtil.Theme.RankController.GetAllImagesOfType(imageType);
+        public BaseImageModel[] GetAllImagesOfType(ImageType imageType) => ThemeUtil.Theme.RankController.GetAllImagesOfType(imageType);
     }
 }

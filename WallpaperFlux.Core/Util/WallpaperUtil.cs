@@ -109,26 +109,22 @@ namespace WallpaperFlux.Core.Util
             return workerw;
         }
 
-        public static void SetWallpaper(int index, bool ignoreRandomization, bool forceChange)
-        {
-            SetWallpaper(index, string.Empty, ignoreRandomization, forceChange);
-        }
-
         // TODO With the presetWallpaperPath I don't think you need ignoreRandomization anymore
         // TODO Both use cases, setting the PreviousWallpaper and directly setting an image as the Wallpaper can use presetWallpaperPath
-        public static bool SetWallpaper(int index, string presetWallpaperPath, bool ignoreRandomization, bool forceChange)
+        public static bool SetWallpaper(int index, bool ignoreRandomization, bool forceChange, ImageModel presetWallpaper = null)
         {
             string wallpaperPath;
 
             // Set Next Wallpaper
-            if (presetWallpaperPath == String.Empty)
+            if (presetWallpaper == null)
             {
                 // if ignoring randomization then we will just use the current ActiveWallpaper path (Likely means that a wallpaper on one monitor changed before/after the others)
                 if (!ignoreRandomization)
                 {
                     if (ThemeUtil.Theme.WallpaperRandomizer.SetNextWallpaperOrder(index))
                     {
-                        wallpaperPath = ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index];
+                        //? SetNextWallpaperOrder should be called before calling this
+                        wallpaperPath = TryGetWallpaperPath(ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index]);
                     }
                     else
                     {
@@ -138,13 +134,13 @@ namespace WallpaperFlux.Core.Util
                 }
                 else
                 {
-                    wallpaperPath = ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index];
+                    wallpaperPath = TryGetWallpaperPath(ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index]);
                 }
             }
             else
             {
-                wallpaperPath = presetWallpaperPath;
-                ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index] = presetWallpaperPath; // need to update the active wallpaper to reflect this preset change
+                wallpaperPath = presetWallpaper.Path;
+                ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index] = presetWallpaper; // need to update the active wallpaper to reflect this preset change
             }
 
             // Check for errors and update the notify icon
@@ -166,13 +162,38 @@ namespace WallpaperFlux.Core.Util
             }
 
             Debug.WriteLine("Setting Wallpaper to Display " + index + ": " + wallpaperPath);
-            // TODO Want want to use IoC for this at some point
+            // TODO Would be a good idea to use IoC for this at some point
             if (ThemeUtil.Theme.Images.ContainsImage(wallpaperPath))
             {
                 WallpaperHandler.OnWallpaperChange(index, ThemeUtil.Theme.Images.GetImage(wallpaperPath), forceChange); //? hooked to a call from WallpaperFlux.WPF
                 WallpaperFluxViewModel.Instance.DisplaySettings[index].ResetTimer(true);
             }
             return true;
+        }
+
+        private static string TryGetWallpaperPath(BaseImageModel image)
+        {
+            if (image is ImageModel imageModel)
+            {
+                return imageModel.Path;
+            }
+
+            if (image is ImageSetModel imageSet)
+            {
+                switch (imageSet.RelatedImageType)
+                {
+                    case RelatedImageType.Alt:
+                        throw new NotImplementedException();
+
+                    case RelatedImageType.Animate:
+                        throw new NotImplementedException();
+
+                    case RelatedImageType.Merge:
+                        throw new NotImplementedException();
+                }
+            }
+
+            return string.Empty;
         }
 
         public static void MuteWallpapers()

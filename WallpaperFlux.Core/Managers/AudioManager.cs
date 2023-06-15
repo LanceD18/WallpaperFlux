@@ -9,6 +9,7 @@ using LanceTools.IO;
 using LanceTools.WindowsUtil;
 using MvvmCross;
 using WallpaperFlux.Core.IoC;
+using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Util;
 
 namespace WallpaperFlux.Core.Managers
@@ -53,11 +54,19 @@ namespace WallpaperFlux.Core.Managers
             {
                 //x Debug.WriteLine("Checking for mute conditions");
                 int potentialAudioCount = 0;
-                foreach (string wallpaper in ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers)
+                foreach (BaseImageModel wallpaper in ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers)
                 {
-                    if (WallpaperUtil.IsSupportedVideoType(wallpaper))
+                    if (wallpaper is ImageModel imageModel)
                     {
-                        potentialAudioCount++;
+                        string wallpaperPath = imageModel.Path;
+
+                        if (FileUtil.Exists(wallpaperPath))
+                        {
+                            if (WallpaperUtil.IsSupportedVideoType(wallpaperPath))
+                            {
+                                potentialAudioCount++;
+                            }
+                        }
                     }
                 }
 
@@ -140,14 +149,18 @@ namespace WallpaperFlux.Core.Managers
                     */
 
                     List<string> potentialNames = new List<string>();
-                    foreach (string wallpaper in ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers)
+                    foreach (BaseImageModel wallpaper in ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers)
                     {
-                        if (FileUtil.Exists(wallpaper))
+                        if (wallpaper is ImageModel imageModel)
                         {
-                            if (WallpaperUtil.IsSupportedVideoType(wallpaper)) // only videos should be checked
+                            string wallpaperPath = imageModel.Path;
+                            if (FileUtil.Exists(wallpaperPath))
                             {
-                                //xDebug.WriteLine("Enabled: " + new FileInfo(wallpaper).Name);
-                                potentialNames.Add(new FileInfo(wallpaper).Name);
+                                if (WallpaperUtil.IsSupportedVideoType(wallpaperPath)) // only videos should be checked
+                                {
+                                    //xDebug.WriteLine("Enabled: " + new FileInfo(wallpaper).Name);
+                                    potentialNames.Add(new FileInfo(wallpaperPath).Name);
+                                }
                             }
                         }
                     }
