@@ -152,11 +152,34 @@ namespace WallpaperFlux.Core.Controllers
                 ThemeUtil.Theme.RankController.PercentileController.UpdateRankPercentiles(imageType); //? this method sets the above booleans to false
             }
 
-            Dictionary<int, double> modifiedRankPercentiles = ThemeUtil.Theme.RankController.PercentileController.GetRankPercentiles(imageType);
+            return GetRandomRank(ref rand, imageType, ThemeUtil.Theme.RankController.PercentileController);
+        }
+
+        public static int GetRandomRank(ref Random rand, ImageType imageType, PercentileController percentileController)
+        {
+            Dictionary<int, double> modifiedRankPercentiles = percentileController.GetRankPercentiles(imageType);
 
             if (modifiedRankPercentiles.Count <= 0) return -1; // no ranks were valid (all had 0 images)
 
             return rand.NextInWeightedArray(modifiedRankPercentiles.Keys.ToArray(), modifiedRankPercentiles.Values.ToArray());
+        }
+
+        public static BaseImageModel GetRandomImageFromPreset(BaseImageModel[] images, ImageType imageType, bool checkForSet)
+        {
+            PercentileController percentileController = new PercentileController(images, imageType, checkForSet);
+
+            Random rand = new Random();
+            int randomRank = GetRandomRank(ref rand, imageType, percentileController);
+
+            if (randomRank != -1)
+            {
+                return percentileController.GetRandomImageOfRank(randomRank, ref rand, imageType);
+            }
+            else
+            {
+                Debug.WriteLine("-1 rank selected | Either all ranks are 0 or all images are disabled");
+                return null;
+            }
         }
 
         #region Wallpaper Order Modifiers
@@ -183,7 +206,7 @@ namespace WallpaperFlux.Core.Controllers
 
                     if (ThemeUtil.Theme.Settings.ThemeSettings.HigherRankedImagesOnLargerDisplays)
                     {
-                        reorderedWallpapers = (from f in wallpapersToModify orderby ImageUtil.GetRank(f) descending select f).ToArray();
+                        reorderedWallpapers = (from f in wallpapersToModify orderby f.Rank descending select f).ToArray();
 
                         // both ranking and size are now a factor so first an image's rank will determine their index and then afterwards
                         // any ranking conflicts have their indexes determined by size rather than being random
@@ -209,7 +232,7 @@ namespace WallpaperFlux.Core.Controllers
             Dictionary<int, List<BaseImageModel>> rankConflicts = new Dictionary<int, List<BaseImageModel>>();
             foreach (BaseImageModel wallpaper in reorderedWallpapers)
             {
-                int wallpaperRank = ImageUtil.GetRank(wallpaper);
+                int wallpaperRank = wallpaper.Rank;
                 if (!rankConflicts.ContainsKey(wallpaperRank))
                 {
                     rankConflicts.Add(wallpaperRank, new List<BaseImageModel> { wallpaper });

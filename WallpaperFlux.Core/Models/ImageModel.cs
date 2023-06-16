@@ -59,6 +59,7 @@ namespace WallpaperFlux.Core.Models
 
         public FolderModel ParentFolder;
 
+        /*x
         private int _rank;
         [DataMember(Name = "Rank")]
         public int Rank
@@ -66,24 +67,13 @@ namespace WallpaperFlux.Core.Models
             get => _rank;
             set
             {
-                /*
-                if (ImageType == ImageType.None) // either this is an invalid file or the image has not been instantiated yet
-                {
-
-                }
-
-                if (ImageType == ImageType.None) // this is an invalid file, end
-                {
-                    // TODO Include with the UI Logger
-                    Debug.WriteLine("Invalid File Encountered: " + Path);
-                    return;
-                }
-                */
-
-                ThemeUtil.Theme.RankController.ModifyRank(this, _rank, ref value); //? this should be called first to allow the old rank to be identified
                 SetProperty(ref _rank, value);
+                RaisePropertyChanged(() => Rank);
+
+                if (IsInRelatedImageSet) ParentRelatedImageModel.UpdateAverageRank();
             }
         }
+        */
 
         [DataMember(Name = "Tags")] public ImageTagCollection Tags;
 
@@ -209,10 +199,6 @@ namespace WallpaperFlux.Core.Models
         public IMvxCommand PasteTagsToTagBoardCommand { get; set; }
 
         public IMvxCommand SetTagsToTagBoardCommand { get; set; }
-
-        public IMvxCommand DecreaseRankCommand { get; set; }
-
-        public IMvxCommand IncreaseRankCommand { get; set; }
         #endregion
 
         #region UI Control
@@ -286,8 +272,6 @@ namespace WallpaperFlux.Core.Models
             DeleteImageCommand = new MvxCommand(() => ImageUtil.DeleteImage(this));
 
             RankImageCommand = new MvxCommand(() => ImageUtil.PromptRankImage(this));
-            DecreaseRankCommand = new MvxCommand(() => Rank--);
-            IncreaseRankCommand = new MvxCommand(() => Rank++);
 
             PasteTagBoardCommand = new MvxCommand(PasteTagBoard);
             PasteTagsToTagBoardCommand = new MvxCommand(() => TaggingUtil.AddTagsToTagboard(Tags.GetTags().ToArray()));
@@ -344,15 +328,7 @@ namespace WallpaperFlux.Core.Models
 
         public void UpdatePath(string newPath) => Path = newPath; //? UPDATES TO OTHER PROPERTIES DONE IN THE SETTER OF PATH
 
-        public void UpdateEnabledState()
-        {
-            if (JsonUtil.IsLoadingData) return;
-
-            //? Modifying the image's rank will check if the image is enabled, re-adding or removing the image as needed
-            ThemeUtil.RankController.ModifyRank(this, _rank, ref _rank);
-        }
-
-        public override bool IsEnabled()
+        public override bool IsEnabled(bool checkForSet = false) //! check for set ensures that we can avoid disabling images that are in sets *when they are needed*
         {
             if (!base.IsEnabled())
             {
@@ -360,9 +336,12 @@ namespace WallpaperFlux.Core.Models
                 return false;
             }
 
-            Active = false; // recheck this every time IsEnabled is called
+            if (!checkForSet)
+            {
+                Active = false; //! we need to set this to false AGAIN because base.IsEnabled() will set Active to TRUE if successful
+            }
 
-            if (IsInRelatedImageSet) return false;
+            if (IsInRelatedImageSet && !checkForSet) return false;
 
             if (ParentFolder == null)
             {
@@ -382,7 +361,11 @@ namespace WallpaperFlux.Core.Models
 
             if (!Tags.AreTagsEnabled()) return false;
 
-            Active = true; // if we reach this point, then the image is in fact Active
+            if (!checkForSet)
+            {
+                Active = true; // if we reach this point, then the image is in fact Active
+            }
+
             return true;
         }
 

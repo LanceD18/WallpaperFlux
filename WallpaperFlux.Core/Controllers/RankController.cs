@@ -19,7 +19,7 @@ namespace WallpaperFlux.Core.Controllers
     public class RankController
     {
         // Structure: [ImageType (Key)][Rank (Index)][Image Path (Value of Index)]
-        private Dictionary<ImageType, ReactiveList<ReactiveHashSet<BaseImageModel>>> RankData = new Dictionary<ImageType, ReactiveList<ReactiveHashSet<BaseImageModel>>>()
+        private Dictionary<ImageType, ReactiveList<ReactiveHashSet<BaseImageModel>>> RankData = new Dictionary<ImageType, ReactiveList<ReactiveHashSet<BaseImageModel>>>
         {
             {ImageType.Static, new ReactiveList<ReactiveHashSet<BaseImageModel>>()},
             {ImageType.GIF, new ReactiveList<ReactiveHashSet<BaseImageModel>>()},
@@ -47,12 +47,24 @@ namespace WallpaperFlux.Core.Controllers
         }
 
         //! this method should only be called by the Setter of the ImageModel Rank property unless otherwise noted
-        public void ModifyRank(BaseImageModel image, int oldRank, ref int newRank)
+        public void ModifyRank(BaseImageModel image, int oldRank, ref int newRank, bool modifyingImageSet = false)
         {
             if (JsonUtil.IsLoadingData) return; //? this will be revisited for all images once loading is finished and all folders are re-validated
 
             // clamps the given rank to the rank-range for just in case something out-of-bounds is given
-            newRank = ClampValueToRankRange(newRank);
+            if (!modifyingImageSet)
+            {
+                newRank = ClampValueToRankRange(newRank);
+            }
+            else
+            {
+                //? if we were to modify the rank reference the override rank would be updated every single time
+                int testRank = ClampValueToRankRange(newRank);
+                if (testRank != newRank)
+                {
+                    newRank = testRank;
+                }
+            }
 
             RankData[image.ImageType][oldRank].Remove(image);
             RankData[image.ImageType][newRank].Add(image);
@@ -62,14 +74,14 @@ namespace WallpaperFlux.Core.Controllers
         //! find a better solution to limit this procedure's access in the future
         public void RemoveRankedImage(BaseImageModel image, bool validUseCase)
         {
-            RankData[image.ImageType][ImageUtil.GetRank(image)].Remove(image);
+            RankData[image.ImageType][image.Rank].Remove(image);
         }
 
         //! should only be used in limited circumstances, the bool only exists to remind us of that (we don't want rogue images)
         //! find a better solution to limit this procedure's access in the future
         public void AddRankedImage(BaseImageModel image, bool validUseCase)
         {
-            RankData[image.ImageType][ImageUtil.GetRank(image)].Add(image);
+            RankData[image.ImageType][image.Rank].Add(image);
         }
 
         public VariableRef<Dictionary<ImageType, ReactiveList<ReactiveHashSet<BaseImageModel>>>> CreateRankDataRef()
@@ -140,8 +152,13 @@ namespace WallpaperFlux.Core.Controllers
 
         public BaseImageModel GetRandomImageOfRank(int rank, ref Random rand, ImageType imageType)
         {
-            int randomImage = rand.Next(0, RankData[imageType][rank].Count);
-            return RankData[imageType][rank].ElementAt(randomImage);
+            return GetRandomImageOfRank(rank, ref rand, imageType, RankData);
+        }
+
+        public BaseImageModel GetRandomImageOfRank(int rank, ref Random rand, ImageType imageType, Dictionary<ImageType, ReactiveList<ReactiveHashSet<BaseImageModel>>> rankData)
+        {
+            int randomImage = rand.Next(0, rankData[imageType][rank].Count);
+            return rankData[imageType][rank].ElementAt(randomImage);
         }
 
         public int ClampValueToRankRange(int value)
@@ -210,14 +227,19 @@ namespace WallpaperFlux.Core.Controllers
         {
             foreach (ImageType imageType in RankData.Keys)
             {
-                RankData[imageType].Add(new ReactiveHashSet<BaseImageModel>()); // this will be rank 0
+                InitializeRankDataImageType(RankData, maxRank, imageType);
+            }
+        }
 
-                for (int i = 0; i < maxRank; i++)
-                {
-                    // adds rank 1 at a time to the max, there will be 1 additional slot to account for rank 0 (added above)
-                    // due to this, you can directly reference an index by its rank
-                    RankData[imageType].Add(new ReactiveHashSet<BaseImageModel>());
-                }
+        public void InitializeRankDataImageType(Dictionary<ImageType, ReactiveList<ReactiveHashSet<BaseImageModel>>> rankData, int maxRank, ImageType imageType)
+        {
+            rankData[imageType].Add(new ReactiveHashSet<BaseImageModel>()); // this will be rank 0
+
+            for (int i = 0; i < maxRank; i++)
+            {
+                // adds rank 1 at a time to the max, there will be 1 additional slot to account for rank 0 (added above)
+                // due to this, you can directly reference an index by its rank
+                rankData[imageType].Add(new ReactiveHashSet<BaseImageModel>());
             }
         }
 

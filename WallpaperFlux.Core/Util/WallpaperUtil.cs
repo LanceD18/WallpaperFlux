@@ -6,6 +6,7 @@ using System.Text;
 using LanceTools.WindowsUtil;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using MvvmCross;
+using WallpaperFlux.Core.Controllers;
 using WallpaperFlux.Core.IoC;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Models.Theme;
@@ -180,6 +181,16 @@ namespace WallpaperFlux.Core.Util
 
             if (image is ImageSetModel imageSet)
             {
+                //! for the moment we will just do Alt by default
+
+                BaseImageModel wallpaper = WallpaperRandomizationController.GetRandomImageFromPreset(imageSet.RelatedImages, imageSet.ImageType, true);
+
+                if (wallpaper is ImageModel wallpaperImageModel)
+                {
+                    return wallpaperImageModel.Path;
+                }
+
+                /* TODO
                 switch (imageSet.RelatedImageType)
                 {
                     case RelatedImageType.Alt:
@@ -191,6 +202,7 @@ namespace WallpaperFlux.Core.Util
                     case RelatedImageType.Merge:
                         throw new NotImplementedException();
                 }
+                */
             }
 
             return string.Empty;

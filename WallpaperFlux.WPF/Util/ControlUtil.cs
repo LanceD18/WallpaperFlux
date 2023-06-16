@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Models.Controls;
+using WallpaperFlux.Core.ViewModels;
 
 namespace WallpaperFlux.WPF.Util
 {
@@ -24,7 +25,7 @@ namespace WallpaperFlux.WPF.Util
             Debug.WriteLine("Singular Selection | Deselecting Other Tabs");
             foreach (ITabModel<U> tab in items)
             {
-                if (tab != selectedItem) // the WPF will handle deselecting the selected item itself (without deselecting the singular selection)
+                if (tab != selectedItem) //? the WPF will handle deselecting the selected item itself (without deselecting the singular selection)
                 {
                     //x Debug.WriteLine("Tab Deselected");
                     tab.DeselectAllItems();

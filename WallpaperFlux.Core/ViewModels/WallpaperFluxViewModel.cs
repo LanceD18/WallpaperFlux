@@ -232,8 +232,6 @@ namespace WallpaperFlux.Core.ViewModels
         {
             get
             {
-                if (SelectedImage == null) return null;
-
                 if (SelectedImage is ImageModel selectedImage)
                 {
                     HashSet<TagModel> tags = selectedImage.Tags.GetTags();
@@ -255,8 +253,34 @@ namespace WallpaperFlux.Core.ViewModels
         public double InspectorHeight
         {
             get => _inspectorHeight;
-            set => SetProperty(ref _inspectorHeight, value); //? needed to update the height when resizing the window
+            set //? needed to update the height when resizing the window
+            {
+                SetProperty(ref _inspectorHeight, value);
+                RaisePropertyChanged(() => ImageSetInspectorListBoxHeight);
+            }
         }
+
+        public double ImageSetInspectorListBoxHeight => InspectorHeight - 100;
+
+        public MvxObservableCollection<ImageModel> InspectedImageSetImages
+        {
+            get
+            {
+                if (InspectedImageSet != null && ImageSetInspectorToggle) return new MvxObservableCollection<ImageModel>(InspectedImageSet.RelatedImages); // update active set view
+
+                if (SelectedImage == null) return null;
+
+                if (SelectedImage is ImageSetModel selectedSet)
+                {
+                    InspectedImageSet = selectedSet;
+                    return new MvxObservableCollection<ImageModel>(selectedSet.RelatedImages);
+                }
+
+                return null;
+            }
+        }
+
+        public ImageSetModel InspectedImageSet;
 
         #endregion
 
@@ -298,6 +322,31 @@ namespace WallpaperFlux.Core.ViewModels
                 SetProperty(ref _inspectorToggle, value);
 
                 MuteIfInspectorHasAudio();
+            }
+        }
+
+        private bool _imageSetInspectorToggle;
+        public bool ImageSetInspectorToggle
+        {
+            get => _imageSetInspectorToggle;
+            set
+            {
+
+                SetProperty(ref _imageSetInspectorToggle, value);
+
+                if (!value)
+                {
+                    // deselect all potentially selected images in the inspected image set
+                    foreach (ImageModel image in InspectedImageSet.RelatedImages) image.IsSelected = false;
+
+                    InspectedImageSet = null;
+                }
+
+                if (value)
+                {
+                    RaisePropertyChanged(() => InspectedImageSetImages);
+                    DeselectAllImages(); // don't want any regular images selected when viewing a set
+                }
             }
         }
 
@@ -354,6 +403,10 @@ namespace WallpaperFlux.Core.ViewModels
 
         public IMvxCommand CreateRelatedImageSetCommand { get; set; }
 
+        public IMvxCommand AddToImageSetCommand { get; set; }
+
+        public IMvxCommand RemoveFromSetCommand { get; set; }
+
         #endregion
 
         #region Inspector
@@ -361,6 +414,8 @@ namespace WallpaperFlux.Core.ViewModels
         public IMvxCommand ToggleInspectorCommand { get; set; }
 
         public IMvxCommand CloseInspectorCommand { get; set; }
+
+        public IMvxCommand CloseImageSetInspectorCommand { get; set; }
 
         #endregion
 
@@ -447,11 +502,14 @@ namespace WallpaperFlux.Core.ViewModels
             MoveImagesCommand = new MvxCommand(() => ImageRenamer.AutoMoveImageRange(GetAllHighlightedImages()));
             DeleteImagesCommand = new MvxCommand(() => ImageUtil.DeleteImageRange(GetAllHighlightedImages()));
             RankImagesCommand = new MvxCommand(() => ImageUtil.PromptRankImageRange(GetAllHighlightedImages()));
-            CreateRelatedImageSetCommand = new MvxCommand(() => ImageUtil.CreateRelatedImageSet(GetAllHighlightedImages()));
+            CreateRelatedImageSetCommand = new MvxCommand(() => ImageUtil.CreateRelatedImageSet(GetAllHighlightedImages(true, true)));
+            AddToImageSetCommand = new MvxCommand(AddToImageSet);
+            RemoveFromSetCommand = new MvxCommand(RemoveFromImageSet);
 
             // Image Inspector
             ToggleInspectorCommand = new MvxCommand(ToggleInspector);
             CloseInspectorCommand = new MvxCommand(CloseInspector);
+            CloseImageSetInspectorCommand = new MvxCommand(CloseImageSetInspector);
         }
 
         public void MuteIfInspectorHasAudio()
@@ -899,6 +957,8 @@ namespace WallpaperFlux.Core.ViewModels
             int invalidCounter = 0;
             string invalidImageString = INVALID_IMAGE_STRING_DEFAULT;
 
+            HashSet<ImageSetModel> encounteredSets = new HashSet<ImageSetModel>();
+
             for (int i = 0; i < tabCount; i++)
             {
                 // a reference of the index for use with the XAML code
@@ -915,12 +975,42 @@ namespace WallpaperFlux.Core.ViewModels
                         bool success = false;
 
                         //! KEEP IN MIND, if we check ContainsImage with the image object itself, then folder searches will not operate properly!!! [I think, double check the reason for writing this]
-                        if (image != null && ThemeUtil.Theme.Images.ContainsImage(image) /*xThemeUtil.Theme.Images.ContainsImage(image.Path, image.ImageType)*/) 
+                        if (image != null && ThemeUtil.Theme.Images.ContainsImage(image) /*xThemeUtil.Theme.Images.ContainsImage(image.Path, image.ImageType)*/)
                         {
-                            if (ThemeUtil.ThemeSettings.EnableDetectionOfInactiveImages || image.Active) //? we don't need to send an error message for user-disabled images
+                            Func<ImageSetModel, bool> checkForSet = set =>
+                            {
+                                if (!encounteredSets.Contains(set))
+                                {
+                                    encounteredSets.Add(set);
+                                    image = set;
+                                    return true;
+                                }
+
+                                return false;
+                            };
+
+                            if (image is ImageModel imageModel)
+                            {
+                                if (imageModel.IsInRelatedImageSet)
+                                {
+                                    if (imageModel.ParentRelatedImageModel.Active) //! this should NOT be combined with the above if statement! (would conflict with the else)
+                                    {
+                                        success = checkForSet.Invoke(imageModel.ParentRelatedImageModel);
+                                    }
+                                }
+                                else if (ThemeUtil.ThemeSettings.EnableDetectionOfInactiveImages || image.Active) //? we don't need to send an error message for user-disabled images
+                                {
+                                    success = true;
+                                }
+                            }
+                            else if (image is ImageSetModel imageSet)
+                            {
+                                success = checkForSet.Invoke(imageSet);
+                            }
+
+                            if (success)
                             {
                                 tabModel.Items.Add(image);
-                                success = true;
                             }
                         }
                         else
@@ -1000,40 +1090,84 @@ namespace WallpaperFlux.Core.ViewModels
         //? While initializing this in RebuildImageSelectorWithTagOptions() is an option, keep in mind that doing so will bring additional load times that don't always apply to the use case
         //? each search, so it's best to just wait for when the user *actually* wants to select all selected images at once and perform a global action, which won't be common
         //? for large selection and does not have a performance impact on smaller selections, where this action will be more common
-        public ImageModel[] GetImagesInAllTabs()
+        public ImageModel[] GetAllImagesInTabsOrSet()
         {
-            List<ImageModel> images = new List<ImageModel>();
-            foreach (ImageSelectorTabModel selectorTab in ImageSelectorTabs)
+            if (!ImageSetInspectorToggle)
             {
-                images.AddRange(selectorTab.GetAllImages());
-
-                foreach (ImageSetModel imageSet in selectorTab.GetAllSets())
+                List<ImageModel> images = new List<ImageModel>();
+                foreach (ImageSelectorTabModel selectorTab in ImageSelectorTabs)
                 {
-                    images.AddRange(imageSet.RelatedImages);
-                }
-            }
+                    images.AddRange(selectorTab.GetAllImages());
 
-            return images.ToArray();
+                    foreach (ImageSetModel imageSet in selectorTab.GetAllSets())
+                    {
+                        images.AddRange(imageSet.RelatedImages);
+                    }
+                }
+
+                return images.ToArray();
+            }
+            else
+            {
+                return InspectedImageSet.RelatedImages;
+            }
         }
 
         // gathers all selected/highlighted images in all image selector tabs
-        public ImageModel[] GetAllHighlightedImages()
+        public ImageModel[] GetAllHighlightedImages(bool ignoreSets = false, bool cancelIfSetFound = false)
         {
             List<ImageModel> images = new List<ImageModel>();
-            foreach (ImageSelectorTabModel selectorTab in ImageSelectorTabs)
-            {
-                images.AddRange(selectorTab.GetSelectedImages());
 
-                foreach (ImageSetModel imageSet in selectorTab.GetSelectedSets())
+            if (!ImageSetInspectorToggle)
+            {
+                foreach (ImageSelectorTabModel selectorTab in ImageSelectorTabs)
                 {
-                    images.AddRange(imageSet.RelatedImages);
+                    if (cancelIfSetFound)
+                    {
+                        if (selectorTab.GetSelectedSets().Length > 0)
+                        {
+                            MessageBoxUtil.ShowError("Additional sets found, operation cancelled");
+                            return null;
+                        }
+                    }
+
+                    images.AddRange(selectorTab.GetSelectedImages());
+
+                    if (!ignoreSets)
+                    {
+                        foreach (ImageSetModel imageSet in selectorTab.GetSelectedSets())
+                        {
+                            images.AddRange(imageSet.RelatedImages);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                foreach (ImageModel image in InspectedImageSet.RelatedImages)
+                {
+                    if (image.IsSelected)
+                    {
+                        images.Add(image);
+                    }
                 }
             }
 
             return images.ToArray();
         }
 
-        public ImageSelectorTabModel GetSelectorTabOfImage(ImageModel image)
+        public BaseImageModel[] GetAllHighlightedImageItems()
+        {
+            List<BaseImageModel> images = new List<BaseImageModel>();
+            foreach (ImageSelectorTabModel selectorTab in ImageSelectorTabs)
+            {
+                images.AddRange(selectorTab.GetSelectedItems());
+            }
+
+            return images.ToArray();
+        }
+
+        public ImageSelectorTabModel GetSelectorTabOfImage(BaseImageModel image)
         {
             foreach (ImageSelectorTabModel imageSelectorTab in ImageSelectorTabs)
             {
@@ -1046,12 +1180,12 @@ namespace WallpaperFlux.Core.ViewModels
             return null;
         }
 
-        public bool RemoveImageFromTab(ImageModel image)
+        public bool RemoveImageFromTab(BaseImageModel image)
         {
             return RemoveImageFromTab(image, out _);
         }
 
-        public bool RemoveImageFromTab(ImageModel image, out int index)
+        public bool RemoveImageFromTab(BaseImageModel image, out int index)
         {
             index = -1;
             ImageSelectorTabModel imageSelectorTab = GetSelectorTabOfImage(image);
@@ -1088,13 +1222,13 @@ namespace WallpaperFlux.Core.ViewModels
 
         public void ReplaceImageWithSet(ImageModel image, ImageSetModel imageSet)
         {
+            // TODO Remove if not given a purpose
             RemoveImageFromTab(image, out int index);
-
         }
 
         public void AddSetToTab(ImageSetModel image)
         {
-
+            // TODO Remove if not given a purpose
         }
 
         private void SelectAllImages()
@@ -1143,13 +1277,82 @@ namespace WallpaperFlux.Core.ViewModels
 
         #region Inspector
 
-        public void ToggleInspector() => InspectorToggle = !InspectorToggle;
+        public void ToggleInspector()
+        {
+            if (SelectedImage is ImageModel)
+            {
+                InspectorToggle = !InspectorToggle;
+            }
+
+            if (SelectedImage is ImageSetModel)
+            {
+                ImageSetInspectorToggle = !ImageSetInspectorToggle;
+            }
+        }
 
         public void OpenInspector() => InspectorToggle = true;
 
         public void CloseInspector() => InspectorToggle = false;
 
+        public void CloseImageSetInspector() => ImageSetInspectorToggle = false;
+
         public void SetInspectorHeight(double newHeight) => InspectorHeight = newHeight;
+
+        #endregion
+
+        #region Image Sets
+
+        private void AddToImageSet()
+        {
+            List<ImageModel> imagesFound = new List<ImageModel>();
+            List<ImageSetModel> imageSetsFound = new List<ImageSetModel>();
+
+            foreach (BaseImageModel image in GetAllHighlightedImageItems())
+            {
+                if (image is ImageSetModel imageSet)
+                {
+                    imageSetsFound.Add(imageSet);
+
+                    if (imageSetsFound.Count > 1)
+                    {
+                        MessageBoxUtil.ShowError("Operation cancelled. You can only add images to one set");
+                        return;
+                    }
+                }
+
+                if (image is ImageModel imageModel)
+                {
+                    imagesFound.Add(imageModel);
+                }
+            }
+
+            if (imageSetsFound.Count == 0)
+            {
+                // TODO the option to add to sets should be greyed out while no sets are selected
+                MessageBoxUtil.ShowError("No set specified to add images to");
+                return;
+            }
+
+            ImageUtil.AddToImageSet(imagesFound.ToArray(), imageSetsFound.First());
+        }
+
+        private void RemoveFromImageSet()
+        {
+            if (ImageSetInspectorToggle && InspectedImageSet != null)
+            {
+                List<ImageModel> imagesFound = new List<ImageModel>();
+
+                foreach (ImageModel image in InspectedImageSet.RelatedImages)
+                {
+                    if (image.IsSelected)
+                    {
+                        imagesFound.Add(image);
+                    }
+                }
+
+                ImageUtil.RemoveFromImageSet(imagesFound.ToArray(), InspectedImageSet);
+            }
+        }
 
         #endregion
 

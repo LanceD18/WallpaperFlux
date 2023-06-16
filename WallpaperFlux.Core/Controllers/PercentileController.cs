@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using HandyControl.Tools.Extension;
 using LanceTools;
 using LanceTools.Collections.Reactive;
 using WallpaperFlux.Core.Models;
@@ -22,9 +23,36 @@ namespace WallpaperFlux.Core.Controllers
         public bool PotentialWeightedRankUpdate;
         public bool PotentialRegularRankUpdate;
 
-        public PercentileController(VariableRef<Dictionary<ImageType, ReactiveList<ReactiveHashSet<BaseImageModel>>>> rankData)
+        public PercentileController(VariableRef<Dictionary<ImageType, ReactiveList<ReactiveHashSet<BaseImageModel>>>> rankData) // for the core RankData we typically use
         {
             RankData = rankData;
+        }
+
+        //! This was initially intended to be used as a VariableRef only to RankController, this context creates some oddities such as the need to use dummyRankData
+        public PercentileController(BaseImageModel[] images, ImageType imageType, bool checkForSet) // for subset percentile groups
+        {
+            Dictionary<ImageType, ReactiveList<ReactiveHashSet<BaseImageModel>>> dummyRankData = new Dictionary<ImageType, ReactiveList<ReactiveHashSet<BaseImageModel>>>
+            {
+                {ImageType.Static, new ReactiveList<ReactiveHashSet<BaseImageModel>>()},
+                {ImageType.GIF, new ReactiveList<ReactiveHashSet<BaseImageModel>>()},
+                {ImageType.Video, new ReactiveList<ReactiveHashSet<BaseImageModel>>()}
+            };
+
+            RankData = new VariableRef<Dictionary<ImageType, ReactiveList<ReactiveHashSet<BaseImageModel>>>>(
+                () => dummyRankData,
+                dictionary => throw new Exception("Cannot set RankData"));
+
+            ThemeUtil.RankController.InitializeRankDataImageType(RankData.Get(), ThemeUtil.RankController.GetMaxRank(), imageType);
+
+            foreach (BaseImageModel image in images)
+            {
+                if (image.IsEnabled(checkForSet))
+                {
+                    RankData.Get()[imageType][image.Rank].Add(image);
+                }
+            }
+
+            SetRankPercentiles(ThemeUtil.RankController.GetMaxRank());
         }
 
         public void SetRankPercentiles(int newMaxRank)
@@ -148,6 +176,11 @@ namespace WallpaperFlux.Core.Controllers
             {
                 ThemeUtil.Theme.RankController.UpdateImageTypeWeights();
             }
+        }
+
+        public BaseImageModel GetRandomImageOfRank(int rank, ref Random rand, ImageType imageType)
+        {
+            return ThemeUtil.RankController.GetRandomImageOfRank(rank, ref rand, imageType, RankData);
         }
     }
 }

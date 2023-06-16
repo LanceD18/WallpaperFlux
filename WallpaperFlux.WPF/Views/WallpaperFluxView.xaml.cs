@@ -373,40 +373,54 @@ namespace WallpaperFlux.WPF.Views
         
         private void Image_OnLoaded_LowQuality(object sender, RoutedEventArgs e)
         {
-            if (sender is Image { DataContext: ImageModel imageModel } image)
+            ImageModel imageModel = null;
+            if (sender is Image image)
             {
-                Thread thread = new Thread(() => //? this cannot thread over the if statement while the Image object is present
+                if (image.DataContext is ImageModel regularImageModel)
                 {
-                    try //? this can accidentally fire off multiple times and cause crashes when trying to load videos (Who still need this for some reason?)
+                    imageModel = regularImageModel;
+                }
+
+                if (image.DataContext is ImageSetModel imageSetModel)
+                {
+                    imageModel = imageSetModel.RelatedImages[0];
+                }
+
+                if (imageModel != null)
+                {
+                    Thread thread = new Thread(() => //? this cannot thread over the if statement while the Image object is present
                     {
-                        BitmapImage bitmap = new BitmapImage();
-                        //xstring path = imageModel.Path;
-                        //xFileStream stream = File.OpenRead(path);
+                        try //? this can accidentally fire off multiple times and cause crashes when trying to load videos (Who still need this for some reason?)
+                        {
+                            BitmapImage bitmap = new BitmapImage();
+                            //xstring path = imageModel.Path;
+                            //xFileStream stream = File.OpenRead(path);
 
-                        bitmap.BeginInit();
-                        RenderOptions.SetBitmapScalingMode(bitmap, BitmapScalingMode.LowQuality);
-                        bitmap.DecodePixelHeight = imageModel.ImageSelectorThumbnailHeight; //! Only set either Height or Width (preferably the larger variant?) to prevent awful stretching!
-                        //x bitmap.DecodePixelWidth = imageModel.ImageSelectorThumbnailWidth;
-                        bitmap.CreateOptions = BitmapCreateOptions.IgnoreColorProfile; // to help with performance
-                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                        bitmap.UriSource = new Uri(imageModel.Path);
-                        bitmap.EndInit();
-                        bitmap.Freeze(); // prevents unnecessary copying: https://stackoverflow.com/questions/799911/in-what-scenarios-does-freezing-wpf-objects-benefit-performance-greatly
-                        //xstream.Close();
-                        //xstream.Dispose();
+                            bitmap.BeginInit();
+                            RenderOptions.SetBitmapScalingMode(bitmap, BitmapScalingMode.LowQuality);
+                            bitmap.DecodePixelHeight = imageModel.ImageSelectorThumbnailHeight; //! Only set either Height or Width (preferably the larger variant?) to prevent awful stretching!
+                                                                                                //x bitmap.DecodePixelWidth = imageModel.ImageSelectorThumbnailWidth;
+                            bitmap.CreateOptions = BitmapCreateOptions.IgnoreColorProfile; // to help with performance
+                            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                            bitmap.UriSource = new Uri(imageModel.Path);
+                            bitmap.EndInit();
+                            bitmap.Freeze(); // prevents unnecessary copying: https://stackoverflow.com/questions/799911/in-what-scenarios-does-freezing-wpf-objects-benefit-performance-greatly
+                                             //xstream.Close();
+                                             //xstream.Dispose();
 
-                        Dispatcher.Invoke(() => image.Source = bitmap); // the image must be called on the UI thread which the dispatcher helps us do under this other thread
-                    }
-                    catch (Exception exception)
-                    {
-                        Console.WriteLine("ERROR: Bitmap Creation Failed: " + exception);
-                        //x throw;
-                    }
-                });
+                            Dispatcher.Invoke(() => image.Source = bitmap); // the image must be called on the UI thread which the dispatcher helps us do under this other thread
+                        }
+                        catch (Exception exception)
+                        {
+                            Console.WriteLine("ERROR: Bitmap Creation Failed: " + exception);
+                            //x throw;
+                        }
+                    });
 
-                thread.IsBackground = true; // stops the thread from continuing to run on closing the application
-                thread.Start();
-                _activeThumbnailThreads.Add(thread);
+                    thread.IsBackground = true; // stops the thread from continuing to run on closing the application
+                    thread.Start();
+                    _activeThumbnailThreads.Add(thread);
+                }
             }
         }
 
@@ -543,6 +557,9 @@ namespace WallpaperFlux.WPF.Views
         #endregion
 
         #region Image Selector
+
+        private void ImageSetListBox_SelectionChanged(object sender, SelectionChangedEventArgs e) => TaggingUtil.HighlightTags();
+
         //? Now that the window scales dynamically you probably won't need font scaling but keep this consideration in mind
         private void ImageSelectorTabListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -566,7 +583,7 @@ namespace WallpaperFlux.WPF.Views
                 {
                     string path = imageModel.Path;
 
-                    SelectedImagePathTextBox.Text = path;
+                    //xSelectedImagePathTextBox.Text = path;
 
                     Size dimensions;
                     if (!imageModel.IsVideo)
@@ -575,7 +592,7 @@ namespace WallpaperFlux.WPF.Views
                         dimensions = new Size(image.Width, image.Height);
                         image.Dispose();
 
-                        SelectedImageDimensionsTextBox.Text = dimensions.Width + "x" + dimensions.Height;
+                        //xSelectedImageDimensionsTextBox.Text = dimensions.Width + "x" + dimensions.Height;
                     }
                     else
                     {
@@ -589,7 +606,7 @@ namespace WallpaperFlux.WPF.Views
                         await element.Close();
                         */
 
-                        SelectedImageDimensionsTextBox.Text = "";
+                        //xSelectedImageDimensionsTextBox.Text = "";
                     }
                 }
             }
@@ -644,12 +661,6 @@ namespace WallpaperFlux.WPF.Views
                 element.Position = TimeSpan.FromSeconds(0);
                 element.Play();
             }
-        }
-
-        // this captures the selection range of the entire listbox item
-        private void ImageSelector_ListBoxItem_OnPreviewMouseUp(object sender, MouseButtonEventArgs e)
-        {
-            // TODO Remove me (initially intended for killing thumbnail threads on page swap)
         }
 
         private void ContextMenuListBox_OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)

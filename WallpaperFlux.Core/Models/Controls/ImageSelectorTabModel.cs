@@ -27,6 +27,11 @@ namespace WallpaperFlux.Core.Models.Controls
 
             set
             {
+                if (WallpaperFluxViewModel.Instance.ImageSetInspectorToggle)
+                {
+                    return; //? cannot change the selected state of images not in an image set while the image set is viewable
+                }
+
                 SetProperty(ref _selectedImage, value);
 
                 // no need to do any of this if it's not the active tab (Which can cause delays on large selections)
@@ -114,7 +119,7 @@ namespace WallpaperFlux.Core.Models.Controls
 
         public void DeselectAllItems()
         {
-            if (SelectedImage != null) // if this is null, then no images have been selected here so we have no need to deselect
+            if (SelectedImage != null) // if SelectedImage is null, then no images have been selected here so we have no need to deselect
             {
                 foreach (BaseImageModel image in Items)
                 {
@@ -123,6 +128,20 @@ namespace WallpaperFlux.Core.Models.Controls
             }
 
             //! TaggingUtil.HighlightTags(); [THIS IS HANDLED IN WallpaperFluxViewModel!!!]
+        }
+
+        public void AddImage(BaseImageModel image) => AddImageRange(new BaseImageModel[] { image });
+
+        public void AddImageRange(BaseImageModel[] images)
+        {
+            //! Range actions are not supported by MvxObservableCollections!!!
+            //! Range actions are not supported by MvxObservableCollections!!!
+            //! Range actions are not supported by MvxObservableCollections!!! (odd)
+
+            foreach (BaseImageModel image in images)
+            {
+                Items.Add(image);
+            }
         }
 
         public void RemoveImage(BaseImageModel image) => RemoveImageRange(new BaseImageModel[] { image });
@@ -137,6 +156,21 @@ namespace WallpaperFlux.Core.Models.Controls
             Items.RemoveItems(images);
         }
 
+        public void ReplaceImage(BaseImageModel oldImage, BaseImageModel newImage)
+        {
+            if (oldImage is ImageSetModel) //? without this process the thumbnail of the set won't update if the first image is removed
+            {
+                int index = Items.IndexOf(oldImage);
+                RemoveImage(oldImage);
+                Items.Insert(index, newImage);
+            }
+
+            if (oldImage is ImageModel)
+            {
+                Items[Items.IndexOf(oldImage)] = newImage;
+            }
+        }
+
         /// <summary>
         /// Checks for potentially deleted images and removes them accordingly
         /// </summary>
@@ -145,10 +179,23 @@ namespace WallpaperFlux.Core.Models.Controls
             for (var i = 0; i < Items.Count; i++)
             {
                 BaseImageModel image = Items[i];
-                if (!ThemeUtil.Theme.Images.ContainsImage(image))
+
+                if (image is ImageModel imageModel)
                 {
-                    Items.RemoveAt(i);
-                    i--;
+                    if (!ThemeUtil.Theme.Images.ContainsImage(imageModel))
+                    {
+                        Items.RemoveAt(i);
+                        i--;
+                    }
+                }
+
+                if (image is ImageSetModel imageSet)
+                {
+                    if (!ThemeUtil.Theme.Images.ContainsImage(imageSet))
+                    {
+                        Items.RemoveAt(i);
+                        i--;
+                    }
                 }
             }
         }

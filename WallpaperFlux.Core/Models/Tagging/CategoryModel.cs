@@ -444,9 +444,9 @@ namespace WallpaperFlux.Core.Models.Tagging
         /// Check all potential images for validity then select the valid images
         /// </summary>
         /// <returns></returns>
-        public ImageModel[] SelectValidImages(TagSearchType searchType, TagModel[] selectedTags)
+        public BaseImageModel[] SelectValidImages(TagSearchType searchType, TagModel[] selectedTags)
         {
-            HashSet<ImageModel> validImages = new HashSet<ImageModel>(); //? we don't want the same image to appear twice, so we'll use a HashSet
+            HashSet<BaseImageModel> validImages = new HashSet<BaseImageModel>(); //? we don't want the same image to appear twice, so we'll use a HashSet
 
             foreach (TagModel tag in selectedTags)
             {
@@ -464,7 +464,17 @@ namespace WallpaperFlux.Core.Models.Tagging
                         }
                     }
 
-                    if (validImage) validImages.Add(image); // if it's still a valid image by now we can add it
+                    if (validImage) 
+                    {
+                        if (!image.IsInRelatedImageSet)
+                        {
+                            validImages.Add(image); // if it's still a valid image by now we can add it
+                        }
+                        else
+                        {
+                            validImages.Add(image.ParentRelatedImageModel);
+                        }
+                    }
                 }
             }
 

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using LanceTools;
 using MvvmCross;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Util;
@@ -81,6 +82,12 @@ namespace WallpaperFlux.Core.Collections
         public void AddImageSet(ImageSetModel imageSet)
         {
             ImageSets.Add(imageSet);
+        }
+
+        public void ReplaceImageSet(ImageSetModel oldImageSet, ImageSetModel newImageSet)
+        {
+            ImageSets.Remove(oldImageSet);
+            ImageSets.Add(newImageSet);
         }
 
         public void UpdateImageCollectionPath(ImageModel image, string oldPath, string newPath)

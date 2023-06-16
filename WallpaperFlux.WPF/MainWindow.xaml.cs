@@ -141,6 +141,9 @@ namespace WallpaperFlux.WPF
 
             //? Without this the creation of extra views will stop the program from completely closing normally
             Application.Current.Shutdown();
+
+            // close all active threads
+            Environment.Exit(0);
         }
     }
 }

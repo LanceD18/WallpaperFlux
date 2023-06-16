@@ -326,10 +326,10 @@ namespace WallpaperFlux.Core.Models.Tagging
 
             // Image Control
             AddTagToSelectedImagesCommand = new MvxCommand(() => AddTagToImages(WallpaperFluxViewModel.Instance.GetAllHighlightedImages(), false));
-            AddTagToEntireImageGroupCommand = new MvxCommand(() => AddTagToImages(WallpaperFluxViewModel.Instance.GetImagesInAllTabs(), true));
+            AddTagToEntireImageGroupCommand = new MvxCommand(() => AddTagToImages(WallpaperFluxViewModel.Instance.GetAllImagesInTabsOrSet(), true));
             RemoveTagFromSelectedImageCommand = new MvxCommand(() => RemoveTagFromImages( ImageUtil.GetImageSet(WallpaperFluxViewModel.Instance.SelectedImage), false));
             RemoveTagFromSelectedImagesCommand = new MvxCommand(() => RemoveTagFromImages(WallpaperFluxViewModel.Instance.GetAllHighlightedImages(), false));
-            RemoveTagFromEntireImageGroupCommand = new MvxCommand(() => RemoveTagFromImages(WallpaperFluxViewModel.Instance.GetImagesInAllTabs(), true));
+            RemoveTagFromEntireImageGroupCommand = new MvxCommand(() => RemoveTagFromImages(WallpaperFluxViewModel.Instance.GetAllImagesInTabsOrSet(), true));
 
             // TagBoard
             RemoveTagFromTagBoardCommand = new MvxCommand(() => TagViewModel.Instance.RemoveTagFromTagBoard(this));
@@ -371,6 +371,7 @@ namespace WallpaperFlux.Core.Models.Tagging
                 foreach (ImageModel image in images) image.AddTag(this, false); //! TAG HIGHLIGHT DONE BELOW
             }
 
+            RaisePropertyChangedImageCount();
             TaggingUtil.HighlightTags();
         }
 
@@ -384,6 +385,7 @@ namespace WallpaperFlux.Core.Models.Tagging
                 foreach(ImageModel image in images) image.RemoveTag(this, false); //! TAG HIGHLIGHT DONE BELOW
             }
 
+            RaisePropertyChangedImageCount();
             TaggingUtil.HighlightTags();
         }
 

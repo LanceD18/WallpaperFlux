@@ -129,19 +129,19 @@ namespace WallpaperFlux.Core.ViewModels
                 }
                 else if (RadioUnranked) // filter down to all unranked images
                 {
-                    rankFilter = image => ImageUtil.GetRank(image) == 0;
+                    rankFilter = image => image.Rank == 0;
                 }
                 else if (RadioRanked) // filter down to all ranked images
                 {
-                    rankFilter = image => ImageUtil.GetRank(image) != 0;
+                    rankFilter = image => image.Rank != 0;
                 }
                 else if (RadioSpecificRank)
                 {
-                    rankFilter = image => ImageUtil.GetRank(image) == SpecifiedRank;
+                    rankFilter = image => image.Rank == SpecifiedRank;
                 }
                 else if (RadioRankRange)
                 {
-                    rankFilter = image => ImageUtil.GetRank(image) >= MinSpecifiedRank && ImageUtil.GetRank(image) <= MaxSpecifiedRank;
+                    rankFilter = image => image.Rank >= MinSpecifiedRank && image.Rank <= MaxSpecifiedRank;
                 }
 
                 if (rankFilter == null) return null;

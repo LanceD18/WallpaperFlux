@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.Text;
+using MvvmCross.Commands;
 using Newtonsoft.Json;
 using WallpaperFlux.Core.Models.Controls;
 using WallpaperFlux.Core.Util;
@@ -14,6 +16,52 @@ namespace WallpaperFlux.Core.Models
 
         public virtual bool IsRelatedImageSet => false;
 
+        protected int _rank;
+        public int Rank
+        {
+            get
+            {
+                if (this is ImageSetModel imageSet)
+                {
+                    int oldRank = _rank;
+
+                    if (imageSet.UsingAverageRank) _rank = imageSet.AverageRank;
+
+                    if (imageSet.UsingOverrideRank) _rank = imageSet.OverrideRank;
+
+                    if (imageSet.UsingWeightedRank) _rank = imageSet.WeightedRank;
+
+                    if (oldRank != _rank)
+                    {
+                        ThemeUtil.Theme.RankController.ModifyRank(this, oldRank, ref _rank, true);
+                    }
+                }
+
+                return _rank;
+            }
+
+            set
+            {
+                if (this is ImageModel imageModel)
+                {
+                    ThemeUtil.Theme.RankController.ModifyRank(this, _rank, ref value); //? this should be called first to allow the old rank to be identified
+                    
+                    SetProperty(ref _rank, value);
+                    RaisePropertyChanged(() => Rank);
+
+                    if (imageModel.IsInRelatedImageSet) imageModel.ParentRelatedImageModel.UpdateAverageRank();
+                }
+
+                if (this is ImageSetModel imageSet)
+                {
+                    if (!imageSet.UsingAverageRank)
+                    {
+                        imageSet.OverrideRank = value;
+                    }
+                }
+            }
+        }
+
         [DataMember(Name = "Enabled")]
         protected bool _enabled = true;
 
@@ -22,7 +70,12 @@ namespace WallpaperFlux.Core.Models
         {
             get => _enabled;
 
-            set => SetProperty(ref _enabled, value);
+            set
+            {
+                SetProperty(ref _enabled, value);
+
+                UpdateEnabledState();
+            }
         }
 
         public bool Active { get; protected set; } //? so that we don't have to check IsEnabled() every time we want to see if the image is available
@@ -66,7 +119,47 @@ namespace WallpaperFlux.Core.Models
         [JsonIgnore] public int ImageSelectorThumbnailWidthVideo => ImageSelectorThumbnailWidth - 20; // until the GroupBox is no longer needed this will account for it
         #endregion
 
-        public virtual bool IsEnabled()
+        public IMvxCommand DecreaseRankCommand { get; set; }
+
+        public IMvxCommand IncreaseRankCommand { get; set; }
+
+        protected BaseImageModel()
+        {
+            DecreaseRankCommand = new MvxCommand(() =>
+            {
+                if (this is ImageModel imageModel)
+                {
+                    imageModel.Rank--;
+                }
+
+                if (this is ImageSetModel imageSet)
+                {
+                    if (!imageSet.UsingAverageRank)
+                    {
+                        imageSet.OverrideRank--;
+                    }
+                }
+            });
+
+            IncreaseRankCommand = new MvxCommand(() =>
+            {
+                if (this is ImageModel imageModel)
+                {
+                    imageModel.Rank++;
+                }
+
+                if (this is ImageSetModel imageSet)
+                {
+                    if (!imageSet.UsingAverageRank)
+                    {
+                        imageSet.OverrideRank++;
+                    }
+                }
+            });
+
+        }
+
+        public virtual bool IsEnabled(bool checkForSet = false)
         {
             Active = false; // recheck this every time IsEnabled is called
 
@@ -76,6 +169,14 @@ namespace WallpaperFlux.Core.Models
 
             Active = true; // if we reach this point, then the image is in fact Active
             return true;
+        }
+
+        public void UpdateEnabledState()
+        {
+            if (JsonUtil.IsLoadingData) return;
+
+            //? Modifying the image's rank will check if the image is enabled, re-adding or removing the image as needed
+            ThemeUtil.RankController.ModifyRank(this, _rank, ref _rank);
         }
     }
 }

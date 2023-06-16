@@ -1,6 +1,7 @@
 ﻿using System;
 using MvvmCross.ViewModels;
 using Newtonsoft.Json;
+using WallpaperFlux.Core.ViewModels;
 
 namespace WallpaperFlux.Core.Models.Controls
 {
@@ -13,6 +14,18 @@ namespace WallpaperFlux.Core.Models.Controls
             get => _isSelected;
             set
             {
+                if (this is ImageModel imageModel)
+                {
+                    if (WallpaperFluxViewModel.Instance.ImageSetInspectorToggle)
+                    {
+                        if (!imageModel.IsInRelatedImageSet)
+                        {
+                            return; //? cannot change the selected state of images not in an image set while the image set is viewable
+                        }
+                    }
+
+                }
+
                 bool changed = _isSelected != value;
 
                 SetProperty(ref _isSelected, value);

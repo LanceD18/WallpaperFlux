@@ -32,20 +32,24 @@
     <views:MvxWpfView.Resources>
         <ResourceDictionary>
             <system:Double x:Key="InspectorWidth">375</system:Double>
+            <system:Double x:Key="ImageSetInspectorWidth">900</system:Double>
+            <system:Double x:Key="ImageSetInspectorListBoxWidth">800</system:Double>
             <system:Double x:Key="InspectorCategoryHeight">400</system:Double>
             <system:Double x:Key="InspectorTagHeight">175</system:Double>
+            <system:Double x:Key="ImageSelectorItemWidth">150</system:Double>
+            <system:Double x:Key="ImageSelectorItemHeight">250</system:Double>
 
             <!--? Rank Handler Template -->
-            <DataTemplate x:Key="RankingHandlerTemplate" DataType="{x:Type models:ImageModel}">
+            <DataTemplate x:Key="RankingHandlerTemplate" DataType="{x:Type models:BaseImageModel}">
                 <StackPanel Orientation="Horizontal" Margin="3" Focusable="False" HorizontalAlignment="Center">
                     <!-- Decrease Rank Button -->
-                    <Button mvx:Bi.nd = "Command DecreaseRankCommand" 
-                                                                Width="25" Height="{Binding ImageSelectorSettingsHeight}" Margin="3" 
-                                                                adonisExtensions:CursorSpotlightExtension.BorderBrush="Red"
-                                                                adonisExtensions:RippleExtension.BorderBrush="Red">
-                        <TextBlock Text="-" FontSize="{Binding ImageSelectorSettingsHeight}"
-                                                               Foreground="Red" FontWeight="Bold" Margin="0 -10 0  0"/>
+                    <Button Command="{Binding DecreaseRankCommand}"
+                                        Width="25" Height="{Binding ImageSelectorSettingsHeight}" Margin="3" 
+                                        adonisExtensions:CursorSpotlightExtension.BorderBrush="Red"
+                                        adonisExtensions:RippleExtension.BorderBrush="Red">
+                        <TextBlock Text="-" FontSize="{Binding ImageSelectorSettingsHeight}" Foreground="Red" FontWeight="Bold" Margin="0 -10 0  0"/>
                     </Button>
+
                     <!-- Rank TextBox -->
                     <TextBox Text="{Binding Rank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                          Width="50" Height="{Binding ImageSelectorSettingsHeight}" Margin="3"
@@ -54,15 +58,261 @@
                             <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
                         </TextBox.Style>
                     </TextBox>
+
                     <!-- Increase Rank Button -->
-                    <Button mvx:Bi.nd = "Command IncreaseRankCommand"
-                                                                Width="25" Height="{Binding ImageSelectorSettingsHeight}" Margin="3" 
-                                                                adonisExtensions:CursorSpotlightExtension.BorderBrush="LimeGreen"
-                                                                adonisExtensions:RippleExtension.BorderBrush="LimeGreen">
-                        <TextBlock Text="+" FontSize="{Binding ImageSelectorSettingsHeight}"
-                                                               Foreground="LimeGreen" FontWeight="Bold" Margin="-5 -10 0  0"/>
+                    <Button Command="{Binding IncreaseRankCommand}"
+                                        Width="25" Height="{Binding ImageSelectorSettingsHeight}" Margin="3" 
+                                        adonisExtensions:CursorSpotlightExtension.BorderBrush="LimeGreen"
+                                        adonisExtensions:RippleExtension.BorderBrush="LimeGreen">
+                        <TextBlock Text="+" FontSize="{Binding ImageSelectorSettingsHeight}" Foreground="LimeGreen" FontWeight="Bold" Margin="-5 -10 0  0"/>
                     </Button>
                 </StackPanel>
+            </DataTemplate>
+
+            <!--? Image Selector Item Template -->
+            <DataTemplate x:Key="ImageSelectorItemTemplate" DataType="{x:Type models:BaseImageModel}">
+                <GroupBox HorizontalAlignment="Center">
+                    <StackPanel Focusable="False">
+
+                        <!-- /// Binding to ImageModel /// -->
+                        <ContentControl Content="{Binding}" HorizontalAlignment="Center">
+                            <!-- Resources -->
+                            <ContentControl.Resources>
+                                <!-- Remember that the Binding context here refers to what's given in the Content of the ContentTemplate, not what ReSharper says -->
+
+                                <!--? //// StaticOrGIFTemplate //// -->
+                                <DataTemplate x:Key="StaticOrGIFTemplate" DataType="{x:Type models:ImageModel}">
+                                    <!--? Thumbnail -->
+                                    <Image ToolTipService.ShowDuration="{StaticResource MaxInt32}"
+                                                                       Width="{Binding ImageSelectorThumbnailWidth}"
+                                                                       Height="{Binding ImageSelectorThumbnailHeight}"
+                                                                       Margin="3"
+                                                                       HorizontalAlignment="Center"
+                                                                       Loaded="Image_OnLoaded_LowQuality"
+                                                                       Unloaded="Image_OnUnloaded">
+                                        <!--? ///// Image Tooltip /////-->
+                                        <Image.ToolTip>
+                                            <ContentControl Content="{Binding}">
+                                                <!-- Resources -->
+                                                <ContentControl.Resources>
+                                                    <!-- Static -->
+                                                    <DataTemplate x:Key="StaticTemplate">
+                                                        <Image Loaded="Tooltip_Image_OnLoaded"
+                                                                                        Unloaded="Tooltip_Image_OnUnloaded"
+                                                                                        Stretch="Uniform"
+                                                                                        RenderOptions.BitmapScalingMode="HighQuality">
+                                                            <!--
+                                                            <Image.Source>
+                                                                <BitmapImage
+                                                                    CacheOption="OnLoad"
+                                                                    UriSource="{Binding Path, Mode=OneWay}">
+                                                                </BitmapImage>
+                                                            </Image.Source>
+                                                            -->
+                                                        </Image>
+                                                    </DataTemplate>
+                                                    <!-- GIF -->
+                                                    <DataTemplate x:Key="GIFTemplate">
+                                                        <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"
+                                                                                        Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" />
+                                                    </DataTemplate>
+                                                </ContentControl.Resources>
+                                                <!--? Template Control -->
+                                                <ContentControl.ContentTemplate>
+                                                    <DataTemplate>
+                                                        <!-- Default Template -->
+                                                        <ContentControl Name="cc" Content="{Binding }" 
+                                                                                ContentTemplate="{StaticResource StaticTemplate}"/>
+                                                        <!-- Triggers -->
+                                                        <DataTemplate.Triggers>
+                                                            <DataTrigger Binding="{Binding IsGif}" Value="True">
+                                                                <!-- Sets the ContentTemplate to be GIFTemplate instead of StaticTemplate -->
+                                                                <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource GIFTemplate}"/>
+                                                            </DataTrigger>
+                                                        </DataTemplate.Triggers>
+                                                    </DataTemplate>
+                                                </ContentControl.ContentTemplate>
+                                            </ContentControl>
+                                        </Image.ToolTip>
+
+                                        <!--? Image Context Menu -->
+                                        <!-- !Changes made here need to be made to the Media Context Menu as well!!! -->
+                                        <Image.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem Header="Open File" mvx:Bi.nd="Command OpenFileCommand"/>
+                                                <MenuItem Header="Open File Location" mvx:Bi.nd="Command ViewFileCommand"/>
+                                                <MenuItem Header="Set As Wallpaper" mvx:Bi.nd="Command SetWallpaperCommand"/>
+                                                <Separator/>
+                                                <MenuItem Header="Rename" Command="{Binding RenameImageCommand}"/>
+                                                <MenuItem Header="Move" Command="{Binding MoveImageCommand}"/>
+                                                <MenuItem Header="Delete" Command="{Binding DeleteImageCommand}"/>
+                                                <MenuItem Header="Rank" Command="{Binding RankImageCommand}"/>
+                                                <Separator/>
+                                                <MenuItem Header="Set Tags to Tagboard" Command="{Binding SetTagsToTagBoardCommand}"/>
+                                                <MenuItem Header="Paste Tagboard to Image" Command="{Binding PasteTagBoardCommand}"/>
+                                                <MenuItem Header="Paste Tags to Tagboard" Command="{Binding PasteTagsToTagBoardCommand}"/>
+                                                <Separator/>
+                                                <MenuItem Header="Enabled" StaysOpenOnClick="True" IsCheckable="True"
+                                                                                IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                                ToolTip="Disabling an image will stop it from appearing here, 
+                                                                                      if you want to see the image again select Enable Detection of Inactive Images"/>
+                                            </ContextMenu>
+                                        </Image.ContextMenu>
+                                    </Image>
+                                </DataTemplate>
+
+                                <!--? //// VideoTemplate //// -->
+                                <DataTemplate x:Key="VideoTemplate" DataType="{x:Type models:ImageModel}">
+                                    <GroupBox adonisExtensions:LayerExtension.IncreaseLayer="False"
+                                                                  Width="{Binding ImageSelectorThumbnailWidthVideo}"
+                                                                  Height="{Binding ImageSelectorThumbnailHeight}" 
+                                                                  ToolTipService.ShowDuration="{StaticResource MaxInt32}"
+                                                                  HorizontalAlignment="Center">
+
+                                        <!--? Thumbnail -->
+                                        <!-- Displays the first frame/thumbnail of videos due to the Loaded event -->
+                                        <Image Loaded="MediaElement_OnLoaded_GenerateVideoThumbnail" Unloaded="MediaElement_OnUnloaded"/>
+
+                                        <!-- The media element will fail to process the Tooltip & Context Menu, so we used a GroupBox -->
+                                        <!--? Media Element Tooltip-->
+                                        <GroupBox.ToolTip>
+                                            <ContentControl Content="{Binding }">
+                                                <ContentControl.Resources>
+                                                    <!--? FFME -->
+                                                    <DataTemplate x:Key="FFME">
+                                                        <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"
+                                                                                        Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" 
+                                                                                        Volume="{Binding ActualVolume, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                    </DataTemplate>
+                                                    <!--? Windows -->
+                                                    <DataTemplate x:Key="Windows">
+                                                        <MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" MediaEnded="MediaElement_OnMediaEnded"
+                                                                                        Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" 
+                                                                                        Volume="{Binding ActualVolume, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                    </DataTemplate>
+                                                </ContentControl.Resources>
+                                                <ContentControl.ContentTemplate>
+                                                    <DataTemplate>
+                                                        <!-- Default Template -->
+                                                        <ContentControl Name="cc" Content="{Binding }" 
+                                                                                        ContentTemplate="{StaticResource Windows}"/>
+                                                        <!-- Triggers -->
+                                                        <DataTemplate.Triggers>
+                                                            <DataTrigger Binding="{Binding IsWebmOrGif}" Value="True">
+                                                                <!-- Sets the ContentTemplate to be GIFTemplate instead of StaticTemplate -->
+                                                                <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource FFME}"/>
+                                                            </DataTrigger>
+                                                        </DataTemplate.Triggers>
+                                                    </DataTemplate>
+                                                </ContentControl.ContentTemplate>
+                                            </ContentControl>
+                                        </GroupBox.ToolTip>
+
+                                        <!--? Media Element Context Menu-->
+                                        <!-- !Changes made here need to be made to the Image Context Menu as well!!! -->
+                                        <GroupBox.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem Header="Open File" Command="{Binding OpenFileCommand}"/>
+                                                <MenuItem Header="Open File Location" Command="{Binding ViewFileCommand}"/>
+                                                <MenuItem Header="Set As Wallpaper" Command="{Binding SetWallpaperCommand}"/>
+                                                <Separator/>
+                                                <MenuItem Header="Rename" Command="{Binding RenameImageCommand}"/>
+                                                <MenuItem Header="Move" Command="{Binding MoveImageCommand}"/>
+                                                <MenuItem Header="Delete" Command="{Binding DeleteImageCommand}"/>
+                                                <MenuItem Header="Rank" Command="{Binding RankImageCommand}"/>
+                                                <MenuItem Header="Paste Tagboard" Command="{Binding PasteTagBoardCommand}"/>
+                                                <Separator/>
+                                                <MenuItem Header="Set Tags to Tagboard" Command="{Binding SetTagsToTagBoardCommand}"/>
+                                                <MenuItem Header="Paste Tagboard to Image" Command="{Binding PasteTagBoardCommand}"/>
+                                                <MenuItem Header="Paste Tags to Tagboard" Command="{Binding PasteTagsToTagBoardCommand}"
+                                                                                ToolTip="Removes existing tags from the tagboard before pasting the current image's tags"/>
+                                                <Separator/>
+                                                <MenuItem Header="Enabled" StaysOpenOnClick="True" IsCheckable="True"
+                                                                                IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                                                ToolTip="Disabling an image will stop it from appearing here, 
+                                                                                      if you want to see the image again select Enable Detection of Inactive Images"/>
+                                                <Separator/>
+                                                <MenuItem Header="Volume" mvx:Bi.nd="Command SetVolumeCommand"/>
+                                                <MenuItem Header="Speed" mvx:Bi.nd="Command SetSpeedCommand"/>
+                                                <MenuItem Header="Override Max Loop Count"/>
+                                                <MenuItem Header="Override Max Video Timer"/>
+                                            </ContextMenu>
+                                        </GroupBox.ContextMenu>
+                                    </GroupBox>
+                                </DataTemplate>
+
+                                <!--? //// RelatedImageTemplate //// -->
+                                <DataTemplate x:Key="RelatedImageTemplate" DataType="{x:Type models:ImageSetModel}">
+                                    <GroupBox adonisExtensions:LayerExtension.IncreaseLayer="False" BorderThickness="2" BorderBrush="SlateBlue"
+                                              adonisExtensions:CornerRadiusExtension.CornerRadius="10">
+                                        <GroupBox adonisExtensions:LayerExtension.IncreaseLayer="False"
+                                              Width="{Binding ImageSelectorThumbnailWidthVideo}"
+                                              Height="{Binding ImageSelectorThumbnailHeight}" 
+                                              ToolTipService.ShowDuration="{StaticResource MaxInt32}"
+                                              HorizontalAlignment="Center">
+
+                                            <!--? Thumbnail -->
+                                            <Image ToolTipService.ShowDuration="{StaticResource MaxInt32}"
+                                                                           Width="{Binding ImageSelectorThumbnailWidth}"
+                                                                           Height="{Binding ImageSelectorThumbnailHeight}"
+                                                                           Margin="3"
+                                                                           HorizontalAlignment="Center"
+                                                                           Loaded="Image_OnLoaded_LowQuality"
+                                                                           Unloaded="Image_OnUnloaded">
+                                                <Image.ContextMenu>
+                                                    <ContextMenu>
+                                                        <MenuItem Header="Ranking Format" IsEnabled="False"/>
+                                                        <MenuItem Header="Average" IsChecked="{Binding UsingAverageRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" StaysOpenOnClick="True" IsCheckable="True"
+                                                                  IsEnabled="{Binding UsingAverageRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource BooleanInverterConverter}}"/>
+                                                        <MenuItem Header="Override" IsChecked="{Binding UsingOverrideRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" StaysOpenOnClick="True" IsCheckable="True"
+                                                                  IsEnabled="{Binding UsingOverrideRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource BooleanInverterConverter}}"/>
+                                                        <MenuItem Header="Weighted" IsChecked="{Binding UsingWeightedRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" StaysOpenOnClick="True" IsCheckable="True"
+                                                                  IsEnabled="{Binding UsingWeightedRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource BooleanInverterConverter}}"/>
+                                                        <MenuItem Header="{Binding OverrideRankWeightText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="False"/>
+                                                        <Slider Value="{Binding OverrideRankWeight}" IsEnabled="{Binding UsingWeightedRank}" Minimum="0" Maximum="100"/>
+                                                        <Separator/>
+                                                        <MenuItem Header="Enabled" StaysOpenOnClick="True" IsCheckable="True"
+                                                                  IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                  ToolTip="Disabling a set will stop it from appearing here, 
+                                                                                      if you want to see the set again select Enable Detection of Inactive Images"/>
+                                                    </ContextMenu>
+                                                </Image.ContextMenu>
+                                            </Image>
+
+                                        </GroupBox>
+                                    </GroupBox>
+                                </DataTemplate>
+                            </ContentControl.Resources>
+
+                            <!-- // Template Control // -->
+                            <ContentControl.ContentTemplate>
+                                <DataTemplate>
+                                    <!-- Default Control -->
+                                    <ContentControl Name="cc" Content="{Binding }" ContentTemplate="{StaticResource StaticOrGIFTemplate}"/>
+                                    <!-- Triggers -->
+                                    <DataTemplate.Triggers>
+                                        <!-- If IsVideo, use the VideoTemplate instead -->
+                                        <DataTrigger Binding="{Binding IsVideo}" Value="True">
+                                            <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource VideoTemplate}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsRelatedImageSet}" Value="True">
+                                            <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource RelatedImageTemplate}"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ContentControl.ContentTemplate>
+                        </ContentControl>
+
+                        <!--! Currently replaced by the Inspect button, not sure if this will have a use in the future -->
+                        <!--x Edit Button -->
+                        <!--
+                                                    <Button Content="Edit" Width="75" Height="{Binding ImageSelectorSettingsHeight}" Margin="3" 
+                                                        HorizontalAlignment="Center"/>
+                                                    -->
+
+                        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource RankingHandlerTemplate}"/>
+                    </StackPanel>
+                </GroupBox>
             </DataTemplate>
 
         </ResourceDictionary>
@@ -177,7 +427,8 @@
         <GroupBox Grid.Row="4" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="0 5 0 5">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="0"/> <!-- Remove this at some point, will need to adjust columns -->
+                    <ColumnDefinition Width="0"/>
+                    <!-- Remove this at some point, will need to adjust columns -->
                     <ColumnDefinition Width="auto"/>
                     <ColumnDefinition Width="auto"/>
                     <ColumnDefinition Width="auto"/>
@@ -243,7 +494,8 @@
         <GroupBox Grid.Row="5" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="10">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="0"/> <!-- Remove this at some point, will need to adjust columns -->
+                    <ColumnDefinition Width="0"/>
+                    <!-- Remove this at some point, will need to adjust columns -->
                     <ColumnDefinition Width="auto"/>
                     <ColumnDefinition Width="auto"/>
                     <ColumnDefinition Width="*"/>
@@ -352,11 +604,14 @@
                     <Button Width="60" Height="25" Content="Move" Margin="3 0 3 0" Command="{Binding MoveImagesCommand}"  IsEnabled="{Binding IsImageSelected}"/>
                     <Button Width="60" Height="25" Content="Delete" Margin="3 0 3 0" Command="{Binding DeleteImagesCommand}"  IsEnabled="{Binding IsImageSelected}"/>
                     <Button Width="60" Height="25" Content="Rank" Margin="3 0 3 0" Command="{Binding RankImagesCommand}"  IsEnabled="{Binding IsImageSelected}"/>
-                    <Button Width="75" Height="25" Content="Create Set" Margin="3 0 3 0 " Command="{Binding CreateRelatedImageSetCommand}"  IsEnabled="{Binding IsImageSelected}"
-                            ToolTip="Builds a 'related image set' out of the selected images"/>
                     <Button Width="105" Height="25" Content="Paste Tagboard" Margin="3 0 3 0" Command="{Binding PasteTagBoardCommand}"  IsEnabled="{Binding IsImageSelected}"/>
                     <CheckBox Content="Rename Grouping" Margin="3" IsChecked="{Binding GroupRenamed}"
                               ToolTip="While this is checked, if multiple images with the same tags are renamed simultaneously, their numbering will be grouped together"/>
+                    <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
+                    <Button Width="75" Height="25" Content="Create Set" Margin="3 0 3 0 " Command="{Binding CreateRelatedImageSetCommand}"  IsEnabled="{Binding IsImageSelected}"
+                            ToolTip="Builds a 'related image set' out of the selected images"/>
+                    <Button Width="75" Height="25" Content="Add To Set" Margin="3 0 3 0 " Command="{Binding AddToImageSetCommand}" IsEnabled="{Binding IsImageSelected}"
+                            ToolTip="If one set is selected, adds the currently selected images to the selected set"/>
                     <!--! Not really much of a point to Apply To All when SelectAllImages() exists -->
                     <!--x
                     <CheckBox Content="Apply To All" Margin="5" IsChecked="{Binding ApplyToAll}"
@@ -368,9 +623,9 @@
                 </StackPanel>
 
                 <!-- Selection Info -->
-                <TextBlock x:Name="SelectedImagePathTextBox" Text="{Binding SelectedImagePathText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
+                <TextBlock Text="{Binding SelectedImagePathText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
                            Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" HorizontalAlignment="Center"/>
-                <TextBlock x:Name="SelectedImageDimensionsTextBox" Text="{Binding SelectedImageDimensionsText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
+                <TextBlock Text="{Binding SelectedImageDimensionsText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
                            Grid.Row="3" Grid.Column="1" HorizontalAlignment="Center" />
 
                 <!--? Image Selector -->
@@ -411,15 +666,15 @@
                                 <ListBox ItemsSource="{Binding Items}" 
                                          SelectedItem="{Binding SelectedImage}"
                                          SelectionMode="Extended" SelectionChanged="ImageSelectorTabListBox_SelectionChanged"
-                                         PreviewMouseUp="ImageSelector_ListBoxItem_OnPreviewMouseUp"
                                          VirtualizingPanel.IsVirtualizing="true" 
-                                         VirtualizingPanel.VirtualizationMode="Recycling">
+                                         VirtualizingPanel.VirtualizationMode="Recycling"
+                                         ItemTemplate="{StaticResource ImageSelectorItemTemplate}">
 
                                     <!-- Wrap Setup -->
                                     <ListBox.ItemsPanel>
                                         <ItemsPanelTemplate>
                                             <WrapPanel Width="{Binding ImageSelectorTabWrapWidth, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                       ItemWidth="150" ItemHeight="250" IsItemsHost="True"/>
+                                                       ItemWidth="{StaticResource ImageSelectorItemWidth}" ItemHeight="{StaticResource ImageSelectorItemHeight}"  IsItemsHost="True"/>
                                         </ItemsPanelTemplate>
                                     </ListBox.ItemsPanel>
 
@@ -431,240 +686,10 @@
                                     </ListBox.ItemContainerStyle>
 
                                     <!--? // Image Info Item Template // -->
+                                    <!-- x
                                     <ListBox.ItemTemplate>
-                                        <DataTemplate DataType="{x:Type models:BaseImageModel}">
-                                            <GroupBox HorizontalAlignment="Center">
-                                                <StackPanel Focusable="False">
-
-                                                    <!--? /// Binding to ImageModel /// -->
-                                                    <ContentControl Content="{Binding}" HorizontalAlignment="Center">
-                                                        <!-- Resources -->
-                                                        <ContentControl.Resources>
-                                                            <!-- Remember that the Binding context here refers to what's given in the Content of the ContentTemplate, not what ReSharper says -->
-
-                                                            <!--? //// StaticOrGIFTemplate //// -->
-                                                            <DataTemplate x:Key="StaticOrGIFTemplate" DataType="{x:Type models:ImageModel}">
-                                                                <!--? Thumbnail -->
-                                                                <Image ToolTipService.ShowDuration="{StaticResource MaxInt32}"
-                                                                       Width="{Binding ImageSelectorThumbnailWidth}"
-                                                                       Height="{Binding ImageSelectorThumbnailHeight}"
-                                                                       Margin="3"
-                                                                       HorizontalAlignment="Center"
-                                                                       Loaded="Image_OnLoaded_LowQuality"
-                                                                       Unloaded="Image_OnUnloaded">
-                                                                    <!--? ///// Image Tooltip /////-->
-                                                                    <Image.ToolTip>
-                                                                        <ContentControl Content="{Binding}">
-                                                                            <!-- Resources -->
-                                                                            <ContentControl.Resources>
-                                                                                <!-- Static -->
-                                                                                <DataTemplate x:Key="StaticTemplate">
-                                                                                    <Image Loaded="Tooltip_Image_OnLoaded"
-                                                                                        Unloaded="Tooltip_Image_OnUnloaded"
-                                                                                        Stretch="Uniform"
-                                                                                        RenderOptions.BitmapScalingMode="HighQuality">
-                                                                                        <!--
-                                                                                        <Image.Source>
-                                                                                            <BitmapImage
-                                                                                                CacheOption="OnLoad"
-                                                                                                UriSource="{Binding Path, Mode=OneWay}">
-                                                                                            </BitmapImage>
-                                                                                        </Image.Source>
-                                                                                        -->
-                                                                                    </Image>
-                                                                                </DataTemplate>
-                                                                                <!-- GIF -->
-                                                                                <DataTemplate x:Key="GIFTemplate">
-                                                                                    <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"
-                                                                                        Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" />
-                                                                                </DataTemplate>
-                                                                            </ContentControl.Resources>
-                                                                            <!--? Template Control -->
-                                                                            <ContentControl.ContentTemplate>
-                                                                                <DataTemplate>
-                                                                                    <!-- Default Template -->
-                                                                                    <ContentControl Name="cc" Content="{Binding }" 
-                                                                                ContentTemplate="{StaticResource StaticTemplate}"/>
-                                                                                    <!-- Triggers -->
-                                                                                    <DataTemplate.Triggers>
-                                                                                        <DataTrigger Binding="{Binding IsGif}" Value="True">
-                                                                                            <!-- Sets the ContentTemplate to be GIFTemplate instead of StaticTemplate -->
-                                                                                            <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource GIFTemplate}"/>
-                                                                                        </DataTrigger>
-                                                                                    </DataTemplate.Triggers>
-                                                                                </DataTemplate>
-                                                                            </ContentControl.ContentTemplate>
-                                                                        </ContentControl>
-                                                                    </Image.ToolTip>
-
-                                                                    <!--? Image Context Menu -->
-                                                                    <!-- !Changes made here need to be made to the Media Context Menu as well!!! -->
-                                                                    <Image.ContextMenu>
-                                                                        <ContextMenu>
-                                                                            <MenuItem Header="Open File" mvx:Bi.nd="Command OpenFileCommand"/>
-                                                                            <MenuItem Header="Open File Location" mvx:Bi.nd="Command ViewFileCommand"/>
-                                                                            <MenuItem Header="Set As Wallpaper" mvx:Bi.nd="Command SetWallpaperCommand"/>
-                                                                            <Separator/>
-                                                                            <MenuItem Header="Rename" Command="{Binding RenameImageCommand}"/>
-                                                                            <MenuItem Header="Move" Command="{Binding MoveImageCommand}"/>
-                                                                            <MenuItem Header="Delete" Command="{Binding DeleteImageCommand}"/>
-                                                                            <MenuItem Header="Rank" Command="{Binding RankImageCommand}"/>
-                                                                            <Separator/>
-                                                                            <MenuItem Header="Set Tags to Tagboard" Command="{Binding SetTagsToTagBoardCommand}"/>
-                                                                            <MenuItem Header="Paste Tagboard to Image" Command="{Binding PasteTagBoardCommand}"/>
-                                                                            <MenuItem Header="Paste Tags to Tagboard" Command="{Binding PasteTagsToTagBoardCommand}"/>
-                                                                            <Separator/>
-                                                                            <MenuItem Header="Enabled" StaysOpenOnClick="True" IsCheckable="True"
-                                                                                IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                                                ToolTip="Disabling an image will stop it from appearing here, 
-                                                                                      if you want to see the image again select Enable Detection of Inactive Images"/>
-                                                                        </ContextMenu>
-                                                                    </Image.ContextMenu>
-                                                                </Image>
-                                                            </DataTemplate>
-
-                                                            <!--? //// VideoTemplate //// -->
-                                                            <DataTemplate x:Key="VideoTemplate" DataType="{x:Type models:ImageModel}">
-                                                                <GroupBox adonisExtensions:LayerExtension.IncreaseLayer="False"
-                                                                  Width="{Binding ImageSelectorThumbnailWidthVideo}"
-                                                                  Height="{Binding ImageSelectorThumbnailHeight}" 
-                                                                  ToolTipService.ShowDuration="{StaticResource MaxInt32}"
-                                                                  HorizontalAlignment="Center">
-
-                                                                    <!--? Thumbnail -->
-                                                                    <!-- Displays the first frame/thumbnail of videos due to the Loaded event -->
-                                                                    <Image Loaded="MediaElement_OnLoaded_GenerateVideoThumbnail" Unloaded="MediaElement_OnUnloaded"/>
-
-                                                                    <!-- The media element will fail to process the Tooltip & Context Menu, so we used a GroupBox -->
-                                                                    <!--? Media Element Tooltip-->
-                                                                    <GroupBox.ToolTip>
-                                                                        <ContentControl Content="{Binding }">
-                                                                            <ContentControl.Resources>
-                                                                                <!--? FFME -->
-                                                                                <DataTemplate x:Key="FFME">
-                                                                                    <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"
-                                                                                        Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" 
-                                                                                        Volume="{Binding ActualVolume, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                                                </DataTemplate>
-                                                                                <!--? Windows -->
-                                                                                <DataTemplate x:Key="Windows">
-                                                                                    <MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" MediaEnded="MediaElement_OnMediaEnded"
-                                                                                        Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" 
-                                                                                        Volume="{Binding ActualVolume, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                                                </DataTemplate>
-                                                                            </ContentControl.Resources>
-                                                                            <ContentControl.ContentTemplate>
-                                                                                <DataTemplate>
-                                                                                    <!-- Default Template -->
-                                                                                    <ContentControl Name="cc" Content="{Binding }" 
-                                                                                        ContentTemplate="{StaticResource Windows}"/>
-                                                                                    <!-- Triggers -->
-                                                                                    <DataTemplate.Triggers>
-                                                                                        <DataTrigger Binding="{Binding IsWebmOrGif}" Value="True">
-                                                                                            <!-- Sets the ContentTemplate to be GIFTemplate instead of StaticTemplate -->
-                                                                                            <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource FFME}"/>
-                                                                                        </DataTrigger>
-                                                                                    </DataTemplate.Triggers>
-                                                                                </DataTemplate>
-                                                                            </ContentControl.ContentTemplate>
-                                                                        </ContentControl>
-                                                                    </GroupBox.ToolTip>
-
-                                                                    <!--? Media Element Context Menu-->
-                                                                    <!-- !Changes made here need to be made to the Image Context Menu as well!!! -->
-                                                                    <GroupBox.ContextMenu>
-                                                                        <ContextMenu>
-                                                                            <MenuItem Header="Open File" Command="{Binding OpenFileCommand}"/>
-                                                                            <MenuItem Header="Open File Location" Command="{Binding ViewFileCommand}"/>
-                                                                            <MenuItem Header="Set As Wallpaper" Command="{Binding SetWallpaperCommand}"/>
-                                                                            <Separator/>
-                                                                            <MenuItem Header="Rename" Command="{Binding RenameImageCommand}"/>
-                                                                            <MenuItem Header="Move" Command="{Binding MoveImageCommand}"/>
-                                                                            <MenuItem Header="Delete" Command="{Binding DeleteImageCommand}"/>
-                                                                            <MenuItem Header="Rank" Command="{Binding RankImageCommand}"/>
-                                                                            <MenuItem Header="Paste Tagboard" Command="{Binding PasteTagBoardCommand}"/>
-                                                                            <Separator/>
-                                                                            <MenuItem Header="Set Tags to Tagboard" Command="{Binding SetTagsToTagBoardCommand}"/>
-                                                                            <MenuItem Header="Paste Tagboard to Image" Command="{Binding PasteTagBoardCommand}"/>
-                                                                            <MenuItem Header="Paste Tags to Tagboard" Command="{Binding PasteTagsToTagBoardCommand}"
-                                                                                ToolTip="Removes existing tags from the tagboard before pasting the current image's tags"/>
-                                                                            <Separator/>
-                                                                            <MenuItem Header="Enabled" StaysOpenOnClick="True" IsCheckable="True"
-                                                                                IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                                                                ToolTip="Disabling an image will stop it from appearing here, 
-                                                                                      if you want to see the image again select Enable Detection of Inactive Images"/>
-                                                                            <Separator/>
-                                                                            <MenuItem Header="Volume" mvx:Bi.nd="Command SetVolumeCommand"/>
-                                                                            <MenuItem Header="Speed" mvx:Bi.nd="Command SetSpeedCommand"/>
-                                                                            <MenuItem Header="Override Max Loop Count"/>
-                                                                            <MenuItem Header="Override Max Video Timer"/>
-                                                                        </ContextMenu>
-                                                                    </GroupBox.ContextMenu>
-                                                                </GroupBox>
-                                                            </DataTemplate>
-
-                                                            <!--? //// RelatedImageTemplate //// -->
-                                                            <DataTemplate x:Key="RelatedImageTemplate" DataType="{x:Type models:ImageSetModel}">
-                                                                <GroupBox adonisExtensions:LayerExtension.IncreaseLayer="False"
-                                                                          Width="{Binding ImageSelectorThumbnailWidthVideo}"
-                                                                          Height="{Binding ImageSelectorThumbnailHeight}" 
-                                                                          ToolTipService.ShowDuration="{StaticResource MaxInt32}"
-                                                                          HorizontalAlignment="Center"
-                                                                          Background="DarkRed">
-
-                                                                    <!--? Thumbnail -->
-                                                                    <Image ToolTipService.ShowDuration="{StaticResource MaxInt32}"
-                                                                           Width="{Binding ImageSelectorThumbnailWidth}"
-                                                                           Height="{Binding ImageSelectorThumbnailHeight}"
-                                                                           Margin="3"
-                                                                           HorizontalAlignment="Center"
-                                                                           Loaded="Image_OnLoaded_LowQuality"
-                                                                           Unloaded="Image_OnUnloaded">
-                                                                        <Image.ContextMenu>
-                                                                            <ContextMenu>
-                                                                                <MenuItem Header="Enabled" StaysOpenOnClick="True" IsCheckable="True"
-                                                                                    IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                                                    ToolTip="Disabling a set will stop it from appearing here, 
-                                                                                      if you want to see the set again select Enable Detection of Inactive Images"/>
-                                                                            </ContextMenu>
-                                                                        </Image.ContextMenu>
-                                                                    </Image>
-
-                                                                </GroupBox>
-                                                            </DataTemplate>
-                                                        </ContentControl.Resources>
-
-                                                        <!-- // Template Control // -->
-                                                        <ContentControl.ContentTemplate>
-                                                            <DataTemplate>
-                                                                <!-- Default Control -->
-                                                                <ContentControl Name="cc" Content="{Binding }" ContentTemplate="{StaticResource StaticOrGIFTemplate}"/>
-                                                                <!-- Triggers -->
-                                                                <DataTemplate.Triggers>
-                                                                    <!-- If IsVideo, use the VideoTemplate instead -->
-                                                                    <DataTrigger Binding="{Binding IsVideo}" Value="True">
-                                                                        <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource VideoTemplate}"/>
-                                                                    </DataTrigger>
-                                                                    <DataTrigger Binding="{Binding IsRelatedImageSet}" Value="True">
-                                                                        <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource RelatedImageTemplate}"/>
-                                                                    </DataTrigger>
-                                                                </DataTemplate.Triggers>
-                                                            </DataTemplate>
-                                                        </ContentControl.ContentTemplate>
-                                                    </ContentControl>
-
-                                                    <!--! Currently replaced by the Inspect button, not sure if this will have a use in the future -->
-                                                    <!--x Edit Button -->
-                                                    <!--
-                                                    <Button Content="Edit" Width="75" Height="{Binding ImageSelectorSettingsHeight}" Margin="3" 
-                                                        HorizontalAlignment="Center"/>
-                                                    -->
-
-                                                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource RankingHandlerTemplate}"/>
-                                                </StackPanel>
-                                            </GroupBox>
-                                        </DataTemplate>
                                     </ListBox.ItemTemplate>
+                                    -->
                                 </ListBox>
                             </DataTemplate>
                         </TabControl.ContentTemplate>
@@ -1034,12 +1059,111 @@
                                     </ContentControl.ContentTemplate>
                                 </ContentControl>
                             </StackPanel>
-
                         </GroupBox>
-
                     </Grid>
                 </GroupBox>
             </ScrollViewer>
+        </hc:Drawer>
+
+        <!--? Image Set Inspector Drawer -->
+        <hc:Drawer  Dock="Right" ShowMode="Cover" IsOpen="{Binding ImageSetInspectorToggle}">
+            <GroupBox Width="{StaticResource ImageSetInspectorWidth}" Height="{Binding InspectorHeight, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                      adonisExtensions:ScrollViewerExtension.HideScrollBarsUntilMouseOver="True"
+                      adonisExtensions:ScrollViewerExtension.VerticalScrollBarPlacement="Overlay"
+                      adonisExtensions:ScrollViewerExtension.VerticalScrollBarExpansionMode="ExpandOnHover"
+                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                      BorderBrush="DarkGray" BorderThickness="2">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <!--<ColumnDefinition Width="{adonisUi:Space 1}"/>-->
+                        <ColumnDefinition Width="0"/>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="0"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!--? Title & Exit Button -->
+                    <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" HorizontalAlignment="Center" Text="Image Set Inspector" FontWeight="Medium" Margin="0 0 0 5">
+                        <TextBlock.Style>
+                            <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <Button Grid.Row="1" Grid.Column="3" HorizontalAlignment="Right" Content="X" Command="{Binding CloseImageSetInspectorCommand}" 
+                            Margin="5 0 5 0" Foreground="Red" FontSize="16" FontWeight="Bold" adonisExtensions:LayerExtension.Layer="1"/>
+
+                    <!--? Header Controls -->
+                    <StackPanel Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Button Width="60" Height="25" Content="Inspect" Margin="3 0 3 0" Command="{Binding ToggleInspectorCommand}" IsEnabled="{Binding IsImageSelected}"/>
+                        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
+                        <Button Width="60" Height="25" Content="Rename" Margin="3 0 3 0" Command="{Binding RenameImagesCommand}"  IsEnabled="{Binding IsImageSelected}"/>
+                        <Button Width="60" Height="25" Content="Move" Margin="3 0 3 0" Command="{Binding MoveImagesCommand}"  IsEnabled="{Binding IsImageSelected}"/>
+                        <Button Width="60" Height="25" Content="Delete" Margin="3 0 3 0" Command="{Binding DeleteImagesCommand}"  IsEnabled="{Binding IsImageSelected}"/>
+                        <Button Width="60" Height="25" Content="Rank" Margin="3 0 3 0" Command="{Binding RankImagesCommand}"  IsEnabled="{Binding IsImageSelected}"/>
+                        <Button Width="105" Height="25" Content="Paste Tagboard" Margin="3 0 3 0" Command="{Binding PasteTagBoardCommand}"  IsEnabled="{Binding IsImageSelected}"/>
+                        <Button Width="110" Height="25" Content="Remove From Set" Margin="3 0 3 0" Command="{Binding RemoveFromSetCommand}"  IsEnabled="{Binding IsImageSelected}"/>
+                        <CheckBox Content="Rename Grouping" Margin="3" IsChecked="{Binding GroupRenamed}"
+                              ToolTip="While this is checked, if multiple images with the same tags are renamed simultaneously, their numbering will be grouped together"/>
+                    </StackPanel>
+
+                    <!--? Selection Info -->
+                    <TextBlock Text="{Binding SelectedImagePathText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
+                                   Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding SelectedImageDimensionsText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
+                                   Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" HorizontalAlignment="Center" />
+
+                    <!--? Mini Image Selector -->
+                    <!-- The image set is essentially the tab here -->
+                    <GroupBox Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3">
+                        <ListBox  
+                                  Margin="0 5 0 0" HorizontalAlignment="Center" 
+                                  ItemsSource="{Binding InspectedImageSetImages}" 
+                                  SelectedItem="{Binding SelectedImage}"
+                                  SelectionMode="Extended"
+                                  SelectionChanged="ImageSetListBox_SelectionChanged"
+                                  VirtualizingPanel.IsVirtualizing="true" 
+                                  VirtualizingPanel.VirtualizationMode="Recycling"
+                                  ItemTemplate="{StaticResource ImageSelectorItemTemplate}"
+                                  Width="{StaticResource ImageSetInspectorListBoxWidth}"
+                                  Height="{Binding ImageSetInspectorListBoxHeight, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
+
+                            <!-- Wrap Setup -->
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Width="{StaticResource ImageSetInspectorListBoxWidth}"
+                                                   ItemWidth="{StaticResource ImageSelectorItemWidth}" ItemHeight="{StaticResource ImageSelectorItemHeight}" IsItemsHost="True"/>
+                                    <!--
+                                        <WrapPanel Width="{Binding ImageSetInspectorWidth, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                   ItemWidth="{StaticResource ImageSelectorItemWidth}" ItemHeight="{StaticResource ImageSelectorItemHeight}" IsItemsHost="True"/>
+                                        -->
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+
+                            <!-- Item Container Style [Handles Selection of multiple items by binding to the IsSelected property of the object] -->
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="{x:Type ListBoxItem}">
+                                    <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+
+                            <!--? // Image Info Item Template // -->
+                            <!-- x
+                                    <ListBox.ItemTemplate>
+                                    </ListBox.ItemTemplate>
+                                    -->
+                        </ListBox>
+                    </GroupBox>
+                </Grid>
+            </GroupBox>
         </hc:Drawer>
 
         <!--? NotifyIcon -->
