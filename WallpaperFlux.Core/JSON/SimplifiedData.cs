@@ -124,6 +124,34 @@ namespace WallpaperFlux.Core.JSON
         }
     }
 
+    public struct SimplifiedImageSet
+    {
+        public string[] ImagePaths;
+
+        public int OverrideRank;
+
+        public bool UsingAverageRank;
+
+        public bool UsingOverrideRank;
+
+        public bool UsingWeightedRank;
+
+        public int OverrideRankWeight;
+
+        public bool Enabled;
+
+        public SimplifiedImageSet(string[] imagePaths, int overrideRank, bool usingAverageRank, bool usingOverrideRank, bool usingWeightedRank, int overrideRankWeight, bool enabled)
+        {
+            ImagePaths = imagePaths;
+            OverrideRank = overrideRank;
+            UsingAverageRank = usingAverageRank;
+            UsingOverrideRank = usingOverrideRank;
+            UsingWeightedRank = usingWeightedRank;
+            OverrideRankWeight = overrideRankWeight;
+            Enabled = enabled;
+        }
+    }
+
     public struct SimplifiedDisplaySettings
     {
         public SimplifiedDisplaySetting[] DisplaySettings;

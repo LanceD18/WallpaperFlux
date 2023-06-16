@@ -502,7 +502,7 @@ namespace WallpaperFlux.Core.ViewModels
             MoveImagesCommand = new MvxCommand(() => ImageRenamer.AutoMoveImageRange(GetAllHighlightedImages()));
             DeleteImagesCommand = new MvxCommand(() => ImageUtil.DeleteImageRange(GetAllHighlightedImages()));
             RankImagesCommand = new MvxCommand(() => ImageUtil.PromptRankImageRange(GetAllHighlightedImages()));
-            CreateRelatedImageSetCommand = new MvxCommand(() => ImageUtil.CreateRelatedImageSet(GetAllHighlightedImages(true, true)));
+            CreateRelatedImageSetCommand = new MvxCommand(() => ImageUtil.CreateRelatedImageSet(GetAllHighlightedImages(true, true), true));
             AddToImageSetCommand = new MvxCommand(AddToImageSet);
             RemoveFromSetCommand = new MvxCommand(RemoveFromImageSet);
 
@@ -993,7 +993,8 @@ namespace WallpaperFlux.Core.ViewModels
                             {
                                 if (imageModel.IsInRelatedImageSet)
                                 {
-                                    if (imageModel.ParentRelatedImageModel.Active) //! this should NOT be combined with the above if statement! (would conflict with the else)
+                                    // not much of a downside to using IsEnabled() on sets, sets have significantly less IsEnabled() checks anyways
+                                    if (imageModel.ParentRelatedImageModel.IsEnabled()) //! this should NOT be combined with the above if statement! (would conflict with the else)
                                     {
                                         success = checkForSet.Invoke(imageModel.ParentRelatedImageModel);
                                     }

@@ -144,6 +144,18 @@ namespace WallpaperFlux.Core.Models
             UpdateAverageRank(); //! must be called after images have been set, added, removed, or re-ranked
         }
 
+        public string[] GetImagePaths()
+        {
+            List<string> imagePaths = new List<string>();
+
+            foreach (ImageModel image in RelatedImages)
+            {
+                imagePaths.Add(image.Path);
+            }
+
+            return imagePaths.ToArray();
+        }
+
         public int GetAverageRank()
         {
             int rankSum = 0; 

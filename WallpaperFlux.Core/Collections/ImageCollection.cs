@@ -79,6 +79,11 @@ namespace WallpaperFlux.Core.Collections
             return images;
         }
 
+        public ImageSetModel[] GetAllImageSets()
+        {
+            return ImageSets.ToArray();
+        }
+
         public void AddImageSet(ImageSetModel imageSet)
         {
             ImageSets.Add(imageSet);

@@ -86,10 +86,10 @@ namespace WallpaperFlux.Core.Util
             }
         }
 
-        public static void CreateRelatedImageSet(ImageModel[] images)
+        public static ImageSetModel CreateRelatedImageSet(ImageModel[] images, bool modifyTabs)
         {
-            if (images == null) return; // likely a cancelled operation
-            if (images.Length == 0) return;
+            if (images == null) return null; // likely a cancelled operation
+            if (images.Length == 0) return null; // invalid
 
             //? Having mixed image types in an image set is currently invalid, may implement in the future
             HashSet<ImageType> encounteredImageTypes = new HashSet<ImageType>();
@@ -101,28 +101,29 @@ namespace WallpaperFlux.Core.Util
                 if (encounteredImageTypes.Count > 1)
                 {
                     MessageBoxUtil.ShowError(INVALID_IMAGE_SET_MESSAGE);
-                    return;
+                    return null;
                 }
             }
 
-            // TODO Create a Related Image Set Model out of the selected images
+            // Create a Related Image Set Model out of the selected images
             ImageSetModel relatedImages = new ImageSetModel(images, encounteredImageTypes.First());
-            if (relatedImages.InvalidSet) return; // if the set becomes invalid, cancel the process
+            if (relatedImages.InvalidSet) return null; // if the set becomes invalid, cancel the process
 
-            // TODO Remove the selected images from the image selector
-            //xImageSelectorTabModel initialTab = WallpaperFluxViewModel.Instance.GetSelectorTabOfImage(images[0]);
+            if (modifyTabs) // not needed if the image selector isn't even open
+            {
+                // Remove the selected images from the image selector
+                //xImageSelectorTabModel initialTab = WallpaperFluxViewModel.Instance.GetSelectorTabOfImage(images[0]);
 
-            ImageSelectorTabModel tabToAddTo = WallpaperFluxViewModel.Instance.GetSelectorTabOfImage(images[0]); // for use later
-            WallpaperFluxViewModel.Instance.RemoveImageRangeFromTabs(images);
+                ImageSelectorTabModel tabToAddTo = WallpaperFluxViewModel.Instance.GetSelectorTabOfImage(images[0]); // for use later
+                WallpaperFluxViewModel.Instance.RemoveImageRangeFromTabs(images);
 
-            // TODO Technical Debt ; Handle adjusting the image selector to account for image removal (applies to deletion as well)
+                // Add the Related Image Set to the Image selector
+                tabToAddTo.AddImage(relatedImages);
+            }
 
-            // TODO Devise a way for the individual images to no longer be accessible by the wallpaper randomization, the image set will take their place
-            // TODO - This implies that we know that the given images are part of an image set, or a check is performed that finds the images existing in an image set ; Find the most optimal option
-
-            // TODO Add the Related Image Set to the Image selector
             ThemeUtil.Theme.Images.AddImageSet(relatedImages);
-            tabToAddTo.AddImage(relatedImages);
+
+            return relatedImages;
         }
 
         public static void AddToImageSet(ImageModel[] images, ImageSetModel targetSet)

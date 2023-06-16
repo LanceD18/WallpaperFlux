@@ -98,8 +98,10 @@ namespace WallpaperFlux.Core.Util
 
         [JsonProperty("ImageData")] public SimplifiedImage[] Images;
 
+        [JsonProperty("ImageSetData")] public SimplifiedImageSet[] ImageSets;
+
         public JsonWallpaperData(SettingsModel settings, SimplifiedDisplaySettings displaySettings, SimplifiedFrequencyModel frequencyModel, SimplifiedFolderPriority[] folderPriorities,
-            MiscData miscData, SimplifiedFolder[] imageFolders, SimplifiedCategory[] categories, SimplifiedImage[] images)
+            MiscData miscData, SimplifiedFolder[] imageFolders, SimplifiedCategory[] categories, SimplifiedImage[] images, SimplifiedImageSet[] imageSets)
         {
             Settings = settings;
             DisplaySettings = displaySettings;
@@ -109,6 +111,7 @@ namespace WallpaperFlux.Core.Util
             ImageFolders = imageFolders;
             Categories = categories;
             Images = images;
+            ImageSets = imageSets;
         }
     }
 
@@ -258,7 +261,8 @@ namespace WallpaperFlux.Core.Util
                 miscData,
                 ConvertToSimplifiedFolders(WallpaperFluxViewModel.Instance.ImageFolders.ToArray()),
                 ConvertToSimplifiedCategories(ThemeUtil.Theme.Categories.ToArray()),
-                ConvertToSimplifiedImages(ThemeUtil.Theme.Images.GetAllImages().ToArray()));
+                ConvertToSimplifiedImages(ThemeUtil.Theme.Images.GetAllImages().ToArray()),
+                ConvertToSimplifiedImageSets(ThemeUtil.Theme.Images.GetAllImageSets()));
 
             Debug.WriteLine("Writing to JSON file");
             using (StreamWriter file = File.CreateText(path))
@@ -379,6 +383,25 @@ namespace WallpaperFlux.Core.Util
 
             return simplifiedImages.ToArray();
         }
+
+        private static SimplifiedImageSet[] ConvertToSimplifiedImageSets(ImageSetModel[] imageSets)
+        {
+            List<SimplifiedImageSet> simplifiedImageSets = new List<SimplifiedImageSet>();
+
+            foreach (ImageSetModel imageSet in imageSets)
+            {
+                simplifiedImageSets.Add(new SimplifiedImageSet(
+                    imageSet.GetImagePaths(),
+                    imageSet.OverrideRank,
+                    imageSet.UsingAverageRank,
+                    imageSet.UsingOverrideRank,
+                    imageSet.UsingWeightedRank,
+                    imageSet.OverrideRankWeight,
+                    imageSet.Enabled));
+            }
+
+            return simplifiedImageSets.ToArray();
+        }
         #endregion
 
         private static string BackupData(string path, string backupNameExtension = "_BACKUP")
@@ -464,10 +487,14 @@ namespace WallpaperFlux.Core.Util
         {
             Debug.WriteLine("Converting theme...");
 
+            //! The order of operations done here is vital to reducing load times & ensuring properties end up where they need to be
+            //! The order of operations done here is vital to reducing load times & ensuring properties end up where they need to be
+            //! The order of operations done here is vital to reducing load times & ensuring properties end up where they need to be
             ConvertThemeOptions(wallpaperData); //! must be done first due to SetMaxRank()
             ConvertMiscData(wallpaperData);
             ConvertTags(wallpaperData);
             ConvertImagesAndFolders(wallpaperData);
+            ConvertImageSets(wallpaperData.ImageSets);
 
             Debug.WriteLine("Conversion Finished");
         }
@@ -641,6 +668,28 @@ namespace WallpaperFlux.Core.Util
                     else
                     {
                         tagCollection.Add(tag, false);
+                    }
+                }
+            }
+        }
+
+        private static void ConvertImageSets(SimplifiedImageSet[] imageSets)
+        {
+            if (imageSets != null)
+            {
+                foreach (SimplifiedImageSet imageSet in imageSets)
+                {
+                    ImageModel[] images = ThemeUtil.Theme.Images.GetImageRange(imageSet.ImagePaths);
+                    ImageSetModel imageSetModel = ImageUtil.CreateRelatedImageSet(images, false);
+
+                    if (imageSetModel != null)
+                    {
+                        imageSetModel.OverrideRank = imageSet.OverrideRank;
+                        imageSetModel.UsingAverageRank = imageSet.UsingAverageRank;
+                        imageSetModel.UsingOverrideRank = imageSet.UsingOverrideRank;
+                        imageSetModel.UsingWeightedRank = imageSet.UsingWeightedRank;
+                        imageSetModel.OverrideRankWeight = imageSet.OverrideRankWeight;
+                        imageSetModel.Enabled = imageSet.Enabled;
                     }
                 }
             }
