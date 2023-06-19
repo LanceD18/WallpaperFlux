@@ -394,6 +394,7 @@ namespace WallpaperFlux.Core.Util
                     imageSet.GetImagePaths(),
                     imageSet.OverrideRank,
                     imageSet.UsingAverageRank,
+                    imageSet.UsingWeightedAverage,
                     imageSet.UsingOverrideRank,
                     imageSet.UsingWeightedRank,
                     imageSet.OverrideRankWeight,
@@ -686,6 +687,7 @@ namespace WallpaperFlux.Core.Util
                     {
                         imageSetModel.OverrideRank = imageSet.OverrideRank;
                         imageSetModel.UsingAverageRank = imageSet.UsingAverageRank;
+                        imageSetModel.UsingWeightedAverage = imageSet.UsingWeightedAverage;
                         imageSetModel.UsingOverrideRank = imageSet.UsingOverrideRank;
                         imageSetModel.UsingWeightedRank = imageSet.UsingWeightedRank;
                         imageSetModel.OverrideRankWeight = imageSet.OverrideRankWeight;

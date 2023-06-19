@@ -70,7 +70,7 @@ namespace WallpaperFlux.Core.Models
                 SetProperty(ref _rank, value);
                 RaisePropertyChanged(() => Rank);
 
-                if (IsInRelatedImageSet) ParentRelatedImageModel.UpdateAverageRank();
+                if (IsInRelatedImageSet) ParentRelatedImageModel.UpdateAverageRankAndWeightedAverage();
             }
         }
         */
@@ -328,7 +328,7 @@ namespace WallpaperFlux.Core.Models
 
         public void UpdatePath(string newPath) => Path = newPath; //? UPDATES TO OTHER PROPERTIES DONE IN THE SETTER OF PATH
 
-        public override bool IsEnabled(bool checkForSet = false) //! check for set ensures that we can avoid disabling images that are in sets *when they are needed*
+        public override bool IsEnabled(bool ignoreSet = false) //! ignore set ensures that we can avoid disabling images that are in sets *when they are needed*
         {
             if (!base.IsEnabled())
             {
@@ -336,12 +336,12 @@ namespace WallpaperFlux.Core.Models
                 return false;
             }
 
-            if (!checkForSet)
-            {
+            //xif (!ignoreSet)
+            //x{
                 Active = false; //! we need to set this to false AGAIN because base.IsEnabled() will set Active to TRUE if successful
-            }
+            //x}
 
-            if (IsInRelatedImageSet && !checkForSet) return false;
+            if (IsInRelatedImageSet && !ignoreSet) return false;
 
             if (ParentFolder == null)
             {
@@ -361,7 +361,7 @@ namespace WallpaperFlux.Core.Models
 
             if (!Tags.AreTagsEnabled()) return false;
 
-            if (!checkForSet)
+            if (!ignoreSet)
             {
                 Active = true; // if we reach this point, then the image is in fact Active
             }

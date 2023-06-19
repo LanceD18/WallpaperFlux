@@ -61,7 +61,7 @@ namespace WallpaperFlux.Core.Controllers
             RankPercentiles = new double[newMaxRank];
             double rankMultiplier = 10.0 / newMaxRank;
 
-            for (int i = 0; i < newMaxRank; i++)
+            for (int i = 1; i < newMaxRank + 1; i++) //? the + 1 allows us to calculate the max rank, we don't need to worry about calculating rank 0
             {
                 // This is the default formula for rank percentiles, where each 10% of ranks has twice the probability of the previous 10%
                 // Due to the rank multiplier, the max rank will always have a probability of 1024
@@ -69,7 +69,7 @@ namespace WallpaperFlux.Core.Controllers
                 //? Note that the below formula does not include rank 0 as 0 * rankMultiplier is Rank 1
                 //? When the percentages are calculated, Rank 1 will still be possible despite a score of 0 as the percentage uses
                 //? the range from 0 to 1 instead of the 0 itself
-                RankPercentiles[i] = Math.Pow(2, i * rankMultiplier);
+                RankPercentiles[i - 1] = Math.Pow(2, i * rankMultiplier);
             }
         }
 
@@ -92,11 +92,11 @@ namespace WallpaperFlux.Core.Controllers
                     {
                         if (RankData.Get()[imageType][i].Count == 0)
                         {
-                            continue; // a rank of 0 is not valid
+                            continue; // a rank with 0 images is not valid
                         }
                     }
 
-                    rankPercentagesTotal += RankPercentiles[i - 1];
+                    rankPercentagesTotal += RankPercentiles[i - 1]; // there are MaxRank + 1 entries in a given image type, we need the -1 since rank 0 is not being evaluated
                     validRanks.Add(i);
                 }
             }

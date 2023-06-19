@@ -132,6 +132,8 @@ namespace WallpaperFlux.Core.JSON
 
         public bool UsingAverageRank;
 
+        public bool UsingWeightedAverage;
+
         public bool UsingOverrideRank;
 
         public bool UsingWeightedRank;
@@ -140,11 +142,12 @@ namespace WallpaperFlux.Core.JSON
 
         public bool Enabled;
 
-        public SimplifiedImageSet(string[] imagePaths, int overrideRank, bool usingAverageRank, bool usingOverrideRank, bool usingWeightedRank, int overrideRankWeight, bool enabled)
+        public SimplifiedImageSet(string[] imagePaths, int overrideRank, bool usingAverageRank, bool usingWeightedAverage, bool usingOverrideRank, bool usingWeightedRank, int overrideRankWeight, bool enabled)
         {
             ImagePaths = imagePaths;
             OverrideRank = overrideRank;
             UsingAverageRank = usingAverageRank;
+            UsingWeightedAverage = usingWeightedAverage;
             UsingOverrideRank = usingOverrideRank;
             UsingWeightedRank = usingWeightedRank;
             OverrideRankWeight = overrideRankWeight;

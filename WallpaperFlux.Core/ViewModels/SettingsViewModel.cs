@@ -13,6 +13,7 @@ using MvvmCross.Commands;
 using MvvmCross.ViewModels;
 using SkiaSharp;
 using WallpaperFlux.Core.IoC;
+using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Models.Theme;
 using WallpaperFlux.Core.Util;
 
@@ -83,11 +84,27 @@ namespace WallpaperFlux.Core.ViewModels
             get
             {
                 int diff = ThemeUtil.Theme.Images.GetAllImages().Length - (ThemeUtil.RankController.GetRankCountTotal() + ThemeUtil.RankController.GetRankCount(0));
-                Debug.WriteLine("Diff: All: " + ThemeUtil.Theme.Images.GetAllImages().Length + " | 99: " + ThemeUtil.RankController.GetRankCountTotal() + " | 0: " + ThemeUtil.RankController.GetRankCount(0));
+                //xDebug.WriteLine("Diff: All: " + ThemeUtil.Theme.Images.GetAllImages().Length + " | 99: " + ThemeUtil.RankController.GetRankCountTotal() + " | 0: " + ThemeUtil.RankController.GetRankCount(0));
 
                 if (diff > 0)
                 {
-                    return "Disabled: " + diff;
+                    //? enabled images in sets count as disabled but for the sake of these number they'll be counted as enabled
+                    return "Disabled: " + (diff - ThemeUtil.Theme.Images.GetEnabledImagesInSetsCount());
+                }
+
+                return "";
+            }
+        }
+
+        public string ImagesInSetText
+        {
+            get
+            {
+                int count = ThemeUtil.Theme.Images.GetEnabledImagesInSetsCount();
+
+                if (count > 0)
+                {
+                    return "In Sets: " + count;
                 }
 
                 return "";

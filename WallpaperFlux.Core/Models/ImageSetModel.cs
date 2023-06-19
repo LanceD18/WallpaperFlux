@@ -16,7 +16,7 @@ namespace WallpaperFlux.Core.Models
 
         public RelatedImageType RelatedImageType { get; set; } = RelatedImageType.None;
 
-        private bool _usingAverageRank = true;
+        private bool _usingAverageRank;
         public bool UsingAverageRank
         {
             get => _usingAverageRank;
@@ -26,7 +26,8 @@ namespace WallpaperFlux.Core.Models
 
                 if (value) UsingOverrideRank = false;
                 if (value) UsingWeightedRank = false;
-                if (value) UpdateAverageRank();
+                if (value) UsingWeightedAverage = false;
+                if (value) UpdateAverageRankAndWeightedAverage();
             }
         }
 
@@ -40,6 +41,7 @@ namespace WallpaperFlux.Core.Models
 
                 if (value) UsingAverageRank = false;
                 if (value) UsingWeightedRank = false;
+                if (value) UsingWeightedAverage = false;
                 if (value) RaisePropertyChanged(() => Rank);
             }
         }
@@ -54,10 +56,31 @@ namespace WallpaperFlux.Core.Models
 
                 if (value) UsingAverageRank = false;
                 if (value) UsingOverrideRank = false;
+                if (value) UsingWeightedAverage = false;
                 if (value)
                 {
                     RaisePropertyChanged(() => WeightedRank);
                     RaisePropertyChanged(() => Rank);
+                }
+            }
+        }
+
+        private bool _usingWeightedAverage = true;
+        // uses the weight scaling for wallpaper randomization & applies it to determining an average rank
+        //? while with other methods the ranking may act as being within the bubble of the image set, weighted average takes into perspective the actual rate an image's rank
+        public bool UsingWeightedAverage
+        {
+            get => _usingWeightedAverage;
+            set
+            {
+                SetProperty(ref _usingWeightedAverage, value);
+
+                if (value) UsingAverageRank = false;
+                if (value) UsingOverrideRank = false;
+                if (value) UsingWeightedRank = false;
+                if (value)
+                {
+                    UpdateWeightedAverage();
                 }
             }
         }
@@ -102,9 +125,22 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
+        private int _weightedAverage;
+        public int WeightedAverage
+        {
+            get => _weightedAverage;
+            private set
+            {
+                SetProperty(ref _weightedAverage, value);
+                RaisePropertyChanged(() => Rank);
+            }
+        }
+
         public string OverrideRankWeightText => "Weight: " + OverrideRankWeight;
 
         public bool InvalidSet { get; set; } = false;
+
+        public string RankText => "Rank: " + Rank;
 
         public ImageSetModel(ImageModel[] relatedImages, ImageType imageType, bool enabled = true)
         {
@@ -141,7 +177,13 @@ namespace WallpaperFlux.Core.Models
                 }
             };
 
-            UpdateAverageRank(); //! must be called after images have been set, added, removed, or re-ranked
+            UpdateAverageRankAndWeightedAverage(); //! must be called after images have been set, added, removed, or re-ranked
+        }
+
+        //! Kept as a reminder that this is not supported at the moment
+        public void SetRelatedImages(ImageModel[] newRelatedImages, ImageType imageType)
+        {
+            throw new Exception("We will only set this once, if you wish to add/remove from the Image set, create a new RelatedImageModel");
         }
 
         public string[] GetImagePaths()
@@ -179,12 +221,61 @@ namespace WallpaperFlux.Core.Models
             return (int)Math.Round(weightedAverage + weightedOverride);
         }
 
-        public void UpdateAverageRank() => AverageRank = GetAverageRank();
-
-        //! Kept as a reminder that this is not supported at the moment
-        public void SetRelatedImages(ImageModel[] newRelatedImages, ImageType imageType)
+        public void UpdateAverageRankAndWeightedAverage()
         {
-            throw new Exception("We will only set this once, if you wish to add/remove from the Image set, create a new RelatedImageModel");
+            if (UsingAverageRank)
+            {
+                AverageRank = GetAverageRank();
+            }
+
+            if (UsingWeightedAverage) // relevant to be called whenever average rank is updated
+            {
+                UpdateWeightedAverage();
+            }
+        }
+
+        public void UpdateWeightedAverage()
+        {
+            //? follows how the Rank Percentiles function
+            // TODO consider merging the logic of this and the PercentileController into a tool
+
+            // Gather Weights
+            int maxRank = ThemeUtil.Theme.RankController.GetMaxRank();
+
+            double[] weights = new double[RelatedImages.Length];
+            double rankMultiplier = 10.0 / maxRank;
+
+            double weightNumerator = 0;
+            double weightDivisor = 0;
+            for (int i = 0; i < RelatedImages.Length; i++)
+            {
+                // if the rank of an image is 0 just set the weight to 0, calculating it will give us a weight of 1
+                weights[i] = RelatedImages[i].Rank != 0 ? Math.Pow(2, RelatedImages[i].Rank * rankMultiplier) : 0;
+
+                weightNumerator += RelatedImages[i].Rank * weights[i];
+                weightDivisor += weights[i];
+            }
+
+            WeightedAverage = (int)Math.Round(weightNumerator / weightDivisor);
+        }
+
+        public ImageModel GetHighestRankedImage()
+        {
+            // returns the highest ranked image in the set
+            // if multiple images have the highest rank, we'll just return whichever one comes first
+
+            int rank = -1;
+            ImageModel highestRankedImage = null;
+
+            foreach (ImageModel image in RelatedImages)
+            {
+                if (image.Rank > rank)
+                {
+                    highestRankedImage = image;
+                }
+            }
+
+            return highestRankedImage;
         }
 
         protected bool Equals(ImageSetModel other)

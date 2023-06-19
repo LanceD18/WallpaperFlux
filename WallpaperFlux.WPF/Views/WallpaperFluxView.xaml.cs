@@ -383,7 +383,7 @@ namespace WallpaperFlux.WPF.Views
 
                 if (image.DataContext is ImageSetModel imageSetModel)
                 {
-                    imageModel = imageSetModel.RelatedImages[0];
+                    imageModel = imageSetModel.GetHighestRankedImage();
                 }
 
                 if (imageModel != null)

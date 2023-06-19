@@ -186,7 +186,16 @@ namespace WallpaperFlux.Core.ViewModels
                 if (SelectedImage is ImageModel selectedImage)
                 {
                     Size size = selectedImage.GetSize();
-                    return size.Width + "x" + size.Height;
+
+                    if (selectedImage.IsInRelatedImageSet && !ImageSetInspectorToggle)
+                    {
+                        //! this shouldn't happen but it has, here's a hacky fix
+                        SelectedImage = selectedImage.ParentRelatedImageModel;
+                    }
+                    else
+                    {
+                        return size.Width + "x" + size.Height;
+                    }
                 }
 
                 if (SelectedImage is ImageSetModel selectedImageSet)
@@ -281,6 +290,19 @@ namespace WallpaperFlux.Core.ViewModels
         }
 
         public ImageSetModel InspectedImageSet;
+
+        public string InspectedImageRankText
+        {
+            get
+            {
+                if (InspectedImageSet != null)
+                {
+                    return InspectedImageSet.RankText;
+                }
+
+                return "";
+            }
+        }
 
         #endregion
 
@@ -1215,7 +1237,7 @@ namespace WallpaperFlux.Core.ViewModels
                 {
                     if (images.Contains(image))
                     {
-                        imageSelectorTab.Items.Remove(image);
+                        imageSelectorTab.RemoveImage(image);
                     }
                 }
             }

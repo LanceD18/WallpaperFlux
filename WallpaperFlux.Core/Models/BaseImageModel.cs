@@ -7,6 +7,7 @@ using MvvmCross.Commands;
 using Newtonsoft.Json;
 using WallpaperFlux.Core.Models.Controls;
 using WallpaperFlux.Core.Util;
+using WallpaperFlux.Core.ViewModels;
 
 namespace WallpaperFlux.Core.Models
 {
@@ -31,9 +32,13 @@ namespace WallpaperFlux.Core.Models
 
                     if (imageSet.UsingWeightedRank) _rank = imageSet.WeightedRank;
 
+                    if (imageSet.UsingWeightedAverage) _rank = imageSet.WeightedAverage;
+
                     if (oldRank != _rank)
                     {
                         ThemeUtil.Theme.RankController.ModifyRank(this, oldRank, ref _rank, true);
+                        imageSet.RaisePropertyChanged(() => imageSet.RankText);
+                        WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.InspectedImageRankText);
                     }
                 }
 
@@ -49,7 +54,7 @@ namespace WallpaperFlux.Core.Models
                     SetProperty(ref _rank, value);
                     RaisePropertyChanged(() => Rank);
 
-                    if (imageModel.IsInRelatedImageSet) imageModel.ParentRelatedImageModel.UpdateAverageRank();
+                    if (imageModel.IsInRelatedImageSet) imageModel.ParentRelatedImageModel.UpdateAverageRankAndWeightedAverage();
                 }
 
                 if (this is ImageSetModel imageSet)
@@ -159,7 +164,7 @@ namespace WallpaperFlux.Core.Models
 
         }
 
-        public virtual bool IsEnabled(bool checkForSet = false)
+        public virtual bool IsEnabled(bool ignoreSet = false)
         {
             Active = false; // recheck this every time IsEnabled is called
 

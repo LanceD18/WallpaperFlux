@@ -259,6 +259,53 @@
                                                                            HorizontalAlignment="Center"
                                                                            Loaded="Image_OnLoaded_LowQuality"
                                                                            Unloaded="Image_OnUnloaded">
+
+                                                <!--? ///// Image Tooltip /////-->
+                                                <Image.ToolTip>
+                                                    <ContentControl Content="{Binding}">
+                                                        <!-- Resources -->
+                                                        <ContentControl.Resources>
+                                                            <!-- Static -->
+                                                            <DataTemplate x:Key="StaticTemplate">
+                                                                <Image Loaded="Tooltip_Image_OnLoaded"
+                                                                                        Unloaded="Tooltip_Image_OnUnloaded"
+                                                                                        Stretch="Uniform"
+                                                                                        RenderOptions.BitmapScalingMode="HighQuality">
+                                                                    <!--
+                                                            <Image.Source>
+                                                                <BitmapImage
+                                                                    CacheOption="OnLoad"
+                                                                    UriSource="{Binding Path, Mode=OneWay}">
+                                                                </BitmapImage>
+                                                            </Image.Source>
+                                                            -->
+                                                                </Image>
+                                                            </DataTemplate>
+                                                            <!-- GIF -->
+                                                            <DataTemplate x:Key="GIFTemplate">
+                                                                <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"
+                                                                                        Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" />
+                                                            </DataTemplate>
+                                                        </ContentControl.Resources>
+                                                        <!--? Template Control -->
+                                                        <ContentControl.ContentTemplate>
+                                                            <DataTemplate>
+                                                                <!-- Default Template -->
+                                                                <ContentControl Name="cc" Content="{Binding }" 
+                                                                                ContentTemplate="{StaticResource StaticTemplate}"/>
+                                                                <!-- Triggers -->
+                                                                <DataTemplate.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsGif}" Value="True">
+                                                                        <!-- Sets the ContentTemplate to be GIFTemplate instead of StaticTemplate -->
+                                                                        <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource GIFTemplate}"/>
+                                                                    </DataTrigger>
+                                                                </DataTemplate.Triggers>
+                                                            </DataTemplate>
+                                                        </ContentControl.ContentTemplate>
+                                                    </ContentControl>
+                                                </Image.ToolTip>
+
+                                                <!--? Context Menu -->
                                                 <Image.ContextMenu>
                                                     <ContextMenu>
                                                         <MenuItem Header="Ranking Format" IsEnabled="False"/>
@@ -266,7 +313,9 @@
                                                                   IsEnabled="{Binding UsingAverageRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource BooleanInverterConverter}}"/>
                                                         <MenuItem Header="Override" IsChecked="{Binding UsingOverrideRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" StaysOpenOnClick="True" IsCheckable="True"
                                                                   IsEnabled="{Binding UsingOverrideRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource BooleanInverterConverter}}"/>
-                                                        <MenuItem Header="Weighted" IsChecked="{Binding UsingWeightedRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" StaysOpenOnClick="True" IsCheckable="True"
+                                                        <MenuItem Header="Weighted Average" IsChecked="{Binding UsingWeightedAverage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" StaysOpenOnClick="True" IsCheckable="True"
+                                                                  IsEnabled="{Binding UsingWeightedAverage, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource BooleanInverterConverter}}"/>
+                                                        <MenuItem Header="Weighted Override" IsChecked="{Binding UsingWeightedRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" StaysOpenOnClick="True" IsCheckable="True"
                                                                   IsEnabled="{Binding UsingWeightedRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource BooleanInverterConverter}}"/>
                                                         <MenuItem Header="{Binding OverrideRankWeightText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="False"/>
                                                         <Slider Value="{Binding OverrideRankWeight}" IsEnabled="{Binding UsingWeightedRank}" Minimum="0" Maximum="100"/>
@@ -1093,7 +1142,13 @@
                     </Grid.RowDefinitions>
 
                     <!--? Title & Exit Button -->
-                    <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" HorizontalAlignment="Center" Text="Image Set Inspector" FontWeight="Medium" Margin="0 0 0 5">
+                    <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" Text="{Binding InspectedImageRankText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
+                               FontWeight="Medium" Margin="0 0 0 5">
+                        <TextBlock.Style>
+                            <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3"  HorizontalAlignment="Center" Text="Image Set Inspector" FontWeight="Medium" Margin="0 0 0 5">
                         <TextBlock.Style>
                             <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
                         </TextBlock.Style>

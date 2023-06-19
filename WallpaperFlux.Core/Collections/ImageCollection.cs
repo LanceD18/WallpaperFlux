@@ -152,6 +152,11 @@ namespace WallpaperFlux.Core.Collections
             return failedRemovals.Length == 0;
         }
 
+        public bool RemoveSet(ImageSetModel set)
+        {
+            return ImageSets.Remove(set);
+        }
+
         public bool ContainsImage(string path, ImageType imageType)
         {
             if (string.IsNullOrEmpty(path)) return false;
@@ -235,6 +240,28 @@ namespace WallpaperFlux.Core.Collections
             }
 
             return images.ToArray();
+        }
+
+        public int GetEnabledImagesInSetsCount()
+        {
+            int count = 0;
+
+            foreach (ImageSetModel set in GetAllImageSets())
+            {
+                int setCount = set.RelatedImages.Length;
+
+                foreach (ImageModel image in set.RelatedImages)
+                {
+                    if (!image.IsEnabled(true))
+                    {
+                        setCount--;
+                    }
+                }
+
+                count += setCount;
+            }
+
+            return count;
         }
 
         //? RankController classifies images by images type by default, so performing this action there is much easier

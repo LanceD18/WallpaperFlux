@@ -159,7 +159,16 @@ namespace WallpaperFlux.Core.Util
             ImageSelectorTabModel targetTab = WallpaperFluxViewModel.Instance.GetSelectorTabOfImage(targetSet);
 
             ImageSetModel newImageSet = new ImageSetModel(targetSet.RelatedImages.Except(images).ToArray(), targetSet.ImageType);
-            ReplaceImageSet(targetSet, newImageSet, targetTab);
+
+            if (newImageSet.RelatedImages.Length != 0)
+            {
+                ReplaceImageSet(targetSet, newImageSet, targetTab);
+            }
+            else //? just delete this image set, it's empty
+            {
+                targetTab.RemoveImage(targetSet);
+                ThemeUtil.Theme.Images.RemoveSet(targetSet);
+            }
 
             targetTab.AddImageRange(images);
             WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.InspectedImageSetImages);
