@@ -148,9 +148,22 @@ namespace WallpaperFlux.Core.ViewModels
 
                 foreach (ImageModel image in images)
                 {
-                    if (rankFilter(image) && VerifyImageType(image))
+                    // check the set for filters instead if one exists
+                    BaseImageModel filteredImageModel = !image.IsInRelatedImageSet ? (BaseImageModel)image : image.ParentRelatedImageModel;
+
+                    if (rankFilter(filteredImageModel) && VerifyImageType(filteredImageModel))
                     {
-                        filteredImages.Add(image);
+                        if (filteredImageModel is ImageSetModel)
+                        {
+                            if (!filteredImages.Contains(filteredImageModel)) // we don't want to add sets multiple times if multiple images in a set are in the search
+                            {
+                                filteredImages.Add(filteredImageModel);
+                            }
+                        }
+                        else
+                        {
+                            filteredImages.Add(filteredImageModel);
+                        }
                     }
                 }
 
@@ -165,7 +178,7 @@ namespace WallpaperFlux.Core.ViewModels
             return filteredImagesArr;
         }
 
-        private bool VerifyImageType(ImageModel image)
+        private bool VerifyImageType(BaseImageModel image)
         {
             if (!RadioAllTypes)
             {

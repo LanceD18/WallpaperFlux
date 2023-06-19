@@ -367,6 +367,7 @@ namespace WallpaperFlux.Core.ViewModels
                 if (value)
                 {
                     RaisePropertyChanged(() => InspectedImageSetImages);
+                    RaisePropertyChanged(() => InspectedImageRankText);
                     DeselectAllImages(); // don't want any regular images selected when viewing a set
                 }
             }
