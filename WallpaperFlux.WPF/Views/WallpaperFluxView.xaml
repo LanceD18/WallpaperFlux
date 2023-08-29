@@ -374,7 +374,7 @@
         <Grid.ColumnDefinitions>
             <!--<ColumnDefinition Width="{adonisUi:Space 1}"/>-->
             <ColumnDefinition Width="0"/>
-            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="500"/>
             <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
@@ -383,6 +383,7 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="625"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
@@ -476,45 +477,33 @@
         -->
 
         <!--? Image Folders -->
-        <GroupBox Grid.Row="4" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="0 5 0 5">
+        <GroupBox Grid.Row="4" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="0 5 0 0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="0"/>
-                    <!-- Remove this at some point, will need to adjust columns -->
-                    <ColumnDefinition Width="auto"/>
                     <ColumnDefinition Width="auto"/>
                     <ColumnDefinition Width="auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="{adonisUi:Space 1}"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="0"/>
                     <RowDefinition Height="auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <!-- Header -->
-                <!--
-                <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Text="Folders" HorizontalAlignment="Center">
-                    <TextBlock.Style>
-                        <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
-                    </TextBlock.Style>
-                </TextBlock>
-                -->
-
                 <!-- Folder Buttons -->
-                <Button mvx:Bi.nd="Command AddFolderCommand" Grid.Row="1" Grid.Column="1" Width="135" Height="25" Content="Add Folder" Margin="10" HorizontalAlignment="Stretch"
-                    adonisExtensions:CursorSpotlightExtension.BorderBrush="LimeGreen"
-                    adonisExtensions:RippleExtension.BackgroundBrush="LimeGreen"/>
-                <Button mvx:Bi.nd="Command RemoveFolderCommand"
-                        Grid.Row="1" Grid.Column="2" Width="135" Height="25" Content="Remove Folder" Margin="5" IsEnabled="{Binding CanRemoveWallpaper}"
-                        adonisExtensions:CursorSpotlightExtension.BorderBrush="Red"
-                        adonisExtensions:RippleExtension.BackgroundBrush="Red"/>
+                <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" HorizontalAlignment="Center">
+                    <Button mvx:Bi.nd="Command AddFolderCommand" Width="135" Height="25" Content="Add Folder" Margin="10" HorizontalAlignment="Stretch"
+                            adonisExtensions:CursorSpotlightExtension.BorderBrush="LimeGreen"
+                            adonisExtensions:RippleExtension.BackgroundBrush="LimeGreen"/>
+                    <Button mvx:Bi.nd="Command RemoveFolderCommand" Width="135" Height="25" Content="Remove Folder" Margin="5" IsEnabled="{Binding CanRemoveWallpaper}"
+                            adonisExtensions:CursorSpotlightExtension.BorderBrush="Red"
+                            adonisExtensions:RippleExtension.BackgroundBrush="Red"/>
+                </StackPanel>
 
-                <!-- Folder List -->
-                <GroupBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3"  adonisExtensions:LayerExtension.IncreaseLayer="True">
-                    <ListBox Width="400" Height="300"
+                <!--? Folder List -->
+                <GroupBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" adonisExtensions:LayerExtension.IncreaseLayer="True">
+                    <ListBox 
                              ItemsSource="{Binding ImageFolders}" SelectedItem="{Binding SelectedImageFolder}" SelectionMode="Extended"
                              adonisExtensions:ScrollViewerExtension.HideScrollBarsUntilMouseOver="True"
                              adonisExtensions:ScrollViewerExtension.VerticalScrollBarPlacement="Overlay"
@@ -542,14 +531,14 @@
             </Grid>
         </GroupBox>
 
+        <GridSplitter Grid.Row="4" Grid.RowSpan="3" Grid.Column="2" Width="5" ResizeDirection="Columns"/>
+
         <!--? Display Settings -->
-        <GroupBox Grid.Row="5" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="10">
+        <GroupBox Grid.Row="6" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="0 0 0 5">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="0"/>
                     <!-- Remove this at some point, will need to adjust columns -->
-                    <ColumnDefinition Width="auto"/>
-                    <ColumnDefinition Width="auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
@@ -560,16 +549,16 @@
                 </Grid.RowDefinitions>
 
                 <!-- Header & Sync -->
-                <TextBlock Text="Display Settings" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" HorizontalAlignment="Center"  Margin="5" FontWeight="Bold"/>
-                <Button  Content="Sync" IsEnabled="{Binding CanSync}" mvx:Bi.nd="Command SyncCommand" Grid.Row="2" Grid.Column="1" Margin="5">
+                <TextBlock Text="Display Settings" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center"  Margin="5" FontWeight="Bold"/>
+                <Button  Content="Sync" MaxWidth="175" IsEnabled="{Binding CanSync}" mvx:Bi.nd="Command SyncCommand" Grid.Row="2" Grid.Column="1" Margin="5">
                     <Button.ToolTip>
                         'Syncing' display settings allows wallpapers to change simultaneously across multiple monitors and applies the same configuration across the sync
                     </Button.ToolTip>
                 </Button>
 
                 <!--? Display Setting Template List -->
-                <GroupBox  Grid.Row="3" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True">
-                    <ListBox Width="310" MaxHeight="210"
+                <GroupBox Grid.Row="3" Grid.Column="1" adonisExtensions:LayerExtension.IncreaseLayer="True">
+                    <ListBox Width="auto" MaxHeight="210" HorizontalAlignment="Center"
                              ItemsSource="{Binding DisplaySettings}"  SelectedItem="{Binding SelectedDisplaySetting}"
                              adonisExtensions:ScrollViewerExtension.HideScrollBarsUntilMouseOver="True"
                              adonisExtensions:ScrollViewerExtension.VerticalScrollBarPlacement="Overlay"
@@ -627,10 +616,10 @@
             </Grid>
         </GroupBox>
 
-        <GridSplitter Grid.Row="4" Grid.Column="2" Width="5" ResizeDirection="Columns"/>
+        <GridSplitter Grid.Row="5" Grid.Column="1" Width="auto" Height="5" ResizeDirection="Rows"/>
 
         <!--? Image Selector -->
-        <GroupBox Grid.Row="4" Grid.RowSpan="2" Grid.Column="3" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin=" 0 5 5 5">
+        <GroupBox Grid.Row="4" Grid.RowSpan="3" Grid.Column="3" adonisExtensions:LayerExtension.IncreaseLayer="True" Margin=" 0 5 5 5">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="0"/>
