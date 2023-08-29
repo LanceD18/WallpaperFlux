@@ -37,7 +37,6 @@ namespace WallpaperFlux.Core.Models
                     if (oldRank != _rank)
                     {
                         ThemeUtil.Theme.RankController.ModifyRank(this, oldRank, ref _rank, true);
-                        imageSet.RaisePropertyChanged(() => imageSet.RankText);
                         WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.InspectedImageRankText);
                     }
                 }
@@ -83,7 +82,7 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
-        public bool Active { get; protected set; } //? so that we don't have to check IsEnabled() every time we want to see if the image is available
+        public bool Active { get; protected set; } = false; //? so that we don't have to check IsEnabled() every time we want to see if the image is available
 
         [DataMember(Name = "Image Type")]
         public ImageType ImageType { get; set; }
@@ -172,6 +171,8 @@ namespace WallpaperFlux.Core.Models
 
             if (!Enabled) return false;
 
+            if (!ThemeUtil.Theme.Images.ContainsImage(this)) return false;
+
             Active = true; // if we reach this point, then the image is in fact Active
             return true;
         }
@@ -180,7 +181,9 @@ namespace WallpaperFlux.Core.Models
         {
             if (JsonUtil.IsLoadingData) return;
 
-            //? Modifying the image's rank will check if the image is enabled, re-adding or removing the image as needed
+            //? Modifying the image's rank will both check if the image is enabled and add/remove the image as needed
+            // ModifyRank will always have to check if the image is enabled or not and since this also determines if we remove/add the image we will perform the enabled state
+            // check through ModifyRank instead of checking IsEnabled() directly
             ThemeUtil.RankController.ModifyRank(this, _rank, ref _rank);
         }
     }

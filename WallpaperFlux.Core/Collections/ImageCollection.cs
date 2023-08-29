@@ -112,6 +112,11 @@ namespace WallpaperFlux.Core.Collections
             image.RemoveAllTags();
             WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.RemoveImage(image);
 
+            if (image.IsInRelatedImageSet)
+            {
+                ImageUtil.RemoveFromImageSet(new ImageModel[] {image}, image.ParentRelatedImageModel);
+            }
+
             return ImageContainer[image.ImageType].Remove(image.Path);
         }
 
@@ -173,7 +178,9 @@ namespace WallpaperFlux.Core.Collections
         {
             if (image is ImageModel imageModel)
             {
-                return ContainsImage(imageModel);
+                //! remember that searching for keys is significantly faster so if possible search that way instead
+                //! remember that searching for keys is significantly faster so if possible search that way instead
+                return ContainsImage(imageModel.Path, imageModel.ImageType); 
             }
 
             if (image is ImageSetModel relatedImageModel)
@@ -184,7 +191,12 @@ namespace WallpaperFlux.Core.Collections
             return false;
         }
 
-        public bool ContainsImage(ImageModel image) => ImageContainer[image.ImageType].ContainsValue(image);
+        public bool ContainsImage(ImageModel image)
+        {
+            //! remember that searching for keys is significantly faster so if possible search that way instead
+            //! remember that searching for keys is significantly faster so if possible search that way instead
+            return ContainsImage(image.Path, image.ImageType);
+        }
 
         public bool ContainsImage(ImageSetModel image) => ImageSets.Contains(image);
 

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using LanceTools.DiagnosticsUtil;
 using LanceTools.IO;
+using LanceTools.WPF.Adonis.Util;
 using MvvmCross.Commands;
 using MvvmCross.ViewModels;
 using WallpaperFlux.Core.Util;
@@ -57,6 +58,7 @@ namespace WallpaperFlux.Core.Models
         public IMvxCommand ViewFolderCommand { get; set; }
 
         public IMvxCommand SelectFolderImagesCommand { get; set; }
+
         public IMvxCommand SelectFolderImagesSelectionFilterCommand { get; set; }
 
         public FolderModel(string path, bool enabled, string priorityName = "")
@@ -65,7 +67,7 @@ namespace WallpaperFlux.Core.Models
             {
                 path = "INVALID PATH ERROR: " + path;
                 Path = path;
-                return; //! doing anything else could cause errors
+                return; //! doing anything else could cause errors as this folder is invalid
             }
 
             //? internally adds the images to the model (see setter)
@@ -84,7 +86,7 @@ namespace WallpaperFlux.Core.Models
 
         public void ViewFolder()
         {
-            if (!ValidationUtil.DirectoryExists(Path)) return;
+            if (!MessageBoxUtil.DirectoryExists(Path)) return;
             ProcessUtil.OpenFile(Path);
         }
 
@@ -104,7 +106,9 @@ namespace WallpaperFlux.Core.Models
 
                     if (image == null) // new image found
                     {
-                        ThemeUtil.Theme.Images.AddImage(imagePath, this);
+                        image = ThemeUtil.Theme.Images.AddImage(imagePath, this);
+
+                        image.UpdateEnabledState(); //? we will always update the enabled state of new images to ensure that they are made active
                     }
                     else // check if existing image is enabled
                     {

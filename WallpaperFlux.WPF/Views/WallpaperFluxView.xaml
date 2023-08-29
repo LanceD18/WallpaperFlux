@@ -308,6 +308,8 @@
                                                 <!--? Context Menu -->
                                                 <Image.ContextMenu>
                                                     <ContextMenu>
+                                                        <MenuItem Header="Set As Wallpaper" mvx:Bi.nd="Command SetWallpaperCommand"/>
+                                                        <Separator/>
                                                         <MenuItem Header="Ranking Format" IsEnabled="False"/>
                                                         <MenuItem Header="Average" IsChecked="{Binding UsingAverageRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" StaysOpenOnClick="True" IsCheckable="True"
                                                                   IsEnabled="{Binding UsingAverageRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource BooleanInverterConverter}}"/>
@@ -319,6 +321,7 @@
                                                                   IsEnabled="{Binding UsingWeightedRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource BooleanInverterConverter}}"/>
                                                         <MenuItem Header="{Binding OverrideRankWeightText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="False"/>
                                                         <Slider Value="{Binding OverrideRankWeight}" IsEnabled="{Binding UsingWeightedRank}" Minimum="0" Maximum="100"/>
+
                                                         <Separator/>
                                                         <MenuItem Header="Enabled" StaysOpenOnClick="True" IsCheckable="True"
                                                                   IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"

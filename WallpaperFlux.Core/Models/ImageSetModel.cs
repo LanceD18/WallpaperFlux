@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using LanceTools;
 using LanceTools.WPF.Adonis.Util;
+using MvvmCross.Commands;
 using WallpaperFlux.Core.Util;
 
 namespace WallpaperFlux.Core.Models
@@ -16,6 +17,8 @@ namespace WallpaperFlux.Core.Models
 
         public RelatedImageType RelatedImageType { get; set; } = RelatedImageType.None;
 
+        public ImageSetRankingFormat RankingFormat { get; set; }
+
         private bool _usingAverageRank;
         public bool UsingAverageRank
         {
@@ -24,10 +27,15 @@ namespace WallpaperFlux.Core.Models
             {
                 SetProperty(ref _usingAverageRank, value);
 
-                if (value) UsingOverrideRank = false;
-                if (value) UsingWeightedRank = false;
-                if (value) UsingWeightedAverage = false;
-                if (value) UpdateAverageRankAndWeightedAverage();
+                if (value)
+                {
+                    UsingOverrideRank = false;
+                    UsingWeightedRank = false;
+                    UsingWeightedAverage = false;
+                    UpdateAverageRankAndWeightedAverage();
+
+                    RankingFormat = ImageSetRankingFormat.Average;
+                }
             }
         }
 
@@ -39,10 +47,15 @@ namespace WallpaperFlux.Core.Models
             {
                 SetProperty(ref _usingOverrideRank, value);
 
-                if (value) UsingAverageRank = false;
-                if (value) UsingWeightedRank = false;
-                if (value) UsingWeightedAverage = false;
-                if (value) RaisePropertyChanged(() => Rank);
+                if (value)
+                {
+                    UsingAverageRank = false;
+                    UsingWeightedRank = false;
+                    UsingWeightedAverage = false;
+                    RaisePropertyChanged(() => Rank);
+
+                    RankingFormat = ImageSetRankingFormat.Override;
+                }
             }
         }
 
@@ -53,14 +66,17 @@ namespace WallpaperFlux.Core.Models
             set
             {
                 SetProperty(ref _usingWeightedRank, value);
-
-                if (value) UsingAverageRank = false;
-                if (value) UsingOverrideRank = false;
-                if (value) UsingWeightedAverage = false;
+                
                 if (value)
                 {
+                    UsingAverageRank = false;
+                    UsingOverrideRank = false;
+                    UsingWeightedAverage = false;
+
                     RaisePropertyChanged(() => WeightedRank);
                     RaisePropertyChanged(() => Rank);
+
+                    RankingFormat = ImageSetRankingFormat.WeightedOverride;
                 }
             }
         }
@@ -75,12 +91,14 @@ namespace WallpaperFlux.Core.Models
             {
                 SetProperty(ref _usingWeightedAverage, value);
 
-                if (value) UsingAverageRank = false;
-                if (value) UsingOverrideRank = false;
-                if (value) UsingWeightedRank = false;
                 if (value)
                 {
+                    UsingAverageRank = false;
+                    UsingOverrideRank = false;
+                    UsingWeightedRank = false;
                     UpdateWeightedAverage();
+
+                    RankingFormat = ImageSetRankingFormat.WeightedAverage;
                 }
             }
         }
@@ -140,11 +158,14 @@ namespace WallpaperFlux.Core.Models
 
         public bool InvalidSet { get; set; } = false;
 
-        public string RankText => "Rank: " + Rank;
+        public IMvxCommand SetWallpaperCommand { get; set; }
 
-        public ImageSetModel(ImageModel[] relatedImages, ImageType imageType, bool enabled = true)
+        public ImageSetModel(ImageModel[] relatedImages, ImageType imageType, RelatedImageType relatedImageType, ImageSetRankingFormat rankingFormat,
+            int overrideRank, int overrideRankWeight, bool enabled = true)
         {
             base.ImageType = imageType;
+
+            RelatedImageType = relatedImageType;
 
             RelatedImages = relatedImages;
 
@@ -177,7 +198,36 @@ namespace WallpaperFlux.Core.Models
                 }
             };
 
-            UpdateAverageRankAndWeightedAverage(); //! must be called after images have been set, added, removed, or re-ranked
+            //! must be called after images have been set, added, removed, or re-ranked
+            //! now handled by the below switch case due to setter functions
+            //xUpdateAverageRankAndWeightedAverage();
+
+            // TODO Make this enum format work with the XAML
+            //? remember that setting one of these options to true automatically sets the rest to false with setter functions
+            switch (rankingFormat)
+            {
+                case ImageSetRankingFormat.Average:
+                    UsingAverageRank = true;
+                    break;
+
+                case ImageSetRankingFormat.WeightedAverage:
+                    UsingWeightedAverage = true;
+                    break;
+
+                case ImageSetRankingFormat.Override:
+                    UsingOverrideRank = true;
+                    break;
+
+                case ImageSetRankingFormat.WeightedOverride:
+                    UsingWeightedRank = true;
+                    break;
+            }
+
+            OverrideRank = overrideRank;
+
+            OverrideRankWeight = overrideRankWeight;
+
+            SetWallpaperCommand = new MvxCommand(() => ImageUtil.SetWallpaper(this));
         }
 
         //! Kept as a reminder that this is not supported at the moment
@@ -256,6 +306,12 @@ namespace WallpaperFlux.Core.Models
                 weightDivisor += weights[i];
             }
 
+            if (weightDivisor == 0)
+            {
+                WeightedAverage = 0; // all images are of rank 0
+                return;
+            }
+
             WeightedAverage = (int)Math.Round(weightNumerator / weightDivisor);
         }
 
@@ -272,6 +328,7 @@ namespace WallpaperFlux.Core.Models
                 if (image.Rank > rank)
                 {
                     highestRankedImage = image;
+                    rank = image.Rank;
                 }
             }
 
@@ -297,7 +354,7 @@ namespace WallpaperFlux.Core.Models
                 equal = false;
             }
 
-            return equal && _rank == other._rank;
+            return equal;
         }
 
         public override bool Equals(object obj)

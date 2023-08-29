@@ -297,7 +297,7 @@ namespace WallpaperFlux.Core.ViewModels
             {
                 if (InspectedImageSet != null)
                 {
-                    return InspectedImageSet.RankText;
+                    return "Rank: " + InspectedImageSet.Rank;
                 }
 
                 return "";
@@ -996,9 +996,8 @@ namespace WallpaperFlux.Core.ViewModels
                         BaseImageModel image = selectedImages[j + imageIndex];
 
                         bool success = false;
-
-                        //! KEEP IN MIND, if we check ContainsImage with the image object itself, then folder searches will not operate properly!!! [I think, double check the reason for writing this]
-                        if (image != null && ThemeUtil.Theme.Images.ContainsImage(image) /*xThemeUtil.Theme.Images.ContainsImage(image.Path, image.ImageType)*/)
+                        
+                        if (image != null /*x&& ThemeUtil.Theme.Images.ContainsImage(image) ThemeUtil.Theme.Images.ContainsImage(image.Path, image.ImageType)*/)
                         {
                             Func<ImageSetModel, bool> checkForSet = set =>
                             {
@@ -1022,7 +1021,8 @@ namespace WallpaperFlux.Core.ViewModels
                                         success = checkForSet.Invoke(imageModel.ParentRelatedImageModel);
                                     }
                                 }
-                                else if (ThemeUtil.ThemeSettings.EnableDetectionOfInactiveImages || image.Active) //? we don't need to send an error message for user-disabled images
+                                else if ((ThemeUtil.ThemeSettings.EnableDetectionOfInactiveImages && ThemeUtil.Theme.Images.ContainsImage(image)) 
+                                         || image.Active) //? we don't need to send an error message for user-disabled images
                                 {
                                     success = true;
                                 }

@@ -17,6 +17,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using HanumanInstitute.MediaPlayer.Wpf.Mpv;
+using LanceTools.WPF.Util;
 using Mpv.NET.Player;
 using MvvmCross.Platforms.Wpf.Views;
 using WallpaperFlux.Core.Managers;
@@ -81,6 +82,11 @@ namespace WallpaperFlux.WPF
             RegisterHotKey();
             */
 
+            Debug.WriteLine("Screen Height:" + DisplayUtil.Displays.First().Bounds.Height);
+            Debug.WriteLine("Actual Height: " + ActualHeight);
+            Debug.WriteLine("Height: " + Height);
+
+            ScreenUtil.MaximizeIfOversized(_interopHelper.Handle, this);
         }
 
         // hide the application on minimize (will go to system tray)
@@ -119,7 +125,7 @@ namespace WallpaperFlux.WPF
         public void OpenWinform(Screen display, IntPtr workerw, int index, Action onVideoEnd)
         {
             WallpaperForm form = new WallpaperForm(display, workerw, index, onVideoEnd);
-            WindowInteropHelper wih = new WindowInteropHelper(this);
+            WindowInteropHelper wih = new WindowInteropHelper(this); // TODO why is this here?
             wih.Owner = form.Handle;
 
             WallpaperForms[index] = form;

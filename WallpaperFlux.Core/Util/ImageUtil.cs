@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using AdonisUI.Controls;
 using LanceTools.WPF.Adonis.Util;
 using MvvmCross;
 using WallpaperFlux.Core.IoC;
@@ -18,6 +19,14 @@ namespace WallpaperFlux.Core.Util
         Alt,
         Merge,
         Animate
+    }
+
+    public enum ImageSetRankingFormat
+    {
+        Average,
+        WeightedAverage,
+        Override,
+        WeightedOverride
     }
 
     public static class ImageUtil
@@ -106,7 +115,7 @@ namespace WallpaperFlux.Core.Util
             }
 
             // Create a Related Image Set Model out of the selected images
-            ImageSetModel relatedImages = new ImageSetModel(images, encounteredImageTypes.First());
+            ImageSetModel relatedImages = new ImageSetModel(images, encounteredImageTypes.First(), RelatedImageType.Alt, ImageSetRankingFormat.WeightedAverage, 0, 50);
             if (relatedImages.InvalidSet) return null; // if the set becomes invalid, cancel the process
 
             if (modifyTabs) // not needed if the image selector isn't even open
@@ -139,7 +148,8 @@ namespace WallpaperFlux.Core.Util
 
             ImageSelectorTabModel targetTab = WallpaperFluxViewModel.Instance.GetSelectorTabOfImage(targetSet);
 
-            ImageSetModel newImageSet = new ImageSetModel(targetSet.RelatedImages.Union(images).ToArray(), targetSet.ImageType);
+            ImageSetModel newImageSet = new ImageSetModel(targetSet.RelatedImages.Union(images).ToArray(), targetSet.ImageType, targetSet.RelatedImageType, targetSet.RankingFormat,
+                targetSet.OverrideRank, targetSet.OverrideRankWeight);
             ReplaceImageSet(targetSet, newImageSet, targetTab);
 
             WallpaperFluxViewModel.Instance.RemoveImageRangeFromTabs(images);
@@ -149,22 +159,19 @@ namespace WallpaperFlux.Core.Util
         {
             foreach (ImageModel image in images)
             {
-                if (image.ImageType != targetSet.ImageType)
-                {
-                    MessageBoxUtil.ShowError("Image Type mismatch between image and set, operation cancelled");
-                    return;
-                }
+                image.ParentRelatedImageModel = null;
             }
 
             ImageSelectorTabModel targetTab = WallpaperFluxViewModel.Instance.GetSelectorTabOfImage(targetSet);
 
-            ImageSetModel newImageSet = new ImageSetModel(targetSet.RelatedImages.Except(images).ToArray(), targetSet.ImageType);
+            ImageSetModel newImageSet = new ImageSetModel(targetSet.RelatedImages.Except(images).ToArray(), targetSet.ImageType, targetSet.RelatedImageType, targetSet.RankingFormat,
+                targetSet.OverrideRank, targetSet.OverrideRankWeight);
 
             if (newImageSet.RelatedImages.Length != 0)
             {
                 ReplaceImageSet(targetSet, newImageSet, targetTab);
             }
-            else //? just delete this image set, it's empty
+            else //? just remove the image set if it's empty
             {
                 targetTab.RemoveImage(targetSet);
                 ThemeUtil.Theme.Images.RemoveSet(targetSet);
@@ -257,6 +264,45 @@ namespace WallpaperFlux.Core.Util
             }
 
             return null;
+        }
+
+
+        private const string DISPLAY_DEFAULT_ID = "display";
+        public static void SetWallpaper(BaseImageModel image)
+        {
+            int displayIndex = 0;
+            if (WallpaperUtil.DisplayUtil.GetDisplayCount() > 1) // this MessageBox will only appear if the user has more than one display
+            {
+                // Create [Choose Display] MessageBox
+                IMessageBoxButtonModel[] buttons = new IMessageBoxButtonModel[WallpaperUtil.DisplayUtil.GetDisplayCount()];
+                for (int i = 0; i < buttons.Length; i++)
+                {
+                    buttons[i] = MessageBoxButtons.Custom("Display " + (i + 1), DISPLAY_DEFAULT_ID + i);
+                }
+
+                MessageBoxModel messageBox = new MessageBoxModel
+                {
+                    Text = "Choose a display",
+                    Caption = "Choose an option",
+                    Icon = MessageBoxImage.Question,
+                    Buttons = buttons
+                };
+
+                // Display [Choose Display] MessageBox
+                MessageBox.Show(messageBox);
+
+                // Evaluate [Choose Display] MessageBox
+                for (int i = 0; i < buttons.Length; i++)
+                {
+                    if ((string)messageBox.ButtonPressed.Id == (DISPLAY_DEFAULT_ID + i))
+                    {
+                        displayIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            WallpaperUtil.SetWallpaper(displayIndex, true, true, image); // no randomization required here
         }
     }
 }

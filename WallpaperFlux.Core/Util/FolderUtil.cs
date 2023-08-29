@@ -32,17 +32,6 @@ namespace WallpaperFlux.Core.Util
         }
         */
 
-        // TODO The way that the references are being handled is a bit of a mess at the moment
-
-        // TODO Decide on if you really want to keep compatibility for multiple observable FolderModel collections,
-        // TODO or just cater to the only one that's likely to exist: ImageFolders from WallpaperFluxVieWModel
-
-        // TODO Decide on if you really want to keep compatibility for multiple observable FolderModel collections,
-        // TODO or just cater to the only one that's likely to exist: ImageFolders from WallpaperFluxVieWModel
-
-        // TODO Decide on if you really want to keep compatibility for multiple observable FolderModel collections,
-        // TODO or just cater to the only one that's likely to exist: ImageFolders from WallpaperFluxVieWModel
-
         //? This serves a dual purpose, enabling/disabling images within a folder AND detecting new images upon validation (But for ALL folders)
         public static void ValidateImageFolders(this MvxObservableCollection<FolderModel> imageFolders, bool updateEnabledState)
         {

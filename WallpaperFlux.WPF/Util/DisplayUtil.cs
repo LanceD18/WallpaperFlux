@@ -9,11 +9,13 @@ namespace WallpaperFlux.WPF.Util
 {
     public static class DisplayUtil
     {
-        //! IMPORTANT: Using Winform's screen property may cause issues since WPF's measurement units are not in pixels, which is why we are using WpfScreenHelper
-        // TODO Why is this an IEnumerable and not just converted to an array?
+        //! IMPORTANT: Using Winform's screen property may cause issues since WPF's measurement units are not in pixels, which is why we are using !!! WpfScreenHelper !!!
+        //! IMPORTANT: Using Winform's screen property may cause issues since WPF's measurement units are not in pixels, which is why we are using !!! WpfScreenHelper !!!
         public static readonly IEnumerable<Screen> Displays = Screen.AllScreens;
+        //! IMPORTANT: Using Winform's screen property may cause issues since WPF's measurement units are not in pixels, which is why we are using !!! WpfScreenHelper !!!
+        //! IMPORTANT: Using Winform's screen property may cause issues since WPF's measurement units are not in pixels, which is why we are using !!! WpfScreenHelper !!!
 
-        //? Screen.AllScreens seems to do this by default due to the way it functions, I wouldn't rely on that though as there's no documentation for it
+        //? Screen.AllScreens seems to do this by default due to the way it functions, don't rely on this though
         private static IEnumerable<int> LargestDisplayOrderIndex =
         (
             from s in Screen.AllScreens

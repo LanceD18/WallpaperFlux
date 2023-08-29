@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using AdonisUI.Controls;
 using LanceTools;
 using LanceTools.DiagnosticsUtil;
+using LanceTools.WPF.Adonis.Util;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using MvvmCross;
 using MvvmCross.Commands;
@@ -95,7 +96,17 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
-        public ImageSetModel ParentRelatedImageModel;
+        private ImageSetModel _parentRelatedImageModel;
+        public ImageSetModel ParentRelatedImageModel
+        {
+            get => _parentRelatedImageModel;
+            set
+            {
+                _parentRelatedImageModel = value;
+
+                UpdateEnabledState();
+            }
+        }
 
         public bool IsInRelatedImageSet => ParentRelatedImageModel != null;
 
@@ -265,7 +276,7 @@ namespace WallpaperFlux.Core.Models
             ViewFileCommand = new MvxCommand(ViewFile);
             OpenFileCommand = new MvxCommand(OpenFile);
             InspectCommand = new MvxCommand(Inspect);
-            SetWallpaperCommand = new MvxCommand(SetWallpaper);
+            SetWallpaperCommand = new MvxCommand(() => ImageUtil.SetWallpaper(this));
 
             RenameImageCommand = new MvxCommand(() => ImageRenamer.AutoRenameImage(this));
             MoveImageCommand = new MvxCommand(() => ImageRenamer.AutoMoveImage(this));
@@ -424,59 +435,21 @@ namespace WallpaperFlux.Core.Models
         // opens the file's folder in the explorer and selects it to navigate the scrollbar to the file
         public void ViewFile()
         {
-            if (!ValidationUtil.FileExists(Path)) return;
+            if (!MessageBoxUtil.FileExists(Path)) return;
             ProcessUtil.SelectFile(Path);
         }
 
         // opens the file
         public void OpenFile()
         {
-            if (!ValidationUtil.FileExists(Path)) return;
+            if (!MessageBoxUtil.FileExists(Path)) return;
             ProcessUtil.OpenFile(Path);
-        }
-
-        private const string DISPLAY_DEFAULT_ID = "display";
-        public void SetWallpaper()
-        {
-            int displayIndex = 0;
-            if (WallpaperUtil.DisplayUtil.GetDisplayCount() > 1) // this MessageBox will only appear if the user has more than one display
-            {
-                // Create [Choose Display] MessageBox
-                IMessageBoxButtonModel[] buttons = new IMessageBoxButtonModel[WallpaperUtil.DisplayUtil.GetDisplayCount()];
-                for (int i = 0; i < buttons.Length; i++)
-                {
-                    buttons[i] = MessageBoxButtons.Custom("Display " + (i + 1), DISPLAY_DEFAULT_ID + i);
-                }
-
-                MessageBoxModel messageBox = new MessageBoxModel
-                {
-                    Text = "Choose a display",
-                    Caption = "Choose an option",
-                    Icon = MessageBoxImage.Question,
-                    Buttons = buttons
-                };
-
-                // Display [Choose Display] MessageBox
-                MessageBox.Show(messageBox);
-
-                // Evaluate [Choose Display] MessageBox
-                for (int i = 0; i < buttons.Length; i++)
-                {
-                    if ((string)messageBox.ButtonPressed.Id == (DISPLAY_DEFAULT_ID + i))
-                    {
-                        displayIndex = i;
-                        break;
-                    }
-                }
-            }
-
-            WallpaperUtil.SetWallpaper(displayIndex, true, true, this); // no randomization required here
         }
         #endregion
 
         protected bool Equals(ImageModel other)
         {
-            return _path == other._path && _rank == other._rank;
+            return _path == other._path;
         }
 
         public override bool Equals(object obj)

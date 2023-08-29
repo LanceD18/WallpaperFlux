@@ -36,7 +36,9 @@ namespace WallpaperFlux.Core.Util
             dialog.Filters.Add(new CommonFileDialogFilter(IMAGE_FILES_DISPLAY_NAME, IMAGE_FILES_EXTENSION_LIST));
             dialog.Filters.Add(new CommonFileDialogFilter(ALL_FILES_DISPLAY_NAME, ALL_FILES_EXTENSION_LIST));
         }
-               
+
+        // TODO This section should be moved to ImageUtil
+        #region Image Types
         public static bool IsStatic(string filePath) => IsStatic_GivenExtension(Path.GetExtension(filePath));
 
         private static bool IsStatic_GivenExtension(string extension) => !(extension == ".gif" || IsSupportedVideoType_GivenExtension(extension));
@@ -51,7 +53,8 @@ namespace WallpaperFlux.Core.Util
 
         public static bool IsSupportedVideoType(string filePath) => IsSupportedVideoType_GivenExtension(Path.GetExtension(filePath));
 
-        public static bool IsSupportedVideoType_GivenExtension(string extension) => extension == ".mp4" || extension == ".webm" || extension == ".avi" || extension == ".wmv";
+        public static bool IsSupportedVideoType_GivenExtension(string extension) => extension == ".mp4" || extension == ".webm" || extension == ".avi" || extension == ".wmv" || extension == ".mkv";
+        #endregion
 
         // Derived from: https://www.codeproject.com/Articles/856020/Draw-Behind-Desktop-Icons-in-Windows-plus
         // Gets the IntPtr value that will allow us to draw the wallpaper behind the desktop icons
@@ -112,9 +115,9 @@ namespace WallpaperFlux.Core.Util
 
         // TODO With the presetWallpaperPath I don't think you need ignoreRandomization anymore
         // TODO Both use cases, setting the PreviousWallpaper and directly setting an image as the Wallpaper can use presetWallpaperPath
-        public static bool SetWallpaper(int index, bool ignoreRandomization, bool forceChange, ImageModel presetWallpaper = null)
+        public static bool SetWallpaper(int index, bool ignoreRandomization, bool forceChange, BaseImageModel presetWallpaper = null)
         {
-            string wallpaperPath;
+            string wallpaperPath = "";
 
             // Set Next Wallpaper
             if (presetWallpaper == null)
@@ -140,7 +143,9 @@ namespace WallpaperFlux.Core.Util
             }
             else
             {
-                wallpaperPath = presetWallpaper.Path;
+                wallpaperPath = TryGetWallpaperPath(presetWallpaper); // get a random image from the given set
+                
+
                 ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index] = presetWallpaper; // need to update the active wallpaper to reflect this preset change
             }
 

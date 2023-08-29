@@ -9,9 +9,7 @@
         xmlns:tb="http://www.hardcodet.net/taskbar"
         adonisExtensions:CursorSpotlightExtension.MaxBlurRadius="128" 
         mc:Ignorable="d"
-        Title="Wallpaper Flux" Height="900" Width="1600" WindowStartupLocation="CenterScreen">
-
-
+        Title="Wallpaper Flux" Height="950" Width="1700" WindowStartupLocation="CenterScreen">
 
     <Grid>
 

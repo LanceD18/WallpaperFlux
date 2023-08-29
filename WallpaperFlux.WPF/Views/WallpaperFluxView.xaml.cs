@@ -146,7 +146,7 @@ namespace WallpaperFlux.WPF.Views
 
             if (image.DataContext is ImageSetModel imageSet)
             {
-                thumbnailSource = imageSet.RelatedImages[0];
+                thumbnailSource = imageSet.GetHighestRankedImage();
             }
 
             if (thumbnailSource == null) return;

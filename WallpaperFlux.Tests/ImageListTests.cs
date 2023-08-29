@@ -11,6 +11,9 @@ namespace WallpaperFlux.Tests
 {
     public class ImageListTests
     {
+        // An assortment of example tests
+        // TODO Expand upon your tests later
+        
         [Fact]
         public void GetTest()
         {
@@ -18,8 +21,8 @@ namespace WallpaperFlux.Tests
 
             string dummyPath = "dummyPath";
 
-            ImageModel image = list.AddImage(dummyPath);
-            list.AddImage("dum");
+            ImageModel image = list.AddImage(dummyPath, null);
+            list.AddImage("dum", null);
 
             Assert.Equal(image, list.GetImage(dummyPath));
         }
@@ -36,8 +39,8 @@ namespace WallpaperFlux.Tests
                 "dum3"
             };
 
-            ImageModel[] images = list.AddImageRange(dummyPaths);
-            list.AddImage("dummyPath");
+            ImageModel[] images = list.AddImageRange(dummyPaths, null);
+            list.AddImage("dummyPath", null);
 
             Assert.Equal(images, list.GetImageRange(dummyPaths));
         }
@@ -63,10 +66,10 @@ namespace WallpaperFlux.Tests
                 new ImageModel("model3")
             };
 
-            list.AddImage(dummyPath);
-            list.AddImage(dummyModel);
-            list.AddImageRange(dummyPaths);
-            list.AddImageRange(dummyModels);
+            list.AddImage(dummyPath, null);
+            list.AddImage(dummyModel, null);
+            list.AddImageRange(dummyPaths, null);
+            list.AddImageRange(dummyModels, null);
 
             // expected
             string[] expectedImages =
@@ -90,7 +93,7 @@ namespace WallpaperFlux.Tests
             ImageCollection list = new ImageCollection();
 
             string dummyPath = "dummyPath";
-            ImageModel image = list.AddImage(dummyPath);
+            ImageModel image = list.AddImage(dummyPath, null);
             list.RemoveImage("dummyPath");
 
             Assert.False(list.ContainsImage(image.Path));
@@ -108,7 +111,7 @@ namespace WallpaperFlux.Tests
                 "dum3"
             };
 
-            list.AddImageRange(dummyPaths);
+            list.AddImageRange(dummyPaths, null);
             list.RemoveImage("dum2");
 
             Assert.False(list.ContainsImage("dum2"));
