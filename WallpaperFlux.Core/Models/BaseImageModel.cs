@@ -69,10 +69,9 @@ namespace WallpaperFlux.Core.Models
         [DataMember(Name = "Enabled")]
         protected bool _enabled = true;
 
-
-        public virtual bool Enabled // this is the image's individual enabled state, if this is false then nothing else can make the image active
+        public virtual bool Enabled // this is the image's individual configurable enabled state, if this is false then nothing else can make the image active
         {
-            get => _enabled;
+            get => _enabled; //! This does NOT guarantee if an image is enabled or not, this represents the configurable Enabled SETTING that the user can TOGGLE, use IsEnabled() instead for that purpose
 
             set
             {

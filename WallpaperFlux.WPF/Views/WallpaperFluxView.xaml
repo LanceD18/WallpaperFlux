@@ -42,6 +42,7 @@
             <!--? Rank Handler Template -->
             <DataTemplate x:Key="RankingHandlerTemplate" DataType="{x:Type models:BaseImageModel}">
                 <StackPanel Orientation="Horizontal" Margin="3" Focusable="False" HorizontalAlignment="Center">
+
                     <!-- Decrease Rank Button -->
                     <Button Command="{Binding DecreaseRankCommand}"
                                         Width="25" Height="{Binding ImageSelectorSettingsHeight}" Margin="3" 

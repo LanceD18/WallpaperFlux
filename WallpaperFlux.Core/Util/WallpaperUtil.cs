@@ -188,7 +188,7 @@ namespace WallpaperFlux.Core.Util
             {
                 //! for the moment we will just do Alt by default
 
-                BaseImageModel wallpaper = WallpaperRandomizationController.GetRandomImageFromPreset(imageSet.RelatedImages, imageSet.ImageType, true);
+                BaseImageModel wallpaper = WallpaperRandomizationController.GetRandomImageFromPreset(imageSet.GetFilteredRelatedImages(), imageSet.ImageType, true);
 
                 if (wallpaper is ImageModel wallpaperImageModel)
                 {

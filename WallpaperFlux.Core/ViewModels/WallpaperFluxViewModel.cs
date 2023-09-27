@@ -200,7 +200,7 @@ namespace WallpaperFlux.Core.ViewModels
 
                 if (SelectedImage is ImageSetModel selectedImageSet)
                 {
-                    return "Images in Set: " + selectedImageSet.RelatedImages.Length;
+                    return "Images in Set: " + selectedImageSet.GetFilteredRelatedImages().Length;
                 }
 
                 return "[ERROR]";
@@ -275,14 +275,16 @@ namespace WallpaperFlux.Core.ViewModels
         {
             get
             {
-                if (InspectedImageSet != null && ImageSetInspectorToggle) return new MvxObservableCollection<ImageModel>(InspectedImageSet.RelatedImages); // update active set view
+                if (InspectedImageSet != null && ImageSetInspectorToggle) return new MvxObservableCollection<ImageModel>(InspectedImageSet.GetFilteredRelatedImages()); // update active set view
 
+                // no set selected
                 if (SelectedImage == null) return null;
 
+                // set new set view
                 if (SelectedImage is ImageSetModel selectedSet)
                 {
                     InspectedImageSet = selectedSet;
-                    return new MvxObservableCollection<ImageModel>(selectedSet.RelatedImages);
+                    return new MvxObservableCollection<ImageModel>(selectedSet.GetFilteredRelatedImages());
                 }
 
                 return null;
@@ -359,7 +361,7 @@ namespace WallpaperFlux.Core.ViewModels
                 if (!value)
                 {
                     // deselect all potentially selected images in the inspected image set
-                    foreach (ImageModel image in InspectedImageSet.RelatedImages) image.IsSelected = false;
+                    foreach (ImageModel image in InspectedImageSet.GetFilteredRelatedImages(false)) image.IsSelected = false;
 
                     InspectedImageSet = null;
                 }
@@ -1005,7 +1007,11 @@ namespace WallpaperFlux.Core.ViewModels
                                 {
                                     encounteredSets.Add(set);
                                     image = set;
-                                    return true;
+
+                                    if (set.GetFilteredRelatedImages(true).Length > 0) // if all images in a set are disabled, no need to add the set
+                                    {
+                                        return true;
+                                    }
                                 }
 
                                 return false;
@@ -1125,7 +1131,7 @@ namespace WallpaperFlux.Core.ViewModels
 
                     foreach (ImageSetModel imageSet in selectorTab.GetAllSets())
                     {
-                        images.AddRange(imageSet.RelatedImages);
+                        images.AddRange(imageSet.GetFilteredRelatedImages());
                     }
                 }
 
@@ -1133,7 +1139,7 @@ namespace WallpaperFlux.Core.ViewModels
             }
             else
             {
-                return InspectedImageSet.RelatedImages;
+                return InspectedImageSet.GetFilteredRelatedImages();
             }
         }
 
@@ -1161,14 +1167,14 @@ namespace WallpaperFlux.Core.ViewModels
                     {
                         foreach (ImageSetModel imageSet in selectorTab.GetSelectedSets())
                         {
-                            images.AddRange(imageSet.RelatedImages);
+                            images.AddRange(imageSet.GetFilteredRelatedImages());
                         }
                     }
                 }
             }
             else
             {
-                foreach (ImageModel image in InspectedImageSet.RelatedImages)
+                foreach (ImageModel image in InspectedImageSet.GetFilteredRelatedImages())
                 {
                     if (image.IsSelected)
                     {
@@ -1366,7 +1372,7 @@ namespace WallpaperFlux.Core.ViewModels
             {
                 List<ImageModel> imagesFound = new List<ImageModel>();
 
-                foreach (ImageModel image in InspectedImageSet.RelatedImages)
+                foreach (ImageModel image in InspectedImageSet.GetFilteredRelatedImages(false))
                 {
                     if (image.IsSelected)
                     {

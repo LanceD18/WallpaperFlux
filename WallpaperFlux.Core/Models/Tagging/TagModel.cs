@@ -327,7 +327,7 @@ namespace WallpaperFlux.Core.Models.Tagging
             // Image Control
             AddTagToSelectedImagesCommand = new MvxCommand(() => AddTagToImages(WallpaperFluxViewModel.Instance.GetAllHighlightedImages(), false));
             AddTagToEntireImageGroupCommand = new MvxCommand(() => AddTagToImages(WallpaperFluxViewModel.Instance.GetAllImagesInTabsOrSet(), true));
-            RemoveTagFromSelectedImageCommand = new MvxCommand(() => RemoveTagFromImages( ImageUtil.GetImageSet(WallpaperFluxViewModel.Instance.SelectedImage), false));
+            RemoveTagFromSelectedImageCommand = new MvxCommand(() => RemoveTagFromImages(ImageUtil.GetImageSet(WallpaperFluxViewModel.Instance.SelectedImage), false));
             RemoveTagFromSelectedImagesCommand = new MvxCommand(() => RemoveTagFromImages(WallpaperFluxViewModel.Instance.GetAllHighlightedImages(), false));
             RemoveTagFromEntireImageGroupCommand = new MvxCommand(() => RemoveTagFromImages(WallpaperFluxViewModel.Instance.GetAllImagesInTabsOrSet(), true));
 

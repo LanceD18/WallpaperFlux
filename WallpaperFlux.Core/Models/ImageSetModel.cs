@@ -11,7 +11,7 @@ namespace WallpaperFlux.Core.Models
 {
     public class ImageSetModel : BaseImageModel
     {
-        public ImageModel[] RelatedImages;
+        private ImageModel[] RelatedImages;
 
         public override bool IsRelatedImageSet => true;
 
@@ -230,6 +230,28 @@ namespace WallpaperFlux.Core.Models
             SetWallpaperCommand = new MvxCommand(() => ImageUtil.SetWallpaper(this));
         }
 
+        public ImageModel[] GetFilteredRelatedImages(bool checkForEnabled = true)
+        {
+            if (checkForEnabled)
+            {
+                List<ImageModel> enabledRelatedImages = new List<ImageModel>();
+
+                foreach (ImageModel image in RelatedImages)
+                {
+                    if (image.IsEnabled(true))
+                    {
+                        enabledRelatedImages.Add(image);
+                    }
+                }
+
+                return enabledRelatedImages.ToArray();
+            }
+            else
+            {
+                return RelatedImages;
+            }
+        }
+
         //! Kept as a reminder that this is not supported at the moment
         public void SetRelatedImages(ImageModel[] newRelatedImages, ImageType imageType)
         {
@@ -250,9 +272,11 @@ namespace WallpaperFlux.Core.Models
 
         public int GetAverageRank()
         {
-            int rankSum = 0; 
+            ImageModel[] filteredRelatedImages = GetFilteredRelatedImages();
 
-            foreach (ImageModel image in RelatedImages)
+            int rankSum = 0;
+
+            foreach (ImageModel image in filteredRelatedImages)
             {
                 rankSum += image.Rank;
             }
@@ -286,23 +310,26 @@ namespace WallpaperFlux.Core.Models
 
         public void UpdateWeightedAverage()
         {
+            ImageModel[] filteredRelatedImages = GetFilteredRelatedImages();
+
             //? follows how the Rank Percentiles function
             // TODO consider merging the logic of this and the PercentileController into a tool
 
             // Gather Weights
             int maxRank = ThemeUtil.Theme.RankController.GetMaxRank();
 
-            double[] weights = new double[RelatedImages.Length];
+
+            double[] weights = new double[filteredRelatedImages.Length];
             double rankMultiplier = 10.0 / maxRank;
 
             double weightNumerator = 0;
             double weightDivisor = 0;
-            for (int i = 0; i < RelatedImages.Length; i++)
+            for (int i = 0; i < filteredRelatedImages.Length; i++)
             {
                 // if the rank of an image is 0 just set the weight to 0, calculating it will give us a weight of 1
-                weights[i] = RelatedImages[i].Rank != 0 ? Math.Pow(2, RelatedImages[i].Rank * rankMultiplier) : 0;
+                weights[i] = filteredRelatedImages[i].Rank != 0 ? Math.Pow(2, filteredRelatedImages[i].Rank * rankMultiplier) : 0;
 
-                weightNumerator += RelatedImages[i].Rank * weights[i];
+                weightNumerator += filteredRelatedImages[i].Rank * weights[i];
                 weightDivisor += weights[i];
             }
 
@@ -315,7 +342,7 @@ namespace WallpaperFlux.Core.Models
             WeightedAverage = (int)Math.Round(weightNumerator / weightDivisor);
         }
 
-        public ImageModel GetHighestRankedImage()
+        public ImageModel GetHighestRankedImage(bool checkForEnabled = true)
         {
             // returns the highest ranked image in the set
             // if multiple images have the highest rank, we'll just return whichever one comes first
@@ -323,7 +350,7 @@ namespace WallpaperFlux.Core.Models
             int rank = -1;
             ImageModel highestRankedImage = null;
 
-            foreach (ImageModel image in RelatedImages)
+            foreach (ImageModel image in GetFilteredRelatedImages(checkForEnabled))
             {
                 if (image.Rank > rank)
                 {
