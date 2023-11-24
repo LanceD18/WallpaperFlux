@@ -200,7 +200,7 @@ namespace WallpaperFlux.Core.ViewModels
 
                 if (SelectedImage is ImageSetModel selectedImageSet)
                 {
-                    return "Images in Set: " + selectedImageSet.GetFilteredRelatedImages().Length;
+                    return "Images in Set: " + selectedImageSet.GetRelatedImages().Length;
                 }
 
                 return "[ERROR]";
@@ -275,7 +275,7 @@ namespace WallpaperFlux.Core.ViewModels
         {
             get
             {
-                if (InspectedImageSet != null && ImageSetInspectorToggle) return new MvxObservableCollection<ImageModel>(InspectedImageSet.GetFilteredRelatedImages()); // update active set view
+                if (InspectedImageSet != null && ImageSetInspectorToggle) return new MvxObservableCollection<ImageModel>(InspectedImageSet.GetRelatedImages()); // update active set view
 
                 // no set selected
                 if (SelectedImage == null) return null;
@@ -284,7 +284,7 @@ namespace WallpaperFlux.Core.ViewModels
                 if (SelectedImage is ImageSetModel selectedSet)
                 {
                     InspectedImageSet = selectedSet;
-                    return new MvxObservableCollection<ImageModel>(selectedSet.GetFilteredRelatedImages());
+                    return new MvxObservableCollection<ImageModel>(selectedSet.GetRelatedImages());
                 }
 
                 return null;
@@ -361,7 +361,7 @@ namespace WallpaperFlux.Core.ViewModels
                 if (!value)
                 {
                     // deselect all potentially selected images in the inspected image set
-                    foreach (ImageModel image in InspectedImageSet.GetFilteredRelatedImages(false)) image.IsSelected = false;
+                    foreach (ImageModel image in InspectedImageSet.GetRelatedImages(false)) image.IsSelected = false;
 
                     InspectedImageSet = null;
                 }
@@ -962,7 +962,7 @@ namespace WallpaperFlux.Core.ViewModels
                 // TODO Make the redundancy apparent in the interface by disabling everything else if random is picked
                 if (dateTime)
                 {
-                    selectedImages = selectedImages.OrderBy(f => new FileInfo(ImageUtil.GetImageModel(f).Path).CreationTime).ToArray();
+                    selectedImages = selectedImages.OrderBy(f => new FileInfo(ImageUtil.GetImageModel(f, false).Path).CreationTime).ToArray();
                 }
 
                 //! order by date time before reversing
@@ -1008,7 +1008,7 @@ namespace WallpaperFlux.Core.ViewModels
                                     encounteredSets.Add(set);
                                     image = set;
 
-                                    if (set.GetFilteredRelatedImages(true).Length > 0) // if all images in a set are disabled, no need to add the set
+                                    if (set.GetRelatedImages(true).Length > 0) // if all images in a set are disabled, no need to add the set
                                     {
                                         return true;
                                     }
@@ -1131,7 +1131,7 @@ namespace WallpaperFlux.Core.ViewModels
 
                     foreach (ImageSetModel imageSet in selectorTab.GetAllSets())
                     {
-                        images.AddRange(imageSet.GetFilteredRelatedImages());
+                        images.AddRange(imageSet.GetRelatedImages());
                     }
                 }
 
@@ -1139,7 +1139,7 @@ namespace WallpaperFlux.Core.ViewModels
             }
             else
             {
-                return InspectedImageSet.GetFilteredRelatedImages();
+                return InspectedImageSet.GetRelatedImages();
             }
         }
 
@@ -1167,14 +1167,14 @@ namespace WallpaperFlux.Core.ViewModels
                     {
                         foreach (ImageSetModel imageSet in selectorTab.GetSelectedSets())
                         {
-                            images.AddRange(imageSet.GetFilteredRelatedImages());
+                            images.AddRange(imageSet.GetRelatedImages());
                         }
                     }
                 }
             }
             else
             {
-                foreach (ImageModel image in InspectedImageSet.GetFilteredRelatedImages())
+                foreach (ImageModel image in InspectedImageSet.GetRelatedImages())
                 {
                     if (image.IsSelected)
                     {
@@ -1372,7 +1372,7 @@ namespace WallpaperFlux.Core.ViewModels
             {
                 List<ImageModel> imagesFound = new List<ImageModel>();
 
-                foreach (ImageModel image in InspectedImageSet.GetFilteredRelatedImages(false))
+                foreach (ImageModel image in InspectedImageSet.GetRelatedImages(false))
                 {
                     if (image.IsSelected)
                     {

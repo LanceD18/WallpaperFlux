@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -148,7 +149,7 @@ namespace WallpaperFlux.Core.Util
 
             ImageSelectorTabModel targetTab = WallpaperFluxViewModel.Instance.GetSelectorTabOfImage(targetSet);
 
-            ImageSetModel newImageSet = new ImageSetModel(targetSet.GetFilteredRelatedImages(false).Union(images).ToArray(), targetSet.ImageType, targetSet.RelatedImageType, targetSet.RankingFormat,
+            ImageSetModel newImageSet = new ImageSetModel(targetSet.GetRelatedImages(false).Union(images).ToArray(), targetSet.ImageType, targetSet.RelatedImageType, targetSet.RankingFormat,
                 targetSet.OverrideRank, targetSet.OverrideRankWeight);
             ReplaceImageSet(targetSet, newImageSet, targetTab);
 
@@ -164,10 +165,10 @@ namespace WallpaperFlux.Core.Util
 
             ImageSelectorTabModel targetTab = WallpaperFluxViewModel.Instance.GetSelectorTabOfImage(targetSet);
 
-            ImageSetModel newImageSet = new ImageSetModel(targetSet.GetFilteredRelatedImages(false).Except(images).ToArray(), targetSet.ImageType, targetSet.RelatedImageType, targetSet.RankingFormat,
+            ImageSetModel newImageSet = new ImageSetModel(targetSet.GetRelatedImages(false).Except(images).ToArray(), targetSet.ImageType, targetSet.RelatedImageType, targetSet.RankingFormat,
                 targetSet.OverrideRank, targetSet.OverrideRankWeight);
 
-            if (newImageSet.GetFilteredRelatedImages(false).Length != 0)
+            if (newImageSet.GetRelatedImages(false).Length != 0)
             {
                 ReplaceImageSet(targetSet, newImageSet, targetTab);
             }
@@ -201,7 +202,7 @@ namespace WallpaperFlux.Core.Util
 
             if (image is ImageSetModel imageSet)
             {
-                foreach (ImageModel relatedImage in imageSet.GetFilteredRelatedImages(checkForEnabled))
+                foreach (ImageModel relatedImage in imageSet.GetRelatedImages(checkForEnabled))
                 {
                     action.Invoke(relatedImage);
                 }
@@ -217,7 +218,7 @@ namespace WallpaperFlux.Core.Util
 
             if (image is ImageSetModel imageSet)
             {
-                foreach (ImageModel relatedImage in imageSet.GetFilteredRelatedImages(checkForEnabled))
+                foreach (ImageModel relatedImage in imageSet.GetRelatedImages(checkForEnabled))
                 {
                     if (func.Invoke(relatedImage)) //? end on success
                     {
@@ -245,7 +246,12 @@ namespace WallpaperFlux.Core.Util
 
             if (image is ImageSetModel imageSet)
             {
-                return imageSet.GetFilteredRelatedImages(checkForEnabled)[0];
+                ImageModel[] images = imageSet.GetRelatedImages(checkForEnabled);
+
+                if (images.Length > 0)
+                {
+                    return images[0];
+                }
             }
 
             return null;
@@ -260,7 +266,7 @@ namespace WallpaperFlux.Core.Util
 
             if (image is ImageSetModel imageSet)
             {
-                return imageSet.GetFilteredRelatedImages(checkForEnabled);
+                return imageSet.GetRelatedImages(checkForEnabled);
             }
 
             return null;

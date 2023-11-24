@@ -84,15 +84,23 @@ namespace WallpaperFlux.Core.Managers
 
                 if (ThemeUtil.Theme.Settings.ThemeSettings.VideoSettings.MuteIfApplicationFocused && !muted)
                 {
-                    Process activeWindow = Win32.GetActiveWindowProcess();
-                    string windowName = activeWindow.ProcessName;
-                    if (windowName != Process.GetCurrentProcess().ProcessName && windowName != "explorer") //? explorer includes the desktop
+                    try
                     {
-                        WindowPlacementStyle windowStyle = WindowInfo.GetWindowStyle(activeWindow);
-                        if (windowStyle == WindowPlacementStyle.Normal || windowStyle == WindowPlacementStyle.Maximized)
+                        Process activeWindow = Win32.GetActiveWindowProcess();
+                        string windowName = activeWindow.ProcessName;
+                        if (windowName != Process.GetCurrentProcess().ProcessName && windowName != "explorer") //? explorer includes the desktop
                         {
-                            Mute();
+                            WindowPlacementStyle windowStyle = WindowInfo.GetWindowStyle(activeWindow);
+                            if (windowStyle == WindowPlacementStyle.Normal || windowStyle == WindowPlacementStyle.Maximized)
+                            {
+                                Mute();
+                            }
                         }
+                    }
+                    catch (Exception e)
+                    {
+                        // TODO Debug this
+                        Debug.WriteLine("Catch likely caused by a process exit");
                     }
                 }
 

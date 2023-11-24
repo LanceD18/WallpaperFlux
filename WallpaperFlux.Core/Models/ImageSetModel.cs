@@ -230,7 +230,7 @@ namespace WallpaperFlux.Core.Models
             SetWallpaperCommand = new MvxCommand(() => ImageUtil.SetWallpaper(this));
         }
 
-        public ImageModel[] GetFilteredRelatedImages(bool checkForEnabled = true)
+        public ImageModel[] GetRelatedImages(bool checkForEnabled = true)
         {
             if (checkForEnabled)
             {
@@ -272,7 +272,7 @@ namespace WallpaperFlux.Core.Models
 
         public int GetAverageRank()
         {
-            ImageModel[] filteredRelatedImages = GetFilteredRelatedImages();
+            ImageModel[] filteredRelatedImages = GetRelatedImages(!JsonUtil.IsLoadingData);
 
             int rankSum = 0;
 
@@ -310,14 +310,13 @@ namespace WallpaperFlux.Core.Models
 
         public void UpdateWeightedAverage()
         {
-            ImageModel[] filteredRelatedImages = GetFilteredRelatedImages();
+            ImageModel[] filteredRelatedImages = GetRelatedImages(!JsonUtil.IsLoadingData);
 
             //? follows how the Rank Percentiles function
             // TODO consider merging the logic of this and the PercentileController into a tool
 
             // Gather Weights
             int maxRank = ThemeUtil.Theme.RankController.GetMaxRank();
-
 
             double[] weights = new double[filteredRelatedImages.Length];
             double rankMultiplier = 10.0 / maxRank;
@@ -350,7 +349,7 @@ namespace WallpaperFlux.Core.Models
             int rank = -1;
             ImageModel highestRankedImage = null;
 
-            foreach (ImageModel image in GetFilteredRelatedImages(checkForEnabled))
+            foreach (ImageModel image in GetRelatedImages(checkForEnabled))
             {
                 if (image.Rank > rank)
                 {

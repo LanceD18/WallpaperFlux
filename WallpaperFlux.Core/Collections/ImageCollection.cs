@@ -260,7 +260,7 @@ namespace WallpaperFlux.Core.Collections
 
             foreach (ImageSetModel set in GetAllImageSets())
             {
-                count += set.GetFilteredRelatedImages(true).Length;
+                count += set.GetRelatedImages(true).Length;
 
                 /*x
                 int setCount = set.RelatedImages.Length;
