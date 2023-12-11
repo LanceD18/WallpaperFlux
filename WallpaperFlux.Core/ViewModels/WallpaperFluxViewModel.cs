@@ -230,7 +230,19 @@ namespace WallpaperFlux.Core.ViewModels
             }
         } //? for the xaml
 
-        public ImageModel SelectedImageModel { get; set; }
+        private ImageModel _selectedImageModel;
+        public ImageModel SelectedImageModel
+        {
+            get => _selectedImageModel;
+            set
+            {
+                if (InspectorToggle || ImageSetInspectorToggle) InspectorImageModel = SelectedImageModel;
+
+                SetProperty(ref _selectedImageModel, value);
+            }
+        }
+
+        public ImageModel InspectorImageModel { get; set; }
 
         public bool TogglingAllSelections = false;
 
@@ -346,16 +358,20 @@ namespace WallpaperFlux.Core.ViewModels
                 SetProperty(ref _inspectorToggle, value);
 
                 MuteIfInspectorHasAudio();
+
+                if (!value) InspectorImageModel = null;
             }
         }
 
+        //? Keep in mind that this is a DIFFERENT inspector from the regular one! The inspector button will sort this out on use
+        //? When inspecting an image set, you will view the set of images rather than inspecting an individual image
+        //? you can still inspect individual images within the images set normally
         private bool _imageSetInspectorToggle;
         public bool ImageSetInspectorToggle
         {
             get => _imageSetInspectorToggle;
             set
             {
-
                 SetProperty(ref _imageSetInspectorToggle, value);
 
                 if (!value)
@@ -1325,7 +1341,7 @@ namespace WallpaperFlux.Core.ViewModels
         public void CloseInspector() => InspectorToggle = false;
 
         public void CloseImageSetInspector() => ImageSetInspectorToggle = false;
-
+        
         public void SetInspectorHeight(double newHeight) => InspectorHeight = newHeight;
 
         #endregion

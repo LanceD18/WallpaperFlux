@@ -100,7 +100,7 @@ namespace WallpaperFlux.Core.Managers
                     catch (Exception e)
                     {
                         // TODO Debug this
-                        Debug.WriteLine("Catch likely caused by a process exit");
+                        Debug.WriteLine("Catch likely caused by a process exiting while being scanned by the AudioManager");
                     }
                 }
 
