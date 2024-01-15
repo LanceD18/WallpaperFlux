@@ -15,7 +15,7 @@ namespace WallpaperFlux.Core.Models
     {
         public virtual bool IsVideo => false;
 
-        public virtual bool IsRelatedImageSet => false;
+        public virtual bool IsImageSet => false;
 
         protected int _rank;
         public int Rank
@@ -53,7 +53,7 @@ namespace WallpaperFlux.Core.Models
                     SetProperty(ref _rank, value);
                     RaisePropertyChanged(() => Rank);
 
-                    if (imageModel.IsInRelatedImageSet) imageModel.ParentRelatedImageModel.UpdateAverageRankAndWeightedAverage();
+                    if (imageModel.IsInImageSet) imageModel.ParentImageSet.UpdateAverageRankAndWeightedAverage();
                 }
 
                 if (this is ImageSetModel imageSet)
@@ -185,5 +185,11 @@ namespace WallpaperFlux.Core.Models
             // check through ModifyRank instead of checking IsEnabled() directly
             ThemeUtil.RankController.ModifyRank(this, _rank, ref _rank);
         }
+
+        protected virtual bool Equals(BaseImageModel other) => throw new NotImplementedException();
+
+        public override bool Equals(object obj) => throw new NotImplementedException();
+
+        public override int GetHashCode() => throw new NotImplementedException();
     }
 }

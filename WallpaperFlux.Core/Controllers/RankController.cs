@@ -72,14 +72,14 @@ namespace WallpaperFlux.Core.Controllers
 
         //! should only be used in limited circumstances, the bool only exists to remind us of that (we don't want lost images)
         //! find a better solution to limit this procedure's access in the future
-        public void RemoveRankedImage(BaseImageModel image, bool validUseCase)
+        public void RemoveRankedImage(BaseImageModel image, bool validUseCase_dummyParam)
         {
             RankData[image.ImageType][image.Rank].Remove(image);
         }
 
         //! should only be used in limited circumstances, the bool only exists to remind us of that (we don't want rogue images)
         //! find a better solution to limit this procedure's access in the future
-        public void AddRankedImage(BaseImageModel image, bool validUseCase)
+        public void AddRankedImage(BaseImageModel image, bool validUseCase_dummyParam)
         {
             RankData[image.ImageType][image.Rank].Add(image);
         }
@@ -425,7 +425,7 @@ namespace WallpaperFlux.Core.Controllers
 
             Func<ImageModel, bool> verifyImageTags = imageModel =>
             {
-                if (imageModel.ContainsTagOrChildTag(tag))
+                if (imageModel.ContainsTagOrChildTag(tag)) // TODO this function only exists on ImageModel yet you call this with a BaseImageModel
                 {
                     count++;
                     return true;
@@ -433,10 +433,37 @@ namespace WallpaperFlux.Core.Controllers
 
                 return false;
             };
-
+            
             foreach (BaseImageModel image in RankData[imageType][rank])
             {
-                ImageUtil.PerformImageCheck(image, verifyImageTags); //? we only need to count this once as in the eyes of the randomizer an image set counts as one image
+                ImageUtil.PerformImageCheck(image, verifyImageTags);
+            }
+
+            return count;
+        }
+
+        public int GetRankSumOfImages(BaseImageModel[] images)
+        {
+            int count = 0;
+
+            foreach (BaseImageModel image in images)
+            {
+                count += image.Rank;
+            }
+
+            return count;
+        }
+
+        public int GetRankSumOfImagesOfType(BaseImageModel[] images, ImageType type)
+        {
+            int count = 0;
+
+            foreach (BaseImageModel image in images)
+            {
+                if (image.ImageType == type)
+                {
+                    count += image.Rank;
+                }
             }
 
             return count;
@@ -461,7 +488,6 @@ namespace WallpaperFlux.Core.Controllers
         {
             if (JsonUtil.IsLoadingData) return;
             if (FolderUtil.IsValidatingFolders) return;
-            ;
 
             int totalSum = 0;
             Dictionary<ImageType, int> imageTypeRankSum = new Dictionary<ImageType, int>();

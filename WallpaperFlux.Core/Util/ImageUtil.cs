@@ -61,9 +61,9 @@ namespace WallpaperFlux.Core.Util
             {
                 //! Don't do the crossed out portion, would prevent the images from within the set from being able to be updated at all, find a better solution
                 /*x
-                if (image.ParentRelatedImageModel != null && !image.ParentRelatedImageModel.UsingAverageRank) //? if the image is in a set that uses an override rank, update the override rank instead
+                if (image.ParentImageSet != null && !image.ParentImageSet.UsingAverageRank) //? if the image is in a set that uses an override rank, update the override rank instead
                 {
-                    image.ParentRelatedImageModel.OverrideRank = rank;
+                    image.ParentImageSet.OverrideRank = rank;
                 }
                 */
                 
@@ -160,7 +160,7 @@ namespace WallpaperFlux.Core.Util
         {
             foreach (ImageModel image in images)
             {
-                image.ParentRelatedImageModel = null;
+                image.ParentImageSet = null;
             }
 
             ImageSelectorTabModel targetTab = WallpaperFluxViewModel.Instance.GetSelectorTabOfImage(targetSet);

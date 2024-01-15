@@ -149,7 +149,7 @@ namespace WallpaperFlux.Core.ViewModels
                 foreach (ImageModel image in images)
                 {
                     // check the set for filters instead if one exists
-                    BaseImageModel filteredImageModel = !image.IsInRelatedImageSet ? (BaseImageModel)image : image.ParentRelatedImageModel;
+                    BaseImageModel filteredImageModel = !image.IsInImageSet ? (BaseImageModel)image : image.ParentImageSet;
 
                     if (rankFilter(filteredImageModel) && VerifyImageType(filteredImageModel))
                     {

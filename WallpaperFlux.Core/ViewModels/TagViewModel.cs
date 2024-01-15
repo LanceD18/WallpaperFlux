@@ -516,7 +516,6 @@ namespace WallpaperFlux.Core.ViewModels
             RaisePropertyChanged(() => TagWrapHeight);
         }
 
-
         /// <summary>
         /// verifies what tags are visible based on the given search
         /// </summary>
@@ -534,7 +533,7 @@ namespace WallpaperFlux.Core.ViewModels
                 return;
             }
 
-            if (SelectedCategory.SortedTags == null)
+            if (SelectedCategory.GetSortedTags() == null)
             {
                 Debug.WriteLine("Null Sorted Tags");
                 SelectedCategory.SortTags();
@@ -548,17 +547,20 @@ namespace WallpaperFlux.Core.ViewModels
                 VisibleTags.Add(nullTag);
             }
             
-            // adjust the indexes to the page tag limit
+            //? adjust the indexes to the page tag limit
             // for when searching
-            if (SelectedCategory.FilteredTags.Length < TaggingUtil.TagsPerPage)
+            TagModel[] filteredTags = SelectedCategory.GetFilteredTags();
+            if (filteredTags.Length < TaggingUtil.TagsPerPage)
             {
-                for (int i = TaggingUtil.TagsPerPage - 1; i >= SelectedCategory.FilteredTags.Length; i--)
+                for (int i = TaggingUtil.TagsPerPage - 1; i >= filteredTags.Length; i--)
                 {
                     VisibleTags[i] = nullTag; //! do NOT directly set a tag to IsHidden here, this does not remove the reference to the original tag and can cause duplicates!
                 }
             }
 
-            SelectedCategory.FilteredTags = SelectedCategory.GetSortedTagsWithSearchFilter();
+            //? updating filtered tags
+            SelectedCategory.UpdateFilteredTags(SelectedCategory.GetSortedTagsWithSearchFilter());
+            filteredTags = SelectedCategory.GetFilteredTags(); //! ensure that this is set after updating the filtered tags
 
             int pageNumber = int.Parse(SelectedCategory.SelectedTagTab.TabIndex);
             int minIndex = TaggingUtil.TagsPerPage * (pageNumber - 1);
@@ -567,19 +569,19 @@ namespace WallpaperFlux.Core.ViewModels
             for (int i = minIndex; i < maxIndex; i++)
             {
                 int pageIndex = i - minIndex;
-                if (i > SelectedCategory.FilteredTags.Length - 1) // we're on the last page and we've run out of tags, fill the rest with null tags to hide them
+                if (i > filteredTags.Length - 1) // we're on the last page and we've run out of tags, fill the rest with null tags to hide them
                 {
                     VisibleTags[pageIndex] = nullTag;
                     continue;
                 }
 
-                if (HideDisabledTags && !SelectedCategory.FilteredTags[i].IsEnabled())
+                if (HideDisabledTags && !filteredTags[i].IsEnabled())
                 {
                     maxIndex++; // this tag is hidden, skip it, we now have space for an additional tag so increase the max index
                     continue;
                 }
 
-                VisibleTags[pageIndex] = SelectedCategory.FilteredTags[i];
+                VisibleTags[pageIndex] = filteredTags[i];
                 VisibleTags[pageIndex].IsHidden = false;
             }
             
@@ -649,7 +651,7 @@ namespace WallpaperFlux.Core.ViewModels
                                 tagsToHighlight = new HashSet<TagModel>(targetImage.Tags.GetTags());
                             }
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
                             // async fail, the image doesn't exist but got past the null check, just make tagsToHighlight empty
                             tagsToHighlight = new HashSet<TagModel>();
@@ -688,8 +690,8 @@ namespace WallpaperFlux.Core.ViewModels
                     if (TagLinkingSource != null)
                     {
                         tag.IsHighlightedInSomeImages = false; // this doesn't apply to this scenario so turn it off, unlike the selected images scenario it won't be automatically turned off
-                        tag.IsHighlightedParent = TagLinkingSource.HasParent(tag);
-                        tag.IsHighlightedChild = TagLinkingSource.HasChild(tag);
+                        tag.IsHighlightedParent = TagLinkingSource.HasTagAsParent(tag);
+                        tag.IsHighlightedChild = TagLinkingSource.HasTagAsChild(tag);
                     }
                     else // doesn't apply to this scenario, ensures that the highlights were turned off so that if we say, select an image, the parent & child highlights won't remain
                     {

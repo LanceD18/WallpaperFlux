@@ -288,6 +288,57 @@ namespace WallpaperFlux.Core.Util
             }
         }
 
+        public static TagModel[] GetAllTags(bool includeDisabled = false, bool includeChildren = true, TagModel[] tagsToExclude = null)
+        {
+            List<TagModel> foundTags = new List<TagModel>();
+
+            foreach (CategoryModel category in TagViewModel.Instance.Categories)
+            {
+                if (category.Enabled || includeDisabled)
+                {
+                    if (includeChildren)
+                    {
+                        foundTags.AddRange(category.GetTags());
+                    }
+                    else
+                    {
+                        foreach (TagModel tag in category.GetTags())
+                        {
+                            if (!tag.HasParent()) //? if the child tag is to be referenced in some way, it is a given that some parent will contain it
+                            {
+                                foundTags.Add(tag);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (tagsToExclude != null)
+            {
+                foreach (TagModel tag in tagsToExclude)
+                {
+                    if (foundTags.Contains(tag))
+                    {
+                        foundTags.Remove(tag);
+                    }
+                }
+            }
+
+            return foundTags.ToArray();
+        }
+        
+        //! don't make a sub-method of this, just use GetLinkedImages()
+        public static BaseImageModel[] GetLinkedImagesInTags(TagModel[] tags)
+        {
+            List<BaseImageModel> images = new List<BaseImageModel>();
+            foreach (TagModel tag in tags)
+            {
+                images.AddRange(tag.GetLinkedImages());
+            }
+
+            return images.ToArray();
+        }
+
         #endregion
 
         #region Tag Sorting

@@ -136,7 +136,7 @@ namespace WallpaperFlux.WPF
             {
                 Width = Display.Bounds.Width + ThemeUtil.Theme.Settings.WindowWidthOffset;
             }
-            catch (Exception e) // invalid input, reset to 0
+            catch (Exception) // invalid input, reset to 0
             {
                 ThemeUtil.Theme.Settings.WindowWidthOffset = 0;
                 Width = Display.Bounds.Width + ThemeUtil.Theme.Settings.WindowWidthOffset;
@@ -146,7 +146,7 @@ namespace WallpaperFlux.WPF
             {
                 Height = Display.Bounds.Height + ThemeUtil.Theme.Settings.WindowHeightOffset;
             }
-            catch (Exception e) // invalid input, reset to 0
+            catch (Exception) // invalid input, reset to 0
             {
                 ThemeUtil.Theme.Settings.WindowHeightOffset = 0;
                 Height = Display.Bounds.Height + ThemeUtil.Theme.Settings.WindowHeightOffset;
@@ -247,7 +247,7 @@ namespace WallpaperFlux.WPF
 
                         RetryMediaOpen(false, image); //? If there's too much load on the system FFME media will fail to start and need to be re-initialized
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         Debug.WriteLine("Failed FFME Open: " + image.Path);
                     }

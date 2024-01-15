@@ -96,7 +96,7 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
-        private readonly IExternalTimer timer;
+        public readonly IExternalTimer Timer;
 
         private Action<int, bool, bool> OnTimerReset;
 
@@ -109,6 +109,8 @@ namespace WallpaperFlux.Core.Models
             timer.Interval = TimeSpan.FromSeconds(1);
             timer.Tick += TimerOnTick;
             timer.Start();
+
+            Timer = timer;
 
             this.OnTimerReset = OnTimerReset;
         }

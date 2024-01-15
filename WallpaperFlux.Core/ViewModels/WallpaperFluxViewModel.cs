@@ -187,10 +187,10 @@ namespace WallpaperFlux.Core.ViewModels
                 {
                     Size size = selectedImage.GetSize();
 
-                    if (selectedImage.IsInRelatedImageSet && !ImageSetInspectorToggle)
+                    if (selectedImage.IsInImageSet && !ImageSetInspectorToggle)
                     {
                         //! this shouldn't happen but it has, here's a hacky fix
-                        SelectedImage = selectedImage.ParentRelatedImageModel;
+                        SelectedImage = selectedImage.ParentImageSet;
                     }
                     else
                     {
@@ -920,9 +920,9 @@ namespace WallpaperFlux.Core.ViewModels
                 if (image != null)
                 {
                     BaseImageModel imageToAdd;
-                    if (image.IsInRelatedImageSet)
+                    if (image.IsInImageSet)
                     {
-                        imageToAdd = image.ParentRelatedImageModel;
+                        imageToAdd = image.ParentImageSet;
 
                         if (selectedImageModels.Contains(imageToAdd))
                         {
@@ -1035,12 +1035,12 @@ namespace WallpaperFlux.Core.ViewModels
 
                             if (image is ImageModel imageModel)
                             {
-                                if (imageModel.IsInRelatedImageSet)
+                                if (imageModel.IsInImageSet)
                                 {
                                     // not much of a downside to using IsEnabled() on sets, sets have significantly less IsEnabled() checks anyways
-                                    if (imageModel.ParentRelatedImageModel.IsEnabled()) //! this should NOT be combined with the above if statement! (would conflict with the else)
+                                    if (imageModel.ParentImageSet.IsEnabled()) //! this should NOT be combined with the above if statement! (would conflict with the else)
                                     {
-                                        success = checkForSet.Invoke(imageModel.ParentRelatedImageModel);
+                                        success = checkForSet.Invoke(imageModel.ParentImageSet);
                                     }
                                 }
                                 else if ((ThemeUtil.ThemeSettings.EnableDetectionOfInactiveImages && ThemeUtil.Theme.Images.ContainsImage(image)) 

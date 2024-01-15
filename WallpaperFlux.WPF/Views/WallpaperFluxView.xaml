@@ -348,7 +348,7 @@
                                         <DataTrigger Binding="{Binding IsVideo}" Value="True">
                                             <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource VideoTemplate}"/>
                                         </DataTrigger>
-                                        <DataTrigger Binding="{Binding IsRelatedImageSet}" Value="True">
+                                        <DataTrigger Binding="{Binding IsImageSet}" Value="True">
                                             <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource RelatedImageTemplate}"/>
                                         </DataTrigger>
                                     </DataTemplate.Triggers>
@@ -1044,7 +1044,6 @@
                                                         <!-- ? VideoSettingsTemplate -->
                                                         <DataTemplate x:Key="VideoSettingsTemplate">
                                                             <StackPanel>
-
                                                                 <!-- Volume -->
                                                                 <StackPanel Orientation="Horizontal">
                                                                     <TextBlock Text="Volume: " VerticalAlignment="Center"/>

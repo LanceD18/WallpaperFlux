@@ -75,6 +75,15 @@ namespace WallpaperFlux.Core.Controllers
             return true;
         }
 
+        // TODO Tag Frequency Idea
+        // By default tags have 100% frequency
+        // When a tag's frequency is increased, it increases the frequency of that tag and all of its children tags
+        // If a child tag's frequency is changed while it's parent is also changed, their rates multiply against each other
+        // When selecting an image, all unmodified tags will fit into one category as one large weighted frequency, while all modified tags will be given individual frequencies
+        // - Weight determined by number of images with tag
+        // - Selectable images are subdivided into the tags you're given
+        //? this should also modify weighted static/gif/video chance (but not unweighted)
+
         private bool RandomizeWallpapers()
         {
             Random rand = new Random();
@@ -185,17 +194,6 @@ namespace WallpaperFlux.Core.Controllers
         #region Wallpaper Order Modifiers
         private void ModifyWallpaperOrder(ref BaseImageModel[] wallpapersToModify)
         {
-            // TODO
-            // request next 3 wallpapers, determine their preferred setting
-            // set first display with said preferred setting
-            // request next 3 wallpapers
-            // set second display with preferred setting
-            // no request
-            // set first wallpaper to next wallpaper (Using second set of requested wallpapers)
-            // request next 3 wallpapers, this changes the third wallpaper setting
-            // set third display, this will use the *second* preferred setting (Using third set of requested wallpapers)
-            // essentially, there will always be an upcoming set of preferred wallpapers, once that set surpassed, a new set will be made that all displays will have to follow
-
             if (IsWallpapersValid(wallpapersToModify))
             {
                 BaseImageModel[] reorderedWallpapers = Array.Empty<BaseImageModel>();

@@ -112,9 +112,9 @@ namespace WallpaperFlux.Core.Collections
             image.RemoveAllTags();
             WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.RemoveImage(image);
 
-            if (image.IsInRelatedImageSet)
+            if (image.IsInImageSet)
             {
-                ImageUtil.RemoveFromImageSet(new ImageModel[] {image}, image.ParentRelatedImageModel);
+                ImageUtil.RemoveFromImageSet(new ImageModel[] {image}, image.ParentImageSet);
             }
 
             return ImageContainer[image.ImageType].Remove(image.Path);

@@ -93,7 +93,7 @@ namespace WallpaperFlux.Core.Tools
             bool canModifyVideo = videoExists != videoPreviouslyExisted;
 
             //? A previously empty frequency should be updated to match it's expected value, if it wasn't made empty intentionally
-            RecalculateExactFrequency(
+            AdjustExactFrequencyToRelative(
                 !intentionalAbsoluteChange[ImageType.Static] || canModifyStatic,
                 !intentionalAbsoluteChange[ImageType.GIF] || canModifyGif,
                 !intentionalAbsoluteChange[ImageType.Video] || canModifyVideo);
@@ -216,7 +216,7 @@ namespace WallpaperFlux.Core.Tools
                 Debug.WriteLine("Setting Relative Frequency of " + imageType + " to: " + input);
                 RelativeFrequency[imageType] = input;//! [You did the stuff on the right in the parent method] input / 100; // the actual value is a percentage
 
-                RecalculateExactFrequency(true, true, true); //? we need to recalculate the exact frequency to account for the change in relative frequency
+                AdjustExactFrequencyToRelative(true, true, true); //? we need to recalculate the exact frequency to account for the change in relative frequency
             }
             else if (frequencyType == FrequencyType.Exact) // set a new exact chance, recalculating the remaining exact chances & also the relative chances to represent this change
             {
@@ -235,16 +235,16 @@ namespace WallpaperFlux.Core.Tools
                 if (input < 1 && input > 0) // all non-absolute inputs
                 {
                     CalculateExactFrequency(imageType);
-                    RecalculateRelativeFrequency(imageType, false);
+                    AdjustRelativeFrequencyToExact(imageType, false);
                 }
                 else if (input >= 1) // exact chance of 1, set everything else to 0
                 {
-                    RecalculateRelativeFrequency(imageType, true);
+                    AdjustRelativeFrequencyToExact(imageType, true);
                 }
                 else if (input <= 0) // exact chance of 0, balance the other frequencies and then update the relative frequencies (under absolute percentage)
                 {
                     CalculateExactFrequency(imageType);
-                    RecalculateRelativeFrequency(imageType, true);
+                    AdjustRelativeFrequencyToExact(imageType, true);
                 }
             }
 
@@ -271,7 +271,7 @@ namespace WallpaperFlux.Core.Tools
         /// </summary>
         /// <param name="changedImageType"></param>
         /// <param name="absoluteExactFrequency"></param>
-        private void RecalculateRelativeFrequency(ImageType changedImageType, bool absoluteExactFrequency)
+        private void AdjustRelativeFrequencyToExact(ImageType changedImageType, bool absoluteExactFrequency)
         {
             Debug.WriteLine("Recalculating Relative Frequency");
 
@@ -368,11 +368,11 @@ namespace WallpaperFlux.Core.Tools
         }
 
         // TODO This is a redundant method that should be removed in the event that you merge FrequencyCalculator and FrequencyModel
-        public void RecalculateExactFrequency() => RecalculateExactFrequency(true, true, true);
+        public void AdjustExactFrequencyToRelative() => AdjustExactFrequencyToRelative(true, true, true);
 
         // Recalculate Exact Frequency to account for changes to Relative Frequency
         // (This also displays to the user what the exact chance even is based on the Relative Frequency)
-        private void RecalculateExactFrequency(bool canModifyStatic, bool canModifyGIF, bool canModifyVideo)
+        private void AdjustExactFrequencyToRelative(bool canModifyStatic, bool canModifyGIF, bool canModifyVideo)
         {
             Debug.WriteLine("Recalculating Exact Frequency");
             if (canModifyStatic == canModifyGIF == canModifyVideo == false)

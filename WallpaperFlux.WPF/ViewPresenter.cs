@@ -82,7 +82,7 @@ namespace WallpaperFlux.WPF
                 else
                     window.Show();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 // TODO Re-test this scenario
                 Debug.WriteLine("Window Open Failed"); //? this can occur if the child window has its own child window open (I think, re-test this for just in case)

@@ -81,10 +81,7 @@ namespace WallpaperFlux.Core.Models.Tagging
         private string _renameFolderPath = string.Empty;
         public string RenameFolderPath
         {
-            get
-            {
-                return _renameFolderPath;
-            }
+            get => _renameFolderPath;
             set
             {
                 if (Directory.Exists(value))
@@ -130,7 +127,6 @@ namespace WallpaperFlux.Core.Models.Tagging
         }
 
         public bool UseForNaming_IncludeCategory => UseForNaming && ParentCategory.UseForNaming;
-
 
         #region ----- Highlighting -----
         //? Used for determining which tag's font to highlight when an image is selected
@@ -316,7 +312,6 @@ namespace WallpaperFlux.Core.Models.Tagging
             InitCommands();
         }
         
-
         private void InitCommands()
         {
             SelectImagesWithTag = new MvxCommand(() => TaggingUtil.RebuildImageSelectorWithTagOptions(GetLinkedImages().ToArray()));
@@ -469,22 +464,49 @@ namespace WallpaperFlux.Core.Models.Tagging
         /// Gets all linked images of this tag and its child tags
         /// </summary>
         /// <returns></returns>
-        public HashSet<ImageModel> GetLinkedImages(bool accountForInvalid = true)
+        public HashSet<BaseImageModel> GetLinkedImages(bool accountForInvalid = true, bool convertImagesToSets = false)
         {
             //? Only include images that actually exist (helps to detect and remove deleted images)
-            HashSet<ImageModel> images;
+            HashSet<BaseImageModel> images;
             if (accountForInvalid) // accounting for invalid can add significant processing time when this is accessed multiple times by a tag that has a large number of children
             {
-                images = new HashSet<ImageModel>(LinkedImages.Where(f => FileUtil.Exists(f.Path)));
+                images = new HashSet<BaseImageModel>(LinkedImages.Where(f => FileUtil.Exists(f.Path)));
             }
             else
             {
-                images = new HashSet<ImageModel>(LinkedImages);
+                images = new HashSet<BaseImageModel>(LinkedImages);
             }
 
             foreach (TagModel tag in ChildTags)
             {
                 images.UnionWith(tag.GetLinkedImages(accountForInvalid));
+            }
+
+            if (convertImagesToSets) //? keeps the set itself but removes the images within the sets
+            {
+                List<ImageModel> imagesToRemove = new List<ImageModel>();
+                HashSet<ImageSetModel> imageSetsToAdd = new HashSet<ImageSetModel>();
+                foreach (BaseImageModel image in images)
+                {
+                    if (image is ImageModel imageModel)
+                    {
+                        if (imageModel.IsInImageSet)
+                        {
+                            imagesToRemove.Add(imageModel);
+                            imageSetsToAdd.Add(imageModel.ParentImageSet);
+                        }
+                    }
+                }
+
+                foreach (ImageModel image in imagesToRemove)
+                {
+                    images.Remove(image);
+                }
+
+                foreach (ImageSetModel imageSet in imageSetsToAdd)
+                {
+                    images.Add(imageSet);
+                }
             }
 
             return images;
@@ -566,7 +588,7 @@ namespace WallpaperFlux.Core.Models.Tagging
         public void ToggleTagLink(TagModel tag)
         {
             // toggles the source tag's link status with this tag
-            if (!tag.HasParent(this))
+            if (!tag.HasTagAsParent(this))
             {
                 tag.LinkTag(this, true); // making this tag the parent of the given tag
             }
@@ -609,8 +631,13 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         public HashSet<TagModel> GetChildTags() => ChildTags;
 
-        public bool HasParent(TagModel tag) => ParentTags.Contains(tag);
-        public bool HasChild(TagModel tag) => ChildTags.Contains(tag);
+        public bool HasTagAsParent(TagModel tag) => ParentTags.Contains(tag);
+
+        public bool HasTagAsChild(TagModel tag) => ChildTags.Contains(tag);
+
+        public bool HasParent() => ParentTags.Count > 0;
+
+        public bool HasChild() => ChildTags.Count > 0;
 
         #endregion
 

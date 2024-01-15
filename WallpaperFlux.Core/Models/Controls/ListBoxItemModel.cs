@@ -18,7 +18,7 @@ namespace WallpaperFlux.Core.Models.Controls
                 {
                     if (WallpaperFluxViewModel.Instance.ImageSetInspectorToggle)
                     {
-                        if (!imageModel.IsInRelatedImageSet)
+                        if (!imageModel.IsInImageSet)
                         {
                             return; //? cannot change the selected state of images not in an image set while the image set is viewable
                         }

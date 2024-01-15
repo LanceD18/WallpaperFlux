@@ -120,8 +120,8 @@ namespace WallpaperFlux.Core.Models.Tagging
             }
         }
 
-        public TagModel[] SortedTags;
-        public TagModel[] FilteredTags;
+        private TagModel[] SortedTags;
+        private TagModel[] FilteredTags;
 
         #endregion
 
@@ -284,6 +284,12 @@ namespace WallpaperFlux.Core.Models.Tagging
         }
 
         public HashSet<TagModel> GetTags() => Tags;
+
+        public TagModel[] GetFilteredTags() => FilteredTags;
+
+        public TagModel[] GetSortedTags() => SortedTags;
+
+        public void UpdateFilteredTags(TagModel[] newFilter) => FilteredTags = newFilter;
 
         /// <summary>
         /// Ensures that the tag with the given name exists and returns it
@@ -466,13 +472,13 @@ namespace WallpaperFlux.Core.Models.Tagging
 
                     if (validImage) 
                     {
-                        if (!image.IsInRelatedImageSet)
+                        if (!image.IsInImageSet)
                         {
                             validImages.Add(image); // if it's still a valid image by now we can add it
                         }
                         else
                         {
-                            validImages.Add(image.ParentRelatedImageModel);
+                            validImages.Add(image.ParentImageSet);
                         }
                     }
                 }

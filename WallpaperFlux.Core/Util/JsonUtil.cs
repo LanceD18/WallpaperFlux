@@ -167,6 +167,8 @@ namespace WallpaperFlux.Core.Util
 
         public static bool IsLoadingData { get; private set; } // used to speed up the loading process by preventing unnecessary calls
 
+        public static List<Action> ActionsPendingLoad = new List<Action>();
+
         public static void SetIsLoadingData(bool isLoadingData)
         {
             IsLoadingData = isLoadingData;
@@ -201,8 +203,6 @@ namespace WallpaperFlux.Core.Util
                 ActionsPendingLoad.Clear();
             }
         }
-
-        public static List<Action> ActionsPendingLoad = new List<Action>();
 
         #region Data Saving
 
@@ -476,7 +476,7 @@ namespace WallpaperFlux.Core.Util
             }
             else
             {
-                MessageBoxUtil.ShowError("Attempted to load a non-existent file");
+                MessageBoxUtil.ShowError("Attempted to load a file that does not exist: \n" + path);
             }
             
             return null;
@@ -601,7 +601,6 @@ namespace WallpaperFlux.Core.Util
             int invalidImageCount = 0;
             string invalidImageString = "The following image(s) no longer exist and have been removed from the theme: ";
 
-            int imagesLoaded = 0;
             //? ----- Converting Images -----
             for (int i = 0; i < wallpaperData.Images.Length; i++)
             {

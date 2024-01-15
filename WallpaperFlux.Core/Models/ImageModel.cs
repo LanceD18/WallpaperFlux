@@ -71,7 +71,7 @@ namespace WallpaperFlux.Core.Models
                 SetProperty(ref _rank, value);
                 RaisePropertyChanged(() => Rank);
 
-                if (IsInRelatedImageSet) ParentRelatedImageModel.UpdateAverageRankAndWeightedAverage();
+                if (IsInImageSet) ParentImageSet.UpdateAverageRankAndWeightedAverage();
             }
         }
         */
@@ -96,19 +96,19 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
-        private ImageSetModel _parentRelatedImageModel;
-        public ImageSetModel ParentRelatedImageModel
+        private ImageSetModel _parentImageSet;
+        public ImageSetModel ParentImageSet
         {
-            get => _parentRelatedImageModel;
+            get => _parentImageSet;
             set
             {
-                _parentRelatedImageModel = value;
+                _parentImageSet = value;
 
                 UpdateEnabledState();
             }
         }
 
-        public bool IsInRelatedImageSet => ParentRelatedImageModel != null;
+        public bool IsInImageSet => ParentImageSet != null;
 
         // Video Properties
         private double _volume = 50;
@@ -352,7 +352,7 @@ namespace WallpaperFlux.Core.Models
                 Active = false; //! we need to set this to false AGAIN because base.IsEnabled() will set Active to TRUE if successful
             //x}
 
-            if (IsInRelatedImageSet && !ignoreSet) return false;
+            if (IsInImageSet && !ignoreSet) return false;
 
             if (ParentFolder == null)
             {
@@ -462,7 +462,7 @@ namespace WallpaperFlux.Core.Models
 
         //? remember that these can be generated under Resharper with Resharper -> Edit -> Generate Code -> Equality Members
         //? https://stackoverflow.com/questions/14652567/is-there-a-way-to-auto-generate-gethashcode-and-equals-with-resharper
-        // for use with dictionary addition
+        //? for use with dictionary addition
         public override int GetHashCode()
         {
             //? we need to use readonly variables here to ensure that the hashcode is not lost, hence the hashPath & hashRank

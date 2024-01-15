@@ -11,9 +11,9 @@ namespace WallpaperFlux.Core.Models
 {
     public class ImageSetModel : BaseImageModel
     {
-        private ImageModel[] RelatedImages;
+        public readonly ImageModel[] RelatedImages;
 
-        public override bool IsRelatedImageSet => true;
+        public override bool IsImageSet => true;
 
         public RelatedImageType RelatedImageType { get; set; } = RelatedImageType.None;
 
@@ -179,7 +179,7 @@ namespace WallpaperFlux.Core.Models
 
             foreach (ImageModel relatedImage in RelatedImages)
             {
-                relatedImage.ParentRelatedImageModel = this;
+                relatedImage.ParentImageSet = this;
 
                 if (relatedImage.ImageType != ImageType)
                 {
@@ -361,27 +361,7 @@ namespace WallpaperFlux.Core.Models
             return highestRankedImage;
         }
 
-        protected bool Equals(ImageSetModel other)
-        {
-            bool equal = true;
-
-            if (RelatedImages.Length == other.RelatedImages.Length)
-            {
-                for (int i = 0; i < RelatedImages.Length; i++)
-                {
-                    if (!RelatedImages[i].Equals(other.RelatedImages[i]))
-                    {
-                        equal = false;
-                    }
-                }
-            }
-            else
-            {
-                equal = false;
-            }
-
-            return equal;
-        }
+        protected bool Equals(ImageSetModel other) => RelatedImages.Equals(other.RelatedImages);
 
         public override bool Equals(object obj)
         {
@@ -390,5 +370,7 @@ namespace WallpaperFlux.Core.Models
             if (obj.GetType() != this.GetType()) return false;
             return Equals((ImageSetModel)obj);
         }
+
+        public override int GetHashCode() => (RelatedImages != null ? RelatedImages.GetHashCode() : 0);
     }
 }

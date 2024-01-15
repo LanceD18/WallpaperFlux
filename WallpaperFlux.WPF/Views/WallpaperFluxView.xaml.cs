@@ -574,8 +574,7 @@ namespace WallpaperFlux.WPF.Views
                 TaggingUtil.HighlightTags();
             }
 
-            return;
-
+            /*x
             // Font Scaling
             if (e.AddedItems.Count > 0)
             {
@@ -597,19 +596,20 @@ namespace WallpaperFlux.WPF.Views
                     else
                     {
                         // TODO Figure out how to gather the video dimensions (With the below method the dimensions never load in time, or seemingly don't load at all)
-                        /*
-                        MediaElement element = new MediaElement();
-                        await element.Open(new Uri(path));
-                        Bitmap bitmap = await element.CaptureBitmapAsync();
+                        ///
+                        /// MediaElement element = new MediaElement();
+                        /// await element.Open(new Uri(path));
+                        /// Bitmap bitmap = await element.CaptureBitmapAsync();
 
-                        dimensions = new Size(bitmap.Width, bitmap.Height);
-                        await element.Close();
-                        */
+                        /// dimensions = new Size(bitmap.Width, bitmap.Height);
+                        /// await element.Close();
+                        ///
 
                         //xSelectedImageDimensionsTextBox.Text = "";
                     }
                 }
             }
+            */
         }
 
         //? it's a bit clunky to introduce a variable for the width of each individual window  but it works
