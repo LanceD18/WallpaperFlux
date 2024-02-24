@@ -56,10 +56,10 @@ namespace WallpaperFlux.Core.ViewModels
 
                     for (int i = 1; i <= ThemeUtil.ThemeSettings.MaxRank; i++) //? not including un-ranked, those will take over the majority of the graph
                     {
-                        allValues.Add(ThemeUtil.RankController.GetRankCount(i));
-                        staticValues.Add(ThemeUtil.RankController.GetImagesOfTypeRankCount(ImageType.Static, i));
-                        gifValues.Add(ThemeUtil.RankController.GetImagesOfTypeRankCount(ImageType.GIF, i));
-                        videoValues.Add(ThemeUtil.RankController.GetImagesOfTypeRankCount(ImageType.Video, i));
+                        allValues.Add(ThemeUtil.RankController.GetCountOfRank(i));
+                        staticValues.Add(ThemeUtil.RankController.GetCountOfRankOfType(ImageType.Static, i));
+                        gifValues.Add(ThemeUtil.RankController.GetCountOfRankOfType(ImageType.GIF, i));
+                        videoValues.Add(ThemeUtil.RankController.GetCountOfRankOfType(ImageType.Video, i));
                     }
 
                     AllColumnSeries.Values = allValues;
@@ -75,16 +75,16 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
-        public string RankedText => "Ranked: " + ThemeUtil.RankController.GetRankCountTotal();
+        public string RankedText => "Ranked: " + ThemeUtil.RankController.GetCountOfAllRankedImages();
 
-        public string UnrankedText => "Unranked: " + ThemeUtil.RankController.GetRankCount(0);
+        public string UnrankedText => "Unranked: " + ThemeUtil.RankController.GetCountOfRank(0);
 
         public string DisabledText
         {
             get
             {
-                int diff = ThemeUtil.Theme.Images.GetAllImages().Length - (ThemeUtil.RankController.GetRankCountTotal() + ThemeUtil.RankController.GetRankCount(0));
-                //xDebug.WriteLine("Diff: All: " + ThemeUtil.Theme.Images.GetAllImages().Length + " | 99: " + ThemeUtil.RankController.GetRankCountTotal() + " | 0: " + ThemeUtil.RankController.GetRankCount(0));
+                int diff = ThemeUtil.Theme.Images.GetAllImages().Length - (ThemeUtil.RankController.GetCountOfAllRankedImages() + ThemeUtil.RankController.GetCountOfRank(0));
+                //xDebug.WriteLine("Diff: All: " + ThemeUtil.Theme.Images.GetAllImages().Length + " | 99: " + ThemeUtil.RankController.GetCountOfAllRankedImages() + " | 0: " + ThemeUtil.RankController.GetCountOfRank(0));
 
                 if (diff > 0)
                 {

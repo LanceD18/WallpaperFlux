@@ -373,9 +373,10 @@
                                         <Separator/>
                                         <MenuItem Header="Rename" Command="{Binding RenameTagCommand}"/>
                                         <MenuItem Header="Delete" Command="{Binding RemoveTagCommand}"/>
-                                        <MenuItem Header="Frequencies">
-                                            <MenuItem Header="Relative Frequency: 100%"/>
-                                            <MenuItem Header="Exact Frequency: 100%"/>
+                                        <MenuItem Header="Frequencies" SubmenuOpened="MenuItem_OnSubmenuOpened">
+                                            <MenuItem Header="{Binding RelativeFrequencyText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                      Command="{Binding ChangeRelativeFrequencyCommand}"/>
+                                            <MenuItem IsEnabled="False" Header="{Binding ExactFrequencyText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
                                         </MenuItem>
 
                                         <Separator/>

@@ -11,11 +11,20 @@ namespace WallpaperFlux.Core.Models
 {
     public class ImageSetModel : BaseImageModel
     {
-        public readonly ImageModel[] RelatedImages;
+        private readonly ImageModel[] RelatedImages;
 
         public override bool IsImageSet => true;
 
-        public RelatedImageType RelatedImageType { get; set; } = RelatedImageType.None;
+        public ImageSetType SetType
+        {
+            get => _setType;
+            set
+            {
+                if (value == _setType) return;
+                _setType = value;
+                RaisePropertyChanged(() => IsAnimated);
+            }
+        }
 
         public ImageSetRankingFormat RankingFormat { get; set; }
 
@@ -144,6 +153,8 @@ namespace WallpaperFlux.Core.Models
         }
 
         private int _weightedAverage;
+        private ImageSetType _setType;
+
         public int WeightedAverage
         {
             get => _weightedAverage;
@@ -156,16 +167,48 @@ namespace WallpaperFlux.Core.Models
 
         public string OverrideRankWeightText => "Weight: " + OverrideRankWeight;
 
+        #region Animated Set Properties
+
+        private bool _fractionIntervals = true;
+        public bool FractionIntervals
+        {
+            get => _fractionIntervals;
+            set
+            {
+                SetProperty(ref _fractionIntervals, value);
+
+                _staticIntervals = !value;
+                RaisePropertyChanged(() => StaticIntervals);
+            }
+        }
+
+        private bool _staticIntervals;
+        public bool StaticIntervals
+        {
+            get => _staticIntervals;
+            set
+            {
+                SetProperty(ref _staticIntervals, value);
+
+                _fractionIntervals = !value;
+                RaisePropertyChanged(() => FractionIntervals);
+            }
+        }
+        
+        public bool WeightedIntervals { get; set; }
+
+        #endregion
+
         public bool InvalidSet { get; set; } = false;
 
         public IMvxCommand SetWallpaperCommand { get; set; }
 
-        public ImageSetModel(ImageModel[] relatedImages, ImageType imageType, RelatedImageType relatedImageType, ImageSetRankingFormat rankingFormat,
+        public ImageSetModel(ImageModel[] relatedImages, ImageType imageType, ImageSetType setType, ImageSetRankingFormat rankingFormat,
             int overrideRank, int overrideRankWeight, bool enabled = true)
         {
             base.ImageType = imageType;
 
-            RelatedImageType = relatedImageType;
+            SetType = setType;
 
             RelatedImages = relatedImages;
 
@@ -252,10 +295,15 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
+        public ImageModel GetRelatedImage(int index, bool checkForEnabled = true)
+        {
+            return GetRelatedImages(checkForEnabled)[index];
+        }
+
         //! Kept as a reminder that this is not supported at the moment
         public void SetRelatedImages(ImageModel[] newRelatedImages, ImageType imageType)
         {
-            throw new Exception("We will only set this once, if you wish to add/remove from the Image set, create a new RelatedImageModel");
+            throw new Exception("We will only set this once, if you wish to add/remove from the Image set, create a new ImageSetModel");
         }
 
         public string[] GetImagePaths()
@@ -371,6 +419,6 @@ namespace WallpaperFlux.Core.Models
             return Equals((ImageSetModel)obj);
         }
 
-        public override int GetHashCode() => (RelatedImages != null ? RelatedImages.GetHashCode() : 0);
+        public override int GetHashCode() => RelatedImages != null ? RelatedImages.GetHashCode() : 0;
     }
 }

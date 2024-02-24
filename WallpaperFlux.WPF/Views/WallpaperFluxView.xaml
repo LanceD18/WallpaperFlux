@@ -22,6 +22,7 @@
     xmlns:media="https://github.com/mysteryx93/MediaPlayerUI.NET"
     xmlns:gif="http://wpfanimatedgif.codeplex.com"
     xmlns:tb="http://www.hardcodet.net/taskbar"
+    xmlns:coreUtil="clr-namespace:WallpaperFlux.Core.Util;assembly=WallpaperFlux.Core"
     mc:Ignorable="d" FontSize="12" FontFamily="Segoe UI"
     d:DesignHeight="450" d:DesignWidth="800"
     SizeChanged="WallpaperFluxView_OnSizeChanged_UpdateInspectorHeight">
@@ -242,7 +243,7 @@
                                     </GroupBox>
                                 </DataTemplate>
 
-                                <!--? //// RelatedImageTemplate //// -->
+                                <!--? //// Image Set Template //// -->
                                 <DataTemplate x:Key="RelatedImageTemplate" DataType="{x:Type models:ImageSetModel}">
                                     <GroupBox adonisExtensions:LayerExtension.IncreaseLayer="False" BorderThickness="2" BorderBrush="SlateBlue"
                                               adonisExtensions:CornerRadiusExtension.CornerRadius="10">
@@ -272,14 +273,6 @@
                                                                                         Unloaded="Tooltip_Image_OnUnloaded"
                                                                                         Stretch="Uniform"
                                                                                         RenderOptions.BitmapScalingMode="HighQuality">
-                                                                    <!--
-                                                            <Image.Source>
-                                                                <BitmapImage
-                                                                    CacheOption="OnLoad"
-                                                                    UriSource="{Binding Path, Mode=OneWay}">
-                                                                </BitmapImage>
-                                                            </Image.Source>
-                                                            -->
                                                                 </Image>
                                                             </DataTemplate>
                                                             <!-- GIF -->
@@ -288,6 +281,7 @@
                                                                                         Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" />
                                                             </DataTemplate>
                                                         </ContentControl.Resources>
+
                                                         <!--? Template Control -->
                                                         <ContentControl.ContentTemplate>
                                                             <DataTemplate>
@@ -310,15 +304,129 @@
                                                 <Image.ContextMenu>
                                                     <ContextMenu>
                                                         <MenuItem Header="Set As Wallpaper" mvx:Bi.nd="Command SetWallpaperCommand"/>
+
                                                         <Separator/>
+
+                                                        <!-- Set Type -->
+                                                        <MenuItem Header="Set Type">
+                                                            <MenuItem StaysOpenOnClick="True">
+                                                                <MenuItem.Header>
+                                                                    <ComboBox ItemsSource="{Binding Source={extensions:Enumeration {x:Type coreUtil:ImageSetType}}}"
+                                                                              DisplayMemberPath="Description"
+                                                                              SelectedValue="{Binding SetType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                              SelectedValuePath="Value">
+                                                                        <ComboBox.ToolTip>
+                                                                            <ToolTip Content="Set Type"/>
+                                                                        </ComboBox.ToolTip>
+                                                                    </ComboBox>
+                                                                </MenuItem.Header>
+                                                            </MenuItem>
+
+                                                            <MenuItem>
+                                                                <MenuItem.Header>
+                                                                    <!--? /// Set-Dependent Options /// -->
+                                                                    <ContentControl Content="{Binding}" HorizontalAlignment="Center">
+                                                                        <!-- Resources -->
+                                                                        <ContentControl.Resources>
+                                                                            <!-- Remember that the Binding context here refers to what's given in the Content of the ContentTemplate, not what ReSharper says -->
+
+                                                                            <DataTemplate x:Key="Alt" DataType="{x:Type models:ImageSetModel}"/>
+
+                                                                            <DataTemplate x:Key="Animate" DataType="{x:Type models:ImageSetModel}">
+                                                                                <StackPanel Orientation="Vertical">
+
+                                                                                    <MenuItem StaysOpenOnClick="True">
+                                                                                        <MenuItem.Header>
+                                                                                            <StackPanel Orientation="Horizontal">
+                                                                                                <TextBlock Text="Speed: " VerticalAlignment="Center"/>
+                                                                                                <TextBox Text="{Binding Speed}" VerticalAlignment="Center">
+                                                                                                    <TextBox.Style>
+                                                                                                        <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInputDecimal}"/>
+                                                                                                    </TextBox.Style>
+                                                                                                </TextBox>
+                                                                                            </StackPanel>
+                                                                                        </MenuItem.Header>
+                                                                                    </MenuItem>
+                  
+                                                                                    <MenuItem Header="Fraction Intervals" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding FractionIntervals}"
+                                                                            ToolTip="Interval amount is determined by the wallpaper change interval (Multiplied by Speed)"/>
+                                                                                    <MenuItem Header="Static Intervals" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding StaticIntervals}"
+                                                                            ToolTip="Speed will instead represent the length of each frame"/>
+                                                                                    <MenuItem Header="Weighted Intervals" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding WeightedIntervals}"
+                                                                            ToolTip="Gives each image an interval weighted to their rank (Multiplied by the Secondary Interval Type)"/>
+                                                                                    <Separator/>
+
+                                                                                    <MenuItem Header="Override Minimum Loops" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding OverrideMinimumLoops}"/>
+                                                                                    <MenuItem StaysOpenOnClick="True" IsEnabled="{Binding OverrideMinimumLoops}">
+                                                                                        <MenuItem.Header>
+                                                                                            <StackPanel Orientation="Horizontal">
+                                                                                                <TextBlock Text="Min Loops: " VerticalAlignment="Center"/>
+                                                                                                <TextBox Text="{Binding MinimumLoops}" VerticalAlignment="Center">
+                                                                                                    <TextBox.Style>
+                                                                                                        <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                                                                                                    </TextBox.Style>
+                                                                                                </TextBox>
+                                                                                            </StackPanel>
+                                                                                        </MenuItem.Header>
+                                                                                    </MenuItem>
+                                                                                    <Separator/>
+                                                                                    <MenuItem Header="Override Maximum Time" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding OverrideMaximumTime}"/>
+                                                                                    <MenuItem StaysOpenOnClick="True" IsEnabled="{Binding OverrideMaximumTime}">
+                                                                                        <MenuItem.Header>
+                                                                                            <StackPanel Orientation="Horizontal">
+                                                                                                <TextBlock Text="Max Time: " VerticalAlignment="Center"/>
+                                                                                                <TextBox Text="{Binding MaximumTime}" VerticalAlignment="Center">
+                                                                                                    <TextBox.Style>
+                                                                                                        <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                                                                                                    </TextBox.Style>
+                                                                                                </TextBox>
+                                                                                            </StackPanel>
+                                                                                        </MenuItem.Header>
+                                                                                    </MenuItem>
+                                                                                </StackPanel>
+                                                                            </DataTemplate>
+
+                                                                            <DataTemplate x:Key="Merge" DataType="{x:Type models:ImageSetModel}"/>
+                                                                        </ContentControl.Resources>
+
+                                                                        <!-- // Template Control // -->
+                                                                        <ContentControl.ContentTemplate>
+                                                                            <DataTemplate>
+                                                                                <!-- Default Control -->
+                                                                                <ContentControl Name="cc" Content="{Binding}" ContentTemplate="{StaticResource Alt}"/>
+                                                                                <!-- Triggers -->
+                                                                                <DataTemplate.Triggers>
+                                                                                    <!-- If IsVideo, use the VideoTemplate instead -->
+                                                                                    <DataTrigger Binding="{Binding IsAnimated}" Value="True">
+                                                                                        <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource Animate}"/>
+                                                                                    </DataTrigger>
+                                                                                    <!-- TODO
+                                                                        <DataTrigger Binding="{Binding IsMerged}" Value="True">
+                                                                            <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource RelatedImageTemplate}"/>
+                                                                        </DataTrigger>
+                                                                        -->
+                                                                                </DataTemplate.Triggers>
+                                                                            </DataTemplate>
+                                                                        </ContentControl.ContentTemplate>
+                                                                    </ContentControl>
+                                                                </MenuItem.Header>
+                                                            </MenuItem>
+                                                        </MenuItem>
+
+                                                        <Separator/>
+
                                                         <MenuItem Header="Ranking Format" IsEnabled="False"/>
-                                                        <MenuItem Header="Average" IsChecked="{Binding UsingAverageRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" StaysOpenOnClick="True" IsCheckable="True"
+                                                        <MenuItem Header="Average" IsChecked="{Binding UsingAverageRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                                  StaysOpenOnClick="True" IsCheckable="True"
                                                                   IsEnabled="{Binding UsingAverageRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource BooleanInverterConverter}}"/>
-                                                        <MenuItem Header="Override" IsChecked="{Binding UsingOverrideRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" StaysOpenOnClick="True" IsCheckable="True"
+                                                        <MenuItem Header="Override" IsChecked="{Binding UsingOverrideRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                                  StaysOpenOnClick="True" IsCheckable="True"
                                                                   IsEnabled="{Binding UsingOverrideRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource BooleanInverterConverter}}"/>
-                                                        <MenuItem Header="Weighted Average" IsChecked="{Binding UsingWeightedAverage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" StaysOpenOnClick="True" IsCheckable="True"
+                                                        <MenuItem Header="Weighted Average" IsChecked="{Binding UsingWeightedAverage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                                  StaysOpenOnClick="True" IsCheckable="True"
                                                                   IsEnabled="{Binding UsingWeightedAverage, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource BooleanInverterConverter}}"/>
-                                                        <MenuItem Header="Weighted Override" IsChecked="{Binding UsingWeightedRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" StaysOpenOnClick="True" IsCheckable="True"
+                                                        <MenuItem Header="Weighted Override" IsChecked="{Binding UsingWeightedRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                                  StaysOpenOnClick="True" IsCheckable="True"
                                                                   IsEnabled="{Binding UsingWeightedRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource BooleanInverterConverter}}"/>
                                                         <MenuItem Header="{Binding OverrideRankWeightText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="False"/>
                                                         <Slider Value="{Binding OverrideRankWeight}" IsEnabled="{Binding UsingWeightedRank}" Minimum="0" Maximum="100"/>
@@ -670,7 +778,7 @@
                 <TextBlock Text="{Binding SelectedImageDimensionsText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
                            Grid.Row="3" Grid.Column="1" HorizontalAlignment="Center" />
 
-                <!--? Image Selector -->
+                <!--? Image Selector Tab -->
                 <GroupBox Grid.Row="4" Grid.Column="1"
                           adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="3">
 

@@ -14,12 +14,11 @@ using WallpaperFlux.Core.ViewModels;
 
 namespace WallpaperFlux.Core.Util
 {
-    public enum RelatedImageType
+    public enum ImageSetType
     {
-        None,
         Alt,
-        Merge,
-        Animate
+        Animate,
+        Merge
     }
 
     public enum ImageSetRankingFormat
@@ -116,7 +115,7 @@ namespace WallpaperFlux.Core.Util
             }
 
             // Create a Related Image Set Model out of the selected images
-            ImageSetModel relatedImages = new ImageSetModel(images, encounteredImageTypes.First(), RelatedImageType.Alt, ImageSetRankingFormat.WeightedAverage, 0, 50);
+            ImageSetModel relatedImages = new ImageSetModel(images, encounteredImageTypes.First(), ImageSetType.Alt, ImageSetRankingFormat.WeightedAverage, 0, 50);
             if (relatedImages.InvalidSet) return null; // if the set becomes invalid, cancel the process
 
             if (modifyTabs) // not needed if the image selector isn't even open
@@ -149,7 +148,7 @@ namespace WallpaperFlux.Core.Util
 
             ImageSelectorTabModel targetTab = WallpaperFluxViewModel.Instance.GetSelectorTabOfImage(targetSet);
 
-            ImageSetModel newImageSet = new ImageSetModel(targetSet.GetRelatedImages(false).Union(images).ToArray(), targetSet.ImageType, targetSet.RelatedImageType, targetSet.RankingFormat,
+            ImageSetModel newImageSet = new ImageSetModel(targetSet.GetRelatedImages(false).Union(images).ToArray(), targetSet.ImageType, targetSet.SetType, targetSet.RankingFormat,
                 targetSet.OverrideRank, targetSet.OverrideRankWeight);
             ReplaceImageSet(targetSet, newImageSet, targetTab);
 
@@ -165,7 +164,7 @@ namespace WallpaperFlux.Core.Util
 
             ImageSelectorTabModel targetTab = WallpaperFluxViewModel.Instance.GetSelectorTabOfImage(targetSet);
 
-            ImageSetModel newImageSet = new ImageSetModel(targetSet.GetRelatedImages(false).Except(images).ToArray(), targetSet.ImageType, targetSet.RelatedImageType, targetSet.RankingFormat,
+            ImageSetModel newImageSet = new ImageSetModel(targetSet.GetRelatedImages(false).Except(images).ToArray(), targetSet.ImageType, targetSet.SetType, targetSet.RankingFormat,
                 targetSet.OverrideRank, targetSet.OverrideRankWeight);
 
             if (newImageSet.GetRelatedImages(false).Length != 0)

@@ -51,21 +51,6 @@ namespace WallpaperFlux.Core.Models.Tagging
                 SetProperty(ref _useForNaming, value);
                 RaisePropertyChanged(() => UseForNaming_IncludeCategory);
                 RaisePropertyChanged(() => ExceptionColor); //? depends on the value of UseForNaming_IncludeCategory
-                /*x
-                if (_UseForNaming != value)  // prevents unnecessary calls
-                {
-                    _UseForNaming = value;
-
-                    if (LinkedImages != null)
-                    {
-                        HashSet<WallpaperData.ImageData> imagesToRename = new HashSet<WallpaperData.ImageData>();
-                        foreach (string imagePath in GetLinkedImages())
-                        {
-                            imagesToRename.Add(WallpaperData.GetImageData(imagePath));
-                        }
-                    }
-                }
-                */
             }
         }
 
@@ -73,10 +58,7 @@ namespace WallpaperFlux.Core.Models.Tagging
         //? Just create a TagModelJSON.cs that converts all of these into strings on saving the theme
         //! Using a string will require us to update this on rename, and search for the tag when needed, so lets just save the string portion for when saving
         private HashSet<TagModel> ParentTags = new HashSet<TagModel>(); //? Will be converted to strings in TagModelJson.cs for saving purposes instead of saving the entire object
-
         private HashSet<TagModel> ChildTags = new HashSet<TagModel>(); //? Will be converted to strings in TagModelJson.cs for saving purposes instead of saving the entire object
-        //xpublic HashSet<Tuple<string, string>> ParentTags = new HashSet<Tuple<string, string>>();
-        //xpublic HashSet<Tuple<string, string>> ChildTags = new HashSet<Tuple<string, string>>();
 
         private string _renameFolderPath = string.Empty;
         public string RenameFolderPath
@@ -172,7 +154,6 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         #region ----- TagBoard -----
 
-
         [JsonIgnore] private TagSearchType _searchType = TaggingUtil.DEFAULT_TAG_SEARCH_TYPE;
 
         public TagSearchType SearchType
@@ -258,6 +239,20 @@ namespace WallpaperFlux.Core.Models.Tagging
             }
         }
 
+        private string _relativeFrequencyText;
+        public string RelativeFrequencyText
+        {
+            get => _relativeFrequencyText;
+            set => SetProperty(ref _relativeFrequencyText, value);
+        }
+
+        private string _exactFrequencyText;
+        public string ExactFrequencyText
+        {
+            get => _exactFrequencyText;
+            set => SetProperty(ref _exactFrequencyText, value);
+        }
+
         #endregion
 
         #region Commands
@@ -296,6 +291,8 @@ namespace WallpaperFlux.Core.Models.Tagging
         public IMvxCommand RemoveRenameFolderCommand { get; set; }
 
         public IMvxCommand ToggleRankGraphCommand { get; set; }
+
+        public IMvxCommand ChangeRelativeFrequencyCommand { get; set; }
 
         #endregion
 
@@ -339,6 +336,9 @@ namespace WallpaperFlux.Core.Models.Tagging
 
             // Rank Graph
             ToggleRankGraphCommand = new MvxCommand(TagViewModel.Instance.ToggleRankGraph);
+
+            // Frequency
+            ChangeRelativeFrequencyCommand = new MvxCommand(ChangeRelativeFrequency);
         }
 
         public bool IsEnabled()
@@ -464,7 +464,7 @@ namespace WallpaperFlux.Core.Models.Tagging
         /// Gets all linked images of this tag and its child tags
         /// </summary>
         /// <returns></returns>
-        public HashSet<BaseImageModel> GetLinkedImages(bool accountForInvalid = true, bool convertImagesToSets = false)
+        public HashSet<BaseImageModel> GetLinkedImages(bool accountForInvalid = true, bool convertImagesToSets = false, bool ignoreChildTags = false)
         {
             //? Only include images that actually exist (helps to detect and remove deleted images)
             HashSet<BaseImageModel> images;
@@ -477,9 +477,12 @@ namespace WallpaperFlux.Core.Models.Tagging
                 images = new HashSet<BaseImageModel>(LinkedImages);
             }
 
-            foreach (TagModel tag in ChildTags)
+            if (!ignoreChildTags)
             {
-                images.UnionWith(tag.GetLinkedImages(accountForInvalid));
+                foreach (TagModel tag in ChildTags)
+                {
+                    images.UnionWith(tag.GetLinkedImages(accountForInvalid));
+                }
             }
 
             if (convertImagesToSets) //? keeps the set itself but removes the images within the sets
@@ -715,6 +718,21 @@ namespace WallpaperFlux.Core.Models.Tagging
                 RaisePropertyChanged(() => ExceptionText);
                 RaisePropertyChanged(() => ExceptionColor);
             }
+        }
+
+        public void UpdateFrequencies()
+        {
+            RelativeFrequencyText = "Relative Frequency: " +Math.Round(TaggingUtil.TagFrequencies.GetRelativeFrequency(this) * 100, 5) + "%";
+            ExactFrequencyText = "Exact Frequency: " + Math.Round(TaggingUtil.TagFrequencies.GetExactFrequency(this) * 100, 5) + "%";
+        }
+
+        public void ChangeRelativeFrequency()
+        {
+            MessageBoxUtil.GetInteger("Relative Frequency", "Set Frequency", out int frequency, "Relative Frequency...");
+
+            TaggingUtil.TagFrequencies.ModifyFrequency(this, (double)frequency / 100);
+
+            UpdateFrequencies();
         }
 
         #endregion

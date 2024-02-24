@@ -199,5 +199,13 @@ namespace WallpaperFlux.WPF.Views
         }
 
         #endregion
+
+        private void MenuItem_OnSubmenuOpened(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem { DataContext: TagModel tag })
+            {
+                tag.UpdateFrequencies();
+            }
+        }
     }
 }

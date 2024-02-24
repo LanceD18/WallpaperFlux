@@ -242,9 +242,10 @@ namespace WallpaperFlux.Core.ViewModels
 
         private void SelectDisabledImages()
         {
-            BaseImageModel[] disabledImages = ThemeUtil.Theme.Images.GetAllImages().Where(f => !f.Active).ToArray();
+            //? if we were to include images in image sets they would all be counted as "disabled", cluttering the selector
+            BaseImageModel[] disabledImages = ThemeUtil.Theme.Images.GetAllImages().Where(f => !f.Active && !f.IsInImageSet).ToArray();
 
-            RebuildImageSelectorWithOptions(disabledImages);
+            RebuildImageSelectorWithOptions(FilterImages(disabledImages));
         }
     }
 }

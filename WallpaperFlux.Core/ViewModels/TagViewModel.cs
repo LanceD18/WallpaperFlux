@@ -863,10 +863,10 @@ namespace WallpaperFlux.Core.ViewModels
 
             for (int i = 1; i <= ThemeUtil.ThemeSettings.MaxRank; i++) //? not including un-ranked, those will take over the majority of the graph
             {
-                allValues.Add(ThemeUtil.RankController.GetRankCountOfTag(i, SelectedTag));
-                staticValues.Add(ThemeUtil.RankController.GetImagesOfTypeRankCountOfTag(ImageType.Static, i, SelectedTag));
-                gifValues.Add(ThemeUtil.RankController.GetImagesOfTypeRankCountOfTag(ImageType.GIF, i, SelectedTag));
-                videoValues.Add(ThemeUtil.RankController.GetImagesOfTypeRankCountOfTag(ImageType.Video, i, SelectedTag));
+                allValues.Add(ThemeUtil.RankController.GetCountOfRankOfTag(i, SelectedTag));
+                staticValues.Add(ThemeUtil.RankController.GetCountOfRankOfTag(ImageType.Static, i, SelectedTag));
+                gifValues.Add(ThemeUtil.RankController.GetCountOfRankOfTag(ImageType.GIF, i, SelectedTag));
+                videoValues.Add(ThemeUtil.RankController.GetCountOfRankOfTag(ImageType.Video, i, SelectedTag));
             }
 
             AllColumnSeries.Values = allValues;

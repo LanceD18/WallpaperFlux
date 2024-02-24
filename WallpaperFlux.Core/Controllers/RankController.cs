@@ -354,72 +354,57 @@ namespace WallpaperFlux.Core.Controllers
         #endregion
 
         #region Rank Count & Weights/Sum
-        /// <summary>
-        /// Gets the sum of the collective ranks of all images of an image type, a rank 100 image adds 100 to the sum while a rank 0 image adds 0 to the sum
-        /// </summary>
-        /// <param name="imageType"></param>
-        /// <returns></returns>
-        public int GetImagesOfTypeRankSum(ImageType imageType)
-        {
-            int sum = 0;
-            for (int i = 1; i < RankData[imageType].Count; i++) //? i starts at 1 since rank 0 images are not included (would be multiplied by 0 anyways, but this method reduces iterations)
-            {
-                sum += RankData[imageType][i].Count * i; // i = rank
-            }
-
-            return sum;
-        }
-
-        public int GetImagesOfTypeRankCount(ImageType imageType, int rank)
+        #region Count
+        public int GetCountOfRankOfType(ImageType imageType, int rank)
         {
             return RankData[imageType][rank].Count;
         }
 
-        public int GetImagesOfTypeRankCountTotal(ImageType imageType)
+        public int GetCountOfAllImagesOfType(ImageType imageType)
         {
             int count = 0;
             for (int i = 1; i < RankData[imageType].Count; i++) //? i starts at 1 since rank 0 images are not included (would be multiplied by 0 anyways)
             {
-                count += GetImagesOfTypeRankCount(imageType, i);
+                count += GetCountOfRankOfType(imageType, i);
             }
 
             return count;
         }
 
-        public int GetRankCount(int rank)
+        public int GetCountOfRank(int rank)
         {
             int count = 0;
 
-            count += GetImagesOfTypeRankCount(ImageType.Static, rank);
-            count += GetImagesOfTypeRankCount(ImageType.GIF, rank);
-            count += GetImagesOfTypeRankCount(ImageType.Video, rank);
+            count += GetCountOfRankOfType(ImageType.Static, rank);
+            count += GetCountOfRankOfType(ImageType.GIF, rank);
+            count += GetCountOfRankOfType(ImageType.Video, rank);
 
             return count;
         }
 
-        public int GetRankCountTotal()
+        public int GetCountOfAllRankedImages()
         {
             int count = 0;
 
-            count += GetImagesOfTypeRankCountTotal(ImageType.Static);
-            count += GetImagesOfTypeRankCountTotal(ImageType.GIF);
-            count += GetImagesOfTypeRankCountTotal(ImageType.Video);
+            count += GetCountOfAllImagesOfType(ImageType.Static);
+            count += GetCountOfAllImagesOfType(ImageType.GIF);
+            count += GetCountOfAllImagesOfType(ImageType.Video);
 
             return count;
         }
 
-        public int GetRankCountOfTag(int rank, TagModel tag)
+        public int GetCountOfRankOfTag(int rank, TagModel tag)
         {
             int count = 0;
 
-            count += GetImagesOfTypeRankCountOfTag(ImageType.Static, rank, tag);
-            count += GetImagesOfTypeRankCountOfTag(ImageType.GIF, rank, tag);
-            count += GetImagesOfTypeRankCountOfTag(ImageType.Video, rank, tag);
+            count += GetCountOfRankOfTag(ImageType.Static, rank, tag);
+            count += GetCountOfRankOfTag(ImageType.GIF, rank, tag);
+            count += GetCountOfRankOfTag(ImageType.Video, rank, tag);
 
             return count;
         }
 
-        public int GetImagesOfTypeRankCountOfTag(ImageType imageType, int rank, TagModel tag)
+        public int GetCountOfRankOfTag(ImageType imageType, int rank, TagModel tag)
         {
             int count = 0;
 
@@ -441,33 +426,90 @@ namespace WallpaperFlux.Core.Controllers
 
             return count;
         }
+        #endregion
 
-        public int GetRankSumOfImages(BaseImageModel[] images)
+        #region Sum
+        /// <summary>
+        /// Gets the sum of the collective ranks of all images of an image type, a rank 100 image adds 100 to the sum while a rank 0 image adds 0 to the sum
+        /// </summary>
+        /// <param name="imageType"></param>
+        /// <returns></returns>
+        public int GetWeightOfType(ImageType imageType)
+        {
+            int sum = 0;
+            for (int i = 1; i < RankData[imageType].Count; i++) //? i starts at 1 since rank 0 images are not included (would be multiplied by 0 anyways, but this method reduces iterations)
+            {
+                sum += RankData[imageType][i].Count * i; // i = rank
+            }
+
+            return sum;
+        }
+
+        public int GetWeightOfRankOfType(ImageType imageType, int rank)
+        {
+            return RankData[imageType][rank].Count * rank;
+        }
+
+        public int GetWeightOfAllImagesOfType(ImageType imageType)
         {
             int count = 0;
-
-            foreach (BaseImageModel image in images)
+            for (int i = 1; i < RankData[imageType].Count; i++) //? i starts at 1 since rank 0 images are not included (would be multiplied by 0 anyways)
             {
-                count += image.Rank;
+                count += GetWeightOfRankOfType(imageType, i);
             }
 
             return count;
         }
 
-        public int GetRankSumOfImagesOfType(BaseImageModel[] images, ImageType type)
+        public int GetWeightOfRank(int rank)
         {
             int count = 0;
+
+            count += GetWeightOfRankOfType(ImageType.Static, rank);
+            count += GetWeightOfRankOfType(ImageType.GIF, rank);
+            count += GetWeightOfRankOfType(ImageType.Video, rank);
+
+            return count;
+        }
+
+        public int GetWeightOfAllRankedImages()
+        {
+            int count = 0;
+
+            count += GetWeightOfAllImagesOfType(ImageType.Static);
+            count += GetWeightOfAllImagesOfType(ImageType.GIF);
+            count += GetWeightOfAllImagesOfType(ImageType.Video);
+
+            return count;
+        }
+
+        public int GetWeightOfImages(BaseImageModel[] images)
+        {
+            int sum = 0;
+
+            foreach (BaseImageModel image in images)
+            {
+                sum += image.Rank;
+            }
+
+            return sum;
+        }
+
+        public int GetWeightOfImagesOfType(BaseImageModel[] images, ImageType type)
+        {
+            int sum = 0;
 
             foreach (BaseImageModel image in images)
             {
                 if (image.ImageType == type)
                 {
-                    count += image.Rank;
+                    sum += image.Rank;
                 }
             }
 
-            return count;
+            return sum;
         }
+        #endregion
 
         public bool IsAnyImagesOfTypeRanked(ImageType imageType)
         {
@@ -493,7 +535,7 @@ namespace WallpaperFlux.Core.Controllers
             Dictionary<ImageType, int> imageTypeRankSum = new Dictionary<ImageType, int>();
             foreach (ImageType imageType in ImageTypeWeights.Keys)
             {
-                int sum = GetImagesOfTypeRankSum(imageType);
+                int sum = GetWeightOfType(imageType);
                 imageTypeRankSum.Add(imageType, sum);
                 totalSum += sum;
             }

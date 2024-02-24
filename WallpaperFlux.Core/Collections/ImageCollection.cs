@@ -183,9 +183,9 @@ namespace WallpaperFlux.Core.Collections
                 return ContainsImage(imageModel.Path, imageModel.ImageType); 
             }
 
-            if (image is ImageSetModel relatedImageModel)
+            if (image is ImageSetModel imageSetModel)
             {
-                return ContainsImage(relatedImageModel);
+                return ContainsImage(imageSetModel);
             }
 
             return false;

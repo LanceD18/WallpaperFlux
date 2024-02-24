@@ -77,6 +77,8 @@ namespace WallpaperFlux.Core.Util
 
         private static bool _sortByCountDirection;
 
+        public static TagFrequencyCollection TagFrequencies = new TagFrequencyCollection();
+
         // Tag Highlights & Toggles
         public static bool GetTagAdderToggle() => InstanceExists && TagViewModel.Instance.TagAdderToggle;
 
@@ -328,12 +330,12 @@ namespace WallpaperFlux.Core.Util
         }
         
         //! don't make a sub-method of this, just use GetLinkedImages()
-        public static BaseImageModel[] GetLinkedImagesInTags(TagModel[] tags)
+        public static BaseImageModel[] GetLinkedImagesInTags(TagModel[] tags, bool accountForInvalid = true)
         {
-            List<BaseImageModel> images = new List<BaseImageModel>();
+            HashSet<BaseImageModel> images = new HashSet<BaseImageModel>();
             foreach (TagModel tag in tags)
             {
-                images.AddRange(tag.GetLinkedImages());
+                images.UnionWith(tag.GetLinkedImages(accountForInvalid, accountForInvalid));
             }
 
             return images.ToArray();

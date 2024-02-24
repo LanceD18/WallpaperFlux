@@ -11,7 +11,7 @@ namespace WallpaperFlux.WPF.Tools
 {
     public class HotkeyManager
     {
-        private GlobalHotkey _ghShiftAlt;
+        private GlobalHotkey _ghShiftAltCtrl;
 
         private IntPtr _handle;
 
@@ -29,22 +29,22 @@ namespace WallpaperFlux.WPF.Tools
         private void RegisterKeys()
         {
             // GlobalHotkey
-            _ghShiftAlt = new GlobalHotkey(VirtualKey.SHIFT + VirtualKey.ALT, Keys.None, _handle);
+            _ghShiftAltCtrl = new GlobalHotkey(VirtualKey.SHIFT + VirtualKey.ALT + VirtualKey.CTRL, Keys.None, _handle);
             //ghDivide = new GlobalHotkey(VirtualKey.NOMOD, Keys.Divide, this);
             //ghMultiply = new GlobalHotkey(VirtualKey.NOMOD, Keys.Multiply, this);
             //ghNumPad5 = new GlobalHotkey(VirtualKey.NOMOD, Keys.NumPad5, this);
 
-            if (!_ghShiftAlt.Register())
+            if (!_ghShiftAltCtrl.Register())
             {
-                MessageBoxUtil.ShowError("ALT + SHIFT hotkey failed to register!");
+                MessageBoxUtil.ShowError("ALT + SHIFT + CTRL hotkey failed to register!");
             }
         }
 
         public void UnregisterKeys()
         {
-            if (!_ghShiftAlt.Unregister())
+            if (!_ghShiftAltCtrl.Unregister())
             {
-                MessageBoxUtil.ShowError("ALT + SHIFT hotkey failed to unregister!");
+                MessageBoxUtil.ShowError("ALT + SHIFT + CTRL hotkey failed to unregister!");
             }
         }
 
@@ -63,13 +63,13 @@ namespace WallpaperFlux.WPF.Tools
         {
             int hotkeyId = wParam.ToInt32();
 
-            if (hotkeyId == _ghShiftAlt.GetHashCode())
+            if (hotkeyId == _ghShiftAltCtrl.GetHashCode())
             {
-                if (!IsNullOrEmpty(JsonUtil.LoadedThemePath))
-                {
+                //xif (!IsNullOrEmpty(JsonUtil.LoadedThemePath))
+                //x{
                     //xJsonUtil.QuickSave();
                     MainWindow.Instance.Close();
-                }
+                //x}
             }
 
             /*x

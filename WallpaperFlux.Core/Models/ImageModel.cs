@@ -60,22 +60,6 @@ namespace WallpaperFlux.Core.Models
 
         public FolderModel ParentFolder;
 
-        /*x
-        private int _rank;
-        [DataMember(Name = "Rank")]
-        public int Rank
-        {
-            get => _rank;
-            set
-            {
-                SetProperty(ref _rank, value);
-                RaisePropertyChanged(() => Rank);
-
-                if (IsInImageSet) ParentImageSet.UpdateAverageRankAndWeightedAverage();
-            }
-        }
-        */
-
         [DataMember(Name = "Tags")] public ImageTagCollection Tags;
 
         public sealed override bool Enabled // this is the image's individual enabled state, if this is false then nothing else can make the image active
@@ -138,27 +122,6 @@ namespace WallpaperFlux.Core.Models
 
         [JsonIgnore] public double ActualVolume => Volume / 100; // for use with inspector & tooltip audio sources and other related occurrences
 
-        // Video & Gif Properties
-        public double Speed { get; set; } = 1;
-
-        public int MinimumLoops { get; set; }
-
-        private bool _overrideMinimumLoops;
-        public bool OverrideMinimumLoops
-        {
-            get => _overrideMinimumLoops;
-            set => SetProperty(ref _overrideMinimumLoops, value);
-        }
-
-        public int MaximumTime { get; set; }
-
-        private bool _overrideMaximumTime;
-        public bool OverrideMaximumTime
-        {
-            get => _overrideMaximumTime;
-            set => SetProperty(ref _overrideMaximumTime, value);
-        }
-
         // Type Checkers
         // TODO Replace the external references to these values (The references in xaml) with the ImageType variable
         public bool IsStatic => WallpaperUtil.IsStatic(Path);
@@ -175,8 +138,8 @@ namespace WallpaperFlux.Core.Models
                 return extension == ".gif" || extension == ".webm";
             }
         }
-
-        public bool IsMp4OrAvi
+        
+        public bool IsMp4OrAvi //? used by WallpaperWindow.xaml.cs
         {
             get
             {

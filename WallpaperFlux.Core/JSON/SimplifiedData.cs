@@ -142,7 +142,27 @@ namespace WallpaperFlux.Core.JSON
 
         public bool Enabled;
 
-        public SimplifiedImageSet(string[] imagePaths, int overrideRank, bool usingAverageRank, bool usingWeightedAverage, bool usingOverrideRank, bool usingWeightedRank, int overrideRankWeight, bool enabled)
+        public double Speed;
+
+        public int MinLoops;
+
+        public int MaxTime;
+
+        public bool OverrideMinLoops;
+
+        public bool OverrideMaxTime;
+
+        public bool FractionIntervals;
+
+        public bool StaticIntervals;
+
+        public bool WeightedIntervals;
+
+        public ImageSetType SetType;
+
+        public SimplifiedImageSet(string[] imagePaths, int overrideRank, bool usingAverageRank, bool usingWeightedAverage, 
+            bool usingOverrideRank, bool usingWeightedRank, int overrideRankWeight, bool enabled, double speed, ImageSetType setType,
+            int minLoops, int maxTime, bool overrideMinLoops, bool overrideMaxTime, bool fractionIntervals, bool staticIntervals, bool weightedIntervals)
         {
             ImagePaths = imagePaths;
             OverrideRank = overrideRank;
@@ -152,6 +172,15 @@ namespace WallpaperFlux.Core.JSON
             UsingWeightedRank = usingWeightedRank;
             OverrideRankWeight = overrideRankWeight;
             Enabled = enabled;
+            Speed = speed;
+            SetType = setType;
+            MinLoops = minLoops;
+            MaxTime = maxTime;
+            OverrideMinLoops = overrideMinLoops;
+            OverrideMaxTime = overrideMaxTime;
+            FractionIntervals = fractionIntervals;
+            StaticIntervals = staticIntervals;
+            WeightedIntervals = weightedIntervals;
         }
     }
 

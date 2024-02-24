@@ -7,7 +7,7 @@ namespace WallpaperFlux.Core.IoC
 {
     public interface IExternalWallpaperHandler
     {
-        void OnWallpaperChange(int index, ImageModel image, bool forceChange);
+        void OnWallpaperChange(int index, BaseImageModel image, bool forceChange);
 
         void OnWallpaperStyleChange(int index, WallpaperStyle style);
 

@@ -10,7 +10,7 @@ namespace WallpaperFlux.WPF.IoC
 {
     public class ExternalWallpaperHandler : IExternalWallpaperHandler
     {
-        public void OnWallpaperChange(int index, ImageModel image, bool forceChange)
+        public void OnWallpaperChange(int index, BaseImageModel image, bool forceChange)
         {
             MainWindow.Instance.Wallpapers?[index].OnWallpaperChange(image, forceChange);
         }
@@ -20,10 +20,7 @@ namespace WallpaperFlux.WPF.IoC
             MainWindow.Instance.Wallpapers?[index].OnWallpaperStyleChange(style);
         }
 
-        public string GetWallpaperPath(int index)
-        {
-            return MainWindow.Instance.Wallpapers?[index].ActiveImage?.Path;
-        }
+        public string GetWallpaperPath(int index) => MainWindow.Instance.Wallpapers?[index].ActiveImage.Path;
 
         public void UpdateVolume(int index)
         {

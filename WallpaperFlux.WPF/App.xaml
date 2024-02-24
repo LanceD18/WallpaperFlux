@@ -58,6 +58,15 @@
                         <EventSetter Event="PreviewMouseUp" Handler="TextBox_MouseEvent_FocusText"/>
                     </Style>
 
+                    <Style x:Key="TextBoxNumInputDecimal" TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
+                        <Setter Property="TextAlignment" Value="Center"/>
+                        <!--<EventSetter Event="GotFocus" Handler="TextBox_GotFocus_FocusText"/>-->
+                        <EventSetter Event="KeyDown" Handler="OnKeyEnterDown_LoseFocus"/>
+                        <EventSetter Event="PreviewTextInput" Handler="OnPreviewTextInput_PositiveNumbersAndDecimalsOnly"/>
+                        <EventSetter Event="PreviewMouseDown" Handler="TextBox_MouseEvent_FocusText"/>
+                        <EventSetter Event="PreviewMouseUp" Handler="TextBox_MouseEvent_FocusText"/>
+                    </Style>
+
                     <Style x:Key="FaintHeader" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type TextBlock}}">
                         <Setter Property="Foreground" Value="LightSlateGray"/>
                         <Setter Property="FontStyle" Value="Italic"/>

@@ -398,7 +398,16 @@ namespace WallpaperFlux.Core.Util
                     imageSet.UsingOverrideRank,
                     imageSet.UsingWeightedRank,
                     imageSet.OverrideRankWeight,
-                    imageSet.Enabled));
+                    imageSet.Enabled,
+                    imageSet.Speed,
+                    imageSet.SetType,
+                    imageSet.MinimumLoops,
+                    imageSet.MaximumTime,
+                    imageSet.OverrideMinimumLoops,
+                    imageSet.OverrideMinimumLoops,
+                    imageSet.FractionIntervals,
+                    imageSet.StaticIntervals,
+                    imageSet.WeightedIntervals));
             }
 
             return simplifiedImageSets.ToArray();
@@ -691,6 +700,15 @@ namespace WallpaperFlux.Core.Util
                         imageSetModel.UsingWeightedRank = imageSet.UsingWeightedRank;
                         imageSetModel.OverrideRankWeight = imageSet.OverrideRankWeight;
                         imageSetModel.Enabled = imageSet.Enabled;
+                        imageSetModel.Speed = imageSet.Speed;
+                        imageSetModel.SetType = imageSet.SetType;
+                        imageSetModel.MinimumLoops = imageSet.MinLoops;
+                        imageSetModel.MaximumTime = imageSet.MaxTime;
+                        imageSetModel.OverrideMinimumLoops = imageSet.OverrideMinLoops;
+                        imageSetModel.OverrideMaximumTime = imageSet.OverrideMaxTime;
+                        imageSetModel.FractionIntervals = imageSet.FractionIntervals;
+                        imageSetModel.StaticIntervals = imageSet.StaticIntervals;
+                        imageSetModel.WeightedIntervals = imageSet.WeightedIntervals;
                     }
                 }
             }

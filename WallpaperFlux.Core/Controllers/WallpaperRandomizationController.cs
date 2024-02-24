@@ -57,16 +57,14 @@ namespace WallpaperFlux.Core.Controllers
             // this indicates that it's time to search for a new set of upcoming wallpapers
             //? ActiveWallpapers[index] == NextWallpapers[index] checks if the next set of wallpapers have been updated. If not, randomization will occur
             //? ignoreRandomization allows the next set of wallpapers to be directly applied. This helps the previous wallpapers setting function as intended
-            if (ActiveWallpapers[index] == NextWallpapers[index])
+            if (Equals(ActiveWallpapers[index], NextWallpapers[index]) || NextWallpapers.IsEveryElementNull())
             {
-                // queues next set of upcoming wallpapers
-                if (!RandomizeWallpapers())
+                if (!RandomizeWallpapers()) // queues next set of upcoming wallpapers
                 {
                     Debug.WriteLine("Randomization Failed");
                     return false;  //? allowing this to continue may cause UpcomingWallpapers to dequeue a null value and crash the program
                 }
 
-                Debug.WriteLine("Setting Next Set Wallpaper for Display " + index);
                 NextWallpapers = UpcomingWallpapers.Dequeue();
             }
 
@@ -124,7 +122,7 @@ namespace WallpaperFlux.Core.Controllers
 
                 int randomRank = GetRandomRank(ref rand, imageTypeToSearchFor);
 
-                // Find random image path
+                // find random image path
                 if (randomRank != -1)
                 {
                     Debug.WriteLine("Setting Wallpaper: " + i);

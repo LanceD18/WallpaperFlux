@@ -117,7 +117,9 @@ namespace WallpaperFlux.Core.Util
         // TODO Both use cases, setting the PreviousWallpaper and directly setting an image as the Wallpaper can use presetWallpaperPath
         public static bool SetWallpaper(int index, bool ignoreRandomization, bool forceChange, BaseImageModel presetWallpaper = null)
         {
-            string wallpaperPath = "";
+            //xstring wallpaperPath = "";
+
+            BaseImageModel wallpaperImage = null;
 
             // Set Next Wallpaper
             if (presetWallpaper == null)
@@ -128,7 +130,7 @@ namespace WallpaperFlux.Core.Util
                     if (ThemeUtil.Theme.WallpaperRandomizer.SetNextWallpaperOrder(index))
                     {
                         //? SetNextWallpaperOrder should be called before calling this
-                        wallpaperPath = TryGetWallpaperPath(ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index]);
+                        wallpaperImage = ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index];
                     }
                     else
                     {
@@ -138,79 +140,27 @@ namespace WallpaperFlux.Core.Util
                 }
                 else
                 {
-                    wallpaperPath = TryGetWallpaperPath(ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index]);
+                    wallpaperImage = ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index];
+
+                    //? we want to call this after a forced change otherwise the next wallpaper will be the same as the one before the forced change
+                    ThemeUtil.Theme.WallpaperRandomizer.SetNextWallpaperOrder(index);
                 }
             }
             else
             {
-                wallpaperPath = TryGetWallpaperPath(presetWallpaper); // get a random image from the given set
-                
+                wallpaperImage = presetWallpaper; // get a random image from the given set
 
                 ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index] = presetWallpaper; // need to update the active wallpaper to reflect this preset change
             }
 
-            // Check for errors and update the notify icon
-            if (ThemeUtil.Theme.Images.ContainsImage(wallpaperPath))
+            //xDebug.WriteLine("Setting Wallpaper to Display " + index + ": " + wallpaperPath);
+            if (ThemeUtil.Theme.Images.ContainsImage(wallpaperImage))
             {
-                /* TODO Update notify icon
-                string wallpaperName = new FileInfo(wallpaperPath).Name; // pathless string of file name
-                wallpaperMenuItems[index].Text = index + 1 + " | R: " + DataUtil.Theme.Images.GetImage(wallpaperPath).Rank + " | " + wallpaperName;
-                */
-            }
-            else
-            {
-                // TODO Ensure that the below is no longer an issue of the redesign, if a failure occurs we will just not load the next wallpaper instead
-                //? this can occur after swapping themes as next wallpaper still holds data from the previous theme
-
-                Debug.WriteLine("Failed to set wallpaper, no images exist");
-                return false;
-                //xDataUtil.Theme.WallpaperRandomizer.SetNextWallpaperOrder(index, ignoreRandomization);
-            }
-
-            Debug.WriteLine("Setting Wallpaper to Display " + index + ": " + wallpaperPath);
-            // TODO Would be a good idea to use IoC for this at some point
-            if (ThemeUtil.Theme.Images.ContainsImage(wallpaperPath))
-            {
-                WallpaperHandler.OnWallpaperChange(index, ThemeUtil.Theme.Images.GetImage(wallpaperPath), forceChange); //? hooked to a call from WallpaperFlux.WPF
+                WallpaperHandler.OnWallpaperChange(index, wallpaperImage, forceChange); //? hooked to a call from WallpaperFlux.WPF
                 WallpaperFluxViewModel.Instance.DisplaySettings[index].ResetTimer(true);
             }
+
             return true;
-        }
-
-        private static string TryGetWallpaperPath(BaseImageModel image)
-        {
-            if (image is ImageModel imageModel)
-            {
-                return imageModel.Path;
-            }
-
-            if (image is ImageSetModel imageSet)
-            {
-                //! for the moment we will just do Alt by default
-
-                BaseImageModel wallpaper = WallpaperRandomizationController.GetRandomImageFromPreset(imageSet.GetRelatedImages(), imageSet.ImageType, true);
-
-                if (wallpaper is ImageModel wallpaperImageModel)
-                {
-                    return wallpaperImageModel.Path;
-                }
-
-                /* TODO
-                switch (imageSet.RelatedImageType)
-                {
-                    case RelatedImageType.Alt:
-                        throw new NotImplementedException();
-
-                    case RelatedImageType.Animate:
-                        throw new NotImplementedException();
-
-                    case RelatedImageType.Merge:
-                        throw new NotImplementedException();
-                }
-                */
-            }
-
-            return string.Empty;
         }
 
         public static void MuteWallpapers()

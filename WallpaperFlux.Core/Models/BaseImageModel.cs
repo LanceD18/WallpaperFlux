@@ -86,6 +86,48 @@ namespace WallpaperFlux.Core.Models
         [DataMember(Name = "Image Type")]
         public ImageType ImageType { get; set; }
 
+
+        // Video, Gif, & Animated Set Properties
+        public bool IsAnimated
+        {
+            get
+            {
+                if (this is ImageModel image)
+                {
+                    return image.IsVideoOrGif;
+                }
+
+                if (this is ImageSetModel imageSet)
+                {
+                    return imageSet.SetType == ImageSetType.Animate;
+                }
+
+                return false;
+            }
+        }
+
+        #region Video / GIF / Animation Properties
+        public double Speed { get; set; } = 1;
+
+        public int MinimumLoops { get; set; }
+
+        private bool _overrideMinimumLoops;
+        public bool OverrideMinimumLoops
+        {
+            get => _overrideMinimumLoops;
+            set => SetProperty(ref _overrideMinimumLoops, value);
+        }
+
+        public int MaximumTime { get; set; }
+
+        private bool _overrideMaximumTime;
+        public bool OverrideMaximumTime
+        {
+            get => _overrideMaximumTime;
+            set => SetProperty(ref _overrideMaximumTime, value);
+        }
+        #endregion
+
         //! The following is intended for image sets
         /*x
         private ImageType _imageType;
