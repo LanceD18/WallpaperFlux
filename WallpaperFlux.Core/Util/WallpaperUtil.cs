@@ -127,7 +127,7 @@ namespace WallpaperFlux.Core.Util
                 // if ignoring randomization then we will just use the current ActiveWallpaper path (Likely means that a wallpaper on one monitor changed before/after the others)
                 if (!ignoreRandomization)
                 {
-                    if (ThemeUtil.Theme.WallpaperRandomizer.SetNextWallpaperOrder(index))
+                    if (ThemeUtil.Theme.WallpaperRandomizer.SetNextWallpaperOrder(index, forceChange))
                     {
                         //? SetNextWallpaperOrder should be called before calling this
                         wallpaperImage = ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index];
@@ -143,7 +143,7 @@ namespace WallpaperFlux.Core.Util
                     wallpaperImage = ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index];
 
                     //? we want to call this after a forced change otherwise the next wallpaper will be the same as the one before the forced change
-                    ThemeUtil.Theme.WallpaperRandomizer.SetNextWallpaperOrder(index);
+                    ThemeUtil.Theme.WallpaperRandomizer.SetNextWallpaperOrder(index, forceChange);
                 }
             }
             else

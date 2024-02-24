@@ -52,12 +52,12 @@ namespace WallpaperFlux.Core.Controllers
             return true;
         }
 
-        public bool SetNextWallpaperOrder(int index)
+        public bool SetNextWallpaperOrder(int index, bool forceRandomization)
         {
             // this indicates that it's time to search for a new set of upcoming wallpapers
             //? ActiveWallpapers[index] == NextWallpapers[index] checks if the next set of wallpapers have been updated. If not, randomization will occur
             //? ignoreRandomization allows the next set of wallpapers to be directly applied. This helps the previous wallpapers setting function as intended
-            if (Equals(ActiveWallpapers[index], NextWallpapers[index]) || NextWallpapers.IsEveryElementNull())
+            if (forceRandomization || Equals(ActiveWallpapers[index], NextWallpapers[index]) || NextWallpapers.IsEveryElementNull())
             {
                 if (!RandomizeWallpapers()) // queues next set of upcoming wallpapers
                 {
@@ -98,7 +98,7 @@ namespace WallpaperFlux.Core.Controllers
                 double gifChance = ThemeUtil.Theme.Settings.ThemeSettings.FrequencyCalc.GetExactFrequency(ImageType.GIF);
                 double videoChance = ThemeUtil.Theme.Settings.ThemeSettings.FrequencyCalc.GetExactFrequency(ImageType.Video);
 
-                if ((staticChance + gifChance + videoChance) == 0)
+                if (staticChance + gifChance + videoChance == 0)
                 {
                     MessageBoxUtil.ShowError("Unable to generate any wallpapers while all Exact Frequencies are set to 0");
                     return false;
