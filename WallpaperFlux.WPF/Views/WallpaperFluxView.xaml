@@ -561,7 +561,7 @@
             <MenuItem Header="Wallpaper">
                 <MenuItem Header="Next Wallpaper" mvx:Bi.nd="Command NextWallpaperCommand" IsEnabled="{Binding CanNextWallpaper}" />
                 <MenuItem Header="Previous Wallpaper" mvx:Bi.nd="Command PreviousWallpaperCommand" IsEnabled="{Binding CanPreviousWallpaper}"/>
-                <MenuItem Header="Cycle Wallpapers [Not implemented]"/>
+                <MenuItem Header="Cycle Wallpapers" Command="{Binding CycleWallpaperCommand}" IsEnabled="{Binding CanCycleWallpaper}"/>
             </MenuItem>
 
             <!-- Tagging -->

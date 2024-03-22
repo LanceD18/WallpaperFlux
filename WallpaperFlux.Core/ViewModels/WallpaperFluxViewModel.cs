@@ -18,6 +18,7 @@ using System.Xml;
 using AdonisUI.Controls;
 using HandyControl.Controls;
 using LanceTools;
+using LanceTools.Collections.Reactive;
 using LanceTools.IO;
 using LanceTools.WPF.Adonis.Util;
 using Microsoft.WindowsAPICodePack.Dialogs;
@@ -341,6 +342,22 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
+        public bool CanCycleWallpaper
+        {
+            get
+            {
+                foreach (BaseImageModel activeWallpaper in ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers)
+                {
+                    if (activeWallpaper != null)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+
         public bool CanRemoveWallpaper => SelectedImageFolder != null;
 
         public bool CanSync => SelectedDisplaySetting != null;
@@ -403,6 +420,8 @@ namespace WallpaperFlux.Core.ViewModels
         public IMvxCommand NextWallpaperCommand { get; set; }
 
         public IMvxCommand PreviousWallpaperCommand { get; set; }
+
+        public IMvxCommand CycleWallpaperCommand { get; set; }
 
         public IMvxCommand LoadThemeCommand { get; set; }
 
@@ -500,7 +519,8 @@ namespace WallpaperFlux.Core.ViewModels
                 MvxObservableCollection<DisplayModel> initDisplaySettings = new MvxObservableCollection<DisplayModel>();
                 for (int i = 0; i < WallpaperUtil.DisplayUtil.GetDisplayCount(); i++)
                 {
-                    initDisplaySettings.Add(new DisplayModel(Mvx.IoCProvider.Resolve<IExternalTimer>(), NextWallpaper)
+                    initDisplaySettings.Add(new DisplayModel(Mvx.IoCProvider.Resolve<IExternalTimer>(), (displayIndex, forceChange, ignoreRandomization) => 
+                        NextWallpaper(displayIndex, ignoreRandomization, forceChange))
                     {
                         DisplayInterval = 0,
                         DisplayIndex = i,
@@ -520,8 +540,9 @@ namespace WallpaperFlux.Core.ViewModels
         public void InitializeCommands()
         {
             // TODO Consider using models to hold command information (Including needed data)
-            NextWallpaperCommand = new MvxCommand(NextWallpaper_ForceChange);
+            NextWallpaperCommand = new MvxCommand(NextWallpaper);
             PreviousWallpaperCommand = new MvxCommand(PreviousWallpaper);
+            CycleWallpaperCommand = new MvxCommand(CycleWallpapers);
             LoadThemeCommand = new MvxCommand(PromptLoadTheme);
             SaveThemeCommand = new MvxCommand(JsonUtil.QuickSave);
             SaveThemeAsCommand = new MvxCommand(PromptSaveTheme);
@@ -584,6 +605,9 @@ namespace WallpaperFlux.Core.ViewModels
             }
 
             ActiveWallpapers[changedIndex] = wallpaper;
+
+            RaisePropertyChanged(() => CanPreviousWallpaper);
+            RaisePropertyChanged(() => CanCycleWallpaper);
         }
 
         #region Command Methods
@@ -595,26 +619,18 @@ namespace WallpaperFlux.Core.ViewModels
         {
             for (int i = 0; i < WallpaperUtil.DisplayUtil.GetDisplayCount(); i++)
             {
-                NextWallpaper(i, false, false);
-            }
-        }
-
-        public void NextWallpaper_ForceChange()
-        {
-            for (int i = 0; i < WallpaperUtil.DisplayUtil.GetDisplayCount(); i++)
-            {
                 NextWallpaper(i, false, true);
             }
         }
 
         // TODO Check if the theme is finished loading before activating, check if any images are active
-        public void NextWallpaper(int displayIndex, bool isCallerTimer, bool forceChange)
+        public void NextWallpaper(int displayIndex, bool ignoreRandomization = false, bool forceChange = false)
         {
             if (ThemeUtil.Theme.Images.GetAllImages().Length > 0 && ThemeUtil.Theme.RankController.GetAllRankedImages().Length > 0)
             {
                 // ignoreRandomization = false here since we need to randomize the new set
                 // Note that RandomizeWallpaper() will check if it even should randomize the wallpapers first (Varied timers and extended videos can undo this requirement)
-                WallpaperUtil.SetWallpaper(displayIndex, false, forceChange);
+                WallpaperUtil.SetWallpaper(displayIndex, ignoreRandomization, forceChange);
             }
             else
             {
@@ -630,6 +646,7 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
         
+        // sets all wallpapers to their previous wallpaper, if one existed
         public void PreviousWallpaper()
         {
             for (int i = 0; i < ThemeUtil.Theme.WallpaperRandomizer.PreviousWallpapers.Length; i++)
@@ -638,26 +655,30 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
-        // sets all wallpapers to their previous wallpaper, if one existed
         public void PreviousWallpaper(int index)
         {
             if (ThemeUtil.Theme.WallpaperRandomizer.PreviousWallpapers[index].Count > 0)
             {
                 BaseImageModel prevWallpaper = ThemeUtil.Theme.WallpaperRandomizer.PreviousWallpapers[index].Pop();
-                ThemeUtil.Theme.WallpaperRandomizer.NextWallpapers[index] = prevWallpaper;
 
-                if (prevWallpaper is ImageModel imageModel && !FileUtil.Exists(imageModel.Path))
-                {
-                    return;
-                }
-
-                WallpaperUtil.SetWallpaper(index, true, true); // ignoreRandomization = true since there is no need to randomize wallpapers that have previously existed
+                WallpaperUtil.SetPresetWallpaper(index, prevWallpaper);
             }
-            // Not needed here, we can just disable the button
-            //xelse
-            //x{
-            //x    MessageBox.Show("There are no more previous wallpapers");
-            //x}
+        }
+
+        public void CycleWallpapers()
+        {
+            BaseImageModel[] activeWallpapers = ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers.ToArray();
+            List<BaseImageModel> cycledWallpapers = new List<BaseImageModel>();
+            for (int i = 0; i < activeWallpapers.Length; i++)
+            {
+                int nextIndex = i + 1 < activeWallpapers.Length ? i + 1 : 0; // loop around to the first index if we are at the end
+                cycledWallpapers.Add(activeWallpapers[nextIndex]);
+            }
+
+            for (int i = 0; i < cycledWallpapers.Count; i++)
+            {
+                WallpaperUtil.SetPresetWallpaper(i, cycledWallpapers[i]);
+            }
         }
         #endregion
 
@@ -826,9 +847,12 @@ namespace WallpaperFlux.Core.ViewModels
         {
             if (!JsonUtil.IsLoadingData) //! the order of operations done while loading prevents this from being needed
             {
-                foreach (FolderModel newFolders in e.NewItems) //? re-validate newly added folders
+                if (e.NewItems != null)
                 {
-                    newFolders.ValidateImages(true); // the images won't be able to find the folder until it is added
+                    foreach (FolderModel newFolders in e.NewItems) //? re-validate newly added folders
+                    {
+                        newFolders.ValidateImages(true); // the images won't be able to find the folder until it is added
+                    }
                 }
             }
         }

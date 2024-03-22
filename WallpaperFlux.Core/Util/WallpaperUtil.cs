@@ -113,12 +113,10 @@ namespace WallpaperFlux.Core.Util
             return workerw;
         }
 
-        // TODO With the presetWallpaperPath I don't think you need ignoreRandomization anymore
-        // TODO Both use cases, setting the PreviousWallpaper and directly setting an image as the Wallpaper can use presetWallpaperPath
-        public static bool SetWallpaper(int index, bool ignoreRandomization, bool forceChange, BaseImageModel presetWallpaper = null)
-        {
-            //xstring wallpaperPath = "";
+        public static bool SetPresetWallpaper(int index, BaseImageModel presetWallpaper) => SetWallpaper(index, true, true, presetWallpaper);
 
+        public static bool SetWallpaper(int index, bool ignoreRandomization = false, bool forceChange = false, BaseImageModel presetWallpaper = null)
+        {
             BaseImageModel wallpaperImage = null;
 
             // Set Next Wallpaper
@@ -127,7 +125,7 @@ namespace WallpaperFlux.Core.Util
                 // if ignoring randomization then we will just use the current ActiveWallpaper path (Likely means that a wallpaper on one monitor changed before/after the others)
                 if (!ignoreRandomization)
                 {
-                    if (ThemeUtil.Theme.WallpaperRandomizer.SetNextWallpaperOrder(index, forceChange))
+                    if (ThemeUtil.Theme.WallpaperRandomizer.SetNextWallpaperOrder(index, forceChange)) // randomize
                     {
                         //? SetNextWallpaperOrder should be called before calling this
                         wallpaperImage = ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[index];

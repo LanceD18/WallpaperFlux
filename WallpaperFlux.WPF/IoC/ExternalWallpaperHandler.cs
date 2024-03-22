@@ -20,7 +20,10 @@ namespace WallpaperFlux.WPF.IoC
             MainWindow.Instance.Wallpapers?[index].OnWallpaperStyleChange(style);
         }
 
-        public string GetWallpaperPath(int index) => MainWindow.Instance.Wallpapers?[index].ActiveImage.Path;
+        public string GetWallpaperPath(int index)
+        {
+            return MainWindow.Instance.Wallpapers?[index].ActiveImage.Path;
+        }
 
         public void UpdateVolume(int index)
         {

@@ -23,7 +23,6 @@ namespace WallpaperFlux.Core.Controllers
         public ReactiveArray<BaseImageModel> ActiveWallpapers = new ReactiveArray<BaseImageModel>(WallpaperUtil.DisplayUtil.GetDisplayCount());  // holds paths of the currently active wallpapers
         public BaseImageModel[] NextWallpapers = new BaseImageModel[WallpaperUtil.DisplayUtil.GetDisplayCount()]; // derived from UpcomingWallpapers, holds the next set of wallpapers
         public Stack<BaseImageModel>[] PreviousWallpapers = new Stack<BaseImageModel>[WallpaperUtil.DisplayUtil.GetDisplayCount()]; // allows you to return back to every wallpaper encountered during the current session
-        public Queue<BaseImageModel[]> UpcomingWallpapers = new Queue<BaseImageModel[]>(); // allows display-dependent wallpaper orders to be set without synced displays
 
         public WallpaperRandomizationController()
         {
@@ -59,30 +58,26 @@ namespace WallpaperFlux.Core.Controllers
             //? ignoreRandomization allows the next set of wallpapers to be directly applied. This helps the previous wallpapers setting function as intended
             if (forceRandomization || Equals(ActiveWallpapers[index], NextWallpapers[index]) || NextWallpapers.IsEveryElementNull())
             {
-                if (!RandomizeWallpapers()) // queues next set of upcoming wallpapers
+                BaseImageModel[] nextWallpapers = RandomizeWallpapers();
+
+                if (nextWallpapers == null) // queues next set of upcoming wallpapers
                 {
                     Debug.WriteLine("Randomization Failed");
-                    return false;  //? allowing this to continue may cause UpcomingWallpapers to dequeue a null value and crash the program
+                    return false;
                 }
-
-                NextWallpapers = UpcomingWallpapers.Dequeue();
+                else
+                {
+                    NextWallpapers = nextWallpapers;
+                }
             }
 
+            PreviousWallpapers[index].Push(ActiveWallpapers[index]);
             ActiveWallpapers[index] = NextWallpapers[index];
 
             return true;
         }
 
-        // TODO Tag Frequency Idea
-        // By default tags have 100% frequency
-        // When a tag's frequency is increased, it increases the frequency of that tag and all of its children tags
-        // If a child tag's frequency is changed while it's parent is also changed, their rates multiply against each other
-        // When selecting an image, all unmodified tags will fit into one category as one large weighted frequency, while all modified tags will be given individual frequencies
-        // - Weight determined by number of images with tag
-        // - Selectable images are subdivided into the tags you're given
-        //? this should also modify weighted static/gif/video chance (but not unweighted)
-
-        private bool RandomizeWallpapers()
+        private BaseImageModel[] RandomizeWallpapers()
         {
             Random rand = new Random();
 
@@ -101,7 +96,7 @@ namespace WallpaperFlux.Core.Controllers
                 if (staticChance + gifChance + videoChance == 0)
                 {
                     MessageBoxUtil.ShowError("Unable to generate any wallpapers while all Exact Frequencies are set to 0");
-                    return false;
+                    return null;
                 }
 
                 ImageType[] imageTypeIndexes = { ImageType.Static, ImageType.GIF, ImageType.Video };
@@ -117,7 +112,7 @@ namespace WallpaperFlux.Core.Controllers
                                              "\nWallpaper Change Cancelled [IMAGE TYPE: " + imageTypeToSearchFor + "]" +
                                              "\n\nEither change relative frequency chance of the above image type to 0% (Under Frequency in the options menu)\n" +
                                              "or activate some wallpapers of the above image type (Unranked images with a rank of 0 are inactive");
-                    return false;
+                    return null;
                 }
 
                 int randomRank = GetRandomRank(ref rand, imageTypeToSearchFor);
@@ -142,9 +137,8 @@ namespace WallpaperFlux.Core.Controllers
             }
 
             ModifyWallpaperOrder(ref potentialWallpapers);
-            UpcomingWallpapers.Enqueue(potentialWallpapers);
-
-            return true;
+            
+            return potentialWallpapers;
         }
 
         // Picks ranks based on their default percentiles (Where the highest rank is the most likely to appear and it goes down from there)
