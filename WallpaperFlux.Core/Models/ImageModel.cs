@@ -46,7 +46,7 @@ namespace WallpaperFlux.Core.Models
                 {
                     ThemeUtil.Theme.Images.UpdateImageCollectionPath(this, _path, value);
                     //? RankController uses the image file itself so it shouldn't need updating
-                } 
+                }
 
                 _path = value;
                 RaisePropertyChanged(() => PathName);
@@ -93,6 +93,10 @@ namespace WallpaperFlux.Core.Models
         }
 
         public bool IsInImageSet => ParentImageSet != null;
+
+        public bool IsDependentOnImageSet => IsInImageSet && !ParentImageSet.RetainImageIndependence;
+
+        public bool IsDependentOnAnimatedImageSet => IsDependentOnImageSet && ParentImageSet.IsAnimated;
 
         // Video Properties
         private double _volume = 50;
@@ -304,7 +308,7 @@ namespace WallpaperFlux.Core.Models
 
         public override bool IsEnabled(bool ignoreSet = false) //! ignore set ensures that we can avoid disabling images that are in sets *when they are needed*
         {
-            if (!base.IsEnabled())
+            if (!base.IsEnabled(ignoreSet))
             {
                 Active = false;
                 return false;
@@ -315,7 +319,7 @@ namespace WallpaperFlux.Core.Models
                 Active = false; //! we need to set this to false AGAIN because base.IsEnabled() will set Active to TRUE if successful
             //x}
 
-            if (IsInImageSet && !ignoreSet) return false;
+            if (IsDependentOnImageSet && !ignoreSet) return false;
 
             if (ParentFolder == null)
             {

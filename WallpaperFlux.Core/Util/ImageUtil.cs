@@ -194,38 +194,43 @@ namespace WallpaperFlux.Core.Util
 
         public static void PerformImageAction(BaseImageModel image, Action<ImageModel> action, bool checkForEnabled = true)
         {
-            if (image is ImageModel imageModel)
+            switch (image)
             {
-                action.Invoke(imageModel);
-            }
+                case ImageModel imageModel:
+                    action.Invoke(imageModel);
+                    break;
 
-            if (image is ImageSetModel imageSet)
-            {
-                foreach (ImageModel relatedImage in imageSet.GetRelatedImages(checkForEnabled))
+                case ImageSetModel imageSet:
                 {
-                    action.Invoke(relatedImage);
+                    foreach (ImageModel relatedImage in imageSet.GetRelatedImages(checkForEnabled))
+                    {
+                        action.Invoke(relatedImage);
+                    }
+
+                    break;
                 }
             }
         }
 
         public static bool PerformImageCheck(BaseImageModel image, Func<ImageModel, bool> func, bool checkForEnabled = true)
         {
-            if (image is ImageModel imageModel)
+            switch (image)
             {
-                return func.Invoke(imageModel);
-            }
+                case ImageModel imageModel:
+                    return func.Invoke(imageModel);
 
-            if (image is ImageSetModel imageSet)
-            {
-                foreach (ImageModel relatedImage in imageSet.GetRelatedImages(checkForEnabled))
+                case ImageSetModel imageSet:
                 {
-                    if (func.Invoke(relatedImage)) //? end on success
+                    foreach (ImageModel relatedImage in imageSet.GetRelatedImages(checkForEnabled))
                     {
-                        return true;
+                        if (func.Invoke(relatedImage)) //? end on success
+                        {
+                            return true;
+                        }
                     }
-                }
 
-                return false;
+                    return false;
+                }
             }
 
             return false;
@@ -238,18 +243,21 @@ namespace WallpaperFlux.Core.Util
         /// <returns></returns>
         public static ImageModel GetImageModel(BaseImageModel image, bool checkForEnabled = true)
         {
-            if (image is ImageModel imageModel)
+            switch (image)
             {
-                return imageModel;
-            }
+                case ImageModel imageModel:
+                    return imageModel;
 
-            if (image is ImageSetModel imageSet)
-            {
-                ImageModel[] images = imageSet.GetRelatedImages(checkForEnabled);
-
-                if (images.Length > 0)
+                case ImageSetModel imageSet:
                 {
-                    return images[0];
+                    ImageModel[] images = imageSet.GetRelatedImages(checkForEnabled);
+
+                    if (images.Length > 0)
+                    {
+                        return images[0];
+                    }
+
+                    break;
                 }
             }
 
@@ -258,14 +266,13 @@ namespace WallpaperFlux.Core.Util
 
         public static ImageModel[] GetImageSet(BaseImageModel image, bool checkForEnabled = true)
         {
-            if (image is ImageModel imageModel)
+            switch (image)
             {
-                return new ImageModel[] { imageModel };
-            }
+                case ImageModel imageModel:
+                    return new ImageModel[] { imageModel };
 
-            if (image is ImageSetModel imageSet)
-            {
-                return imageSet.GetRelatedImages(checkForEnabled);
+                case ImageSetModel imageSet:
+                    return imageSet.GetRelatedImages(checkForEnabled);
             }
 
             return null;

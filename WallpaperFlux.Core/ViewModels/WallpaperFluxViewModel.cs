@@ -184,24 +184,27 @@ namespace WallpaperFlux.Core.ViewModels
             {
                 if (SelectedImage == null) return ""; // nothing is currently selected
 
-                if (SelectedImage is ImageModel selectedImage)
+                switch (SelectedImage)
                 {
-                    Size size = selectedImage.GetSize();
-
-                    if (selectedImage.IsInImageSet && !ImageSetInspectorToggle)
+                    case ImageModel selectedImage:
                     {
-                        //! this shouldn't happen but it has, here's a hacky fix
-                        SelectedImage = selectedImage.ParentImageSet;
-                    }
-                    else
-                    {
-                        return size.Width + "x" + size.Height;
-                    }
-                }
+                        Size size = selectedImage.GetSize();
 
-                if (SelectedImage is ImageSetModel selectedImageSet)
-                {
-                    return "Images in Set: " + selectedImageSet.GetRelatedImages().Length;
+                        if (selectedImage.IsInImageSet && !ImageSetInspectorToggle)
+                        {
+                            //! this shouldn't happen but it has, here's a hacky fix
+                            SelectedImage = selectedImage.ParentImageSet;
+                        }
+                        else
+                        {
+                            return size.Width + "x" + size.Height;
+                        }
+
+                        break;
+                    }
+
+                    case ImageSetModel selectedImageSet:
+                        return "Images in Set: " + selectedImageSet.GetRelatedImages().Length;
                 }
 
                 return "[ERROR]";
@@ -564,7 +567,7 @@ namespace WallpaperFlux.Core.ViewModels
             MoveImagesCommand = new MvxCommand(() => ImageRenamer.AutoMoveImageRange(GetAllHighlightedImages()));
             DeleteImagesCommand = new MvxCommand(() => ImageUtil.DeleteImageRange(GetAllHighlightedImages()));
             RankImagesCommand = new MvxCommand(() => ImageUtil.PromptRankImageRange(GetAllHighlightedImages()));
-            CreateRelatedImageSetCommand = new MvxCommand(() => ImageUtil.CreateRelatedImageSet(GetAllHighlightedImages(true, true), true));
+            CreateRelatedImageSetCommand = new MvxCommand(() => ImageUtil.CreateRelatedImageSet(GetAllHighlightedImages(true), true));
             AddToImageSetCommand = new MvxCommand(AddToImageSet);
             RemoveFromSetCommand = new MvxCommand(RemoveFromImageSet);
 
@@ -926,8 +929,8 @@ namespace WallpaperFlux.Core.ViewModels
         }
 
         //? ----- Rebuild Image Selector (String) -----
-        private readonly string INVALID_IMAGE_STRING_DEFAULT = "The following selected images do not exist in your theme:\n(Please add the folder that they reside in to include them)";
-        private readonly string INVALID_IMAGE_STRING_ALL_INVALID = "None of the selected images exist in your theme. Please add the folder that they reside in to include them.";
+        private readonly string INVALID_IMAGE_STRING_DEFAULT = "Some of the selected images do not exist in your theme.\nPlease add the folder that they reside in to include them.";
+        private readonly string INVALID_IMAGE_STRING_ALL_INVALID = "None of the selected images exist in your theme.\nPlease add the folder that they exist in to include them.";
 
         //! This variant of RebuildImageSelector is typically used by Folder Selection
         public void RebuildImageSelector(string[] selectedImages, bool randomize = false, bool reverseOrder = false, bool dateTime = false)
@@ -1057,25 +1060,30 @@ namespace WallpaperFlux.Core.ViewModels
                                 return false;
                             };
 
-                            if (image is ImageModel imageModel)
+                            switch (image)
                             {
-                                if (imageModel.IsInImageSet)
+                                case ImageModel imageModel:
                                 {
-                                    // not much of a downside to using IsEnabled() on sets, sets have significantly less IsEnabled() checks anyways
-                                    if (imageModel.ParentImageSet.IsEnabled()) //! this should NOT be combined with the above if statement! (would conflict with the else)
+                                    if (imageModel.IsInImageSet)
                                     {
-                                        success = checkForSet.Invoke(imageModel.ParentImageSet);
+                                        // not much of a downside to using IsEnabled() on sets, sets have significantly less IsEnabled() checks anyways
+                                        if (imageModel.ParentImageSet.IsEnabled()) //! this should NOT be combined with the above if statement! (would conflict with the else)
+                                        {
+                                            success = checkForSet.Invoke(imageModel.ParentImageSet);
+                                        }
                                     }
+                                    else if ((ThemeUtil.ThemeSettings.EnableDetectionOfInactiveImages && ThemeUtil.Theme.Images.ContainsImage(image))
+                                             || image.Active) //? we don't need to send an error message for user-disabled images
+                                    {
+                                        success = true;
+                                    }
+
+                                    break;
                                 }
-                                else if ((ThemeUtil.ThemeSettings.EnableDetectionOfInactiveImages && ThemeUtil.Theme.Images.ContainsImage(image)) 
-                                         || image.Active) //? we don't need to send an error message for user-disabled images
-                                {
-                                    success = true;
-                                }
-                            }
-                            else if (image is ImageSetModel imageSet)
-                            {
-                                success = checkForSet.Invoke(imageSet);
+
+                                case ImageSetModel imageSet:
+                                    success = checkForSet.Invoke(imageSet);
+                                    break;
                             }
 
                             if (success)
@@ -1086,21 +1094,6 @@ namespace WallpaperFlux.Core.ViewModels
                         else
                         {
                             invalidCounter++;
-
-                            invalidImageString += "\n";
-
-                            if (image is ImageModel imageModel)
-                            {
-                                invalidImageString += imageModel.Path;
-                            }
-                            else if (image is ImageSetModel)
-                            {
-                                invalidImageString += "<Image Set>";
-                            }
-                            else
-                            {
-                                invalidImageString += "[NULL]";
-                            }
                         }
 
                         if (!success) // prevents creating null space
@@ -1145,7 +1138,7 @@ namespace WallpaperFlux.Core.ViewModels
 
             if (invalidCounter > 0)
             {
-                MessageBoxUtil.ShowError(invalidImageString);
+                MessageBoxUtil.ShowError(invalidImageString + "\n\nInvalid Images: " + invalidCounter);
                 return;
             }
         }
@@ -1184,7 +1177,7 @@ namespace WallpaperFlux.Core.ViewModels
         }
 
         // gathers all selected/highlighted images in all image selector tabs
-        public ImageModel[] GetAllHighlightedImages(bool ignoreSets = false, bool cancelIfSetFound = false)
+        public ImageModel[] GetAllHighlightedImages(bool cancelIfSetFound = false)
         {
             List<ImageModel> images = new List<ImageModel>();
 
@@ -1196,19 +1189,16 @@ namespace WallpaperFlux.Core.ViewModels
                     {
                         if (selectorTab.GetSelectedSets().Length > 0)
                         {
-                            MessageBoxUtil.ShowError("Additional sets found, operation cancelled");
+                            MessageBoxUtil.ShowError("Sub-sets are not yet supported");
                             return null;
                         }
                     }
 
                     images.AddRange(selectorTab.GetSelectedImages());
 
-                    if (!ignoreSets)
+                    foreach (ImageSetModel imageSet in selectorTab.GetSelectedSets())
                     {
-                        foreach (ImageSetModel imageSet in selectorTab.GetSelectedSets())
-                        {
-                            images.AddRange(imageSet.GetRelatedImages());
-                        }
+                        images.AddRange(imageSet.GetRelatedImages());
                     }
                 }
             }
@@ -1349,14 +1339,15 @@ namespace WallpaperFlux.Core.ViewModels
 
         public void ToggleInspector()
         {
-            if (SelectedImage is ImageModel)
+            switch (SelectedImage)
             {
-                InspectorToggle = !InspectorToggle;
-            }
+                case ImageModel _:
+                    InspectorToggle = !InspectorToggle;
+                    break;
 
-            if (SelectedImage is ImageSetModel)
-            {
-                ImageSetInspectorToggle = !ImageSetInspectorToggle;
+                case ImageSetModel _:
+                    ImageSetInspectorToggle = !ImageSetInspectorToggle;
+                    break;
             }
         }
 
@@ -1377,22 +1368,27 @@ namespace WallpaperFlux.Core.ViewModels
             List<ImageModel> imagesFound = new List<ImageModel>();
             List<ImageSetModel> imageSetsFound = new List<ImageSetModel>();
 
+            // split images and image sets into two arrays
             foreach (BaseImageModel image in GetAllHighlightedImageItems())
             {
-                if (image is ImageSetModel imageSet)
+                switch (image)
                 {
-                    imageSetsFound.Add(imageSet);
-
-                    if (imageSetsFound.Count > 1)
+                    case ImageSetModel imageSet:
                     {
-                        MessageBoxUtil.ShowError("Operation cancelled. You can only add images to one set");
-                        return;
-                    }
-                }
+                        imageSetsFound.Add(imageSet);
 
-                if (image is ImageModel imageModel)
-                {
-                    imagesFound.Add(imageModel);
+                        if (imageSetsFound.Count > 1)
+                        {
+                            MessageBoxUtil.ShowError("Operation cancelled. You can only add images to one set");
+                            return;
+                        }
+
+                        break;
+                    }
+
+                    case ImageModel imageModel:
+                        imagesFound.Add(imageModel);
+                        break;
                 }
             }
 

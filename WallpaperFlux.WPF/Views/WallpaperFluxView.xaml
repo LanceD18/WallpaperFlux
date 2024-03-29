@@ -156,8 +156,8 @@
                                                 <Separator/>
                                                 <MenuItem Header="Enabled" StaysOpenOnClick="True" IsCheckable="True"
                                                                                 IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                                                ToolTip="Disabling an image will stop it from appearing here, 
-                                                                                      if you want to see the image again select Enable Detection of Inactive Images"/>
+                                                                                ToolTip="Disabling an imageSet will stop it from appearing here, 
+                                                                                      if you want to see the imageSet again select Enable Detection of Inactive Images"/>
                                             </ContextMenu>
                                         </Image.ContextMenu>
                                     </Image>
@@ -227,12 +227,12 @@
                                                 <MenuItem Header="Set Tags to Tagboard" Command="{Binding SetTagsToTagBoardCommand}"/>
                                                 <MenuItem Header="Paste Tagboard to Image" Command="{Binding PasteTagBoardCommand}"/>
                                                 <MenuItem Header="Paste Tags to Tagboard" Command="{Binding PasteTagsToTagBoardCommand}"
-                                                                                ToolTip="Removes existing tags from the tagboard before pasting the current image's tags"/>
+                                                                                ToolTip="Removes existing tags from the tagboard before pasting the current imageSet's tags"/>
                                                 <Separator/>
                                                 <MenuItem Header="Enabled" StaysOpenOnClick="True" IsCheckable="True"
                                                                                 IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                                                                ToolTip="Disabling an image will stop it from appearing here, 
-                                                                                      if you want to see the image again select Enable Detection of Inactive Images"/>
+                                                                                ToolTip="Disabling an imageSet will stop it from appearing here, 
+                                                                                      if you want to see the imageSet again select Enable Detection of Inactive Images"/>
                                                 <Separator/>
                                                 <MenuItem Header="Volume" mvx:Bi.nd="Command SetVolumeCommand"/>
                                                 <MenuItem Header="Speed" mvx:Bi.nd="Command SetSpeedCommand"/>
@@ -307,7 +307,7 @@
 
                                                         <Separator/>
 
-                                                        <!-- Set Type -->
+                                                        <!--? Set Type -->
                                                         <MenuItem Header="Set Type">
                                                             <MenuItem StaysOpenOnClick="True">
                                                                 <MenuItem.Header>
@@ -353,7 +353,8 @@
                                                                                     <MenuItem Header="Static Intervals" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding StaticIntervals}"
                                                                             ToolTip="Speed will instead represent the length of each frame"/>
                                                                                     <MenuItem Header="Weighted Intervals" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding WeightedIntervals}"
-                                                                            ToolTip="Gives each image an interval weighted to their rank (Multiplied by the Secondary Interval Type)"/>
+                                                                            ToolTip="Gives each imageSet an interval weighted to their rank (Requires Static or Fraction intervals to function)"/>
+
                                                                                     <Separator/>
 
                                                                                     <MenuItem Header="Override Minimum Loops" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding OverrideMinimumLoops}"/>
@@ -369,7 +370,9 @@
                                                                                             </StackPanel>
                                                                                         </MenuItem.Header>
                                                                                     </MenuItem>
+
                                                                                     <Separator/>
+
                                                                                     <MenuItem Header="Override Maximum Time" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding OverrideMaximumTime}"/>
                                                                                     <MenuItem StaysOpenOnClick="True" IsEnabled="{Binding OverrideMaximumTime}">
                                                                                         <MenuItem.Header>
@@ -415,27 +418,36 @@
 
                                                         <Separator/>
 
+                                                        <!--? Ranking Format -->
                                                         <MenuItem Header="Ranking Format" IsEnabled="False"/>
                                                         <MenuItem Header="Average" IsChecked="{Binding UsingAverageRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                                                                   StaysOpenOnClick="True" IsCheckable="True"
-                                                                  IsEnabled="{Binding UsingAverageRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource BooleanInverterConverter}}"/>
+                                                                  IsEnabled="{Binding UsingAverageRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, 
+                                                            Converter={StaticResource BooleanInverterConverter}}"/>
                                                         <MenuItem Header="Override" IsChecked="{Binding UsingOverrideRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                                                                   StaysOpenOnClick="True" IsCheckable="True"
-                                                                  IsEnabled="{Binding UsingOverrideRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource BooleanInverterConverter}}"/>
+                                                                  IsEnabled="{Binding UsingOverrideRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, 
+                                                            Converter={StaticResource BooleanInverterConverter}}"/>
                                                         <MenuItem Header="Weighted Average" IsChecked="{Binding UsingWeightedAverage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                                                                   StaysOpenOnClick="True" IsCheckable="True"
-                                                                  IsEnabled="{Binding UsingWeightedAverage, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource BooleanInverterConverter}}"/>
+                                                                  IsEnabled="{Binding UsingWeightedAverage, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, 
+                                                            Converter={StaticResource BooleanInverterConverter}}"/>
                                                         <MenuItem Header="Weighted Override" IsChecked="{Binding UsingWeightedRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                                                                   StaysOpenOnClick="True" IsCheckable="True"
-                                                                  IsEnabled="{Binding UsingWeightedRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource BooleanInverterConverter}}"/>
+                                                                  IsEnabled="{Binding UsingWeightedRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, 
+                                                            Converter={StaticResource BooleanInverterConverter}}"/>
                                                         <MenuItem Header="{Binding OverrideRankWeightText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="False"/>
                                                         <Slider Value="{Binding OverrideRankWeight}" IsEnabled="{Binding UsingWeightedRank}" Minimum="0" Maximum="100"/>
 
                                                         <Separator/>
+
                                                         <MenuItem Header="Enabled" StaysOpenOnClick="True" IsCheckable="True"
                                                                   IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                                   ToolTip="Disabling a set will stop it from appearing here, 
                                                                                       if you want to see the set again select Enable Detection of Inactive Images"/>
+                                                        <MenuItem Header="Retain Image Independence" StaysOpenOnClick="True" IsCheckable="True"
+                                                                  IsChecked="{Binding RetainImageIndependence, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                  ToolTip="Allows independent images and the set to co-exist in the theme"/>
                                                     </ContextMenu>
                                                 </Image.ContextMenu>
                                             </Image>
@@ -445,7 +457,7 @@
                                 </DataTemplate>
                             </ContentControl.Resources>
 
-                            <!-- // Template Control // -->
+                            <!--? // Template Control // -->
                             <ContentControl.ContentTemplate>
                                 <DataTemplate>
                                     <!-- Default Control -->
@@ -759,7 +771,7 @@
                               ToolTip="While this is checked, if multiple images with the same tags are renamed simultaneously, their numbering will be grouped together"/>
                     <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
                     <Button Width="75" Height="25" Content="Create Set" Margin="3 0 3 0 " Command="{Binding CreateRelatedImageSetCommand}"  IsEnabled="{Binding IsImageSelected}"
-                            ToolTip="Builds a 'related image set' out of the selected images"/>
+                            ToolTip="Builds a 'related imageSet set' out of the selected images"/>
                     <Button Width="75" Height="25" Content="Add To Set" Margin="3 0 3 0 " Command="{Binding AddToImageSetCommand}" IsEnabled="{Binding IsImageSelected}"
                             ToolTip="If one set is selected, adds the currently selected images to the selected set"/>
                     <!--! Not really much of a point to Apply To All when SelectAllImages() exists -->

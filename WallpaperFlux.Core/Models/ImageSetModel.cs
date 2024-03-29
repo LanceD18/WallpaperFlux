@@ -9,7 +9,7 @@ using WallpaperFlux.Core.Util;
 
 namespace WallpaperFlux.Core.Models
 {
-    public class ImageSetModel : BaseImageModel
+    public sealed class ImageSetModel : BaseImageModel
     {
         private readonly ImageModel[] RelatedImages;
 
@@ -26,6 +26,7 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
+        #region Ranking Format
         public ImageSetRankingFormat RankingFormat { get; set; }
 
         private bool _usingAverageRank;
@@ -38,12 +39,13 @@ namespace WallpaperFlux.Core.Models
 
                 if (value)
                 {
+                    RankingFormat = ImageSetRankingFormat.Average;
+
                     UsingOverrideRank = false;
                     UsingWeightedRank = false;
                     UsingWeightedAverage = false;
                     UpdateAverageRankAndWeightedAverage();
 
-                    RankingFormat = ImageSetRankingFormat.Average;
                 }
             }
         }
@@ -58,12 +60,13 @@ namespace WallpaperFlux.Core.Models
 
                 if (value)
                 {
+                    RankingFormat = ImageSetRankingFormat.Override;
+
                     UsingAverageRank = false;
                     UsingWeightedRank = false;
                     UsingWeightedAverage = false;
                     RaisePropertyChanged(() => Rank);
 
-                    RankingFormat = ImageSetRankingFormat.Override;
                 }
             }
         }
@@ -78,6 +81,8 @@ namespace WallpaperFlux.Core.Models
                 
                 if (value)
                 {
+                    RankingFormat = ImageSetRankingFormat.WeightedOverride;
+
                     UsingAverageRank = false;
                     UsingOverrideRank = false;
                     UsingWeightedAverage = false;
@@ -85,7 +90,6 @@ namespace WallpaperFlux.Core.Models
                     RaisePropertyChanged(() => WeightedRank);
                     RaisePropertyChanged(() => Rank);
 
-                    RankingFormat = ImageSetRankingFormat.WeightedOverride;
                 }
             }
         }
@@ -102,12 +106,13 @@ namespace WallpaperFlux.Core.Models
 
                 if (value)
                 {
+                    RankingFormat = ImageSetRankingFormat.WeightedAverage;
+
                     UsingAverageRank = false;
                     UsingOverrideRank = false;
                     UsingWeightedRank = false;
-                    UpdateWeightedAverage();
 
-                    RankingFormat = ImageSetRankingFormat.WeightedAverage;
+                    UpdateWeightedAverage();
                 }
             }
         }
@@ -132,7 +137,8 @@ namespace WallpaperFlux.Core.Models
             get => _overrideRank;
             set
             {
-                SetProperty(ref _overrideRank, value);
+                // it is possible for the user to save a value out of the range despite the actual rank being bounded
+                SetProperty(ref _overrideRank, MathE.Clamp(value, 0, ThemeUtil.RankController.GetMaxRank()));
                 RaisePropertyChanged(() => WeightedRank);
                 RaisePropertyChanged(() => Rank);
             }
@@ -166,6 +172,7 @@ namespace WallpaperFlux.Core.Models
         }
 
         public string OverrideRankWeightText => "Weight: " + OverrideRankWeight;
+        #endregion
 
         #region Animated Set Properties
 
@@ -198,6 +205,8 @@ namespace WallpaperFlux.Core.Models
         public bool WeightedIntervals { get; set; }
 
         #endregion
+
+        public bool RetainImageIndependence { get; set; } = false; //? while this is enabled, independent images and the set will co-exist in the theme
 
         public bool InvalidSet { get; set; } = false;
 
@@ -345,15 +354,10 @@ namespace WallpaperFlux.Core.Models
 
         public void UpdateAverageRankAndWeightedAverage()
         {
-            if (UsingAverageRank)
-            {
-                AverageRank = GetAverageRank();
-            }
+            //! These are only updated when a rank is adjusted to reduce looping
+            if (RankingFormat == ImageSetRankingFormat.Average) AverageRank = GetAverageRank();
 
-            if (UsingWeightedAverage) // relevant to be called whenever average rank is updated
-            {
-                UpdateWeightedAverage();
-            }
+            if (RankingFormat == ImageSetRankingFormat.WeightedAverage) UpdateWeightedAverage();
         }
 
         public void UpdateWeightedAverage()
@@ -409,7 +413,7 @@ namespace WallpaperFlux.Core.Models
             return highestRankedImage;
         }
 
-        protected bool Equals(ImageSetModel other) => RelatedImages.Equals(other.RelatedImages);
+        private bool Equals(ImageSetModel other) => RelatedImages.Equals(other.RelatedImages);
 
         public override bool Equals(object obj)
         {

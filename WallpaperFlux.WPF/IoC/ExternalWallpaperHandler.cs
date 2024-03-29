@@ -22,7 +22,17 @@ namespace WallpaperFlux.WPF.IoC
 
         public string GetWallpaperPath(int index)
         {
-            return MainWindow.Instance.Wallpapers?[index].ActiveImage.Path;
+            switch (MainWindow.Instance.Wallpapers?[index].ActiveImage)
+            {
+                case ImageModel image:
+                    return image.Path;
+
+                case ImageSetModel _:
+                    return "Image Set";
+            }
+
+            return "[ERROR]";
+
         }
 
         public void UpdateVolume(int index)

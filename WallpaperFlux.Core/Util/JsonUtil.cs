@@ -407,7 +407,8 @@ namespace WallpaperFlux.Core.Util
                     imageSet.OverrideMinimumLoops,
                     imageSet.FractionIntervals,
                     imageSet.StaticIntervals,
-                    imageSet.WeightedIntervals));
+                    imageSet.WeightedIntervals,
+                    imageSet.RetainImageIndependence));
             }
 
             return simplifiedImageSets.ToArray();
@@ -709,6 +710,7 @@ namespace WallpaperFlux.Core.Util
                         imageSetModel.FractionIntervals = imageSet.FractionIntervals;
                         imageSetModel.StaticIntervals = imageSet.StaticIntervals;
                         imageSetModel.WeightedIntervals = imageSet.WeightedIntervals;
+                        imageSetModel.RetainImageIndependence = imageSet.RetainImageIndependence;
                     }
                 }
             }

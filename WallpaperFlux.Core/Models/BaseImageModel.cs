@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.Text;
+using LanceTools;
 using MvvmCross.Commands;
 using Newtonsoft.Json;
 using WallpaperFlux.Core.Models.Controls;
@@ -26,13 +27,16 @@ namespace WallpaperFlux.Core.Models
                 {
                     int oldRank = _rank;
 
-                    if (imageSet.UsingAverageRank) _rank = imageSet.AverageRank;
+                    if (imageSet.RankingFormat == ImageSetRankingFormat.Average) _rank = imageSet.AverageRank;
 
-                    if (imageSet.UsingOverrideRank) _rank = imageSet.OverrideRank;
+                    if (imageSet.RankingFormat == ImageSetRankingFormat.Override) _rank = imageSet.OverrideRank;
 
-                    if (imageSet.UsingWeightedRank) _rank = imageSet.WeightedRank;
+                    if (imageSet.RankingFormat == ImageSetRankingFormat.WeightedOverride) _rank = imageSet.WeightedRank;
 
-                    if (imageSet.UsingWeightedAverage) _rank = imageSet.WeightedAverage;
+                    if (imageSet.RankingFormat == ImageSetRankingFormat.WeightedAverage) _rank = imageSet.WeightedAverage;
+
+                    //! safety precaution ; if a calculation sends _rank above max rank or below 0 we will get a stack overflow as the old rank will always be bound to the rank range
+                    _rank = MathE.Clamp(_rank, 0, ThemeUtil.RankController.GetMaxRank());
 
                     if (oldRank != _rank)
                     {
@@ -46,22 +50,27 @@ namespace WallpaperFlux.Core.Models
 
             set
             {
-                if (this is ImageModel imageModel)
+                switch (this)
                 {
-                    ThemeUtil.Theme.RankController.ModifyRank(this, _rank, ref value); //? this should be called first to allow the old rank to be identified
-                    
-                    SetProperty(ref _rank, value);
-                    RaisePropertyChanged(() => Rank);
+                    case ImageModel imageModel:
 
-                    if (imageModel.IsInImageSet) imageModel.ParentImageSet.UpdateAverageRankAndWeightedAverage();
-                }
+                        ThemeUtil.Theme.RankController.ModifyRank(this, _rank, ref value); //? this should be called first to allow the old rank to be identified
 
-                if (this is ImageSetModel imageSet)
-                {
-                    if (!imageSet.UsingAverageRank)
-                    {
-                        imageSet.OverrideRank = value;
-                    }
+                        SetProperty(ref _rank, value);
+                        RaisePropertyChanged(() => Rank);
+
+                        if (imageModel.IsInImageSet) imageModel.ParentImageSet.UpdateAverageRankAndWeightedAverage();
+
+                        break;
+
+                    case ImageSetModel imageSet:
+
+                        if (!imageSet.UsingAverageRank)
+                        {
+                            imageSet.OverrideRank = value;
+                        }
+
+                        break;
                 }
             }
         }
@@ -92,14 +101,13 @@ namespace WallpaperFlux.Core.Models
         {
             get
             {
-                if (this is ImageModel image)
+                switch (this)
                 {
-                    return image.IsVideoOrGif;
-                }
+                    case ImageModel image:
+                        return image.IsVideoOrGif;
 
-                if (this is ImageSetModel imageSet)
-                {
-                    return imageSet.SetType == ImageSetType.Animate;
+                    case ImageSetModel imageSet:
+                        return imageSet.SetType == ImageSetType.Animate;
                 }
 
                 return false;
@@ -172,36 +180,41 @@ namespace WallpaperFlux.Core.Models
         {
             DecreaseRankCommand = new MvxCommand(() =>
             {
-                if (this is ImageModel imageModel)
+                switch (this)
                 {
-                    imageModel.Rank--;
-                }
+                    case ImageModel imageModel:
+                        imageModel.Rank--;
 
-                if (this is ImageSetModel imageSet)
-                {
-                    if (!imageSet.UsingAverageRank)
-                    {
-                        imageSet.OverrideRank--;
-                    }
+                        break;
+
+                    case ImageSetModel imageSet:
+                        if (imageSet.RankingFormat == ImageSetRankingFormat.Override || imageSet.RankingFormat == ImageSetRankingFormat.WeightedOverride)
+                        {
+                            imageSet.OverrideRank--;
+                        }
+
+                        break;
                 }
             });
 
             IncreaseRankCommand = new MvxCommand(() =>
             {
-                if (this is ImageModel imageModel)
+                switch (this)
                 {
-                    imageModel.Rank++;
-                }
+                    case ImageModel imageModel:
+                        imageModel.Rank++;
 
-                if (this is ImageSetModel imageSet)
-                {
-                    if (!imageSet.UsingAverageRank)
-                    {
-                        imageSet.OverrideRank++;
-                    }
+                        break;
+
+                    case ImageSetModel imageSet:
+                        if (imageSet.RankingFormat == ImageSetRankingFormat.Override || imageSet.RankingFormat == ImageSetRankingFormat.WeightedOverride)
+                        {
+                            imageSet.OverrideRank++;
+                        }
+
+                        break;
                 }
             });
-
         }
 
         public virtual bool IsEnabled(bool ignoreSet = false)

@@ -528,7 +528,7 @@ namespace WallpaperFlux.Core.Controllers
 
         public void UpdateImageTypeWeights()
         {
-            if (JsonUtil.IsLoadingData) return;
+            //xif (JsonUtil.IsLoadingData) return;
             if (FolderUtil.IsValidatingFolders) return;
 
             int totalSum = 0;

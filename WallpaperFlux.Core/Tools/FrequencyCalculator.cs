@@ -11,6 +11,11 @@ using WallpaperFlux.Core.Util;
 
 namespace WallpaperFlux.Core.Tools
 {
+    // TODO Untangle the spaghetti here at some point
+    // TODO Untangle the spaghetti here at some point
+    // TODO Untangle the spaghetti here at some point
+    // TODO Untangle the spaghetti here at some point
+
     public class FrequencyCalculator
     {
         private Dictionary<ImageType, double> RelativeFrequency = new Dictionary<ImageType, double>()
@@ -80,6 +85,7 @@ namespace WallpaperFlux.Core.Tools
 
             Debug.WriteLine("Verifying Image Type Existence, this may recalculate some exact frequencies in need of updating");
 
+            // TODO This is being nullified twice for the same reason (see UpdateFrequency())
             ExactFrequency[ImageType.Static] = staticExists ? ExactFrequency[ImageType.Static] : 0;
             ExactFrequency[ImageType.GIF] = gifExists ? ExactFrequency[ImageType.GIF] : 0;
             ExactFrequency[ImageType.Video] = videoExists ? ExactFrequency[ImageType.Video] : 0;
@@ -108,6 +114,7 @@ namespace WallpaperFlux.Core.Tools
             ThemeUtil.Theme.Settings.ThemeSettings.FrequencyModel.UpdateModelFrequency(); // updates the UI to the potentially adjusted frequency
         }
 
+        // TODO This is the same as VerifyImageTypeExistence? Clean up at some point
         public void HandleEmptyImageTypes(ImageModel imageToVerify = null)
         {
             bool staticExists = ThemeUtil.Theme.RankController.IsAnyImagesOfTypeRanked(ImageType.Static);
@@ -166,28 +173,38 @@ namespace WallpaperFlux.Core.Tools
         public void UpdateFrequency(ImageType imageType, FrequencyType frequencyType, double value, bool valueIsPercentage)
         {
             if (!valueIsPercentage) value /= 100;  // if retrieving from FrequencyModel, the visual value is 100 times larger than the actual value which goes from 0-1
+            
+            NullifyFrequencies(false);
 
-            // Display an error message if the image type is empty and abort the method
-            if (!ThemeUtil.Theme.RankController.IsAnyImagesOfTypeRanked(imageType) && !JsonUtil.IsLoadingData)
+            //x Display an error message if the image type is empty and abort the method
+            // Nullify image types with no images
+            if (!ThemeUtil.Theme.RankController.IsAnyImagesOfTypeRanked(imageType))
             {
-                string imageTypeString = "";
+                return;
+                //xstring imageTypeString = "";
 
                 switch (imageType)
                 {
                     case ImageType.Static:
-                        imageTypeString = "[Images]";
+                        //ximageTypeString = "[Images]";
+                        RelativeFrequency[ImageType.Static] = 1;
+                        ExactFrequency[ImageType.Static] = 0;
                         break;
 
                     case ImageType.GIF:
-                        imageTypeString = "[GIFs]";
+                        //ximageTypeString = "[GIFs]";
+                        RelativeFrequency[ImageType.GIF] = 1;
+                        ExactFrequency[ImageType.GIF] = 0;
                         break;
 
                     case ImageType.Video:
-                        imageTypeString = "[Videos]";
+                        //ximageTypeString = "[Videos]";
+                        RelativeFrequency[ImageType.Video] = 1;
+                        ExactFrequency[ImageType.Video] = 0;
                         break;
                 }
 
-                MessageBoxUtil.ShowError("Cannot set the frequency of an empty type. Rank a few " + imageTypeString + " first then try again");
+                //xMessageBoxUtil.ShowError("Cannot set the frequency of an empty type. Rank a few " + imageTypeString + " first then try again");
                 return;
             }
 
@@ -389,6 +406,12 @@ namespace WallpaperFlux.Core.Tools
 
             double chanceTotal = staticRelativeFrequency + gifRelativeFrequency + videoRelativeFrequency;
 
+            if (chanceTotal == 0)
+            {
+                NullifyFrequencies(true);
+                return;
+            }
+
             double staticRelativeChance = RelativeFrequency[ImageType.Static] / chanceTotal;
             double gifRelativeChance = RelativeFrequency[ImageType.GIF] / chanceTotal;
             double videoRelativeChance = RelativeFrequency[ImageType.Video] / chanceTotal;
@@ -410,6 +433,7 @@ namespace WallpaperFlux.Core.Tools
                 ExactFrequency[ImageType.Static] = staticRelativeChance;
                 ExactFrequency[ImageType.GIF] = gifRelativeChance;
                 ExactFrequency[ImageType.Video] = videoRelativeChance;
+                NullifyFrequencies(false); // TODO Spaghetti
             }
             else // Weighted Frequency, frequency will be adjusted by the number of images in each image type
             {
@@ -538,6 +562,23 @@ namespace WallpaperFlux.Core.Tools
             if (ExactFrequency[ImageType.GIF] != 0) ExactFrequency[ImageType.GIF] /= chanceTotal;
 
             if (ExactFrequency[ImageType.Video] != 0) ExactFrequency[ImageType.Video] /= chanceTotal;
+        }
+
+        public void NullifyFrequencies(bool forceNullify)
+        {
+            foreach (int i in Enum.GetValues(typeof(ImageType)))
+            {
+                ImageType curImageType = (ImageType)Enum.ToObject(typeof(ImageType), i);
+                if (curImageType != ImageType.None)
+                {
+                    bool huh = !ThemeUtil.Theme.RankController.IsAnyImagesOfTypeRanked(curImageType);
+                    if (forceNullify || !ThemeUtil.Theme.RankController.IsAnyImagesOfTypeRanked(curImageType))
+                    {
+                        RelativeFrequency[curImageType] = 1;
+                        ExactFrequency[curImageType] = 0;
+                    }
+                }
+            }
         }
     }
 }

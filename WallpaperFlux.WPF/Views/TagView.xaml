@@ -58,7 +58,7 @@
 
                 <MenuItem Header="Toggle Tag-Adder" IsCheckable="True" IsChecked="{Binding TagAdderToggle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                     <MenuItem.ToolTip>
-                        While this toggle is enabled every tag you click will be added to or removed from the selected image. The tags of the selected image will be highlighted
+                        While this toggle is enabled every tag you click will be added to or removed from the selected imageSet. The tags of the selected imageSet will be highlighted
                     </MenuItem.ToolTip>
                 </MenuItem>
                 <MenuItem Header="Toggle Tag-Linker" IsCheckable="True"
@@ -75,7 +75,7 @@
                 <MenuItem Header="View Folder Priority" Command="{Binding ViewFolderPriorityCommand}"/>
                 <MenuItem Header="Hide Disabled Tags" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding HideDisabledTags, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 <MenuItem Header="Use Selection Options Filter" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding SelectionOptionsFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                          ToolTip="Filters your selection to the options set in the image selector"/>
+                          ToolTip="Filters your selection to the options set in the imageSet selector"/>
             </MenuItem>
         </Menu>
 
@@ -402,11 +402,11 @@
                                         <Separator/>
 
                                         <MenuItem Header="{Binding RenameFolderContextMenuString, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="False"
-                                                                          ToolTip="The rename folder helps to determine what folder an image will be assigned to upon renaming"/>
+                                                                          ToolTip="The rename folder helps to determine what folder an imageSet will be assigned to upon renaming"/>
                                         <MenuItem Header="Assign Rename Folder" Command="{Binding AssignRenameFolderCommand}"
-                                                                          ToolTip="The rename folder helps to determine what folder an image will be assigned to upon renaming"/>
+                                                                          ToolTip="The rename folder helps to determine what folder an imageSet will be assigned to upon renaming"/>
                                         <MenuItem Header="Remove Rename Folder" Command="{Binding RemoveRenameFolderCommand}"
-                                                                          ToolTip="The rename folder helps to determine what folder an image will be assigned to upon renaming"/>
+                                                                          ToolTip="The rename folder helps to determine what folder an imageSet will be assigned to upon renaming"/>
 
                                         <Separator/>
 

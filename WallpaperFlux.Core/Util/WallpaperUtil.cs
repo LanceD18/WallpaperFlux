@@ -178,20 +178,5 @@ namespace WallpaperFlux.Core.Util
                 WallpaperHandler.Unmute(i);
             }
         }
-
-        /*x
-        //? Note: For this function to work, the form has to be already created. The form.Load event seems to be the right place for it.
-        private void InitializeWallpapers()
-        {
-            IntPtr workerw = GetDesktopWorkerW();
-
-            int monitorCount = DisplayData.Displays.Length;
-            wallpapers = new WallpaperForm.WallpaperForm[monitorCount];
-            for (int i = 0; i < monitorCount; i++)
-            {
-                wallpapers[i] = new WallpaperForm.WallpaperForm(DisplayData.Displays[i], workerw);
-            }
-        }
-        */
     }
 }

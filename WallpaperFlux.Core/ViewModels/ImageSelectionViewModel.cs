@@ -146,23 +146,35 @@ namespace WallpaperFlux.Core.ViewModels
 
                 if (rankFilter == null) return null;
 
-                foreach (ImageModel image in images)
+                foreach (BaseImageModel image in images)
                 {
                     // check the set for filters instead if one exists
-                    BaseImageModel filteredImageModel = !image.IsInImageSet ? (BaseImageModel)image : image.ParentImageSet;
 
-                    if (rankFilter(filteredImageModel) && VerifyImageType(filteredImageModel))
+                    if (rankFilter(image) && VerifyImageType(image))
                     {
-                        if (filteredImageModel is ImageSetModel)
+                        switch (image)
                         {
-                            if (!filteredImages.Contains(filteredImageModel)) // we don't want to add sets multiple times if multiple images in a set are in the search
+                            case ImageModel imageModel:
                             {
-                                filteredImages.Add(filteredImageModel);
+                                if (!imageModel.IsInImageSet)
+                                {
+                                    filteredImages.Add(imageModel);
+                                }
+                                else
+                                {
+                                    //! if multiple images from one set are in the search, we could accidentally add the same set multiple times without this
+                                    if (!filteredImages.Contains(imageModel.ParentImageSet))
+                                    {
+                                        filteredImages.Add(imageModel.ParentImageSet);
+                                    }
+                                }
+
+                                break;
                             }
-                        }
-                        else
-                        {
-                            filteredImages.Add(filteredImageModel);
+                            
+                            case ImageSetModel _:
+                                filteredImages.Add(image);
+                                break;
                         }
                     }
                 }

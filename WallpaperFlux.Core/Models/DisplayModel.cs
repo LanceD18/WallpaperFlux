@@ -148,7 +148,7 @@ namespace WallpaperFlux.Core.Models
                     {
                         if (model != this)
                         {
-                            model.OnTimerReset?.Invoke(model._displayIndex, true, false);
+                            model.OnTimerReset?.Invoke(model._displayIndex, false, false); //! force change will skip videos/animations
                         }
                     }
                 }

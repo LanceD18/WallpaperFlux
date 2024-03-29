@@ -137,17 +137,12 @@ namespace WallpaperFlux.WPF.Views
 
         private async void LoadImage(Image image, bool highQuality)
         {
-            ImageModel thumbnailSource = null;
-
-            if (image.DataContext is ImageModel imageModel)
+            ImageModel thumbnailSource = image.DataContext switch
             {
-                thumbnailSource = imageModel;
-            }
-
-            if (image.DataContext is ImageSetModel imageSet)
-            {
-                thumbnailSource = imageSet.GetHighestRankedImage();
-            }
+                ImageModel imageModel => imageModel,
+                ImageSetModel imageSet => imageSet.GetHighestRankedImage(),
+                _ => null
+            };
 
             if (thumbnailSource == null) return;
 
@@ -376,15 +371,12 @@ namespace WallpaperFlux.WPF.Views
             ImageModel imageModel = null;
             if (sender is Image image)
             {
-                if (image.DataContext is ImageModel regularImageModel)
+                imageModel = image.DataContext switch
                 {
-                    imageModel = regularImageModel;
-                }
-
-                if (image.DataContext is ImageSetModel imageSetModel)
-                {
-                    imageModel = imageSetModel.GetHighestRankedImage();
-                }
+                    ImageModel regularImageModel => regularImageModel,
+                    ImageSetModel imageSetModel => imageSetModel.GetHighestRankedImage(),
+                    _ => null
+                };
 
                 if (imageModel != null)
                 {

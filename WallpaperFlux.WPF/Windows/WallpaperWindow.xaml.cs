@@ -55,7 +55,7 @@ namespace WallpaperFlux.WPF
             Mpv
         }
 
-        public ImageModel ActiveImage;
+        public BaseImageModel ActiveImage;
 
         private int LoopCount;
 
@@ -70,6 +70,8 @@ namespace WallpaperFlux.WPF
         public WallpaperForm ConnectedForm => MainWindow.Instance.WallpaperForms[DisplayIndex];
 
         public DispatcherTimer AnimatedImageSetTimer = new DispatcherTimer();
+
+        public double AnimatedImageUnweightedInterval;
 
         public WallpaperWindow(Screen display, IntPtr workerw, int displayIndex)
         {
@@ -148,90 +150,53 @@ namespace WallpaperFlux.WPF
             SetWallpaper(image, false);
         }
 
-        private void SetWallpaper(BaseImageModel image, bool isAnimatedImage)
+        #region Set Wallpaper
+        private void SetWallpaper(BaseImageModel image, bool imageIsInAnimatedSet)
         {
-            // -----Set Wallpaper -----
-            if (image is ImageModel imageModel)
+            switch (image)
             {
-                FileInfo wallpaperInfo;
-                string wallpaperPath = imageModel.Path;
-
-                // --- Verify Wallpaper ---
-                if (!string.IsNullOrEmpty(wallpaperPath))
+                // -----Set Wallpaper -----
+                case ImageModel imageModel:
                 {
-                    wallpaperInfo = new FileInfo(wallpaperPath);
-                }
-                else
-                {
-                    Debug.WriteLine("Null Wallpaper Path found when calling OnWallpaperChange");
-                    return;
-                }
+                    FileInfo wallpaperInfo;
+                    string wallpaperPath = imageModel.Path;
 
-                Debug.WriteLine("Changing into: " + wallpaperPath);
+                    // --- Verify Wallpaper ---
+                    if (!string.IsNullOrEmpty(wallpaperPath))
+                    {
+                        wallpaperInfo = new FileInfo(wallpaperPath);
+                    }
+                    else
+                    {
+                        Debug.WriteLine("Null Wallpaper Path found when calling OnWallpaperChange");
+                        return;
+                    }
 
-                if (WallpaperUtil.IsSupportedVideoType_GivenExtension(wallpaperInfo.Extension) || imageModel.IsGif) //? ---- video or gif ----
-                {
-                    SetVideoOrGif(imageModel, wallpaperInfo, isAnimatedImage);
-                }
-                else //? ---- static ----
-                {
-                    SetStatic(imageModel.Path, isAnimatedImage);
-                }
+                    Debug.WriteLine("Changing into: " + wallpaperPath);
 
-                //! keep in mind that the image set will loop around to this
-                ActiveImage = imageModel; //? this change implies that the wallpaper was SUCCESSFULLY changed | Errors, video loop control, etc. can stop this
+                    if (WallpaperUtil.IsSupportedVideoType_GivenExtension(wallpaperInfo.Extension) || imageModel.IsGif) //? ---- video or gif ----
+                    {
+                        SetVideoOrGif(imageModel, wallpaperInfo, imageIsInAnimatedSet);
+                    }
+                    else //? ---- static ----
+                    {
+                        SetStatic(imageModel.Path, imageIsInAnimatedSet);
+                    }
+
+                    break;
+                }
+                case ImageSetModel imageSet:
+                    SetImageSet(imageSet);
+                    break;
             }
-            else if (image is ImageSetModel imageSet)
+
+            if (!imageIsInAnimatedSet) // we don't want to override the set with its animated image for the 'ActiveImage'
             {
-                SetImageSet(imageSet);
+                ActiveImage = image; //? this change implies that the wallpaper was SUCCESSFULLY changed | Errors, video loop control, etc. can stop this
             }
         }
 
-        public async void SetVideoOrGif(ImageModel image, FileInfo wallpaperInfo, bool isAnimatedImage)
-        {
-            UpdateVolume(image); //! Do NOT use ActiveImage here, it is not set until the end of the method!
-
-            if (WallpaperUtil.IsSupportedVideoType_GivenExtension(wallpaperInfo.Extension))
-            {
-                ConnectedForm.Enabled = true;
-                ConnectedForm.Visible = true;
-                //xConnectedForm.BringToFront();
-                ConnectedForm.SetWallpaper(image);
-                DisableUnusedElements(UsedElement.Mpv, isAnimatedImage);
-            }
-            else if (/*wallpaperInfo.Extension == ".webm" ||*/ image.IsGif) //? FFME can't handle .avi files and crashes on some videos depending on their pixel format, this seems to be more common with .webms
-            {
-                Debug.WriteLine("FFME (Recording path for just in case of crash, convert crashed .webms to .mp4): " + image.Path);
-
-                try
-                {
-                    await WallpaperMediaElementFFME.Close();
-                    await WallpaperMediaElementFFME.Open(new Uri(wallpaperInfo.FullName));
-                    WallpaperMediaElementFFME.IsEnabled = true;
-                    WallpaperMediaElementFFME.Visibility = Visibility.Visible;
-
-                    DisableUnusedElements(UsedElement.FFME, isAnimatedImage);
-
-                    RetryMediaOpen(false, isAnimatedImage); //? If there's too much load on the system FFME media will fail to start and need to be re-initialized
-                }
-                catch (Exception)
-                {
-                    Debug.WriteLine("Failed FFME Open: " + image.Path);
-                }
-
-            }
-            else //? Use the MediaElement as a last resort | seems to handle .wmv just fine
-            {
-                WallpaperMediaElement.Close();
-                WallpaperMediaElement.Source = new Uri(wallpaperInfo.FullName);
-                WallpaperMediaElement.IsEnabled = true;
-                WallpaperMediaElement.Visibility = Visibility.Visible;
-
-                DisableUnusedElements(UsedElement.MediaElement, isAnimatedImage);
-            }
-        }
-
-        public async void SetStatic(string wallpaperPath, bool isAnimatedImage)
+        public async void SetStatic(string wallpaperPath, bool imageIsInAnimatedSet)
         {
             await Task.Factory.StartNew(() =>
             {
@@ -254,7 +219,7 @@ namespace WallpaperFlux.WPF
                 });
             }, TaskCreationOptions.LongRunning);
 
-            DisableUnusedElements(UsedElement.Image, isAnimatedImage);
+            DisableUnusedElements(UsedElement.Image, imageIsInAnimatedSet);
         }
 
         public void SetImageSet(ImageSetModel imageSet)
@@ -275,36 +240,32 @@ namespace WallpaperFlux.WPF
                 case ImageSetType.Animate:
                     
                     AnimatedSetIndex = 0;
-                    SetWallpaper(imageSet.GetRelatedImage(AnimatedSetIndex), true); //? starting on the first index
+                    ImageModel[] relatedImages = imageSet.GetRelatedImages();
+
+                    SetWallpaper(relatedImages[AnimatedSetIndex], true); //? starting on the first index
 
                     double intervalTime = 0;
                     int displayTimerMax = WallpaperFluxViewModel.Instance.DisplaySettings[DisplayIndex].DisplayTimerMax;
-                    int relatedImageLength = imageSet.GetRelatedImages(true).Length;
 
+                    // Fraction Intervals
                     if (imageSet.FractionIntervals)
                     {
-                        intervalTime = displayTimerMax / (double)relatedImageLength;
+                        intervalTime = displayTimerMax / (double)relatedImages.Length;
                         intervalTime /= imageSet.Speed;
                     }
 
+                    // Static Intervals
                     if (imageSet.StaticIntervals) intervalTime = imageSet.Speed;
 
-                    if (intervalTime == 0) intervalTime = displayTimerMax; //? will end up just playing one image from the set
+                    if (intervalTime == 0) intervalTime = displayTimerMax; //? if a time of 0 is set, we will end up just playing one image per interval
 
-                    if (imageSet.WeightedIntervals)
-                    {
-                        double totalTime = intervalTime * relatedImageLength;
+                    // Weighted Intervals
+                    AnimatedImageUnweightedInterval = intervalTime; //! for use with WeightedIntervals, requires prior interval times to be set
 
-                        // TODO Get average rank
-                        // TODO Get weighting and multiply by max rank
-                        // TODO Divide the values to get the weight multiple
-                        // TODO Multiply weight by given interval
-
-                        // TODO Will update with each call of AdvanceAnimatedImageSet()
-                    }
-
+                    // Timer Setup
+                    DisableSet(); //! if the timer is not stopped before resetting the previous set will play indefinitely
                     AnimatedImageSetTimer = new DispatcherTimer(DispatcherPriority.Background, Application.Current.Dispatcher); //? resetting events
-                    AnimatedImageSetTimer.Interval = TimeSpan.FromSeconds(intervalTime);
+                    AnimatedImageSetTimer.Interval = !imageSet.WeightedIntervals ? TimeSpan.FromSeconds(intervalTime) : TimeSpan.FromSeconds(GetWeightedInterval(relatedImages));
                     AnimatedImageSetTimer.Tick += (sender, e) => AdvanceAnimatedImageSet(imageSet);
                     AnimatedImageSetTimer.Start();
 
@@ -313,28 +274,97 @@ namespace WallpaperFlux.WPF
                 case ImageSetType.Merge:
                     //! If you don't use SetStatic, add this: DisableUnusedElements(UsedElement.Image);
 
-                    MessageBoxUtil.ShowError("Merge Sets have yet to be implemented");
+                    MessageBoxUtil.ShowError("Merge Sets are currently not implemented");
                     break;
             }
+        }
+
+        public async void SetVideoOrGif(ImageModel image, FileInfo wallpaperInfo, bool imageIsInAnimatedSet)
+        {
+            UpdateVolume(image); //! Do NOT use ActiveImage here, it is not set until the end of the method!
+
+            if (WallpaperUtil.IsSupportedVideoType_GivenExtension(wallpaperInfo.Extension))
+            {
+                ConnectedForm.Enabled = true;
+                ConnectedForm.Visible = true;
+                //xConnectedForm.BringToFront();
+                ConnectedForm.SetWallpaper(image);
+                DisableUnusedElements(UsedElement.Mpv, imageIsInAnimatedSet);
+            }
+            else if (/*wallpaperInfo.Extension == ".webm" ||*/ image.IsGif) //? FFME can't handle .avi files and crashes on some videos depending on their pixel format, this seems to be more common with .webms
+            {
+                Debug.WriteLine("FFME (Recording path for just in case of crash, convert crashed .webms to .mp4): " + image.Path);
+
+                try
+                {
+                    await WallpaperMediaElementFFME.Close();
+                    await WallpaperMediaElementFFME.Open(new Uri(wallpaperInfo.FullName));
+                    WallpaperMediaElementFFME.IsEnabled = true;
+                    WallpaperMediaElementFFME.Visibility = Visibility.Visible;
+
+                    DisableUnusedElements(UsedElement.FFME, imageIsInAnimatedSet);
+
+                    RetryMediaOpen(false, imageIsInAnimatedSet); //? If there's too much load on the system FFME media will fail to start and need to be re-initialized
+                }
+                catch (Exception)
+                {
+                    Debug.WriteLine("Failed FFME Open: " + image.Path);
+                }
+
+            }
+            else //? Use the MediaElement as a last resort | seems to handle .wmv just fine
+            {
+                WallpaperMediaElement.Close();
+                WallpaperMediaElement.Source = new Uri(wallpaperInfo.FullName);
+                WallpaperMediaElement.IsEnabled = true;
+                WallpaperMediaElement.Visibility = Visibility.Visible;
+
+                DisableUnusedElements(UsedElement.MediaElement, imageIsInAnimatedSet);
+            }
+        }
+
+        private double GetWeightedInterval(ImageModel[] relatedImages)
+        {
+            double totalTime = AnimatedImageUnweightedInterval * relatedImages.Length;
+
+            int curImageWeight = relatedImages[AnimatedSetIndex].Rank;
+            int weightTotal = 0;
+            for (int i = 0; i < relatedImages.Length; i++)
+            {
+                weightTotal += relatedImages[i].Rank;
+            }
+
+            if (weightTotal == 0) return 0;
+
+           return totalTime * ((double)curImageWeight / weightTotal);
         }
 
         private void AdvanceAnimatedImageSet(ImageSetModel set)
         {
             if (set.SetType != ImageSetType.Animate) return;
 
+            ImageModel[] relatedImages = set.GetRelatedImages();
+
             AnimatedSetIndex++;
-            if (AnimatedSetIndex >= set.GetRelatedImages().Length)
+            if (AnimatedSetIndex >= relatedImages.Length)
             {
                 AnimatedSetIndex = 0;
             }
 
-            if (AnimatedSetIndex >= set.GetRelatedImages().Length - 1)
+            //! we start the loop count on the prior image to prevent fraction intervals from having an extra loop due to them ending right on the wallpaper change
+            if (AnimatedSetIndex >= relatedImages.Length - 1)
             {
                 LoopCount++;
             }
 
+            if (set.WeightedIntervals)
+            {
+                AnimatedImageSetTimer.Interval = TimeSpan.FromSeconds(GetWeightedInterval(relatedImages));
+            }
+
             SetWallpaper(set.GetRelatedImage(AnimatedSetIndex), true);
         }
+        #endregion
 
         /// <summary>
         /// Scan video wallpapers for loop & max time settings
@@ -345,10 +375,9 @@ namespace WallpaperFlux.WPF
         {
             if (ActiveImage == null) return false;
 
-            bool animatedSet = ActiveImage.IsInImageSet && ActiveImage.ParentImageSet.IsAnimated;
-            bool validImage = ActiveImage.IsAnimated || animatedSet;
+            bool isAnimated = ActiveImage.IsAnimated || ActiveImage is ImageModel { IsDependentOnAnimatedImageSet: true };
 
-            if (!forceChange && validImage) // we can only make these checks if the previous wallpaper was a video or gif
+            if (!forceChange && isAnimated) // we can only make these checks if the previous wallpaper was a video or gif
             {
                 int minLoops = ActiveImage.OverrideMinimumLoops ? ActiveImage.MinimumLoops : ThemeUtil.VideoSettings.MinimumLoops;
                 int maxTime = ActiveImage.OverrideMaximumTime ? ActiveImage.MaximumTime : ThemeUtil.VideoSettings.MaximumTime;
@@ -376,7 +405,7 @@ namespace WallpaperFlux.WPF
                 }
             }
 
-            if (animatedSet) DisableSet();
+            if (ActiveImage is ImageModel { IsDependentOnAnimatedImageSet: true }) DisableSet();
 
             //xvlcStopwatch.Reset(); // for situations where the next wallpaper is not a VLC wallpaper
             return false;
@@ -424,6 +453,7 @@ namespace WallpaperFlux.WPF
         }
         #endregion
 
+        #region Events
         //? The index is checked in ExternalWallpaperHandler now as it has access to the array, which allows wallpapers to be changed independently of one another
         public void OnWallpaperStyleChange(WallpaperStyle style)
         {
@@ -468,30 +498,39 @@ namespace WallpaperFlux.WPF
         }
 
         private void WallpaperMediaElementFFME_OnMediaEnded(object? sender, EventArgs e) => LoopCount++;
+        #endregion
 
         #region Volume
         public void Mute()
         {
-            UpdateVolume(ActiveImage);
+            UpdateVolume();
             ConnectedForm.Mute();
         }
 
         public void Unmute()
         {
-            UpdateVolume(ActiveImage);
+            UpdateVolume();
             ConnectedForm.Unmute();
         }
+        
 
         public void UpdateVolume()
         {
-            UpdateVolume(ActiveImage);
-        }
-
-        public void UpdateVolume(BaseImageModel image)
-        {
-            if (ActiveImage is ImageModel imageModel)
+            switch (ActiveImage)
             {
-                UpdateVolume(imageModel);
+                case ImageModel imageModel:
+                    UpdateVolume(imageModel);
+                    break;
+
+                case ImageSetModel imageSet:
+                {
+                    if (imageSet.IsAnimated)
+                    {
+                        UpdateVolume(imageSet.GetRelatedImages()[AnimatedSetIndex]);
+                    }
+
+                    break;
+                }
             }
         }
 

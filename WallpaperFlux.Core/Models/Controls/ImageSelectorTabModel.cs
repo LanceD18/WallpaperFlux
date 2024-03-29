@@ -51,20 +51,22 @@ namespace WallpaperFlux.Core.Models.Controls
             Items.CollectionChanged += ItemsOnCollectionChanged_SplitImagesAndSets;
         }
 
+        // automates addition and removal of images and image sets so that we can have split collections (useful for more efficient searching)
         private void ItemsOnCollectionChanged_SplitImagesAndSets(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.OldItems != null)
             {
                 foreach (var item in e.OldItems)
                 {
-                    if (item is ImageModel imageModel)
+                    switch (item)
                     {
-                        ImageItems.Remove(imageModel);
-                    }
+                        case ImageModel imageModel:
+                            ImageItems.Remove(imageModel);
+                            break;
 
-                    if (item is ImageSetModel imageSet)
-                    {
-                        ImageSetItems.Remove(imageSet);
+                        case ImageSetModel imageSet:
+                            ImageSetItems.Remove(imageSet);
+                            break;
                     }
                 }
             }
@@ -73,14 +75,15 @@ namespace WallpaperFlux.Core.Models.Controls
             {
                 foreach (var item in e.NewItems)
                 {
-                    if (item is ImageModel imageModel)
+                    switch (item)
                     {
-                        ImageItems.Add(imageModel);
-                    }
+                        case ImageModel imageModel:
+                            ImageItems.Add(imageModel);
+                            break;
 
-                    if (item is ImageSetModel imageSet)
-                    {
-                        ImageSetItems.Add(imageSet);
+                        case ImageSetModel imageSet:
+                            ImageSetItems.Add(imageSet);
+                            break;
                     }
                 }
             }
@@ -158,17 +161,10 @@ namespace WallpaperFlux.Core.Models.Controls
 
         public void ReplaceImage(BaseImageModel oldImage, BaseImageModel newImage)
         {
-            if (oldImage is ImageSetModel) //? without this process the thumbnail of the set won't update if the first image is removed
-            {
-                int index = Items.IndexOf(oldImage);
-                RemoveImage(oldImage);
-                Items.Insert(index, newImage);
-            }
-
-            if (oldImage is ImageModel)
-            {
-                Items[Items.IndexOf(oldImage)] = newImage;
-            }
+             //? without this process the thumbnail of the image won't update
+             int index = Items.IndexOf(oldImage);
+             RemoveImage(oldImage);
+             Items.Insert(index, newImage);
         }
 
         /// <summary>
@@ -179,23 +175,11 @@ namespace WallpaperFlux.Core.Models.Controls
             for (var i = 0; i < Items.Count; i++)
             {
                 BaseImageModel image = Items[i];
-
-                if (image is ImageModel imageModel)
+            
+                if (!ThemeUtil.Theme.Images.ContainsImage(image))
                 {
-                    if (!ThemeUtil.Theme.Images.ContainsImage(imageModel))
-                    {
-                        Items.RemoveAt(i);
-                        i--;
-                    }
-                }
-
-                if (image is ImageSetModel imageSet)
-                {
-                    if (!ThemeUtil.Theme.Images.ContainsImage(imageSet))
-                    {
-                        Items.RemoveAt(i);
-                        i--;
-                    }
+                    Items.RemoveAt(i);
+                    i--;
                 }
             }
         }

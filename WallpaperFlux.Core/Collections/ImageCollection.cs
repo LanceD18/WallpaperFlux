@@ -176,16 +176,15 @@ namespace WallpaperFlux.Core.Collections
 
         public bool ContainsImage(BaseImageModel image)
         {
-            if (image is ImageModel imageModel)
+            switch (image)
             {
-                //! remember that searching for keys is significantly faster so if possible search that way instead
-                //! remember that searching for keys is significantly faster so if possible search that way instead
-                return ContainsImage(imageModel.Path, imageModel.ImageType); 
-            }
+                case ImageModel imageModel:
+                    //! remember that searching for keys is significantly faster so if possible search that way instead
+                    //! remember that searching for keys is significantly faster so if possible search that way instead
+                    return ContainsImage(imageModel.Path, imageModel.ImageType);
 
-            if (image is ImageSetModel imageSetModel)
-            {
-                return ContainsImage(imageSetModel);
+                case ImageSetModel imageSet:
+                    return ContainsImage(imageSet);
             }
 
             return false;
@@ -198,7 +197,7 @@ namespace WallpaperFlux.Core.Collections
             return ContainsImage(image.Path, image.ImageType);
         }
 
-        public bool ContainsImage(ImageSetModel image) => ImageSets.Contains(image);
+        public bool ContainsImage(ImageSetModel imageSet) => ImageSets.Contains(imageSet);
 
         public ImageModel GetImage(string path)
         {
