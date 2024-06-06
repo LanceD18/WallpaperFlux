@@ -232,9 +232,6 @@
         <!-- ? Other Settings -->
         <StackPanel Grid.Row="5" Grid.Column="1">
 
-            <CheckBox Content="Enable Detection of Disabled Images" ToolTip="This allows disabled images to appear in the image selector" Margin="3"
-                      IsChecked="{Binding Settings.ThemeSettings.EnableDetectionOfInactiveImages}"/>
-
             <Button Width="175" Content="Rank Distribution Graph" Margin="3" Command="{Binding ToggleRankGraphCommand}" HorizontalAlignment="Left"/>
 
             <StackPanel Orientation="Horizontal" DataContext="{Binding Settings}">
@@ -256,6 +253,9 @@
                     </TextBox.Style>
                 </TextBox>
             </StackPanel>
+
+            <CheckBox Content="Enable Detection of Disabled Images" ToolTip="This allows disabled images to appear in the image selector" Margin="3"
+                      IsChecked="{Binding Settings.ThemeSettings.EnableDetectionOfInactiveImages}"/>
 
         </StackPanel>
 

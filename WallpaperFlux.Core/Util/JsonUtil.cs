@@ -421,7 +421,7 @@ namespace WallpaperFlux.Core.Util
             if (!FileUtil.Exists(path)) return null;
 
             FileInfo pathFile = new FileInfo(path);
-            string tempPathName = pathFile.DirectoryName + "\\" + Path.GetFileNameWithoutExtension(pathFile.Name) + backupNameExtension;
+            string tempPathName = pathFile.DirectoryName + "\\WF_Backup\\" + Path.GetFileNameWithoutExtension(pathFile.Name) + backupNameExtension;
             string tempPath = tempPathName + pathFile.Extension;
 
             // for just in case the user ends up with multiple accidents, we don't want to overwrite a singular backup with a damaged file
@@ -451,6 +451,16 @@ namespace WallpaperFlux.Core.Util
             tempPath = newTempPath;
 
             Debug.WriteLine("Temp File Location: " + tempPath);
+
+            FileInfo tempFileInfo = new FileInfo(tempPath);
+            if (!Directory.Exists(tempFileInfo.DirectoryName))
+            {
+                if (tempFileInfo.DirectoryName != null)
+                {
+                    Directory.CreateDirectory(tempFileInfo.DirectoryName);
+                }
+            }
+
             File.Copy(path, tempPath, true);
 
             return tempPath;

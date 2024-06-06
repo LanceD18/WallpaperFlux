@@ -102,8 +102,6 @@ namespace WallpaperFlux.Core.Controllers
                 ImageType[] imageTypeIndexes = { ImageType.Static, ImageType.GIF, ImageType.Video };
                 double[] imageTypePercentages = { staticChance, gifChance, videoChance };
 
-                //xMessageBoxUtil.ShowError("Huh: " + rand.NextPercentageIndex(imageTypePercentages, imageTypePercentages.Sum()));
-
                 imageTypeToSearchFor = rand.NextInWeightedArray(imageTypeIndexes, imageTypePercentages);
 
                 if (ThemeUtil.Theme.RankController.IsAllImagesOfTypeUnranked(imageTypeToSearchFor))

@@ -191,9 +191,9 @@ namespace WallpaperFlux.Core.Models
             Path = _hashPath = path;
 
             ImageType = IsStatic // ideally this won't be changing later
-                ? ImageType.Static 
+                ? ImageType.Static
                 : IsGif 
-                    ? ImageType.GIF 
+                    ? ImageType.GIF
                     : ImageType.Video;
 
             //!ParentFolder must be set before Enabled is set and after Path is set

@@ -172,15 +172,20 @@ namespace WallpaperFlux.Core.Models.Controls
         /// </summary>
         public void VerifyImages()
         {
+            List<BaseImageModel> imagesToRemove = new List<BaseImageModel>();
             for (var i = 0; i < Items.Count; i++)
             {
                 BaseImageModel image = Items[i];
             
                 if (!ThemeUtil.Theme.Images.ContainsImage(image))
                 {
-                    Items.RemoveAt(i);
-                    i--;
+                    imagesToRemove.Add(image);
                 }
+            }
+
+            if (imagesToRemove.Count > 0) //? only call this when the count is > 0, otherwise the tab will redraw each time this is called
+            {
+                Items.RemoveItems(imagesToRemove.ToArray());
             }
         }
     }

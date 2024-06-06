@@ -201,8 +201,8 @@ namespace WallpaperFlux.Core.Models
                 RaisePropertyChanged(() => FractionIntervals);
             }
         }
-        
-        public bool WeightedIntervals { get; set; }
+
+        public bool WeightedIntervals { get; set; } = true;
 
         #endregion
 
