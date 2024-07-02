@@ -242,7 +242,14 @@ namespace WallpaperFlux.WPF
                     AnimatedSetIndex = 0;
                     ImageModel[] relatedImages = imageSet.GetRelatedImages();
 
-                    SetWallpaper(relatedImages[AnimatedSetIndex], true); //? starting on the first index
+                    if (AnimatedSetIndex < relatedImages.Length)
+                    {
+                        SetWallpaper(relatedImages[AnimatedSetIndex], true); //? starting on the first index
+                    }
+                    else
+                    {
+                        Debug.WriteLine("Error: Invalid Animation Index Selected");
+                    }
 
                     double intervalTime = 0;
                     int displayTimerMax = WallpaperFluxViewModel.Instance.DisplaySettings[DisplayIndex].DisplayTimerMax;
@@ -405,7 +412,7 @@ namespace WallpaperFlux.WPF
                 }
             }
 
-            if (ActiveImage is ImageModel { IsDependentOnAnimatedImageSet: true }) DisableSet();
+            if (ActiveImage is ImageModel { IsDependentOnAnimatedImageSet: true }) DisableSet(); // stops animated set timer
 
             //xvlcStopwatch.Reset(); // for situations where the next wallpaper is not a VLC wallpaper
             return false;

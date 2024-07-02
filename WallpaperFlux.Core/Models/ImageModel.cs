@@ -143,7 +143,7 @@ namespace WallpaperFlux.Core.Models
             }
         }
         
-        public bool IsMp4OrAvi //? used by WallpaperWindow.xaml.cs
+        public bool IsMp4OrAvi //? used by WallpaperWindow.xaml.cs 
         {
             get
             {
@@ -318,7 +318,7 @@ namespace WallpaperFlux.Core.Models
             //x{
                 Active = false; //! we need to set this to false AGAIN because base.IsEnabled() will set Active to TRUE if successful
             //x}
-
+                
             if (IsDependentOnImageSet && !ignoreSet) return false;
 
             if (ParentFolder == null)

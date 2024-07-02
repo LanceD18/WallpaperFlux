@@ -47,11 +47,14 @@ namespace WallpaperFlux.Core.Controllers
         }
 
         //! this method should only be called by the Setter of the ImageModel Rank property unless otherwise noted
-        public void ModifyRank(BaseImageModel image, int oldRank, ref int newRank, bool modifyingImageSet = false)
+        public void ModifyRank(BaseImageModel image, int oldRank, ref int newRank)
         {
             if (JsonUtil.IsLoadingData) return; //? this will be revisited for all images once loading is finished and all folders are re-validated
 
             // clamps the given rank to the rank-range for just in case something out-of-bounds is given
+            newRank = ClampValueToRankRange(newRank);
+
+            /*x this is redundant?
             if (!modifyingImageSet)
             {
                 newRank = ClampValueToRankRange(newRank);
@@ -65,6 +68,7 @@ namespace WallpaperFlux.Core.Controllers
                     newRank = testRank;
                 }
             }
+            */
 
             RankData[image.ImageType][oldRank].Remove(image);
             RankData[image.ImageType][newRank].Add(image);
@@ -345,7 +349,7 @@ namespace WallpaperFlux.Core.Controllers
 
         private void ValidateImageTypeExistence(BaseImageModel image)
         {
-            Debug.WriteLine("A recently adjusted rank is now empty");
+            Debug.WriteLine("A recently adjusted rank now has either 0 or 1 images");
             PercentileController.PotentialRegularRankUpdate = true; // ranks that do not have images should not be processed by the percentile controller, and vice versa for adding them back
 
             ImageUtil.PerformImageAction(image,

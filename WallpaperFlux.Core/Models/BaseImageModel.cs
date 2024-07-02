@@ -23,27 +23,7 @@ namespace WallpaperFlux.Core.Models
         {
             get
             {
-                if (this is ImageSetModel imageSet)
-                {
-                    int oldRank = _rank;
-
-                    if (imageSet.RankingFormat == ImageSetRankingFormat.Average) _rank = imageSet.AverageRank;
-
-                    if (imageSet.RankingFormat == ImageSetRankingFormat.Override) _rank = imageSet.OverrideRank;
-
-                    if (imageSet.RankingFormat == ImageSetRankingFormat.WeightedOverride) _rank = imageSet.WeightedRank;
-
-                    if (imageSet.RankingFormat == ImageSetRankingFormat.WeightedAverage) _rank = imageSet.WeightedAverage;
-
-                    //! safety precaution ; if a calculation sends _rank above max rank or below 0 we will get a stack overflow as the old rank will always be bound to the rank range
-                    _rank = MathE.Clamp(_rank, 0, ThemeUtil.RankController.GetMaxRank());
-
-                    if (oldRank != _rank)
-                    {
-                        ThemeUtil.Theme.RankController.ModifyRank(this, oldRank, ref _rank, true);
-                        WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.InspectedImageRankText);
-                    }
-                }
+                VerifySetRank();
 
                 return _rank;
             }
@@ -217,6 +197,31 @@ namespace WallpaperFlux.Core.Models
             });
         }
 
+        public void VerifySetRank()
+        {
+            if (this is ImageSetModel imageSet)
+            {
+                int oldRank = _rank;
+
+                if (imageSet.RankingFormat == ImageSetRankingFormat.Average) _rank = imageSet.AverageRank;
+
+                if (imageSet.RankingFormat == ImageSetRankingFormat.Override) _rank = imageSet.OverrideRank;
+
+                if (imageSet.RankingFormat == ImageSetRankingFormat.WeightedOverride) _rank = imageSet.WeightedRank;
+
+                if (imageSet.RankingFormat == ImageSetRankingFormat.WeightedAverage) _rank = imageSet.WeightedAverage;
+
+                //! safety precaution ; if a calculation sends _rank above max rank or below 0 we will get a stack overflow as the old rank will always be bound to the rank range
+                _rank = MathE.Clamp(_rank, 0, ThemeUtil.RankController.GetMaxRank());
+
+                if (oldRank != _rank)
+                {
+                    ThemeUtil.Theme.RankController.ModifyRank(this, oldRank, ref _rank);
+                    WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.InspectedImageRankText);
+                }
+            }
+        }
+
         public virtual bool IsEnabled(bool ignoreSet = false)
         {
             Active = false; // recheck this every time IsEnabled is called
@@ -234,6 +239,15 @@ namespace WallpaperFlux.Core.Models
         public void UpdateEnabledState()
         {
             if (JsonUtil.IsLoadingData) return;
+
+            if (this is ImageModel iModel )
+            {
+                if (iModel.IsInImageSet) //? ensures that the set is added to the randomizer if enabled
+                {
+                    iModel.ParentImageSet.VerifySetRank();
+                    iModel.ParentImageSet.UpdateEnabledState(); //! VerifySetRank may or may not check ModifyRank, so we will need to call this regardless
+                }
+            }
 
             //? Modifying the image's rank will both check if the image is enabled and add/remove the image as needed
             // ModifyRank will always have to check if the image is enabled or not and since this also determines if we remove/add the image we will perform the enabled state
