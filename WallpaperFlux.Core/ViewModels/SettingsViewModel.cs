@@ -83,13 +83,18 @@ namespace WallpaperFlux.Core.ViewModels
         {
             get
             {
-                int diff = ThemeUtil.Theme.Images.GetAllImages().Length - (ThemeUtil.RankController.GetCountOfAllRankedImages() + ThemeUtil.RankController.GetCountOfRank(0));
-                //xDebug.WriteLine("Diff: All: " + ThemeUtil.Theme.Images.GetAllImages().Length + " | 99: " + ThemeUtil.RankController.GetCountOfAllRankedImages() + " | 0: " + ThemeUtil.RankController.GetCountOfRank(0));
+                int enabledImageCount = ThemeUtil.RankController.GetCountOfAllRankedImages() + ThemeUtil.RankController.GetCountOfRank(0);
+                int totalImageCount = ThemeUtil.Theme.Images.GetAllImages().Length + ThemeUtil.Theme.Images.GetAllImageSets().Length;
+                int disabledImageCount = totalImageCount - enabledImageCount;
+                //xDebug.WriteLine("All Images: " + totalImageCount + " | 99: " + ThemeUtil.RankController.GetCountOfAllRankedImages() + " | 0: " + ThemeUtil.RankController.GetCountOfRank(0));
 
-                if (diff > 0)
+                if (disabledImageCount > 0)
                 {
-                    //? enabled images in sets count as disabled but for the sake of these number they'll be counted as enabled
-                    return "Disabled: " + (diff - ThemeUtil.Theme.Images.GetEnabledImagesInSetsCount());
+                    //xDebug.WriteLine("Disabled Images: " + disabledImageCount);
+                    //xDebug.WriteLine("B: " + (disabledImageCount - ThemeUtil.Theme.Images.GetEnabledImagesInSetsCount()));
+                    //x//? enabled images in sets count as disabled but for the sake of this number they'll be counted as enabled
+                    //xreturn "Disabled: " + (diff - ThemeUtil.Theme.Images.GetEnabledImagesInSetsCount());
+                    return "Disabled: " + (disabledImageCount - ThemeUtil.Theme.Images.GetEnabledImagesInSetsCount(true)) + " (" +  disabledImageCount + ")";
                 }
 
                 return "";
@@ -100,7 +105,7 @@ namespace WallpaperFlux.Core.ViewModels
         {
             get
             {
-                int count = ThemeUtil.Theme.Images.GetEnabledImagesInSetsCount();
+                int count = ThemeUtil.Theme.Images.GetEnabledImagesInSetsCount(false);
 
                 if (count > 0)
                 {

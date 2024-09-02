@@ -327,6 +327,7 @@
                                         <TextBlock.Style>
                                             <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintHeader}"/>
                                         </TextBlock.Style>
+                                        <TextBlock.ToolTip>Disabled Images (Disabled Images + Images Dependent On Sets)</TextBlock.ToolTip>
                                     </TextBlock>
                                 </StackPanel>
 

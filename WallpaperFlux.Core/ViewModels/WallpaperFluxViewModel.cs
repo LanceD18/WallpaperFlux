@@ -1333,7 +1333,7 @@ namespace WallpaperFlux.Core.ViewModels
         /// Checks for potentially deleted images and removes them accordingly
         /// </summary>
         /// <param name="tab">the Image Selector Tab to be scanned</param>
-        public void VerifyImageSelectorTab(ImageSelectorTabModel tab) => tab.VerifyImages();
+        //xpublic void VerifyImageSelectorTab(ImageSelectorTabModel tab) => tab.VerifyImages();
 
         #region Inspector
 

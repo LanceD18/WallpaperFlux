@@ -253,12 +253,14 @@ namespace WallpaperFlux.Core.Collections
             return images.ToArray();
         }
 
-        public int GetEnabledImagesInSetsCount()
+        public int GetEnabledImagesInSetsCount(bool ignoreIndependence)
         {
             int count = 0;
 
             foreach (ImageSetModel set in GetAllImageSets())
             {
+                if (set.RetainImageIndependence && ignoreIndependence) continue; //? prevents counting images that retain independence from sets
+
                 count += set.GetRelatedImages(true).Length;
 
                 /*x

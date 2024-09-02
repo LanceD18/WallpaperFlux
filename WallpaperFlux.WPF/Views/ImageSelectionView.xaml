@@ -108,6 +108,9 @@
             <Button Content="Select Disabled Images" Margin="5" HorizontalAlignment="Center" Command="{Binding SelectDisabledImagesCommand}" 
                     Visibility="{Binding ShowDisabledSelector, Converter={StaticResource BooleanToVisibilityConverter}}"
                     adonisExtensions:LayerExtension.Layer="3" BorderBrush="DimGray" ToolTip="Requires [Enable Detection of Disabled Images] to be enabled"/>
+
+            <CheckBox Content="Include Sets?" IsChecked="{Binding IncludeDependentImages}" Visibility="{Binding ShowDisabledSelector, Converter={StaticResource BooleanToVisibilityConverter}}"
+                      adonisExtensions:LayerExtension.Layer="3" ToolTip="Classifies images dependent on sets as disabled when selecting disabled images"/>
         </StackPanel>
 
     </Grid>

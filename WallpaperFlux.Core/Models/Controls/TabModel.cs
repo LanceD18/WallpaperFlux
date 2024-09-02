@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using MvvmCross.ViewModels;
 using WallpaperFlux.Core.Util;
 
@@ -16,6 +17,8 @@ namespace WallpaperFlux.Core.Models.Controls
             get => _items;
             set => SetProperty(ref _items, value);
         }
+
+        //xprotected readonly AutoResetEvent ResetEvent = new AutoResetEvent(false);
 
         #region XAML
 

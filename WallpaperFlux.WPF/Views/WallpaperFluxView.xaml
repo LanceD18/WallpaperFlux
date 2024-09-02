@@ -582,6 +582,9 @@
             </MenuItem>
 
             <MenuItem Header="Pagination Test" Click="MenuItem_OpenPaginationTest_Click"/>
+            <!--
+            <MenuItem Header="Bust it open" Click="MenuItem_OnClick_BustItOpen"/>
+            -->
         </Menu>
 
         <Separator Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="10"/>

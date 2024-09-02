@@ -58,15 +58,12 @@ namespace WallpaperFlux.WPF.Views
     [MvxViewFor(typeof(WallpaperFluxViewModel))]
     public partial class WallpaperFluxView : MvxWpfView
     {
-
-
         private List<Thread> _activeThumbnailThreads = new List<Thread>(); //? kills thumbnail threads on page load, intended to stop videos from clogging the task runners
         //! don't actually outright kill the thread, find a more graceful solutions:
         //! https://stackoverflow.com/questions/14817427/how-to-stop-threads
         //! https://josipmisko.com/posts/c-sharp-stop-thread
         //! https://stackoverflow.com/questions/7834351/gracefully-shutdown-a-thread
         //! https://stackoverflow.com/questions/17095696/how-do-i-end-a-thread-gracefully-at-the-point-when-the-calling-process-exits-or
-
 
         public WallpaperFluxView()
         {
@@ -610,11 +607,13 @@ namespace WallpaperFlux.WPF.Views
 
         private void ImageSelectorTabControl_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            /*x
             Debug.WriteLine(sender.GetType());
             if (sender is TabControl { SelectedItem: ImageSelectorTabModel tab })
             {
                 WallpaperFluxViewModel.Instance.VerifyImageSelectorTab(tab);
             }
+            */
 
             UpdateImageSelectorTabWrapperWidth();
 
@@ -659,6 +658,11 @@ namespace WallpaperFlux.WPF.Views
         {
             // Set the Handled property to true to prevent the context menu from closing
             e.Handled = true;
+        }
+
+        private void MenuItem_OnClick_BustItOpen(object sender, RoutedEventArgs e)
+        {
+            throw new Exception("Zamb");
         }
     }
 }

@@ -339,7 +339,7 @@ namespace WallpaperFlux.Core.Models
 
             if (!Tags.AreTagsEnabled()) return false;
 
-            if (!ignoreSet) // don't change the active state if we are ignoring the set
+            if (!ignoreSet || !IsDependentOnImageSet) // don't change the active state if we are ignoring the set ; but do change the active state if the given image is not dependent
             {
                 Active = true; // if we reach this point, then the image is in fact Active
             }

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using MvvmCross.ViewModels;
 using WallpaperFlux.Core.Util;
 using WallpaperFlux.Core.ViewModels;
@@ -46,13 +48,31 @@ namespace WallpaperFlux.Core.Models.Controls
 
         public HashSet<ImageSetModel> ImageSetItems = new HashSet<ImageSetModel>();
 
+        private Thread VerifyImageThread;
+
         public ImageSelectorTabModel(int index) : base(index)
         {
-            Items.CollectionChanged += ItemsOnCollectionChanged_SplitImagesAndSets;
+            Items.CollectionChanged += ItemsOnCollectionChanged;
         }
 
-        // automates addition and removal of images and image sets so that we can have split collections (useful for more efficient searching)
-        private void ItemsOnCollectionChanged_SplitImagesAndSets(object sender, NotifyCollectionChangedEventArgs e)
+        private void ItemsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            // automates addition and removal of images and image sets so that we can have split collections (useful for more efficient searching)
+            SplitImagesAndSets(e);
+
+            if (VerifyImageThread == null || (VerifyImageThread != null && !VerifyImageThread.IsAlive))
+            {
+                VerifyImageThread = new Thread(() =>
+                {
+                    Thread.Sleep(1000);
+                    VerifyImages();
+                });
+
+                VerifyImageThread.Start();
+            }
+        }
+
+        private void SplitImagesAndSets(NotifyCollectionChangedEventArgs e)
         {
             if (e.OldItems != null)
             {
@@ -170,7 +190,7 @@ namespace WallpaperFlux.Core.Models.Controls
         /// <summary>
         /// Checks for potentially deleted images and removes them accordingly
         /// </summary>
-        public void VerifyImages()
+        private void VerifyImages()
         {
             List<BaseImageModel> imagesToRemove = new List<BaseImageModel>();
             for (var i = 0; i < Items.Count; i++)

@@ -306,7 +306,18 @@ namespace WallpaperFlux.Core.Models
 
         public ImageModel GetRelatedImage(int index, bool checkForEnabled = true)
         {
-            return GetRelatedImages(checkForEnabled)[index];
+            ImageModel[] relatedImages = GetRelatedImages(checkForEnabled);
+
+            if (index < relatedImages.Length)
+            {
+                return GetRelatedImages(checkForEnabled)[index];
+            }
+            else
+            {
+                return null; // invalid index
+            }
+
+            
         }
 
         //! Kept as a reminder that this is not supported at the moment

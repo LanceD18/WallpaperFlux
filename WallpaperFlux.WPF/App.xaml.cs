@@ -13,6 +13,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using LanceTools.IO;
 using LanceTools.Util;
+using LanceTools.WPF.Adonis.Util;
 using Microsoft.VisualBasic.FileIO;
 using MvvmCross;
 using MvvmCross.Core;
@@ -36,6 +37,10 @@ namespace WallpaperFlux.WPF
             LibVLCSharp.Shared.Core.Initialize();
 
             base.OnStartup(e);
+
+#if (!DEBUG)
+            this.Dispatcher.UnhandledException += OnDispatcherUnhandledException;
+#endif
         }
 
         // called before OnStartup
@@ -56,6 +61,12 @@ namespace WallpaperFlux.WPF
             MpvUtil.MpvPath = wallpaperFluxApplicationDataFolder + "\\mpv\\mpv-1.dll";
 
             MediaElement.FFmpegMessageLogged += (s, ev) => Debug.WriteLine(ev.Message);
+        }
+
+        void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+        {
+            // TODO Attempt to make a backup/autosave
+            MessageBoxUtil.ShowError("Unhandled exception occurred: \n" + e.Exception.Message);
         }
 
         #region Generic Control

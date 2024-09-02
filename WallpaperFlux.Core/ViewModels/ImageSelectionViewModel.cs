@@ -71,6 +71,8 @@ namespace WallpaperFlux.Core.ViewModels
 
         public bool RadioRankRange { get; set; }
 
+        public bool IncludeDependentImages { get; set; }
+
         #endregion
 
         #region Commands
@@ -254,8 +256,19 @@ namespace WallpaperFlux.Core.ViewModels
 
         private void SelectDisabledImages()
         {
-            //? if we were to include images in image sets they would all be counted as "disabled", cluttering the selector
-            BaseImageModel[] disabledImages = ThemeUtil.Theme.Images.GetAllImages().Where(f => !f.Active && !f.IsInImageSet).ToArray();
+            //x//? if we were to include images in image sets they would all be counted as "disabled", cluttering the selector
+            //xBaseImageModel[] disabledImages = ThemeUtil.Theme.Images.GetAllImages().Where(f => !f.Active && !f.IsInImageSet).ToArray();
+            BaseImageModel[] disabledImages;
+            ImageModel[] allImages = ThemeUtil.Theme.Images.GetAllImages();
+
+            if (IncludeDependentImages)
+            {
+                disabledImages = allImages.Where(f => !f.Active).ToArray();
+            }
+            else
+            {
+                disabledImages = allImages.Where(f => !f.Active && !f.IsDependentOnImageSet).ToArray();
+            }
 
             RebuildImageSelectorWithOptions(FilterImages(disabledImages));
         }

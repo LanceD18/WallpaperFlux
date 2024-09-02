@@ -123,7 +123,7 @@ namespace WallpaperFlux.Winform
 
         // TODO Create a queue that stores pictureBoxes/axWindowMediaPlayers for each wallpaper. This will be used to allow transitions & prevent flickering from
         // TODO style readjustment when changing wallpapers by *locking* the previous wallpaper in place
-        public void SetWallpaper(ImageModel image)
+        public async void SetWallpaper(ImageModel image)
         {
             if (IsDisposed) return; // for uses of this.<>
 
@@ -132,13 +132,20 @@ namespace WallpaperFlux.Winform
 
             if (!IsHandleCreated) return;
 
+            bool setWallpaperResult = false;
+
             if (this.InvokeRequired)
             {
-                this.BeginInvoke((MethodInvoker)delegate { SetWallpaperInternal(image); });
+                this.BeginInvoke((MethodInvoker)delegate
+                {
+                    SetWallpaperInternal(image);
+                    setWallpaperResult = true;
+                });
             }
             else
             {
-                SetWallpaperInternal(image);
+                await Task.Run(() => SetWallpaperInternal(image)).ConfigureAwait(false);
+                setWallpaperResult = true;
             }
 
             async void SetWallpaperInternal(ImageModel image)
@@ -154,7 +161,7 @@ namespace WallpaperFlux.Winform
                 else
                 {
                     Debug.WriteLine("Null Wallpaper Path found when calling OnWallpaperChange");
-                    return;
+                    return; //xfalse;
                 }
 
                 if (WallpaperUtil.IsSupportedVideoType_GivenExtension(wallpaperInfo.Extension))
@@ -193,7 +200,10 @@ namespace WallpaperFlux.Winform
                 */
 
                 ActiveImage = image; //? this change implies that the wallpaper was SUCCESSFULLY changed | Errors, video loop control, etc. can stop this
+                //xreturn true;
             }
+
+            //xreturn setWallpaperResult;
         }
 
         public void SetWallpaperStyle(WallpaperStyle wallpaperStyle)
