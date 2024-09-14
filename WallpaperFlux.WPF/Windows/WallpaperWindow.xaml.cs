@@ -71,7 +71,7 @@ namespace WallpaperFlux.WPF
 
         public DispatcherTimer AnimatedImageSetTimer = new DispatcherTimer();
 
-        public Stopwatch AnimatedWallpaperStopwatch = new Stopwatch();
+        public Stopwatch AnimatedImageSetStopwatch = new Stopwatch();
 
         public double AnimatedImageUnweightedInterval;
 
@@ -183,7 +183,6 @@ namespace WallpaperFlux.WPF
                         Task.Run(() =>
                         {
                             SetVideoOrGif(imageModel, wallpaperInfo, imageIsInAnimatedSet);
-                            AnimatedWallpaperStopwatch.Restart();
                         }).ConfigureAwait(false);
                     }
                     else //? ---- static ----
@@ -191,7 +190,6 @@ namespace WallpaperFlux.WPF
                         Task.Run(() =>
                         {
                             SetStatic(imageModel.Path, imageIsInAnimatedSet);
-                            AnimatedWallpaperStopwatch.Stop();
                         }).ConfigureAwait(false);
                     }
 
@@ -203,12 +201,13 @@ namespace WallpaperFlux.WPF
                     break;
             }
 
-            if (animatedWallpaperSet)
+            if (!animatedWallpaperSet)
             {
+                AnimatedImageSetStopwatch.Stop();
             }
             else
             {
-                AnimatedWallpaperStopwatch.Stop();
+                AnimatedImageSetStopwatch.Restart();
             }
 
             if (!imageIsInAnimatedSet) // we don't want to override the set with its animated image for the 'ActiveImage'
@@ -356,6 +355,10 @@ namespace WallpaperFlux.WPF
             }
             else //? Use the MediaElement as a last resort | seems to handle .wmv just fine
             {
+                // ! note the usage of .wmv here
+                // ! note the usage of .wmv here
+                // ! note the usage of .wmv here
+
                 Dispatcher.Invoke(() =>
                 {
                     WallpaperMediaElement.Close();
@@ -449,18 +452,39 @@ namespace WallpaperFlux.WPF
                     //xif (WallpaperMediaElementFFME.IsLoaded) await WallpaperMediaElementFFME.Play();
                     //! a test countermeasure against failed loads never looping
 
-                    /*x
                     Debug.WriteLine("Max Video Time: " + maxTime);
-                    Debug.WriteLine("Media: " + WallpaperMediaElement.Position.Seconds + 
-                                    " | FFME: " + WallpaperMediaElementFFME.Position.Seconds + 
-                                    " | MPV: " + ConnectedForm.Player.Position.Seconds );
-                    if (WallpaperMediaElement.Position.Seconds <= maxTime ||
-                        WallpaperMediaElementFFME.Position.Seconds <= maxTime ||
-                        ConnectedForm.Player.Position.Seconds <= maxTime)
+
+                    bool isUnderMaxTime = false;
+                    if (maxTime > 0)
                     {
-                        */
-                    Debug.WriteLine("Max Video Time: " + maxTime + " | " + "Elapsed Time: " + AnimatedWallpaperStopwatch.Elapsed.Seconds);
-                    if (AnimatedWallpaperStopwatch.Elapsed.Seconds <= maxTime && maxTime != 0) {
+                        if (ConnectedForm.Player != null)
+                        {
+                            Debug.WriteLine("MPV: " + ConnectedForm.Player.Position.Seconds);
+                            isUnderMaxTime = ConnectedForm.Player.Position.Seconds <= maxTime;
+                        }
+                        else if (AnimatedImageSetStopwatch.IsRunning)
+                        {
+                            Debug.WriteLine("Stopwatch: " + AnimatedImageSetStopwatch.Elapsed.Seconds);
+                            isUnderMaxTime = AnimatedImageSetStopwatch.Elapsed.Seconds <= maxTime;
+                        }
+                        else if (WallpaperMediaElement.HasVideo)
+                        {
+                            Debug.WriteLine("Media: " + WallpaperMediaElement.Position.Seconds);
+                            isUnderMaxTime = WallpaperMediaElement.Position.Seconds <= maxTime;
+                        }
+                        else if (WallpaperMediaElementFFME.HasVideo)
+                        {
+                            Debug.WriteLine("FFME: " + WallpaperMediaElementFFME.Position.Seconds);
+                            isUnderMaxTime = WallpaperMediaElementFFME.Position.Seconds <= maxTime;
+                        }
+                    }
+                    else // if the maxTime is 0, ignore
+                    {
+                        Debug.WriteLine("Max Time ignored");
+                        isUnderMaxTime = true;
+                    }
+
+                    if (isUnderMaxTime) {
                         // keep the current wallpaper
                         ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers[WallpaperWindowUtil.GetWallpaperIndex(this)] = ActiveImage;
                         return true;

@@ -193,7 +193,7 @@ namespace WallpaperFlux.Core.ViewModels
                     return "Select a tag to add or remove from the currently highlighted image(s)";
 
                 if (TagLinkerToggle)
-                    return "Editing linked tags of the tag: " + TagLinkingSource?.Name + " (Select an non-child tag to link or unlink as a parent to the active tag)";
+                    return "Editing linked tags of the tag: " + TagLinkingSource?.Name + " (Select a non-child tag to link/unlink as a parent to the active tag)";
 
                 return "";
             }
