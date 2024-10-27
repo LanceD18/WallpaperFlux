@@ -659,10 +659,5 @@ namespace WallpaperFlux.WPF.Views
             // Set the Handled property to true to prevent the context menu from closing
             e.Handled = true;
         }
-
-        private void MenuItem_OnClick_BustItOpen(object sender, RoutedEventArgs e)
-        {
-            throw new Exception("Zamb");
-        }
     }
 }

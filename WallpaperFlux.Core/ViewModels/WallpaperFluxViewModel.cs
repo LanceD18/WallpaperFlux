@@ -985,7 +985,7 @@ namespace WallpaperFlux.Core.ViewModels
         }
 
         //? ----- Rebuild Image Selector (ImageModel) -----
-        public void RebuildImageSelector(BaseImageModel[] selectedImages, bool randomize = false, bool reverseOrder = false, bool dateTime = false)
+        public void RebuildImageSelector(BaseImageModel[] selectedImages, bool randomize = false, bool reverseOrder = false, bool dateTime = false, bool imageSetRestriction = false)
         {
             //-----Checking Validation Conditions-----
             if (selectedImages == null || selectedImages.Length == 0)
@@ -994,13 +994,18 @@ namespace WallpaperFlux.Core.ViewModels
                 return;
             }
 
+            if (imageSetRestriction)
+            {
+                selectedImages = selectedImages.Where(f => f.IsImageSet).ToArray();
+            }
+
             //----- Apply Optional Modification Conditions -----
             //? should come after checking conditions, no need to process this if something is wrong
             if (randomize)
             {
                 selectedImages = selectedImages.Randomize().ToArray();
             }
-            else//? it is redundant to randomize and reverse the order at the same time as the randomization will end up being the only factor
+            else //? it is redundant to randomize and reverse the order at the same time as the randomization will end up being the only factor
             {
                 // TODO Make the redundancy apparent in the interface by disabling everything else if random is picked
                 if (dateTime)

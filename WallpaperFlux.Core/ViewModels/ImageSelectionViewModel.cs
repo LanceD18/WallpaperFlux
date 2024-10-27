@@ -51,6 +51,8 @@ namespace WallpaperFlux.Core.ViewModels
 
         public bool DateTime { get; set; }
 
+        public bool ImageSetRestriction { get; set; }
+
         public bool TagboardFilter { get; set; }
 
         public bool RadioAllRanks { get; set; } = true;
@@ -91,7 +93,22 @@ namespace WallpaperFlux.Core.ViewModels
 
         public ImageSelectionViewModel()
         {
-            SelectImagesCommand = new MvxCommand( () => RebuildImageSelectorWithOptions(FilterImages(ThemeUtil.Theme.Images.GetAllImages())));
+            SelectImagesCommand = new MvxCommand( () =>
+            {
+                BaseImageModel[] images;
+
+                // TODO With this set up, we will check for image sets twice (second time in RebuildImageSelector()) ; find a better way to do this
+                if (!ImageSetRestriction)
+                {
+                    images = ThemeUtil.Theme.Images.GetAllImages();
+                }
+                else
+                {
+                    images = ThemeUtil.Theme.Images.GetAllImageSets();
+                }
+
+                RebuildImageSelectorWithOptions(FilterImages(images));
+            });
             SelectImagesOfTypeCommand = new MvxCommand(PromptImageType);
             SelectImagesInFolderCommand = new MvxCommand(PromptFolder);
             SelectActiveWallpapersCommand = new MvxCommand(SelectActiveWallpapers);
@@ -100,7 +117,7 @@ namespace WallpaperFlux.Core.ViewModels
 
         public void RebuildImageSelectorWithOptions(BaseImageModel[] images, bool closeWindow = true)
         {
-            WallpaperFluxViewModel.Instance.RebuildImageSelector(images, Randomize, Reverse, DateTime);
+            WallpaperFluxViewModel.Instance.RebuildImageSelector(images, Randomize, Reverse, DateTime, ImageSetRestriction);
 
             if (closeWindow)
             {

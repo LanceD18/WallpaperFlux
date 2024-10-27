@@ -518,8 +518,6 @@ namespace WallpaperFlux.WPF
                 WallpaperMediaElement.IsEnabled = false;
                 WallpaperMediaElement.Visibility = Visibility.Hidden;
             });
-
-
         }
 
         private void DisableFFME()

@@ -16,6 +16,11 @@ using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Util;
 using WallpaperFlux.Core.ViewModels;
 
+// TODO Make a button that lets you change the rank of a range of ranks/all images additively (i.e., pushing 50-100 down to 30-80)
+// TODO - Once done, go ahead and push the rank of all images down by 20
+// TODO - This will allow you to reduce image ranks while preserving their current range differences
+// TODO - Additionally, add a button that allows you to select sets since sets with rank overrides may be impacted weirdly by this
+
 namespace WallpaperFlux.Core.Controllers
 {
     public class WallpaperRandomizationController

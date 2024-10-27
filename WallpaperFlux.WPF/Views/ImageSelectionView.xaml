@@ -27,6 +27,7 @@
             <CheckBox Content="Randomize" HorizontalAlignment="Center" Margin="5" adonisExtensions:LayerExtension.Layer="1" IsChecked="{Binding Randomize}"/>
             <CheckBox Content="Reverse" HorizontalAlignment="Center" Margin="5" adonisExtensions:LayerExtension.Layer="1" IsChecked="{Binding Reverse}"/>
             <CheckBox Content="Date" HorizontalAlignment="Center" Margin="5" adonisExtensions:LayerExtension.Layer="1" IsChecked="{Binding DateTime}"/>
+            <CheckBox Content="Sets Only" HorizontalAlignment="Center" Margin="5" adonisExtensions:LayerExtension.Layer="1" IsChecked="{Binding ImageSetRestriction}"/>
         </StackPanel>
 
         <GroupBox Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center" Margin="5">
