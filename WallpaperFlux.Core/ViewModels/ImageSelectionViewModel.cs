@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using AdonisUI.Controls;
@@ -81,8 +82,6 @@ namespace WallpaperFlux.Core.ViewModels
 
         public IMvxCommand SelectImagesCommand { get; set; }
         
-        public IMvxCommand SelectImagesOfTypeCommand { get; set; }
-        
         public IMvxCommand SelectImagesInFolderCommand { get; set; }
         
         public IMvxCommand SelectActiveWallpapersCommand { get; set; }
@@ -109,7 +108,6 @@ namespace WallpaperFlux.Core.ViewModels
 
                 RebuildImageSelectorWithOptions(FilterImages(images));
             });
-            SelectImagesOfTypeCommand = new MvxCommand(PromptImageType);
             SelectImagesInFolderCommand = new MvxCommand(PromptFolder);
             SelectActiveWallpapersCommand = new MvxCommand(SelectActiveWallpapers);
             SelectDisabledImagesCommand = new MvxCommand(SelectDisabledImages);
@@ -133,8 +131,6 @@ namespace WallpaperFlux.Core.ViewModels
 
             BaseImageModel[] filteredImagesArr;
 
-            Func<BaseImageModel, bool> rankFilter = null;
-
             if (RadioAllRanks && RadioAllTypes) // if we're specifying a rank then we're be 
             {
                 // no changes needed
@@ -144,32 +140,31 @@ namespace WallpaperFlux.Core.ViewModels
             {
                 if (RadioAllRanks && !RadioAllTypes)
                 {
-                    rankFilter = image => true;
+                    // do nothing ; keep default
                 }
                 else if (RadioUnranked) // filter down to all unranked images
                 {
-                    rankFilter = image => image.Rank == 0;
+                    images = ThemeUtil.RankController.GetAllUnrankedImages();
                 }
                 else if (RadioRanked) // filter down to all ranked images
                 {
-                    rankFilter = image => image.Rank != 0;
+                    images = ThemeUtil.RankController.GetAllRankedImages();
                 }
                 else if (RadioSpecificRank)
                 {
-                    rankFilter = image => image.Rank == SpecifiedRank;
+                    images = ThemeUtil.RankController.GetImagesOfRank(SpecifiedRank);
                 }
                 else if (RadioRankRange)
                 {
-                    rankFilter = image => image.Rank >= MinSpecifiedRank && image.Rank <= MaxSpecifiedRank;
+                    images = ThemeUtil.RankController.GetImagesOfRankRange(MinSpecifiedRank, MaxSpecifiedRank);
                 }
 
-                if (rankFilter == null) return null;
+                if (images == null) return null;
 
                 foreach (BaseImageModel image in images)
                 {
                     // check the set for filters instead if one exists
-
-                    if (rankFilter(image) && VerifyImageType(image))
+                    if (VerifyImageType(image))
                     {
                         switch (image)
                         {
@@ -202,9 +197,7 @@ namespace WallpaperFlux.Core.ViewModels
             }
 
             if (TagboardFilter)
-            {
                 return TagViewModel.Instance.SearchValidImagesWithTagBoard(filteredImagesArr);
-            }
 
             return filteredImagesArr;
         }
@@ -225,40 +218,6 @@ namespace WallpaperFlux.Core.ViewModels
             return true;
         }
 
-        private const string STATIC_BUTTON_ID = "static";
-        private const string GIF_BUTTON_ID = "gif";
-        private const string VIDEO_BUTTON_ID = "video";
-        private void PromptImageType()
-        {
-            // ----- Create Button -----
-            MessageBoxModel messageBox = new MessageBoxModel
-            {
-                Text = "Choose an image type",
-                Caption = "Choose an option",
-                Icon = MessageBoxImage.Question,
-                Buttons = new[] { MessageBoxButtons.Custom("Static", STATIC_BUTTON_ID),
-                    MessageBoxButtons.Custom("GIF", GIF_BUTTON_ID),
-                    MessageBoxButtons.Custom("Video", VIDEO_BUTTON_ID)
-                }
-            };
-
-            MessageBox.Show(messageBox);
-
-            // ----- Evaluate Button Result -----
-            if ((string)messageBox.ButtonPressed.Id == STATIC_BUTTON_ID)
-            {
-                RebuildImageSelectorWithOptions(FilterImages(ThemeUtil.Theme.RankController.GetAllImagesOfType(ImageType.Static)));
-            }
-            else if ((string)messageBox.ButtonPressed.Id == GIF_BUTTON_ID)
-            {
-                RebuildImageSelectorWithOptions(FilterImages(ThemeUtil.Theme.RankController.GetAllImagesOfType(ImageType.GIF)));
-            }
-            else if ((string)messageBox.ButtonPressed.Id == VIDEO_BUTTON_ID)
-            {
-                RebuildImageSelectorWithOptions(FilterImages(ThemeUtil.Theme.RankController.GetAllImagesOfType(ImageType.Video)));
-            }
-        }
-
         private void PromptFolder()
         {
             RebuildImageSelectorWithOptions(FilterImages(FolderUtil.PromptValidFolderModel()?.GetImageModels()));
@@ -267,7 +226,6 @@ namespace WallpaperFlux.Core.ViewModels
         private void SelectActiveWallpapers()
         {
             BaseImageModel[] activeImages = ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers.ToArray();
-
             RebuildImageSelectorWithOptions(activeImages);
         }
 
@@ -278,14 +236,9 @@ namespace WallpaperFlux.Core.ViewModels
             BaseImageModel[] disabledImages;
             ImageModel[] allImages = ThemeUtil.Theme.Images.GetAllImages();
 
-            if (IncludeDependentImages)
-            {
-                disabledImages = allImages.Where(f => !f.Active).ToArray();
-            }
-            else
-            {
-                disabledImages = allImages.Where(f => !f.Active && !f.IsDependentOnImageSet).ToArray();
-            }
+            disabledImages = IncludeDependentImages ? 
+                allImages.Where(f => !f.Active).ToArray() : 
+                allImages.Where(f => !f.Active && !f.IsDependentOnImageSet).ToArray();
 
             RebuildImageSelectorWithOptions(FilterImages(disabledImages));
         }

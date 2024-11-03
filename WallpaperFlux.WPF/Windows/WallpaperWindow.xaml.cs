@@ -27,7 +27,6 @@ using WpfScreenHelper;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using LanceTools.WPF.Adonis.Util;
-using LibVLCSharp.Shared;
 using MvvmCross.Platforms.Wpf.Presenters.Attributes;
 using MvvmCross.ViewModels;
 using Unosquare.FFME;
@@ -96,7 +95,7 @@ namespace WallpaperFlux.WPF
             Top = Display.Bounds.Y + DisplayUtil.MinDisplayY;
 
             //? Default, should match what's stated on the WPF
-            WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = WallpaperVlcViewBox.Stretch = Stretch.Fill; // this is actually stretch
+            WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = Stretch.Fill; // this is actually stretch
 
             // This line makes the form a child of the WorkerW window, thus putting it behind the desktop icons and out of reach 
             // of any user input. The form will just be rendered, no keyboard or mouse input will reach it.
@@ -494,7 +493,6 @@ namespace WallpaperFlux.WPF
 
             if (ActiveImage is ImageModel { IsDependentOnAnimatedImageSet: true }) DisableSet(); // stops animated set timer
 
-            //xvlcStopwatch.Reset(); // for situations where the next wallpaper is not a VLC wallpaper
             return false;
         }
 
@@ -561,22 +559,22 @@ namespace WallpaperFlux.WPF
                 switch (style)
                 {
                     case WallpaperStyle.Fill:
-                        WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = WallpaperVlcViewBox.Stretch = Stretch.UniformToFill;
+                        WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = Stretch.UniformToFill;
                         //xWallpaperImage.Stretch = Stretch.UniformToFill;
                         break;
 
                     case WallpaperStyle.Stretch:
-                        WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = WallpaperVlcViewBox.Stretch = Stretch.Fill;
+                        WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch  = Stretch.Fill;
                         //xWallpaperImage.Stretch = Stretch.Fill;
                         break;
 
                     case WallpaperStyle.Fit:
-                        WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = WallpaperVlcViewBox.Stretch = Stretch.Uniform;
+                        WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = Stretch.Uniform;
                         //xWallpaperImage.Stretch = Stretch.Uniform;
                         break;
 
                     case WallpaperStyle.Center:
-                        WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = WallpaperVlcViewBox.Stretch = Stretch.None;
+                        WallpaperImage.Stretch = WallpaperMediaElement.Stretch = WallpaperMediaElementFFME.Stretch = Stretch.None;
                         //xWallpaperImage.Stretch = Stretch.None;
                         break;
                 }

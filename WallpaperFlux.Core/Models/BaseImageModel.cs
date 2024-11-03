@@ -23,7 +23,7 @@ namespace WallpaperFlux.Core.Models
         {
             get
             {
-                VerifySetRank();
+                VerifyImageSetRank();
 
                 return _rank;
             }
@@ -40,12 +40,11 @@ namespace WallpaperFlux.Core.Models
                         RaisePropertyChanged(() => Rank);
 
                         if (imageModel.IsInImageSet) imageModel.ParentImageSet.UpdateAverageRankAndWeightedAverage();
-
                         break;
 
                     case ImageSetModel imageSet:
 
-                        if (!imageSet.UsingAverageRank)
+                        if (imageSet.UsingOverride)
                         {
                             imageSet.OverrideRank = value;
                         }
@@ -93,7 +92,7 @@ namespace WallpaperFlux.Core.Models
                 return false;
             }
         }
-
+        
         #region Video / GIF / Animation Properties
         public double Speed { get; set; } = 1;
 
@@ -164,11 +163,10 @@ namespace WallpaperFlux.Core.Models
                 {
                     case ImageModel imageModel:
                         imageModel.Rank--;
-
                         break;
 
                     case ImageSetModel imageSet:
-                        if (imageSet.RankingFormat == ImageSetRankingFormat.Override || imageSet.RankingFormat == ImageSetRankingFormat.WeightedOverride)
+                        if (imageSet.UsingOverride)
                         {
                             imageSet.OverrideRank--;
                         }
@@ -183,11 +181,10 @@ namespace WallpaperFlux.Core.Models
                 {
                     case ImageModel imageModel:
                         imageModel.Rank++;
-
                         break;
 
                     case ImageSetModel imageSet:
-                        if (imageSet.RankingFormat == ImageSetRankingFormat.Override || imageSet.RankingFormat == ImageSetRankingFormat.WeightedOverride)
+                        if (imageSet.UsingOverride)
                         {
                             imageSet.OverrideRank++;
                         }
@@ -197,7 +194,7 @@ namespace WallpaperFlux.Core.Models
             });
         }
 
-        public void VerifySetRank()
+        public void VerifyImageSetRank()
         {
             if (this is ImageSetModel imageSet)
             {
@@ -212,7 +209,7 @@ namespace WallpaperFlux.Core.Models
                 if (imageSet.RankingFormat == ImageSetRankingFormat.WeightedAverage) _rank = imageSet.WeightedAverage;
 
                 //! safety precaution ; if a calculation sends _rank above max rank or below 0 we will get a stack overflow as the old rank will always be bound to the rank range
-                _rank = MathE.Clamp(_rank, 0, ThemeUtil.RankController.GetMaxRank());
+                _rank = ThemeUtil.Theme.RankController.ClampValueToRankRange(_rank);
 
                 if (oldRank != _rank)
                 {
@@ -220,6 +217,14 @@ namespace WallpaperFlux.Core.Models
                     WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.InspectedImageRankText);
                 }
             }
+        }
+
+        public void VerifyIfRankValid()
+        {
+            //? Modifying the image's rank will both check if the image is enabled and add/remove the image as needed
+            // ModifyRank will always have to check if the image is enabled or not and since this also determines if we remove/add the image we will perform the enabled state
+            // check through ModifyRank instead of checking IsEnabled() directly
+            ThemeUtil.RankController.ModifyRank(this, _rank, ref _rank);
         }
 
         public virtual bool IsEnabled(bool ignoreSet = false)
@@ -244,15 +249,12 @@ namespace WallpaperFlux.Core.Models
             {
                 if (iModel.IsInImageSet) //? ensures that the set is added to the randomizer if enabled
                 {
-                    iModel.ParentImageSet.VerifySetRank();
+                    iModel.ParentImageSet.VerifyImageSetRank();
                     iModel.ParentImageSet.UpdateEnabledState(); //! VerifySetRank may or may not check ModifyRank, so we will need to call this regardless
                 }
             }
 
-            //? Modifying the image's rank will both check if the image is enabled and add/remove the image as needed
-            // ModifyRank will always have to check if the image is enabled or not and since this also determines if we remove/add the image we will perform the enabled state
-            // check through ModifyRank instead of checking IsEnabled() directly
-            ThemeUtil.RankController.ModifyRank(this, _rank, ref _rank);
+            VerifyIfRankValid();
         }
 
         protected virtual bool Equals(BaseImageModel other) => throw new NotImplementedException();

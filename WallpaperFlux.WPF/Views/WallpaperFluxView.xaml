@@ -432,12 +432,12 @@
                                                                   StaysOpenOnClick="True" IsCheckable="True"
                                                                   IsEnabled="{Binding UsingWeightedAverage, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, 
                                                             Converter={StaticResource BooleanInverterConverter}}"/>
-                                                        <MenuItem Header="Weighted Override" IsChecked="{Binding UsingWeightedRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                        <MenuItem Header="Weighted Override" IsChecked="{Binding UsingWeightedOverride, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                                                                   StaysOpenOnClick="True" IsCheckable="True"
-                                                                  IsEnabled="{Binding UsingWeightedRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, 
+                                                                  IsEnabled="{Binding UsingWeightedOverride, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, 
                                                             Converter={StaticResource BooleanInverterConverter}}"/>
                                                         <MenuItem Header="{Binding OverrideRankWeightText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="False"/>
-                                                        <Slider Value="{Binding OverrideRankWeight}" IsEnabled="{Binding UsingWeightedRank}" Minimum="0" Maximum="100"/>
+                                                        <Slider Value="{Binding OverrideRankWeight}" IsEnabled="{Binding UsingWeightedOverride}" Minimum="0" Maximum="100"/>
 
                                                         <Separator/>
 

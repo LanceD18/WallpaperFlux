@@ -86,7 +86,7 @@ namespace WallpaperFlux.Core.Controllers
             List<int> validRanks = new List<int>();
             for (int i = 0; i < RankData.Get()[imageType].Count; i++) // i == rank | Remember that the count should always be 1 more than the max rank
             {
-                if (RankData.Get()[imageType][i].Count != 0 && i != 0) // The use of i != 0 excludes unranked images
+                if (i != 0 && RankData.Get()[imageType][i].Count != 0) // The use of i != 0 excludes unranked images
                 {
                     if (imageType != ImageType.None) // if an image type is being searched for, check if contains any values
                     {

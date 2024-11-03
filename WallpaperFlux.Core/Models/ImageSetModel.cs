@@ -42,7 +42,7 @@ namespace WallpaperFlux.Core.Models
                     RankingFormat = ImageSetRankingFormat.Average;
 
                     UsingOverrideRank = false;
-                    UsingWeightedRank = false;
+                    UsingWeightedOverride = false;
                     UsingWeightedAverage = false;
                     UpdateAverageRankAndWeightedAverage();
 
@@ -63,7 +63,7 @@ namespace WallpaperFlux.Core.Models
                     RankingFormat = ImageSetRankingFormat.Override;
 
                     UsingAverageRank = false;
-                    UsingWeightedRank = false;
+                    UsingWeightedOverride = false;
                     UsingWeightedAverage = false;
                     RaisePropertyChanged(() => Rank);
 
@@ -71,13 +71,13 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
-        private bool _usingWeightedRank;
-        public bool UsingWeightedRank // combines average rank & override rank using a weight slider
+        private bool _usingWeightedOverride;
+        public bool UsingWeightedOverride // combines average rank & override rank using a weight slider
         {
-            get => _usingWeightedRank;
+            get => _usingWeightedOverride;
             set
             {
-                SetProperty(ref _usingWeightedRank, value);
+                SetProperty(ref _usingWeightedOverride, value);
                 
                 if (value)
                 {
@@ -110,7 +110,7 @@ namespace WallpaperFlux.Core.Models
 
                     UsingAverageRank = false;
                     UsingOverrideRank = false;
-                    UsingWeightedRank = false;
+                    UsingWeightedOverride = false;
 
                     UpdateWeightedAverage();
                 }
@@ -124,6 +124,8 @@ namespace WallpaperFlux.Core.Models
             private set
             {
                 SetProperty(ref _averageRank, value);
+
+                VerifyImageSetRank(); // ? keep in mind that the set will not update until the next load if this isn't handled properly (be sure to test if changing)
                 RaisePropertyChanged(() => WeightedRank);
                 RaisePropertyChanged(() => Rank);
             }
@@ -139,6 +141,8 @@ namespace WallpaperFlux.Core.Models
             {
                 // it is possible for the user to save a value out of the range despite the actual rank being bounded
                 SetProperty(ref _overrideRank, MathE.Clamp(value, 0, ThemeUtil.RankController.GetMaxRank()));
+
+                VerifyImageSetRank(); // ? keep in mind that the set will not update until the next load if this isn't handled properly (be sure to test if changing)
                 RaisePropertyChanged(() => WeightedRank);
                 RaisePropertyChanged(() => Rank);
             }
@@ -153,6 +157,7 @@ namespace WallpaperFlux.Core.Models
                 value = MathE.Clamp(value, 0, 100);
                 SetProperty(ref _overrideRankWeight, value);
 
+                VerifyImageSetRank(); // ? keep in mind that the set will not update until the next load if this isn't handled properly (be sure to test if changing)
                 RaisePropertyChanged(() => OverrideRankWeightText);
                 RaisePropertyChanged(() => Rank);
             }
@@ -167,11 +172,15 @@ namespace WallpaperFlux.Core.Models
             private set
             {
                 SetProperty(ref _weightedAverage, value);
+
+                VerifyImageSetRank(); // ? keep in mind that the set will not update until the next load if this isn't handled properly (be sure to test if changing)
                 RaisePropertyChanged(() => Rank);
             }
         }
 
         public string OverrideRankWeightText => "Weight: " + OverrideRankWeight;
+
+        public bool UsingOverride => UsingOverrideRank || UsingWeightedOverride;
         #endregion
 
         #region Animated Set Properties
@@ -206,7 +215,17 @@ namespace WallpaperFlux.Core.Models
 
         #endregion
 
-        public bool RetainImageIndependence { get; set; } = false; //? while this is enabled, independent images and the set will co-exist in the theme
+        private bool _retainImageIndependence = false;
+        public bool RetainImageIndependence
+        {
+            get => _retainImageIndependence;
+            set
+            {
+                SetProperty(ref _retainImageIndependence, value);
+                
+                foreach (ImageModel image in RelatedImages) image.VerifyIfRankValid();
+            }
+        } //? while this is enabled, independent images and the set will co-exist in the theme
 
         public bool InvalidSet { get; set; } = false;
 
@@ -271,7 +290,7 @@ namespace WallpaperFlux.Core.Models
                     break;
 
                 case ImageSetRankingFormat.WeightedOverride:
-                    UsingWeightedRank = true;
+                    UsingWeightedOverride = true;
                     break;
             }
 

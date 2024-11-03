@@ -45,16 +45,51 @@
         <TextBlock Grid.Row="1" Grid.Column="1" Text="Settings" FontSize="16" FontWeight="Bold" Margin="10"/>
 
         <!--? Rank Settings -->
-        <GroupBox  Grid.Row="2" Grid.Column="1" Margin="3" DataContext="{Binding Settings.ThemeSettings}">
+        <GroupBox  Grid.Row="2" Grid.Column="1" Margin="3">
             <StackPanel Orientation="Vertical">
+
+                <!-- Max Rank -->
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Margin="5" VerticalAlignment="Center">
                         <Run Text="Max Rank: "/>
-                        <Run Text="{Binding MaxRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        <Run Text="{Binding Settings.ThemeSettings.MaxRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
                     </TextBlock>
-                    <Button Content="Set Max Rank" Margin="3" mvx:Bi.nd="Command Settings.UpdateMaxRankCommand"/>
+                    <!--! not yet implemented -->
+                    <Button Content="Set Max Rank" Margin="3" mvx:Bi.nd="Command UpdateMaxRankCommand" IsEnabled="False"/>
                 </StackPanel>
-                <CheckBox Content="Weighted Ranks" IsChecked="{Binding WeightedRanks, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" adonisExtensions:LayerExtension.Layer="3"/>
+
+                <!-- Rank Shifting -->
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="Shift Ranks" Margin="3" Command="{Binding ShiftRanksCommand}"/>
+                    <!-- Min -->
+                    <TextBlock Text="Range: " VerticalAlignment="Center"/>
+                    <TextBox Margin="5 0 5 0"  Text="{Binding MinShiftRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             adonisExtensions:WatermarkExtension.IsWatermarkVisible="True" adonisExtensions:WatermarkExtension.Watermark="Min">
+                        <TextBox.Style>
+                            <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                        </TextBox.Style>
+                    </TextBox>
+                    <TextBlock Text="-" VerticalAlignment="Center"/>
+                    <!-- Max -->
+                    <TextBox Margin="5 0 5 0"  Text="{Binding MaxShiftRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             adonisExtensions:WatermarkExtension.IsWatermarkVisible="True" adonisExtensions:WatermarkExtension.Watermark="Max">
+                        <TextBox.Style>
+                            <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                        </TextBox.Style>
+                    </TextBox>
+                    <!-- Amount -->
+                    <TextBlock Text="Amount: " VerticalAlignment="Center"/>
+                    <TextBox Margin="5 0 5 0"  Text="{Binding ShiftAmount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             adonisExtensions:WatermarkExtension.IsWatermarkVisible="True" adonisExtensions:WatermarkExtension.Watermark="Amount">
+                        <TextBox.Style>
+                            <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInputPlusMinus}"/>
+                        </TextBox.Style>
+                    </TextBox>
+                </StackPanel>
+
+                <!-- Weighted Ranks -->
+            <CheckBox Content="Weighted Ranks" IsChecked="{Binding Settings.ThemeSettings.WeightedRanks, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                      adonisExtensions:LayerExtension.Layer="3"/>
             </StackPanel>
         </GroupBox>
 

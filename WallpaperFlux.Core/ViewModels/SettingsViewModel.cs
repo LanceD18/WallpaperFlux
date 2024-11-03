@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
+using LanceTools.WPF.Adonis.Util;
 using LiveChartsCore;
 using LiveChartsCore.Drawing;
 using LiveChartsCore.Kernel.Drawing;
@@ -67,7 +69,7 @@ namespace WallpaperFlux.Core.ViewModels
                     GifColumnSeries.Values = gifValues;
                     VideoColumnSeries.Values = videoValues;
 
-                    //xRankColumnSeries.Fill = new SolidColorPaint(SKColors.Blue);
+                    //xRankColumnSeries.Fill = new SolidColorPaint(SKColors.Blue); (default)
                     StaticColumnSeries.Fill = new SolidColorPaint(SKColors.SlateBlue);
                     GifColumnSeries.Fill = new SolidColorPaint(SKColors.LimeGreen);
                     VideoColumnSeries.Fill = new SolidColorPaint(SKColors.OrangeRed);
@@ -160,11 +162,34 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
+        private int _shiftAmount;
+        public int ShiftAmount
+        {
+            get => _shiftAmount;
+            set => SetProperty(ref _shiftAmount, value);
+        }
+
+        private int _minShiftRank;
+        public int MinShiftRank
+        {
+            get => _minShiftRank;
+            set => SetProperty(ref _minShiftRank, ThemeUtil.Theme.RankController.ClampValueToRankRange(value));
+        }
+
+        private int _maxShiftRank;
+        public int MaxShiftRank
+        {
+            get => _maxShiftRank;
+            set => SetProperty(ref _maxShiftRank, ThemeUtil.Theme.RankController.ClampValueToRankRange(value));
+        }
+
         #region Commands
 
         public IMvxCommand ToggleRankGraphCommand { get; set; }
 
         public IMvxCommand CloseRankGraphCommand { get; set; }
+
+        public IMvxCommand ShiftRanksCommand { get; set; }
 
         #endregion
 
@@ -191,10 +216,49 @@ namespace WallpaperFlux.Core.ViewModels
 
             ToggleRankGraphCommand = new MvxCommand(ToggleRankGraph);
             CloseRankGraphCommand = new MvxCommand(CloseRankGraph);
+            ShiftRanksCommand = new MvxCommand(ShiftRanks);
         }
 
         public void ToggleRankGraph() => RankGraphToggle = !RankGraphToggle;
 
         public void CloseRankGraph() => RankGraphToggle = false;
+
+        public void ShiftRanks()
+        {
+            if (MessageBoxUtil.PromptYesNo($"This will shift the rank of all images in the selected rank range of [{MinShiftRank} - {MaxShiftRank}], are you sure?"))
+            {
+                BaseImageModel[] images;
+                ImageSetModel[] imageSetsWithOverride = ThemeUtil.Theme.Images.GetAllImageSets().Where(f => f.UsingOverrideRank).ToArray();
+                if ((MinShiftRank == 0 || MinShiftRank == 1) && MaxShiftRank == ThemeUtil.Theme.RankController.GetMaxRank())
+                {
+                    images = ThemeUtil.Theme.Images.GetAllImages();
+                }
+                else
+                {
+                    images = ThemeUtil.Theme.Images.GetAllImages().Where(f => f.Rank >= MinShiftRank && f.Rank <= MaxShiftRank).ToArray();
+                    imageSetsWithOverride = imageSetsWithOverride.Where(f => f.OverrideRank >= MinShiftRank && f.OverrideRank <= MaxShiftRank).ToArray();
+                }
+
+                bool ignoreUnranked = ShiftAmount < 0;
+
+                foreach (BaseImageModel image in images)
+                {
+                    if (ignoreUnranked && image.Rank == 0) continue;
+
+                    image.Rank += ShiftAmount;
+
+                    // ? don't allow shifting below 0 as that will un-rank the image
+                    if (image.Rank == 0) image.Rank = 1;
+                }
+
+                foreach (ImageSetModel set in imageSetsWithOverride)
+                {
+                    if (ignoreUnranked && set.OverrideRank == 0) return;
+
+                    set.OverrideRank += ShiftAmount;
+                    if (set.OverrideRank == 0) set.OverrideRank = 1;
+                }
+            }
+        }
     }
 }

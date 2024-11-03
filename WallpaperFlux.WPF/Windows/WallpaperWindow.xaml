@@ -10,15 +10,9 @@
         xmlns:windowsForms="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms"
         xmlns:media="https://github.com/mysteryx93/MediaPlayerUI.NET"
         xmlns:hc="https://handyorg.github.io/handycontrol"
-        xmlns:vlc="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF"
         mc:Ignorable="d" Background="Transparent" ResizeMode="NoResize"
         Title="WallpaperWindow" Height="450" Width="800" WindowStyle="None">
     <Grid>
-        <Viewbox x:Name="WallpaperVlcViewBox">
-            <!--
-            <vlc:VideoView x:Name="WallpaperVlc" Visibility="Hidden"/>
-        -->
-        </Viewbox>
 
         <Image x:Name="WallpaperImage" Width="auto" Height="auto" Visibility="Hidden"/>
         <ffme:MediaElement x:Name="WallpaperMediaElementFFME" Width="auto" Height="auto" UnloadedBehavior="Manual"

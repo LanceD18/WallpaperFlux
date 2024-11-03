@@ -110,6 +110,18 @@ namespace WallpaperFlux.Core.Controllers
             return images.ToArray();
         }
 
+        public BaseImageModel[] GetImagesOfRankRange(int min, int max)
+        {
+            if (min > max) return null;
+            List<BaseImageModel> images = new List<BaseImageModel>();
+            for (int i = min; i <= max; i++)
+            {
+                images.AddRange(GetImagesOfRank(i));
+            }
+
+            return images.ToArray();
+        }
+
         public BaseImageModel[] GetAllUnrankedImages() => GetImagesOfRank(0);
 
         public BaseImageModel[] GetAllUnrankedImagesOfType(ImageType imageType) => GetImagesOfRank(0, imageType);
