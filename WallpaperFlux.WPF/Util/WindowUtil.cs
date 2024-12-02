@@ -38,6 +38,8 @@ namespace WallpaperFlux.WPF.Util
             TagViewModel.Instance = InitializeViewModel(TagViewModel.Instance);
             SettingsViewModel.Instance = InitializeViewModel(SettingsViewModel.Instance);
             ImageSelectionViewModel.Instance = InitializeViewModel(ImageSelectionViewModel.Instance);
+
+
         }
 
         // The windows using this initializer will be closed and re-opened throughout the life of the program

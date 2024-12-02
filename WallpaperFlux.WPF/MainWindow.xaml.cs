@@ -92,13 +92,13 @@ namespace WallpaperFlux.WPF
         // hide the application on minimize (will go to system tray)
         protected override void OnStateChanged(EventArgs e)
         {
+            base.OnStateChanged(e);
+
             if (WindowState == System.Windows.WindowState.Minimized)
             {
                 this.Hide();
                 WindowUtil.HideAllWindows();
             }
-
-            base.OnStateChanged(e);
         }
 
         private void InitializeWallpapers()

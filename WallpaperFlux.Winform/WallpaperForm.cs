@@ -46,7 +46,9 @@ namespace WallpaperFlux.Winform
         }
 
         public int DisplayIndex;
-        
+
+        protected override bool ShowWithoutActivation => true; // ! should stop the form from gaining focus when a wallpaper is set
+
         public WallpaperForm(WpfScreenHelper.Screen display, IntPtr workerw, int displayIndex, Action onVideoEnd)
         {
             this.SetStyle(ControlStyles.SupportsTransparentBackColor, true);
