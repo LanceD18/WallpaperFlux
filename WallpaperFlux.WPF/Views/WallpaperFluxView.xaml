@@ -100,9 +100,8 @@
                                                     <!-- Static -->
                                                     <DataTemplate x:Key="StaticTemplate">
                                                         <Image Loaded="Tooltip_Image_OnLoaded"
-                                                                                        Unloaded="Tooltip_Image_OnUnloaded"
-                                                                                        Stretch="Uniform"
-                                                                                        RenderOptions.BitmapScalingMode="HighQuality">
+                                                               Unloaded="Tooltip_Image_OnUnloaded"
+                                                               Stretch="Uniform">
                                                             <!--
                                                             <Image.Source>
                                                                 <BitmapImage

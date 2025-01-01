@@ -31,7 +31,7 @@ namespace WallpaperFlux.Winform
         public int Loops { get; private set; }
 
         public Stopwatch WallpaperUptime { get; private set; } = new Stopwatch();
-        public bool IsPlayingVideo { get; private set; }
+        //xpublic bool IsPlayingVideo { get; private set; }
 
         private ImageModel _activeImage;
         public ImageModel ActiveImage
@@ -73,7 +73,7 @@ namespace WallpaperFlux.Winform
                     pictureBoxBounds = new Rectangle(0, 0, Width, Height);
 
                     // Sets bounds of the wallpaper
-                    pictureBoxWallpaper.Bounds = pictureBoxBounds;
+                    //xpictureBoxWallpaper.Bounds = pictureBoxBounds;
                     panelWallpaper.Bounds = pictureBoxBounds;
 
                     // Initializes Player
@@ -94,7 +94,7 @@ namespace WallpaperFlux.Winform
 
             Closing += (s, e) =>
             {
-                Controls.Remove(pictureBoxWallpaper);
+                //xControls.Remove(pictureBoxWallpaper);
 
                 Player?.Stop();
 
@@ -168,18 +168,19 @@ namespace WallpaperFlux.Winform
 
                 if (WallpaperUtil.IsSupportedVideoType_GivenExtension(wallpaperInfo.Extension))
                 {
-                    IsPlayingVideo = true;
-                    WallpaperUptime.Restart();
+                    //xIsPlayingVideo = true;
 
-                    pictureBoxWallpaper.Visible = false; // TODO Redundant, only needs to be called once
-                    pictureBoxWallpaper.Enabled = false; // TODO Redundant, only needs to be called once
+                    //xpictureBoxWallpaper.Visible = false; // TODO Redundant, only needs to be called once
+                    //xpictureBoxWallpaper.Enabled = false; // TODO Redundant, only needs to be called once
 
+                    // ? these are set back to false every time StopMpv() is called
                     panelWallpaper.Enabled = true;
                     panelWallpaper.Visible = true;
 
                     await Task.Run(() =>
                     {
-                        Player.Reload(image.Path);
+                        Player.Reload(image.Path, true);
+                        WallpaperUptime.Restart();
 
                         UpdateVolume(image);
 
@@ -227,6 +228,7 @@ namespace WallpaperFlux.Winform
             {
                 if (ActiveImage == null) return;
 
+                /*x
                 if (pictureBoxWallpaper.Visible)
                 {
                     if (pictureBoxWallpaper.ImageLocation == null) return;
@@ -259,6 +261,7 @@ namespace WallpaperFlux.Winform
 
                     pictureBoxWallpaper.ResumeLayout();
                 }
+                */
 
                 if (panelWallpaper.Visible)
                 {

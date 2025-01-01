@@ -107,11 +107,14 @@ namespace WallpaperFlux.Core.Models
                     if (image == null) // new image found
                     {
                         image = ThemeUtil.Theme.Images.AddImage(imagePath, this);
+                        if (image == null) continue; // ? invalid image type gathered
 
                         image.UpdateEnabledState(); //? we will always update the enabled state of new images to ensure that they are made active
                     }
                     else // check if existing image is enabled
                     {
+                        if (image.ImageType == ImageType.None) continue; // ? previously valid image type is now invalid, do not add
+
                         //xif (!JsonUtil.IsLoadingData) ThemeUtil.Theme.Images.AddImage(image, this); //? the image will add itself while loading
                         image.ParentFolder = this;
 

@@ -565,7 +565,17 @@ namespace WallpaperFlux.Core.ViewModels
             DeselectImagesCommand = new MvxCommand(DeselectAllImages);
             RenameImagesCommand = new MvxCommand(() => ImageRenamer.AutoRenameImageRange(GetAllHighlightedImages()));
             MoveImagesCommand = new MvxCommand(() => ImageRenamer.AutoMoveImageRange(GetAllHighlightedImages()));
-            DeleteImagesCommand = new MvxCommand(() => ImageUtil.DeleteImageRange(GetAllHighlightedImages()));
+            DeleteImagesCommand = new MvxCommand(() =>
+            {
+                ImageUtil.DeleteImageRange(GetAllHighlightedImages());
+
+                if (InspectorToggle) CloseInspector(); // ? if the inspector is toggled and an image is deleted, the inspected (selected) image will be removed, close the inspector
+
+                if (ImageSetInspectorToggle && InspectedImageSet.GetRelatedImages().Length == 0) // ? close the inspector if all images are removed from the set (a set of 1 image can still exist)
+                {
+                    CloseImageSetInspector();
+                }
+            });
             RankImagesCommand = new MvxCommand(() => ImageUtil.PromptRankImageRange(GetAllHighlightedImages()));
             CreateRelatedImageSetCommand = new MvxCommand(() => ImageUtil.CreateRelatedImageSet(GetAllHighlightedImages(true), true));
             AddToImageSetCommand = new MvxCommand(AddToImageSet);

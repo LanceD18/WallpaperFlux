@@ -636,6 +636,7 @@ namespace WallpaperFlux.Core.Util
                 ImageModel image = new ImageModel(simpleImage.Path, simpleImage.Rank, simpleImage.Enabled, volume: simpleImage.Volume, 
                     minimumLoops: simpleImage.MinLoops, overrideMinimumLoops: simpleImage.OverrideMinLoops, maximumTime: simpleImage.MaxTime, overrideMaximumTime: simpleImage.OverrideMaxTime);
                 ImageTagCollection tags = new ImageTagCollection(image);
+                if (image.ImageType == ImageType.None) continue; // ? previously valid image is now invalid, move on
 
                 //? We need two iterations of this, one for regular tags & one for naming exceptions
                 ConvertSimpleImageTagsToTagCollection(simpleImage, tags, false);

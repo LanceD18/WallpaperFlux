@@ -36,6 +36,8 @@ namespace WallpaperFlux.Core.Collections
             if (ContainsImage(path)) return null;
 
             ImageModel addedImage = new ImageModel(path, volume: ThemeUtil.VideoSettings.DefaultVideoVolume);
+            if (addedImage.ImageType == ImageType.None) return null;
+
             AddImage(addedImage, parentFolder);
             return addedImage;
         }
@@ -55,7 +57,7 @@ namespace WallpaperFlux.Core.Collections
 
         public void AddImage(ImageModel image, FolderModel parentFolder)
         {
-            //xif (ContainsImage(image)) return;
+            if (image.ImageType == ImageType.None) return;
             if (ImageContainer[image.ImageType].ContainsKey(image.Path)) return; //? an image with the same path may not necessarily have the same object, can occur on re-load
 
             ImageContainer[image.ImageType].Add(image.Path, image);

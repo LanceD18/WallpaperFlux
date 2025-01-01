@@ -321,30 +321,31 @@ namespace WallpaperFlux.WPF
                 {
                     ConnectedForm.Enabled = true;
                     ConnectedForm.Visible = true;
+                    ConnectedForm.BringToFront();
                 });
 
-                //xConnectedForm.BringToFront();
                 await Task.Run(() => ConnectedForm.SetWallpaper(image)).ConfigureAwait(false);
                 playSuccessful = true; // TODO try to get success information from ConnectedForm.SetWallpaper()
                 DisableUnusedElements(UsedElement.Mpv, imageIsInAnimatedSet);
             }
             else if (/*wallpaperInfo.Extension == ".webm" ||*/ image.IsGif) //? FFME can't handle .avi files and crashes on some videos depending on their pixel format, this seems to be more common with .webms
             {
-                Debug.WriteLine("FFME (Recording path for just in case of crash, convert crashed .webms to .mp4): " + image.Path);
+                //xDebug.WriteLine("FFME (Recording path for just in case of crash, convert crashed .webms to .mp4): " + image.Path);
 
                 try
                 {
-                    await Dispatcher.Invoke(async () =>
+                    string path = wallpaperInfo.FullName;
+                    await Dispatcher.Invoke(() =>
                     {
-                        await WallpaperMediaElementFFME.Close();
-                        await WallpaperMediaElementFFME.Open(new Uri(wallpaperInfo.FullName));
+                        ResetFFME(path);
                         WallpaperMediaElementFFME.IsEnabled = true;
                         WallpaperMediaElementFFME.Visibility = Visibility.Visible;
-                    });
+                        RetryMediaOpen(false, imageIsInAnimatedSet, path); //? If there's too much load on the system FFME media will fail to start and need to be re-initialized
+                        return Task.CompletedTask;
+                    }).ConfigureAwait(false);
 
                     DisableUnusedElements(UsedElement.FFME, imageIsInAnimatedSet);
 
-                    RetryMediaOpen(false, imageIsInAnimatedSet); //? If there's too much load on the system FFME media will fail to start and need to be re-initialized
                     playSuccessful = true;
                 }
                 catch (Exception)
@@ -683,7 +684,7 @@ namespace WallpaperFlux.WPF
         }
         #endregion
 
-        private async void RetryMediaOpen(bool finalAttempt, bool isAnimatedImage)
+        private async void RetryMediaOpen(bool finalAttempt, bool isAnimatedImage, string path)
         {
             //xif (image.IsWebmOrGif) return; //? webms & gifs do not advance the position value, closing and reopening them will turn them off
 
@@ -694,26 +695,33 @@ namespace WallpaperFlux.WPF
 
                 Dispatcher.Invoke(() =>
                 {
-                    Debug.WriteLine("FFME Opening: " + WallpaperMediaElementFFME.IsOpening);
-                    if (WallpaperMediaElementFFME.IsEnabled && !WallpaperMediaElementFFME.IsOpening)
+                    // TODO Maybe get the color of the pixels displayed and if too many are pure black reload
+                    Debug.WriteLine("FFME Loaded: " + WallpaperMediaElementFFME.IsLoaded + " | FFME Buffering: " + WallpaperMediaElementFFME.IsBuffering);
+                    if (!WallpaperMediaElementFFME.IsLoaded)
                     {
-                        Debug.WriteLine("FFME Position: " + WallpaperMediaElementFFME.Position);
+                        //xDebug.WriteLine("FFME Position: " + WallpaperMediaElementFFME.Position);
                         //if (WallpaperMediaElementFFME.Position < TimeSpan.FromSeconds(1))
                         //{
                         Debug.WriteLine("Fixing FFME");
-                        //xWallpaperMediaElementFFME.Close();
+                        ResetFFME(path);
                         WallpaperMediaElementFFME.Play();
                         DisableUnusedElements(UsedElement.FFME, isAnimatedImage);
 
                         if (!finalAttempt)
                         {
                             //WallpaperMediaElementFFME.Open(new Uri(image.Path));
-                            RetryMediaOpen(true, isAnimatedImage);
+                            RetryMediaOpen(true, isAnimatedImage, path);
                         }
                         //}
                     }
                 });
             }).ConfigureAwait(false);
+        }
+
+        private async void ResetFFME(string path)
+        {
+            await WallpaperMediaElementFFME.Close();
+            await WallpaperMediaElementFFME.Open(new Uri(path));
         }
 
         public void IncrementLoopCount() => LoopCount++;

@@ -118,6 +118,8 @@ namespace WallpaperFlux.Core.Models
         //-----Methods-----
         private void TimerOnTick(object sender, EventArgs e)
         {
+            if (JsonUtil.IsLoadingData) return; // ? don't want to accidentally swap wallpaper before the data is even loaded
+
             if (NotSyncedToParent)
             {
                 if (DisplayIntervalType != IntervalType.None)

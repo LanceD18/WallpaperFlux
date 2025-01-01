@@ -58,7 +58,6 @@ namespace WallpaperFlux.WPF.Views
     [MvxViewFor(typeof(WallpaperFluxViewModel))]
     public partial class WallpaperFluxView : MvxWpfView
     {
-        private List<Thread> _activeThumbnailThreads = new List<Thread>(); //? kills thumbnail threads on page load, intended to stop videos from clogging the task runners
         //! don't actually outright kill the thread, find a more graceful solutions:
         //! https://stackoverflow.com/questions/14817427/how-to-stop-threads
         //! https://josipmisko.com/posts/c-sharp-stop-thread
@@ -149,7 +148,7 @@ namespace WallpaperFlux.WPF.Views
 
                 try
                 {
-                    LoadBitmapImage(image, thumbnailSource.IsGif, highQuality, path: thumbnailSource.Path);
+                    LoadBitmapImage(image, thumbnailSource.IsGif/*x, highQuality*/, path: thumbnailSource.Path);
                 }
                 catch (Exception e)
                 {
@@ -199,26 +198,27 @@ namespace WallpaperFlux.WPF.Views
         //? https://stackoverflow.com/questions/8352787/how-to-free-the-memory-after-the-bitmapimage-is-no-longer-needed
         //? https://stackoverflow.com/questions/2631604/get-absolute-file-path-from-image-in-wpf
         //? prevents the application from continuing to 'use' the image after loading it in, which also saves some memory
-        private void LoadBitmapImage(Image image, bool isGif, bool highQuality, string path = "", FileStream stream = null)
+        private void LoadBitmapImage(Image image, bool isGif, string path = "", int decodePixelHeight = 0, MemoryStream ms = null)
         {
             // TODO THIS METHOD IS BEING CALLED MULTIPLE TIMES PER INSPECTOR SWITCH, FIX
-            try //? this can accidentally fire off multiple times and cause crashes when trying to load videos (Who still need this for some reason?)
+            try // ! this can accidentally fire off multiple times and cause crashes when trying to load videos
             {
                 BitmapImage bitmap = new BitmapImage();
 
                 // --- Begin Init ---
                 bitmap.BeginInit();
+                if (ms != null) ms.Seek(0, SeekOrigin.Begin);
+                if (decodePixelHeight != 0) bitmap.DecodePixelHeight = decodePixelHeight; // ! only set either Height of Width (preferably whichever is larger) to prevent stretching
+                //xif (!highQuality) RenderOptions.SetBitmapScalingMode(bitmap, BitmapScalingMode.LowQuality);
+                RenderOptions.SetBitmapScalingMode(bitmap, BitmapScalingMode.LowQuality); // ! high quality does not really matter for thumbnails
 
-                if (!highQuality)
+                // ! ignoring cache & OnDemand will break videos
+                bitmap.CreateOptions = BitmapCreateOptions.IgnoreColorProfile; // to help with performance
+                bitmap.CacheOption = BitmapCacheOption.OnLoad; // ! OnLoad is required for videos
+
+                if (ms != null)
                 {
-                    bitmap.CreateOptions = BitmapCreateOptions.IgnoreColorProfile; // to help with performance
-                }
-
-                bitmap.CacheOption = BitmapCacheOption.OnLoad;
-
-                if (stream != null)
-                {
-                    bitmap.StreamSource = stream;
+                    bitmap.StreamSource = ms;
                 }
                 else if (path != "")
                 {
@@ -241,12 +241,11 @@ namespace WallpaperFlux.WPF.Views
                         image.Source = bitmap;
                     }
 
-                    if (stream != null)
+                    if (ms != null)
                     {
-                        stream.Close();
-                        stream.Dispose();
+                        ms.Close();
+                        ms.Dispose();
                     }
-
                 });
             }
             catch (Exception e)
@@ -379,6 +378,9 @@ namespace WallpaperFlux.WPF.Views
                 {
                     Thread thread = new Thread(() => //? this cannot thread over the if statement while the Image object is present
                     {
+                        // ? don't load gifs on low quality
+                        LoadBitmapImage(image, false/*x, false*/, imageModel.Path, imageModel.ImageSelectorThumbnailHeight);
+                        /*x
                         try //? this can accidentally fire off multiple times and cause crashes when trying to load videos (Who still need this for some reason?)
                         {
                             BitmapImage bitmap = new BitmapImage();
@@ -389,8 +391,8 @@ namespace WallpaperFlux.WPF.Views
                             RenderOptions.SetBitmapScalingMode(bitmap, BitmapScalingMode.LowQuality);
                             bitmap.DecodePixelHeight = imageModel.ImageSelectorThumbnailHeight; //! Only set either Height or Width (preferably the larger variant?) to prevent awful stretching!
                                                                                                 //x bitmap.DecodePixelWidth = imageModel.ImageSelectorThumbnailWidth;
-                            bitmap.CreateOptions = BitmapCreateOptions.IgnoreColorProfile; // to help with performance
-                            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                            bitmap.CreateOptions = BitmapCreateOptions.IgnoreImageCache; // to help with performance
+                            bitmap.CacheOption = BitmapCacheOption.None;
                             bitmap.UriSource = new Uri(imageModel.Path);
                             bitmap.EndInit();
                             bitmap.Freeze(); // prevents unnecessary copying: https://stackoverflow.com/questions/799911/in-what-scenarios-does-freezing-wpf-objects-benefit-performance-greatly
@@ -404,11 +406,11 @@ namespace WallpaperFlux.WPF.Views
                             Console.WriteLine("ERROR: Bitmap Creation Failed: " + exception);
                             //x throw;
                         }
+                        */
                     });
 
                     thread.IsBackground = true; // stops the thread from continuing to run on closing the application
                     thread.Start();
-                    _activeThumbnailThreads.Add(thread);
                 }
             }
         }
@@ -421,11 +423,15 @@ namespace WallpaperFlux.WPF.Views
             }
         }
         
-        public static BitmapImage ConvertBitmapToThumbnailBitmapImage(Bitmap bitmap, ImageModel imageModel)
+        private void ConvertBitmapToThumbnailBitmapImage(Image img, Bitmap bitmap, ImageModel imageModel)
         {
+
             using (MemoryStream ms = new MemoryStream())
             {
                 bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
+                LoadBitmapImage(img, false/*x, false*/, decodePixelHeight: imageModel.ImageSelectorThumbnailHeight, ms: ms);
+
+                /*x
                 BitmapImage image = new BitmapImage();
 
                 image.BeginInit();
@@ -439,6 +445,7 @@ namespace WallpaperFlux.WPF.Views
                 image.Freeze();
 
                 return image;
+                */
             }
         }
 
@@ -454,11 +461,12 @@ namespace WallpaperFlux.WPF.Views
                     {
                         using (Bitmap bm = shellFile.Thumbnail.Bitmap)
                         {
+                            ConvertBitmapToThumbnailBitmapImage(image, bm, imageModel);
+
+                            /*x
                             BitmapImage bitmapImage = ConvertBitmapToThumbnailBitmapImage(bm, imageModel);
-                            Dispatcher.Invoke(() =>
-                            {
-                                return image.Source = bitmapImage;
-                            }); // the image must be called on the UI thread which the dispatcher helps us do under this other thread
+                            Dispatcher.Invoke(() => { return image.Source = bitmapImage; }); // the image must be called on the UI thread which the dispatcher helps us do under this other thread
+                            */
                         }
                     }
                 });
@@ -466,7 +474,6 @@ namespace WallpaperFlux.WPF.Views
                 // TODO Apply IsBackground to more threads
                 thread.IsBackground = true; //? stops the thread from continuing to run on closing the application
                 thread.Start();
-                _activeThumbnailThreads.Add(thread);
             }
         }
 
@@ -497,7 +504,9 @@ namespace WallpaperFlux.WPF.Views
 
         private void UnloadImage(Image image)
         {
+            image.BeginInit();
             image.Source = null;
+            image.EndInit();
             /*x
             UpdateLayout();
 
@@ -562,6 +571,14 @@ namespace WallpaperFlux.WPF.Views
 
                 TaggingUtil.HighlightTags();
             }
+
+            /*x
+            while (_activeThumbnailThreads.Count > 0)
+            {
+                _activeThumbnailThreads[0].Interrupt(); // ! don't use abort, it is unsafe
+                _activeThumbnailThreads.RemoveAt(0);
+            }
+            */
 
             /*x
             // Font Scaling

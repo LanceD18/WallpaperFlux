@@ -132,7 +132,7 @@ namespace WallpaperFlux.Core.Models
 
         public bool IsGif => WallpaperUtil.IsGif(Path);
 
-        public override bool IsVideo => WallpaperUtil.IsVideo(Path);
+        public sealed override bool IsVideo => WallpaperUtil.IsVideo(Path);
 
         public bool IsWebmOrGif
         {
@@ -192,9 +192,17 @@ namespace WallpaperFlux.Core.Models
 
             ImageType = IsStatic // ideally this won't be changing later
                 ? ImageType.Static
-                : IsGif 
+                : IsGif
                     ? ImageType.GIF
-                    : ImageType.Video;
+                    : IsVideo
+                        ? ImageType.Video
+                        : ImageType.None;
+
+            if (ImageType == ImageType.None)
+            {
+                Debug.WriteLine("Invalid Path Found: " + path);
+                return;
+            }
 
             //!ParentFolder must be set before Enabled is set and after Path is set
             if (parentFolder != null)

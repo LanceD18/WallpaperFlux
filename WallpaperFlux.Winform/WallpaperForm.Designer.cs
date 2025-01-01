@@ -29,25 +29,16 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.pictureBoxWallpaper = new System.Windows.Forms.PictureBox();
             this.panelWallpaper = new System.Windows.Forms.Panel();
             this.timerAudioFixer = new System.Windows.Forms.Timer(this.components);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxWallpaper)).BeginInit();
             this.SuspendLayout();
-            // 
-            // pictureBoxWallpaper
-            // 
-            this.pictureBoxWallpaper.Location = new System.Drawing.Point(124, 71);
-            this.pictureBoxWallpaper.Name = "pictureBoxWallpaper";
-            this.pictureBoxWallpaper.Size = new System.Drawing.Size(169, 140);
-            this.pictureBoxWallpaper.TabIndex = 1;
-            this.pictureBoxWallpaper.TabStop = false;
             // 
             // panelWallpaper
             // 
-            this.panelWallpaper.Location = new System.Drawing.Point(465, 245);
+            this.panelWallpaper.Location = new System.Drawing.Point(542, 283);
+            this.panelWallpaper.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.panelWallpaper.Name = "panelWallpaper";
-            this.panelWallpaper.Size = new System.Drawing.Size(200, 100);
+            this.panelWallpaper.Size = new System.Drawing.Size(233, 115);
             this.panelWallpaper.TabIndex = 2;
             // 
             // timerAudioFixer
@@ -57,22 +48,19 @@
             // 
             // WallpaperForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(933, 519);
             this.Controls.Add(this.panelWallpaper);
-            this.Controls.Add(this.pictureBoxWallpaper);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
+            this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.Name = "WallpaperForm";
             this.Text = "WallpaperForm";
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxWallpaper)).EndInit();
             this.ResumeLayout(false);
 
         }
 
         #endregion
-
-        private System.Windows.Forms.PictureBox pictureBoxWallpaper;
         private System.Windows.Forms.Panel panelWallpaper;
         private System.Windows.Forms.Timer timerAudioFixer;
     }

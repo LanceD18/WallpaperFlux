@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Text;
 using Microsoft.VisualBasic.FileIO;
 using WallpaperFlux.Core.IoC;
+using WallpaperFlux.Core.Util;
 
 namespace WallpaperFlux.WPF.IoC
 {
@@ -13,7 +14,10 @@ namespace WallpaperFlux.WPF.IoC
         {
             try
             {
-                FileSystem.DeleteFile(imagePath, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
+                if (WallpaperUtil.IsSupportedFileType(imagePath)) // ? to not accidentally delete something random
+                {
+                    FileSystem.DeleteFile(imagePath, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
+                }
             }
             catch (Exception e)
             {

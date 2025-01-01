@@ -25,8 +25,8 @@ namespace WallpaperFlux.Core.Util
         public static IExternalAppUtil AppUtil = Mvx.IoCProvider.Resolve<IExternalAppUtil>();
 
         //-----File Types-----
-        private static readonly string IMAGE_FILES_DISPLAY_NAME = "Image Files (*.jpg, *.jpeg, *.jpe, *.jfif, *.png, *webp, *.gif, *.mp4, *.webm, *.avi)";
-        private static readonly string IMAGE_FILES_EXTENSION_LIST = "*.jpg; *.jpeg; *.jpe; *.jfif; *.png; *.webp; *.gif; *.mp4; *.webm; *.avi";
+        private static readonly string IMAGE_FILES_DISPLAY_NAME = "Image Files (*.jpg, *.jpeg, *.jpe, *.jfif, *.png, *webp, *.gif, *.mp4, *.webm, *.avi, *.wmv, *.mkv, *.mpg, *.mov)";
+        private static readonly string IMAGE_FILES_EXTENSION_LIST = "*.jpg; *.jpeg; *.jpe; *.jfif; *.png; *.webp; *.gif; *.mp4; *.webm; *.avi; *.wmv; *.mkv; *.mpg; *.mov";
 
         private static readonly string ALL_FILES_DISPLAY_NAME = "All Files (*.*)";
         private static readonly string ALL_FILES_EXTENSION_LIST = ".*";
@@ -39,21 +39,39 @@ namespace WallpaperFlux.Core.Util
 
         // TODO This section should be moved to ImageUtil
         #region Image Types
-        public static bool IsStatic(string filePath) => IsStatic_GivenExtension(Path.GetExtension(filePath));
+        public static bool IsStatic(string filePath) => IsStatic_GivenExtension(Path.GetExtension(filePath.ToLower()));
 
-        private static bool IsStatic_GivenExtension(string extension) => !(extension == ".gif" || IsSupportedVideoType_GivenExtension(extension));
+        //xprivate static bool IsStatic_GivenExtension(string extension) => !(extension == ".gif" || IsSupportedVideoType_GivenExtension(extension));
 
-        public static bool IsGif(string filePath) => IsGif_GivenExtension(Path.GetExtension(filePath));
+        private static bool IsStatic_GivenExtension(string extension) =>
+            extension.Contains(".jpg") ||
+            extension.Contains(".jpeg") ||
+            extension.Contains(".jpe") ||
+            extension.Contains(".jfif") ||
+            extension.Contains(".png") ||
+            extension.Contains(".webp");
+
+        public static bool IsGif(string filePath) => IsGif_GivenExtension(Path.GetExtension(filePath.ToLower()));
 
         public static bool IsGif_GivenExtension(string extension) => extension == ".gif";
 
-        public static bool IsVideo(string filePath) => IsVideo_GivenExtension(Path.GetExtension(filePath));
+        public static bool IsVideo(string filePath) => IsVideo_GivenExtension(Path.GetExtension(filePath.ToLower()));
 
         public static bool IsVideo_GivenExtension(string extension) => IsSupportedVideoType_GivenExtension(extension);
 
-        public static bool IsSupportedVideoType(string filePath) => IsSupportedVideoType_GivenExtension(Path.GetExtension(filePath));
+        public static bool IsSupportedVideoType(string filePath) => IsSupportedVideoType_GivenExtension(Path.GetExtension(filePath.ToLower()));
 
-        public static bool IsSupportedVideoType_GivenExtension(string extension) => extension == ".mp4" || extension == ".webm" || extension == ".avi" || extension == ".wmv" || extension == ".mkv";
+        public static bool IsSupportedVideoType_GivenExtension(string extension) => 
+            extension.Contains(".mp4") || 
+            extension.Contains(".mp3") ||
+            extension.Contains(".webm") || 
+            extension.Contains(".avi") || 
+            extension.Contains(".wmv") || 
+            extension.Contains(".mkv") ||
+            extension.Contains(".mpg") ||
+            extension.Contains(".mov");
+
+        public static bool IsSupportedFileType(string filePath) => IsStatic(filePath) || IsGif(filePath) || IsVideo(filePath);
         #endregion
 
         // Derived from: https://www.codeproject.com/Articles/856020/Draw-Behind-Desktop-Icons-in-Windows-plus
