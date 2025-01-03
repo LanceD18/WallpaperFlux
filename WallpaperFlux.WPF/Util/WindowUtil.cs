@@ -10,6 +10,7 @@ using MvvmCross.ViewModels;
 using WallpaperFlux.Core.Util;
 using WallpaperFlux.Core.ViewModels;
 using WallpaperFlux.WPF.Views;
+using WallpaperFlux.WPF.Windows;
 using static WallpaperFlux.WPF.Util.WindowUtil;
 
 namespace WallpaperFlux.WPF.Util
@@ -38,8 +39,6 @@ namespace WallpaperFlux.WPF.Util
             TagViewModel.Instance = InitializeViewModel(TagViewModel.Instance);
             SettingsViewModel.Instance = InitializeViewModel(SettingsViewModel.Instance);
             ImageSelectionViewModel.Instance = InitializeViewModel(ImageSelectionViewModel.Instance);
-
-
         }
 
         // The windows using this initializer will be closed and re-opened throughout the life of the program
@@ -86,7 +85,7 @@ namespace WallpaperFlux.WPF.Util
 
         public static void PresentWindow(ref ViewPresenter presenter, Type viewType, Type viewModelType, float width, float height, string title, bool modal)
         {
-            if (presenter == null || presenter.ViewWindow == null) // for the case where either the presenter or the view itself do not exist
+            if (presenter?.ViewWindow == null) // for the case where either the presenter or the view itself do not exist
             {
                 presenter = new ViewPresenter(viewType, viewModelType, width, height, title, modal);
             }

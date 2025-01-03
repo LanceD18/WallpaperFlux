@@ -112,7 +112,11 @@ namespace WallpaperFlux.Core.Collections
             ThemeUtil.Theme.RankController.RemoveRankedImage(image, true);
 
             image.RemoveAllTags();
-            WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.RemoveImage(image);
+
+            if (WallpaperFluxViewModel.Instance.SelectedImageSelectorTab != null)
+            {
+                WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.RemoveImage(image);
+            }
 
             if (image.IsInImageSet)
             {

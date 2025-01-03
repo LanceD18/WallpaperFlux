@@ -71,70 +71,30 @@
                 </StackPanel>
             </DataTemplate>
 
-            <!--? Image Selector Item Template -->
+                <!--? Image Selector Item Template -->
             <DataTemplate x:Key="ImageSelectorItemTemplate" DataType="{x:Type models:BaseImageModel}">
-                <GroupBox HorizontalAlignment="Center">
+                <GroupBox HorizontalAlignment="Center" Unloaded="FrameworkElement_DisposeOnUnloaded">
                     <StackPanel Focusable="False">
 
                         <!-- /// Binding to ImageModel /// -->
-                        <ContentControl Content="{Binding}" HorizontalAlignment="Center">
+                        <ContentControl Content="{Binding Mode=OneTime}" HorizontalAlignment="Center" Unloaded="FrameworkElement_DisposeOnUnloaded">
                             <!-- Resources -->
                             <ContentControl.Resources>
                                 <!-- Remember that the Binding context here refers to what's given in the Content of the ContentTemplate, not what ReSharper says -->
 
-                                <!--? //// StaticOrGIFTemplate //// -->
-                                <DataTemplate x:Key="StaticOrGIFTemplate" DataType="{x:Type models:ImageModel}">
+                                <!--? //// StaticTemplate //// -->
+                                <DataTemplate x:Key="StaticTemplate" DataType="{x:Type models:ImageModel}">
                                     <!--? Thumbnail -->
                                     <Image ToolTipService.ShowDuration="{StaticResource MaxInt32}"
-                                                                       Width="{Binding ImageSelectorThumbnailWidth}"
-                                                                       Height="{Binding ImageSelectorThumbnailHeight}"
-                                                                       Margin="3"
-                                                                       HorizontalAlignment="Center"
-                                                                       Loaded="Image_OnLoaded_LowQuality"
-                                                                       Unloaded="Image_OnUnloaded">
+                                           Width="{Binding ImageSelectorThumbnailWidth}"
+                                           Height="{Binding ImageSelectorThumbnailHeight}"
+                                           Margin="3"
+                                           HorizontalAlignment="Center"
+                                           Loaded="Image_OnLoaded_LowQuality"
+                                           Unloaded="Image_OnUnloaded"
+                                           MouseEnter="ImageSelector_Image_OnMouseEnter"
+                                           MouseLeave="ImaeSelector_Image_OnMouseLeave">
                                         <!--? ///// Image Tooltip /////-->
-                                        <Image.ToolTip>
-                                            <ContentControl Content="{Binding}">
-                                                <!-- Resources -->
-                                                <ContentControl.Resources>
-                                                    <!-- Static -->
-                                                    <DataTemplate x:Key="StaticTemplate">
-                                                        <Image Loaded="Tooltip_Image_OnLoaded"
-                                                               Unloaded="Tooltip_Image_OnUnloaded"
-                                                               Stretch="Uniform">
-                                                            <!--
-                                                            <Image.Source>
-                                                                <BitmapImage
-                                                                    CacheOption="OnLoad"
-                                                                    UriSource="{Binding Path, Mode=OneWay}">
-                                                                </BitmapImage>
-                                                            </Image.Source>
-                                                            -->
-                                                        </Image>
-                                                    </DataTemplate>
-                                                    <!-- GIF -->
-                                                    <DataTemplate x:Key="GIFTemplate">
-                                                        <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"
-                                                                                        Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" />
-                                                    </DataTemplate>
-                                                </ContentControl.Resources>
-                                                <!--? Template Control -->
-                                                <ContentControl.ContentTemplate>
-                                                    <DataTemplate>
-                                                        <!-- Default Template -->
-                                                        <ContentControl Name="cc" Content="{Binding }" 
-                                                                                ContentTemplate="{StaticResource StaticTemplate}"/>
-                                                        <!-- Triggers -->
-                                                        <DataTemplate.Triggers>
-                                                            <DataTrigger Binding="{Binding IsGif}" Value="True">
-                                                                <!-- Sets the ContentTemplate to be GIFTemplate instead of StaticTemplate -->
-                                                                <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource GIFTemplate}"/>
-                                                            </DataTrigger>
-                                                        </DataTemplate.Triggers>
-                                                    </DataTemplate>
-                                                </ContentControl.ContentTemplate>
-                                            </ContentControl>
-                                        </Image.ToolTip>
 
                                         <!--? Image Context Menu -->
                                         <!-- !Changes made here need to be made to the Media Context Menu as well!!! -->
@@ -162,8 +122,8 @@
                                     </Image>
                                 </DataTemplate>
 
-                                <!--? //// VideoTemplate //// -->
-                                <DataTemplate x:Key="VideoTemplate" DataType="{x:Type models:ImageModel}">
+                                <!--? //// VideoOrGifTemplate //// -->
+                                <DataTemplate x:Key="VideoOrGifTemplate" DataType="{x:Type models:ImageModel}">
                                     <GroupBox adonisExtensions:LayerExtension.IncreaseLayer="False"
                                                                   Width="{Binding ImageSelectorThumbnailWidthVideo}"
                                                                   Height="{Binding ImageSelectorThumbnailHeight}" 
@@ -183,13 +143,13 @@
                                                     <DataTemplate x:Key="FFME">
                                                         <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"
                                                                                         Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" 
-                                                                                        Volume="{Binding ActualVolume, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                                                        Volume="{Binding ActualVolume, Mode=OneTime, UpdateSourceTrigger=PropertyChanged}"/>
                                                     </DataTemplate>
                                                     <!--? Windows -->
                                                     <DataTemplate x:Key="Windows">
                                                         <MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" MediaEnded="MediaElement_OnMediaEnded"
                                                                                         Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" 
-                                                                                        Volume="{Binding ActualVolume, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                                                        Volume="{Binding ActualVolume, Mode=OneTime, UpdateSourceTrigger=PropertyChanged}"/>
                                                     </DataTemplate>
                                                 </ContentControl.Resources>
                                                 <ContentControl.ContentTemplate>
@@ -199,7 +159,7 @@
                                                                                         ContentTemplate="{StaticResource Windows}"/>
                                                         <!-- Triggers -->
                                                         <DataTemplate.Triggers>
-                                                            <DataTrigger Binding="{Binding IsWebmOrGif}" Value="True">
+                                                            <DataTrigger Binding="{Binding IsWebmOrGif, Mode=OneTime}" Value="True">
                                                                 <!-- Sets the ContentTemplate to be GIFTemplate instead of StaticTemplate -->
                                                                 <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource FFME}"/>
                                                             </DataTrigger>
@@ -233,7 +193,9 @@
                                                                                 ToolTip="Disabling an imageSet will stop it from appearing here, 
                                                                                       if you want to see the imageSet again select Enable Detection of Inactive Images"/>
                                                 <Separator/>
-                                                <MenuItem Header="Volume" mvx:Bi.nd="Command SetVolumeCommand"/>
+                                                <MenuItem Header="Volume" mvx:Bi.nd="Command SetVolumeCommand"
+                                                          Visibility="{Binding IsVideo,
+                                                    Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                                 <MenuItem Header="Speed" mvx:Bi.nd="Command SetSpeedCommand"/>
                                                 <MenuItem Header="Override Max Loop Count"/>
                                                 <MenuItem Header="Override Max Video Timer"/>
@@ -242,7 +204,7 @@
                                     </GroupBox>
                                 </DataTemplate>
 
-                                <!--? //// Image Set Template //// -->
+                                <!--! //// Image Set Template //// -->
                                 <DataTemplate x:Key="RelatedImageTemplate" DataType="{x:Type models:ImageSetModel}">
                                     <GroupBox adonisExtensions:LayerExtension.IncreaseLayer="False" BorderThickness="2" BorderBrush="SlateBlue"
                                               adonisExtensions:CornerRadiusExtension.CornerRadius="10">
@@ -340,18 +302,22 @@
                                                                                                 <TextBlock Text="Speed: " VerticalAlignment="Center"/>
                                                                                                 <TextBox Text="{Binding Speed}" VerticalAlignment="Center">
                                                                                                     <TextBox.Style>
-                                                                                                        <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInputDecimal}"/>
+                                                                                                        <Style TargetType="{x:Type TextBox}" 
+                                                                                                            BasedOn="{StaticResource TextBoxNumInputDecimal}"/>
                                                                                                     </TextBox.Style>
                                                                                                 </TextBox>
                                                                                             </StackPanel>
                                                                                         </MenuItem.Header>
                                                                                     </MenuItem>
                   
-                                                                                    <MenuItem Header="Fraction Intervals" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding FractionIntervals}"
+                                                                                    <MenuItem Header="Fraction Intervals" IsCheckable="True" StaysOpenOnClick="True" 
+                                                                                        IsChecked="{Binding FractionIntervals}"
                                                                             ToolTip="Interval amount is determined by the wallpaper change interval (Multiplied by Speed)"/>
-                                                                                    <MenuItem Header="Static Intervals" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding StaticIntervals}"
+                                                                                    <MenuItem Header="Static Intervals" IsCheckable="True" StaysOpenOnClick="True" 
+                                                                                        IsChecked="{Binding StaticIntervals}"
                                                                             ToolTip="Speed will instead represent the length of each frame"/>
-                                                                                    <MenuItem Header="Weighted Intervals" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding WeightedIntervals}"
+                                                                                    <MenuItem Header="Weighted Intervals" IsCheckable="True" StaysOpenOnClick="True" 
+                                                                                        IsChecked="{Binding WeightedIntervals}"
                                                                             ToolTip="Gives each imageSet an interval weighted to their rank (Requires Static or Fraction intervals to function)"/>
 
                                                                                     <Separator/>
@@ -450,7 +416,6 @@
                                                     </ContextMenu>
                                                 </Image.ContextMenu>
                                             </Image>
-
                                         </GroupBox>
                                     </GroupBox>
                                 </DataTemplate>
@@ -460,12 +425,12 @@
                             <ContentControl.ContentTemplate>
                                 <DataTemplate>
                                     <!-- Default Control -->
-                                    <ContentControl Name="cc" Content="{Binding }" ContentTemplate="{StaticResource StaticOrGIFTemplate}"/>
+                                    <ContentControl Name="cc" Content="{Binding }" ContentTemplate="{StaticResource StaticTemplate}"/>
                                     <!-- Triggers -->
                                     <DataTemplate.Triggers>
                                         <!-- If IsVideo, use the VideoTemplate instead -->
-                                        <DataTrigger Binding="{Binding IsVideo}" Value="True">
-                                            <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource VideoTemplate}"/>
+                                        <DataTrigger Binding="{Binding IsAnimated}" Value="True">
+                                            <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource VideoOrGifTemplate}"/>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding IsImageSet}" Value="True">
                                             <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource RelatedImageTemplate}"/>

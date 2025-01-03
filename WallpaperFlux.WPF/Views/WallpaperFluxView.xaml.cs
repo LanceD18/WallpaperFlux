@@ -67,6 +67,8 @@ namespace WallpaperFlux.WPF.Views
         public WallpaperFluxView()
         {
             InitializeComponent();
+            ToolTipThumbnailImage = new Image();
+            ToolTipFfmeMediaElement = new Unosquare.FFME.MediaElement();
         }
 
         private void WallpaperFluxView_OnSizeChanged_UpdateInspectorHeight(object sender, SizeChangedEventArgs e) => WallpaperFluxViewModel.Instance.SetInspectorHeight(ActualHeight - 75);
@@ -88,7 +90,7 @@ namespace WallpaperFlux.WPF.Views
         {
             if (sender is Image image)
             {
-                LoadImage(image, false);
+                LoadImage(image, false, image);
             }
             else if (sender is MediaElement element)
             {
@@ -131,16 +133,16 @@ namespace WallpaperFlux.WPF.Views
             }
         }
 
-        private async void LoadImage(Image image, bool highQuality)
+        private async void LoadImage(Image image, bool highQuality, Image imageWithContext)
         {
-            ImageModel thumbnailSource = image.DataContext switch
+            ImageModel thumbnailSource = imageWithContext.DataContext switch
             {
                 ImageModel imageModel => imageModel,
                 ImageSetModel imageSet => imageSet.GetHighestRankedImage(),
                 _ => null
             };
 
-            if (thumbnailSource == null) return;
+            if (thumbnailSource == null) return; // ! failed
 
             await Task.Run(() =>
             {
@@ -229,6 +231,7 @@ namespace WallpaperFlux.WPF.Views
                 bitmap.Freeze(); // prevents unnecessary copying: https://stackoverflow.com/questions/799911/in-what-scenarios-does-freezing-wpf-objects-benefit-performance-greatly
                 // --- End Init (Freeze) ---
 
+
                 //! await Task.Run() will be used outside of this method to capture the Bitmap within the 'calling thread'
                 Dispatcher.Invoke(() => // the image must be called on the UI thread which the dispatcher helps us do under this other thread
                 {
@@ -260,96 +263,101 @@ namespace WallpaperFlux.WPF.Views
         {
             if (sender is Image image)
             {
-                //ximage.BeginInit();
-
-                LoadImage(image, true);
-
-                Point mousePos = PointToScreen(Mouse.GetPosition(this));
-                Rect mouseRect = new Rect(mousePos, mousePos);
-
-                int wallpaperIndex = -1;
-                Screen[] displays = DisplayUtil.Displays.ToArray();
-                for (int i = 0; i < DisplayUtil.Displays.Count(); i++)
-                {
-                    if (displays[i].WorkingArea.IntersectsWith(mouseRect))
-                    {
-                        wallpaperIndex = i;
-                    }
-                }
-
-                try // for just in case the casting fails, we can just use the normal size
-                {
-                    async void AttemptSetSize(int retries = 0)
-                    {
-                        if (retries > 3) return; // tried too many times, just return
-
-                        if (wallpaperIndex != -1 && image.Source != null)
-                        {
-                            int pxWidth = ((BitmapSource)image.Source).PixelWidth;
-                            int pxHeight = ((BitmapSource)image.Source).PixelHeight;
-
-                            double wallWidth = MainWindow.Instance.Wallpapers[wallpaperIndex].Width;
-                            double wallHeight = MainWindow.Instance.Wallpapers[wallpaperIndex].Height;
-                            //xDebug.WriteLine("Pixel Width: " + pxWidth);
-                            //xDebug.WriteLine("Pixel Height: " + pxHeight);
-
-                            bool oversizedWidth = pxWidth > wallWidth;
-                            bool oversizedHeight = pxHeight > wallHeight;
-
-                            // dynamically resize based on the ratio of the oversized dimension
-                            if (oversizedWidth || oversizedHeight) //? ratios are only touched on if one size extends beyond the dimensions of the monitor screen
-                            {
-                                double ratio;
-
-                                if (pxWidth > pxHeight) // the larger value indicates which direction the image will stretch, indicating which direction we need to shorten
-                                {
-                                    ratio = wallHeight / pxWidth;
-                                }
-                                else
-                                {
-                                    ratio = wallHeight / pxHeight;
-                                }
-
-                                pxWidth = (int)(pxWidth * ratio);
-                                pxHeight = (int)(pxHeight * ratio);
-                            }
-                            
-                            image.Width = pxWidth;
-                            image.Height = pxHeight;
-                            //xDebug.WriteLine("Image Width: " + image.Width); 
-                            //xDebug.WriteLine("Image Height: " + image.Height);
-                        }
-                        else
-                        {
-                            Debug.WriteLine("Potential invalid image source, try again");
-
-                            await Task.Run(() =>
-                            {
-                                Thread.Sleep((int)Math.Pow(10, retries + 1)); // increment the delay so that we don't spam retries
-
-                                Dispatcher.Invoke(() =>
-                                {
-                                    AttemptSetSize(++retries); //? sometimes the image source won't load fast enough and we'll need to try again
-                                });
-                            });
-                        }
-                    }
-
-                    // start attempts
-                    AttemptSetSize();
-                }
-                catch (Exception exception)
-                {
-                    Debug.WriteLine("Tooltip Resizing Failed: " + exception);
-                }
-                
-                //ximage.EndInit();
-                //ximage.UpdateLayout();
+                LoadTooltip(ToolTipThumbnailImage);
             }
             else
             {
                 Debug.WriteLine("Image failed to send");
             }
+        }
+
+        private async void LoadTooltip(Image image)
+        {
+            //ximage.BeginInit();
+
+            LoadImage(image, true, ThumbnailImage);
+
+            Point mousePos = PointToScreen(Mouse.GetPosition(this));
+            Rect mouseRect = new Rect(mousePos, mousePos);
+
+            int wallpaperIndex = -1;
+            Screen[] displays = DisplayUtil.Displays.ToArray();
+            for (int i = 0; i < DisplayUtil.Displays.Count(); i++)
+            {
+                if (displays[i].WorkingArea.IntersectsWith(mouseRect))
+                {
+                    wallpaperIndex = i;
+                }
+            }
+
+            try // for just in case the casting fails, we can just use the normal size
+            {
+                async void AttemptSetSize(int retries = 0)
+                {
+                    if (retries > 3) return; // tried too many times, just return
+
+                    if (wallpaperIndex != -1 && image.Source != null)
+                    {
+                        int pxWidth = ((BitmapSource)image.Source).PixelWidth;
+                        int pxHeight = ((BitmapSource)image.Source).PixelHeight;
+
+                        double wallWidth = MainWindow.Instance.Wallpapers[wallpaperIndex].Width;
+                        double wallHeight = MainWindow.Instance.Wallpapers[wallpaperIndex].Height;
+                        //xDebug.WriteLine("Pixel Width: " + pxWidth);
+                        //xDebug.WriteLine("Pixel Height: " + pxHeight);
+
+                        bool oversizedWidth = pxWidth > wallWidth;
+                        bool oversizedHeight = pxHeight > wallHeight;
+
+                        // dynamically resize based on the ratio of the oversized dimension
+                        if (oversizedWidth || oversizedHeight) //? ratios are only touched on if one size extends beyond the dimensions of the monitor screen
+                        {
+                            double ratio;
+
+                            if (pxWidth > pxHeight) // the larger value indicates which direction the image will stretch, indicating which direction we need to shorten
+                            {
+                                ratio = wallHeight / pxWidth;
+                            }
+                            else
+                            {
+                                ratio = wallHeight / pxHeight;
+                            }
+
+                            pxWidth = (int)(pxWidth * ratio);
+                            pxHeight = (int)(pxHeight * ratio);
+                        }
+
+                        image.Width = pxWidth;
+                        image.Height = pxHeight;
+                        //xDebug.WriteLine("Image Width: " + image.Width); 
+                        //xDebug.WriteLine("Image Height: " + image.Height);
+                    }
+                    else
+                    {
+                        Debug.WriteLine("Potential invalid image source, try again");
+
+                        await Task.Run(() =>
+                        {
+                            Thread.Sleep((int)Math.Pow(10, retries + 1)); // increment the delay so that we don't spam retries
+
+                            Dispatcher.Invoke(() =>
+                            {
+                                AttemptSetSize(++retries); //? sometimes the image source won't load fast enough and we'll need to try again
+                            });
+                        });
+                    }
+                }
+
+                // start attempts
+                //xAttemptSetSize();
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine("Tooltip Resizing Failed: " + exception);
+            }
+
+            //ximage.EndInit();
+            //ximage.UpdateLayout();
         }
 
         private void Tooltip_Image_OnUnloaded(object sender, RoutedEventArgs e)
@@ -504,9 +512,19 @@ namespace WallpaperFlux.WPF.Views
 
         private void UnloadImage(Image image)
         {
-            image.BeginInit();
             image.Source = null;
-            image.EndInit();
+            BindingOperations.ClearAllBindings(image);
+            image = null;
+
+            // ! controls will not dispose if any events are still remaining or the control is not null
+            // x https://stackoverflow.com/questions/19222400/wpf-user-control-not-being-disposed
+            /*x
+            image.Loaded -= Tooltip_Image_OnLoaded;
+            image.Unloaded -= Tooltip_Image_OnUnloaded;
+            BindingOperations.ClearAllBindings(image);
+            image = null;
+            */
+
             /*x
             UpdateLayout();
 
@@ -676,5 +694,132 @@ namespace WallpaperFlux.WPF.Views
             // Set the Handled property to true to prevent the context menu from closing
             e.Handled = true;
         }
+
+        private void FrameworkElement_DisposeOnUnloaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement element)
+            {
+                BindingOperations.ClearAllBindings(element);
+                element = null;
+
+                // ! controls will not dispose if any events are still remaining or the control is not null
+                // x https://stackoverflow.com/questions/19222400/wpf-user-control-not-being-disposed
+                /*x
+                image.Loaded -= Tooltip_Image_OnLoaded;
+                image.Unloaded -= Tooltip_Image_OnUnloaded;
+                BindingOperations.ClearAllBindings(image);
+                image = null;
+                */
+            }
+        }
+
+        private Image ToolTipThumbnailImage = new Image();
+        private Image ThumbnailImage;
+        private Unosquare.FFME.MediaElement ToolTipFfmeMediaElement;
+        private void ImageSelector_Image_OnMouseEnter(object sender, MouseEventArgs e)
+        {
+            if (sender is Image image)
+            {
+                ThumbnailImage = image;
+                ImageModel imageModel = GetImageModelFromContext(image);
+
+                if (!imageModel.IsGif)
+                {
+                    image.ToolTip = ToolTipThumbnailImage;
+                    LoadTooltip(ToolTipThumbnailImage);
+                }
+                else
+                {
+                    ToolTipFfmeMediaElement = new Unosquare.FFME.MediaElement();
+                    ToolTipFfmeMediaElement.LoadedBehavior = MediaPlaybackState.Play;
+                    ToolTipFfmeMediaElement.LoopingBehavior = MediaPlaybackState.Play;
+
+                    image.ToolTip = ToolTipFfmeMediaElement;
+                    Task.Run( async () =>
+                    {
+                        await ToolTipFfmeMediaElement.Open(new Uri(imageModel.Path));
+                        await ToolTipFfmeMediaElement.Play();
+                    }).ConfigureAwait(false);
+                }
+            }
+        }
+
+        private void ImaeSelector_Image_OnMouseLeave(object sender, MouseEventArgs e)
+        {
+            ThumbnailImage.ToolTip = null;
+            ToolTipThumbnailImage.Source = null;
+            ToolTipFfmeMediaElement.Stop();
+            ToolTipFfmeMediaElement.Dispose();
+            /*x
+            Task.Run(async () =>
+            {
+                await ToolTipFfmeMediaElement.Stop();
+                ToolTipFfmeMediaElement.Dispose();
+            }).ConfigureAwait(false);
+            */
+        }
+
+        private ImageModel GetImageModelFromContext(Image imageWithContext)
+        {
+            ImageModel thumbnailSource = imageWithContext.DataContext switch
+            {
+                ImageModel imageModel => imageModel,
+                ImageSetModel imageSet => imageSet.GetHighestRankedImage(),
+                _ => null
+            };
+
+            return thumbnailSource;
+        }
+        /*
+                                        <Image.ToolTip>
+                                            <ContentControl Content = "{Binding Mode=OneTime}" >
+                                                < !--Resources-- >
+                                                < ContentControl.Resources >
+                                                    < !--Static-- >
+                                                    < DataTemplate x:Key="StaticTemplate">
+                                                        <!--
+                                                        <Image Loaded = "Tooltip_Image_OnLoaded"
+                                                               Unloaded="Tooltip_Image_OnUnloaded"
+                                                               Stretch="Uniform">
+                                                        </Image>
+                                                        -->
+
+                                                        <!--
+                                                        <Image Stretch = "Uniform" >
+                                                            < Image.Source >
+                                                                < BitmapImage
+                                                                    CacheOption="OnLoad"
+                                                                    UriSource="{Binding Path, Mode=OneWay}">
+                                                                </BitmapImage>
+                                                            </Image.Source>
+                                                        </Image>
+                                                        -->
+                                                    </DataTemplate>
+                                                    <!-- GIF -->
+                                                    <DataTemplate x:Key="GIFTemplate">
+                                                        <ffme:MediaElement UnloadedBehavior = "Manual" LoadedBehavior="Play" LoopingBehavior="Play"
+                                                                                        Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" />
+                                                    </DataTemplate>
+                                                </ContentControl.Resources>
+                                                <!--? Template Control -->
+                                                <ContentControl.ContentTemplate>
+                                                    <DataTemplate>
+                                                        <!-- Default Template -->
+                                                        <ContentControl Name = "cc" Content="{Binding Mode=OneTime}" 
+                                                                                ContentTemplate="{StaticResource StaticTemplate}"/>
+                                                        <!-- Triggers -->
+                                                        <DataTemplate.Triggers>
+                                                            <DataTrigger Binding = "{Binding IsGif, Mode=OneTime}" Value="True">
+                                                                <!-- Sets the ContentTemplate to be GIFTemplate instead of StaticTemplate -->
+                                                                <Setter TargetName = "cc" Property="ContentTemplate" Value="{StaticResource GIFTemplate}"/>
+                                                            </DataTrigger>
+                                                        </DataTemplate.Triggers>
+                                                    </DataTemplate>
+                                                </ContentControl.ContentTemplate>
+                                            </ContentControl>
+                                        </Image.ToolTip>
+
+
+        */
     }
 }
