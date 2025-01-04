@@ -679,7 +679,6 @@ namespace WallpaperFlux.WPF
                 else
                 {
                     //? mute regardless of whether there is a valid image
-
                     WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = 0;
                 }
             });
