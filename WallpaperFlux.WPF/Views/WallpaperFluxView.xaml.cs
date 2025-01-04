@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -45,6 +46,7 @@ using WpfAnimatedGif;
 using WpfScreenHelper;
 using ControlUtil = WallpaperFlux.WPF.Util.ControlUtil;
 using Image = System.Windows.Controls.Image;
+using MenuItem = System.Windows.Controls.MenuItem;
 using Point = System.Windows.Point;
 using Size = System.Windows.Size;
 
@@ -67,8 +69,8 @@ namespace WallpaperFlux.WPF.Views
         public WallpaperFluxView()
         {
             InitializeComponent();
-            ToolTipThumbnailImage = new Image();
-            ToolTipFfmeMediaElement = new Unosquare.FFME.MediaElement();
+
+            InitToolTipItems();
         }
 
         private void WallpaperFluxView_OnSizeChanged_UpdateInspectorHeight(object sender, SizeChangedEventArgs e) => WallpaperFluxViewModel.Instance.SetInspectorHeight(ActualHeight - 75);
@@ -114,7 +116,7 @@ namespace WallpaperFlux.WPF.Views
                 {
                     element.Stop();
                     element.Close();
-                    element.ClearValue(MediaElement.SourceProperty);
+                    //xelement.ClearValue(MediaElement.SourceProperty);
                     element.Source = null;
                 }
 
@@ -372,7 +374,7 @@ namespace WallpaperFlux.WPF.Views
         
         private void Image_OnLoaded_LowQuality(object sender, RoutedEventArgs e)
         {
-            ImageModel imageModel = null;
+            ImageModel imageModel;
             if (sender is Image image)
             {
                 imageModel = image.DataContext switch
@@ -386,35 +388,21 @@ namespace WallpaperFlux.WPF.Views
                 {
                     Thread thread = new Thread(() => //? this cannot thread over the if statement while the Image object is present
                     {
-                        // ? don't load gifs on low quality
-                        LoadBitmapImage(image, false/*x, false*/, imageModel.Path, imageModel.ImageSelectorThumbnailHeight);
-                        /*x
-                        try //? this can accidentally fire off multiple times and cause crashes when trying to load videos (Who still need this for some reason?)
+                        if (!imageModel.IsVideo)
                         {
-                            BitmapImage bitmap = new BitmapImage();
-                            //xstring path = imageModel.Path;
-                            //xFileStream stream = File.OpenRead(path);
-
-                            bitmap.BeginInit();
-                            RenderOptions.SetBitmapScalingMode(bitmap, BitmapScalingMode.LowQuality);
-                            bitmap.DecodePixelHeight = imageModel.ImageSelectorThumbnailHeight; //! Only set either Height or Width (preferably the larger variant?) to prevent awful stretching!
-                                                                                                //x bitmap.DecodePixelWidth = imageModel.ImageSelectorThumbnailWidth;
-                            bitmap.CreateOptions = BitmapCreateOptions.IgnoreImageCache; // to help with performance
-                            bitmap.CacheOption = BitmapCacheOption.None;
-                            bitmap.UriSource = new Uri(imageModel.Path);
-                            bitmap.EndInit();
-                            bitmap.Freeze(); // prevents unnecessary copying: https://stackoverflow.com/questions/799911/in-what-scenarios-does-freezing-wpf-objects-benefit-performance-greatly
-                                             //xstream.Close();
-                                             //xstream.Dispose();
-
-                            Dispatcher.Invoke(() => image.Source = bitmap); // the image must be called on the UI thread which the dispatcher helps us do under this other thread
+                            // ? don't load gifs on low quality
+                            LoadBitmapImage(image, false /*x, false*/, imageModel.Path, imageModel.ImageSelectorThumbnailHeight);
                         }
-                        catch (Exception exception)
+                        else
                         {
-                            Console.WriteLine("ERROR: Bitmap Creation Failed: " + exception);
-                            //x throw;
+                            using (ShellFile shellFile = ShellFile.FromFilePath(imageModel.Path))
+                            {
+                                using (Bitmap bm = shellFile.Thumbnail.Bitmap)
+                                {
+                                    ConvertBitmapToThumbnailBitmapImage(image, bm, imageModel);
+                                }
+                            }
                         }
-                        */
                     });
 
                     thread.IsBackground = true; // stops the thread from continuing to run on closing the application
@@ -684,7 +672,8 @@ namespace WallpaperFlux.WPF.Views
         {
             if (sender is MediaElement element)
             {
-                element.Position = TimeSpan.FromSeconds(0);
+                //xelement.Position = TimeSpan.FromSeconds(0);
+                element.Position = new TimeSpan(0, 0, 1);
                 element.Play();
             }
         }
@@ -715,7 +704,8 @@ namespace WallpaperFlux.WPF.Views
 
         private Image ToolTipThumbnailImage = new Image();
         private Image ThumbnailImage;
-        private Unosquare.FFME.MediaElement ToolTipFfmeMediaElement;
+        private List<Unosquare.FFME.MediaElement> ToolTipFfmeMediaElements = new List<Unosquare.FFME.MediaElement>();
+        private MediaElement ToolTipMediaElement;
         private void ImageSelector_Image_OnMouseEnter(object sender, MouseEventArgs e)
         {
             if (sender is Image image)
@@ -723,23 +713,43 @@ namespace WallpaperFlux.WPF.Views
                 ThumbnailImage = image;
                 ImageModel imageModel = GetImageModelFromContext(image);
 
-                if (!imageModel.IsGif)
+                if (imageModel.IsStatic)
                 {
                     image.ToolTip = ToolTipThumbnailImage;
                     LoadTooltip(ToolTipThumbnailImage);
                 }
-                else
+                else if (imageModel.IsWebm)
                 {
-                    ToolTipFfmeMediaElement = new Unosquare.FFME.MediaElement();
-                    ToolTipFfmeMediaElement.LoadedBehavior = MediaPlaybackState.Play;
-                    ToolTipFfmeMediaElement.LoopingBehavior = MediaPlaybackState.Play;
+                    return;
+                    var element = new Unosquare.FFME.MediaElement
+                    {
+                        LoadedBehavior = MediaPlaybackState.Play,
+                        LoopingBehavior = MediaPlaybackState.Play,
+                    };
+                    ToolTipFfmeMediaElements.Add(element);
+                    element.RendererOptions.UseLegacyAudioOut = true;
+                    element.MessageLogged += ToolTipFfmeMediaElementOnMessageLogged;
 
-                    image.ToolTip = ToolTipFfmeMediaElement;
+                    element.Volume = imageModel.ActualVolume;
+                    element.Open(new Uri(imageModel.Path));
+                    element.IsEnabled = true;
+
+                    image.ToolTip = element;
+                    /*x
                     Task.Run( async () =>
                     {
                         await ToolTipFfmeMediaElement.Open(new Uri(imageModel.Path));
-                        await ToolTipFfmeMediaElement.Play();
+                        //xawait ToolTipFfmeMediaElement.ChangeMedia();
                     }).ConfigureAwait(false);
+                    */
+                }
+                else
+                {
+                    ToolTipMediaElement.Volume = imageModel.ActualVolume;
+                    ToolTipMediaElement.Source = new Uri(imageModel.Path);
+                    ToolTipMediaElement.IsEnabled = true;
+
+                    image.ToolTip = ToolTipMediaElement;
                 }
             }
         }
@@ -748,8 +758,45 @@ namespace WallpaperFlux.WPF.Views
         {
             ThumbnailImage.ToolTip = null;
             ToolTipThumbnailImage.Source = null;
-            ToolTipFfmeMediaElement.Stop();
-            ToolTipFfmeMediaElement.Dispose();
+
+            //xUnloadMediaElement(ToolTipFfmeMediaElement);
+
+            /*x
+            for (var i = 0; i < ToolTipFfmeMediaElements.Count; i++)
+            {
+                var element = ToolTipFfmeMediaElements[i];
+                if (element.IsOpening)
+                {
+                    element.Stop();
+                    Task.Run(() =>
+                    {
+                        Thread.Sleep(1000);
+                        element.Close();
+                    });
+                }
+                else
+                {
+                    if (element.IsOpen)
+                    {
+                        element.IsEnabled = false;
+                        element.ClearValue(MediaElement.SourceProperty);
+                        element.Close();
+                    }
+
+                    ToolTipFfmeMediaElements.RemoveAt(i);
+                    i--;
+                }
+            }
+            */
+
+            //xToolTipFfmeMediaElement.Close();
+
+            ToolTipMediaElement.Stop();
+            ToolTipMediaElement.Close();
+            ToolTipMediaElement.IsEnabled = false;
+            ToolTipMediaElement.Source = null;
+
+            //xToolTipFfmeMediaElement.Dispose();
             /*x
             Task.Run(async () =>
             {
@@ -757,6 +804,36 @@ namespace WallpaperFlux.WPF.Views
                 ToolTipFfmeMediaElement.Dispose();
             }).ConfigureAwait(false);
             */
+        }
+
+        private void InitToolTipItems()
+        {
+            ToolTipThumbnailImage = new Image();
+
+            /*x
+            ToolTipFfmeMediaElement = new Unosquare.FFME.MediaElement
+            {
+                LoadedBehavior = MediaPlaybackState.Play,
+                LoopingBehavior = MediaPlaybackState.Play,
+            };
+            ToolTipFfmeMediaElement.RendererOptions.UseLegacyAudioOut = true;
+            ToolTipFfmeMediaElement.MessageLogged += ToolTipFfmeMediaElementOnMessageLogged;
+            */
+
+            ToolTipMediaElement = new MediaElement
+            {
+                LoadedBehavior = MediaState.Play,
+                UnloadedBehavior = MediaState.Manual,
+            };
+            ToolTipMediaElement.MediaEnded += MediaElement_OnMediaEnded;
+        }
+
+        private void ToolTipFfmeMediaElementOnMessageLogged(object sender, MediaLogMessageEventArgs e)
+        {
+            if (e.MessageType == MediaLogMessageType.Trace)
+                return;
+
+            Debug.WriteLine($"ToolTipFfmeMediaElement: {e.MessageType} | {e.Message}");
         }
 
         private ImageModel GetImageModelFromContext(Image imageWithContext)
@@ -821,5 +898,439 @@ namespace WallpaperFlux.WPF.Views
 
 
         */
+
+        private void ImageSelector_GroupBox_OnLoaded(object sender, RoutedEventArgs e)
+        {
+            throw new NotImplementedException();
+            if (sender is GroupBox groupBox)
+            {
+                BaseImageModel bImageModel = groupBox.DataContext as BaseImageModel;
+                ContextMenu cMenu = new ContextMenu();
+
+                MenuItem setWallpaperItem = new MenuItem() { Header = "Set As Wallpaper", Command = bImageModel.SetWallpaperCommand };
+
+                if (bImageModel is ImageModel imageModel)
+                {
+                    MenuItem openFileItem = new MenuItem() { Header = "Open File", Command = imageModel.OpenFileCommand };
+                    MenuItem openFileLocationItem = new MenuItem() { Header = "Open File Location", Command = imageModel.ViewFileCommand };
+                    Separator s1 = new Separator();
+                    MenuItem renameItem = new MenuItem() { Header = "Rename", Command = imageModel.RenameImageCommand };
+                    MenuItem moveItem = new MenuItem() { Header = "Move", Command = imageModel.MoveImageCommand };
+                    MenuItem deleteItem = new MenuItem() { Header = "Delete", Command = imageModel.DeleteImageCommand };
+                    //xMenuItem rankItem = new MenuItem() { Header = "Rank", Command = imageModel.RankImageCommand }; Not really needed, doesn't help with group ranking
+                    Separator s2 = new Separator();
+                    MenuItem setTagsToTagboardItem = new MenuItem() { Header = "Set Tags to Tagboard", Command = imageModel.SetTagsToTagBoardCommand };
+                    MenuItem pasteTagboardToImageItem = new MenuItem() { Header = "Paste Tagboard to Image", Command = imageModel.PasteTagBoardCommand };
+                    MenuItem pasteTagsToTagboardItem = new MenuItem() { Header = "Paste Tags to Tagboard", Command = imageModel.PasteTagsToTagBoardCommand };
+                    Separator s3 = new Separator();
+
+                    cMenu.Items.Add(openFileItem);
+                    cMenu.Items.Add(openFileLocationItem);
+                    cMenu.Items.Add(setWallpaperItem);
+                    cMenu.Items.Add(s1);
+                    cMenu.Items.Add(renameItem);
+                    cMenu.Items.Add(moveItem);
+                    cMenu.Items.Add(deleteItem);
+                    cMenu.Items.Add(s2);
+                    cMenu.Items.Add(setTagsToTagboardItem);
+                    cMenu.Items.Add(pasteTagboardToImageItem);
+                    cMenu.Items.Add(pasteTagsToTagboardItem);
+                    cMenu.Items.Add(s3);
+
+                    if (imageModel.IsAnimated)
+                    {
+                        MenuItem speedItem = new MenuItem() { Header = "Speed", Command = null };
+                        MenuItem overrideMaxLoopCountItem = new MenuItem() { Header = "Override Max Loop Count", Command = null };
+                        MenuItem overrideMaxVideoTimerItem = new MenuItem() { Header = "Override Max video Timer", Command = null };
+
+                        cMenu.Items.Add(speedItem);
+                        cMenu.Items.Add(overrideMaxLoopCountItem);
+                        cMenu.Items.Add(overrideMaxVideoTimerItem);
+                    }
+
+                    if (imageModel.IsVideo)
+                    {
+                        MenuItem volumeItem = new MenuItem() { Header = "Volume", Command = null };
+                        cMenu.Items.Add(volumeItem);
+                    }
+                }
+                else if (bImageModel is ImageSetModel setModel)
+                {
+                    cMenu.Items.Add(setWallpaperItem);
+
+                    MenuItem setTypeItem = new MenuItem() { Header = "Set Type" };
+                    MenuItem setTypeOptionsItem = new MenuItem();
+
+                    // ? if referencing this in the future for the enumeration, don't forget that this used to be done like this: (where extensions:Enumeration comes from LanceTools)
+                    /*
+                        < ComboBox ItemsSource = "{Binding Source={extensions:Enumeration {x:Type coreUtil:ImageSetType}}}"
+                                               DisplayMemberPath = "Description"
+                                               SelectedValue = "{Binding SetType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                               SelectedValuePath = "Value" >
+                    */
+                    ComboBox setTypeOptionsBox = new ComboBox() { ToolTip = "Set Type" };
+                    Binding selectedValueBinding = new Binding()
+                    {
+                        Path = new PropertyPath(typeof(ImageSetModel).GetProperty(nameof(ImageSetModel.SetType))),
+                        Mode = BindingMode.TwoWay,
+                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+                    };
+                    BindingOperations.SetBinding(setTypeOptionsBox, Selector.SelectedValueProperty, selectedValueBinding);
+                    foreach (ImageSetType setType in Enum.GetValues(typeof(ImageSetType))) setTypeOptionsBox.Items.Add(setType);
+
+                    setTypeOptionsItem.Header = setTypeOptionsBox;
+                    setTypeItem.Items.Add(setTypeOptionsItem);
+
+                    MenuItem setDependentOptionsItem = new MenuItem();
+                    ContentControl setOptionsControl = new ContentControl();
+                    ResourceDictionary setOptionsResources = new ResourceDictionary();
+
+                    DataTemplate altTemplate = new DataTemplate();
+                    DataTemplate animateTemplate = new DataTemplate();
+                    DataTemplate mergeTemplate = new DataTemplate();
+
+                    FrameworkElementFactory altItem = new FrameworkElementFactory(typeof(MenuItem));
+                    altItem.SetValue(HeaderedItemsControl.HeaderProperty, "Alt");
+                    FrameworkElementFactory altPanel = new FrameworkElementFactory(typeof(StackPanel));
+                    altPanel.AppendChild(altItem);
+                    altTemplate.VisualTree = altPanel;
+
+                    FrameworkElementFactory animateItem = new FrameworkElementFactory(typeof(MenuItem));
+                    animateItem.SetValue(HeaderedItemsControl.HeaderProperty, "Animate");
+                    FrameworkElementFactory animatePanel = new FrameworkElementFactory(typeof(StackPanel));
+                    animatePanel.AppendChild(animateItem);
+                    animateTemplate.VisualTree = animatePanel;
+
+                    FrameworkElementFactory mergeItem = new FrameworkElementFactory(typeof(MenuItem));
+                    mergeItem.SetValue(HeaderedItemsControl.HeaderProperty, "Merge");
+                    FrameworkElementFactory mergePanel = new FrameworkElementFactory(typeof(StackPanel));
+                    mergePanel.AppendChild(mergeItem);
+                    mergeTemplate.VisualTree = mergePanel;
+
+                    setOptionsResources.Add(ImageSetType.Alt, altTemplate);
+                    setOptionsResources.Add(ImageSetType.Animate, animateTemplate);
+                    setOptionsResources.Add(ImageSetType.Merge, mergeTemplate);
+
+                    setOptionsControl.Resources = setOptionsResources;
+
+                    DataTemplate setOptionsContentTemplate = new DataTemplate();
+                    FrameworkElementFactory contentTemplateControl = new FrameworkElementFactory(typeof(ContentControl));
+                    contentTemplateControl.SetValue( ContentControl.NameProperty, "cc");
+                    contentTemplateControl.SetValue(ContentControl.ContentProperty, setModel);
+                    contentTemplateControl.SetValue(ContentControl.ContentTemplateProperty, altTemplate);
+                    setOptionsContentTemplate.VisualTree = contentTemplateControl;
+
+                    DataTrigger animatedTrigger = new DataTrigger();
+                    Setter animatedSetter = new Setter(ContentTemplateProperty, animateTemplate, "cc");
+                    animatedTrigger.Setters.Add(animatedSetter);
+                    setOptionsContentTemplate.Triggers.Add(animatedTrigger);
+
+                    DataTrigger mergeTrigger = new DataTrigger();
+                    Setter mergeSetter = new Setter(ContentTemplateProperty, mergeTemplate, "cc");
+                    animatedTrigger.Setters.Add(mergeSetter);
+                    setOptionsContentTemplate.Triggers.Add(mergeTrigger);
+
+
+                    setOptionsControl.ContentTemplate = setOptionsContentTemplate;
+
+                    setDependentOptionsItem.Header = setOptionsControl;
+                    setTypeItem.Items.Add(setDependentOptionsItem);
+                    cMenu.Items.Add(setTypeItem);
+                }
+
+                groupBox.ContextMenu = cMenu;
+            }
+        }
     }
 }
+
+/*
+                                    < MenuItem.Header >
+                                        < ContentControl Content = "{Binding Mode=OneTime}" HorizontalAlignment = "Center" >
+   
+                                               < ContentControl.Resources >
+   
+                                                   < !-- ? ImageModelTemplate - Context Menu-- >
+   
+                                                   < DataTemplate x: Key = "ImageModelTemplate" DataType = "{x:Type models:ImageModel}" >
+       
+                                                           < ContextMenu >
+       
+                                                               < MenuItem Header = "Open File" mvx: Bi.nd = "Command OpenFileCommand" />
+           
+                                                                   < MenuItem Header = "Open File Location" mvx: Bi.nd = "Command ViewFileCommand" />
+               
+                                                                       < MenuItem Header = "Set As Wallpaper" mvx: Bi.nd = "Command SetWallpaperCommand" />
+                   
+                                                                           < Separator />
+                   
+                                                                           < MenuItem Header = "Rename" Command = "{Binding RenameImageCommand}" />
+                      
+                                                                              < MenuItem Header = "Move" Command = "{Binding MoveImageCommand}" />
+                         
+                                                                                 < MenuItem Header = "Delete" Command = "{Binding DeleteImageCommand}" />
+                            
+                                                                                    < MenuItem Header = "Rank" Command = "{Binding RankImageCommand}" />
+                               
+                                                                                       < Separator />
+                               
+                                                                                       < MenuItem Header = "Set Tags to Tagboard" Command = "{Binding SetTagsToTagBoardCommand}" />
+                                  
+                                                                                          < MenuItem Header = "Paste Tagboard to Image" Command = "{Binding PasteTagBoardCommand}" />
+                                     
+                                                                                             < MenuItem Header = "Paste Tags to Tagboard" Command = "{Binding PasteTagsToTagBoardCommand}" />
+                                        
+                                                                                                < Separator />
+                                        
+                                                                                                < MenuItem Header = "Enabled" StaysOpenOnClick = "True" IsCheckable = "True"
+                                                                                IsChecked = "{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                                ToolTip = "Disabling an imageSet will stop it from appearing here, 
+                                                                                      if you want to see the imageSet again select Enable Detection of Inactive Images"/>
+                                                        <Separator/>
+                                                        <MenuItem Header="Volume" mvx:Bi.nd = "Command SetVolumeCommand"
+                                                                      Visibility = "{Binding IsVideo,
+                                                                Converter ={ StaticResource BooleanToVisibilityConverter}}"/>
+< MenuItem Header = "Speed" mvx: Bi.nd = "Command SetSpeedCommand"
+                                                                      Visibility = "{Binding IsGif,
+                                                                Converter ={ StaticResource BooleanToVisibilityConverter}}"/>
+< MenuItem Header = "Override Max Loop Count"
+                                                                      Visibility = "{Binding IsGif,
+                                                                Converter ={ StaticResource BooleanToVisibilityConverter}}"/>
+< MenuItem Header = "Override Max Video Timer"
+                                                                      Visibility = "{Binding IsGif, 
+                                                                Converter ={ StaticResource BooleanToVisibilityConverter}}"/>
+</ ContextMenu >
+
+</ DataTemplate >
+
+
+< !-- ? ImageSetModelTemplate - Context Menu-- >
+
+< DataTemplate x: Key = "ImageSetModelTemplate" DataType = "{x:Type models:ImageSetModel}" >
+
+< ContextMenu >
+
+< MenuItem Header = "Set As Wallpaper" mvx: Bi.nd = "Command SetWallpaperCommand" />
+
+
+< Separator />
+
+
+< !--? Set Type-- >
+
+< MenuItem Header = "Set Type" >
+
+< MenuItem StaysOpenOnClick = "True" >
+
+< MenuItem.Header >
+
+< ComboBox ItemsSource = "{Binding Source={extensions:Enumeration {x:Type coreUtil:ImageSetType}}}"
+                                                                              DisplayMemberPath = "Description"
+                                                                              SelectedValue = "{Binding SetType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                              SelectedValuePath = "Value" >
+                                                                        < ComboBox.ToolTip >
+                                                                            < ToolTip Content = "Set Type" />
+ 
+                                                                         </ ComboBox.ToolTip >
+ 
+                                                                     </ ComboBox >
+ 
+                                                                 </ MenuItem.Header >
+ 
+                                                             </ MenuItem >
+ 
+
+                                                             < MenuItem >
+ 
+                                                                 < MenuItem.Header >
+ 
+                                                                     < !--? /// Set-Dependent Options /// -->
+                                                                    < ContentControl Content = "{Binding}" HorizontalAlignment = "Center" >
+   
+                                                                           < !--Resources-- >
+   
+                                                                           < ContentControl.Resources >
+   
+                                                                               < !--Remember that the Binding context here refers to what's given in the Content of the ContentTemplate, not what ReSharper says -->
+
+                                                                            <DataTemplate x:Key = "Alt" DataType = "{x:Type models:ImageSetModel}" />
+  
+
+                                                                              < DataTemplate x: Key = "Animate" DataType = "{x:Type models:ImageSetModel}" >
+      
+                                                                                      < StackPanel Orientation = "Vertical" >
+       
+
+                                                                                           < MenuItem StaysOpenOnClick = "True" >
+        
+                                                                                                < MenuItem.Header >
+        
+                                                                                                    < StackPanel Orientation = "Horizontal" >
+         
+                                                                                                         < TextBlock Text = "Speed: " VerticalAlignment = "Center" />
+            
+                                                                                                            < TextBox Text = "{Binding Speed}" VerticalAlignment = "Center" >
+               
+                                                                                                                   < TextBox.Style >
+               
+                                                                                                                       < Style TargetType = "{x:Type TextBox}"
+                                                                                                            BasedOn = "{StaticResource TextBoxNumInputDecimal}" />
+                                                                                                    </ TextBox.Style >
+                                                                                                </ TextBox >
+                                                                                            </ StackPanel >
+                                                                                        </ MenuItem.Header >
+                                                                                    </ MenuItem >
+
+                                                                                    < MenuItem Header = "Fraction Intervals" IsCheckable = "True" StaysOpenOnClick = "True"
+                                                                                        IsChecked = "{Binding FractionIntervals}"
+                                                                            ToolTip = "Interval amount is determined by the wallpaper change interval (Multiplied by Speed)" />
+                                                                                    < MenuItem Header = "Static Intervals" IsCheckable = "True" StaysOpenOnClick = "True"
+                                                                                        IsChecked = "{Binding StaticIntervals}"
+                                                                            ToolTip = "Speed will instead represent the length of each frame" />
+                                                                                    < MenuItem Header = "Weighted Intervals" IsCheckable = "True" StaysOpenOnClick = "True"
+                                                                                        IsChecked = "{Binding WeightedIntervals}"
+                                                                            ToolTip = "Gives each imageSet an interval weighted to their rank (Requires Static or Fraction intervals to function)" />
+
+                                                                                    < Separator />
+
+                                                                                    < MenuItem Header = "Override Minimum Loops" IsCheckable = "True" StaysOpenOnClick = "True"
+                                                                                            IsChecked = "{Binding OverrideMinimumLoops}" />
+                                                                                    < MenuItem StaysOpenOnClick = "True" IsEnabled = "{Binding OverrideMinimumLoops}" >
+   
+                                                                                           < MenuItem.Header >
+   
+                                                                                               < StackPanel Orientation = "Horizontal" >
+    
+                                                                                                    < TextBlock Text = "Min Loops: " VerticalAlignment = "Center" />
+       
+                                                                                                       < TextBox Text = "{Binding MinimumLoops}" VerticalAlignment = "Center" >
+          
+                                                                                                              < TextBox.Style >
+          
+                                                                                                                  < Style TargetType = "{x:Type TextBox}"
+                                                                                                                BasedOn = "{StaticResource TextBoxNumInput}" />
+                                                                                                    </ TextBox.Style >
+                                                                                                </ TextBox >
+                                                                                            </ StackPanel >
+                                                                                        </ MenuItem.Header >
+                                                                                    </ MenuItem >
+
+                                                                                    < Separator />
+
+                                                                                    < MenuItem Header = "Override Maximum Time" IsCheckable = "True" StaysOpenOnClick = "True"
+                                                                                            IsChecked = "{Binding OverrideMaximumTime}" />
+                                                                                    < MenuItem StaysOpenOnClick = "True" IsEnabled = "{Binding OverrideMaximumTime}" >
+   
+                                                                                           < MenuItem.Header >
+   
+                                                                                               < StackPanel Orientation = "Horizontal" >
+    
+                                                                                                    < TextBlock Text = "Max Time: " VerticalAlignment = "Center" />
+       
+                                                                                                       < TextBox Text = "{Binding MaximumTime}" VerticalAlignment = "Center" >
+          
+                                                                                                              < TextBox.Style >
+          
+                                                                                                                  < Style TargetType = "{x:Type TextBox}"
+                                                                                                                BasedOn = "{StaticResource TextBoxNumInput}" />
+                                                                                                    </ TextBox.Style >
+                                                                                                </ TextBox >
+                                                                                            </ StackPanel >
+                                                                                        </ MenuItem.Header >
+                                                                                    </ MenuItem >
+                                                                                </ StackPanel >
+                                                                            </ DataTemplate >
+
+                                                                            < DataTemplate x: Key = "Merge" DataType = "{x:Type models:ImageSetModel}" />
+    
+                                                                            </ ContentControl.Resources >
+    
+
+                                                                            < !-- // Template Control // -->
+
+                                                                            < ContentControl.ContentTemplate >
+    
+                                                                                < DataTemplate >
+    
+                                                                                    < !--Default Control-- >
+    
+                                                                                    < ContentControl Name = "cc" Content = "{Binding}" ContentTemplate = "{StaticResource Alt}" />
+         
+                                                                                         < !--Triggers-- >
+         
+                                                                                         < DataTemplate.Triggers >
+         
+                                                                                             < !--If IsVideo, use the VideoTemplate instead -->
+                                                                                    <DataTrigger Binding="{Binding IsAnimated}" Value="True">
+                                                                                        <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource Animate}"/>
+                                                                                    </DataTrigger>
+                                                                                    <!-- TODO
+                                                                        <DataTrigger Binding="{Binding IsMerged}" Value="True">
+                                                                            <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource RelatedImageTemplate}"/>
+                                                                        </DataTrigger>
+                                                                        -->
+                                                                                </DataTemplate.Triggers>
+                                                                            </DataTemplate>
+                                                                        </ContentControl.ContentTemplate>
+                                                                    </ContentControl>
+                                                                </MenuItem.Header>
+                                                            </MenuItem>
+                                                        </MenuItem>
+
+                                                        <Separator/>
+
+                                                        <!--? Ranking Format -->
+                                                        <MenuItem Header="Ranking Format" IsEnabled="False"/>
+                                                        <MenuItem Header="Average" IsChecked="{Binding UsingAverageRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                                  StaysOpenOnClick="True" IsCheckable="True"
+                                                                  IsEnabled="{Binding UsingAverageRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, 
+                                                            Converter={StaticResource BooleanInverterConverter}}"/>
+                                                        < MenuItem Header = "Override" IsChecked = "{Binding UsingOverrideRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                  StaysOpenOnClick = "True" IsCheckable = "True"
+                                                                  IsEnabled = "{Binding UsingOverrideRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, 
+                                                            Converter ={ StaticResource BooleanInverterConverter}}"/>
+< MenuItem Header = "Weighted Average" IsChecked = "{Binding UsingWeightedAverage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                  StaysOpenOnClick = "True" IsCheckable = "True"
+                                                                  IsEnabled = "{Binding UsingWeightedAverage, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, 
+                                                            Converter ={ StaticResource BooleanInverterConverter}}"/>
+< MenuItem Header = "Weighted Override" IsChecked = "{Binding UsingWeightedOverride, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                  StaysOpenOnClick = "True" IsCheckable = "True"
+                                                                  IsEnabled = "{Binding UsingWeightedOverride, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, 
+                                                            Converter ={ StaticResource BooleanInverterConverter}}"/>
+< MenuItem Header = "{Binding OverrideRankWeightText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled = "False" />
+
+< Slider Value = "{Binding OverrideRankWeight}" IsEnabled = "{Binding UsingWeightedOverride}" Minimum = "0" Maximum = "100" />
+
+
+< Separator />
+
+
+< MenuItem Header = "Enabled" StaysOpenOnClick = "True" IsCheckable = "True"
+                                                                  IsChecked = "{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                  ToolTip = "Disabling a set will stop it from appearing here, 
+                                                                                      if you want to see the set again select Enable Detection of Inactive Images"/>
+                                                        <MenuItem Header="Retain Image Independence" StaysOpenOnClick="True" IsCheckable="True"
+                                                                  IsChecked="{Binding RetainImageIndependence, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                  ToolTip="Allows independent images and the set to co-exist in the theme"/>
+                                                    </ContextMenu>
+                                                </DataTemplate>
+                                            </ContentControl.Resources>
+
+                                            <!--? // Template Control - Context Menu // -->
+                                            <ContentControl.ContentTemplate>
+                                                <DataTemplate>
+                                                    <!-- Default Control -->
+                                                    <ContentControl Name="cc" Content="{Binding}" ContentTemplate="{StaticResource ImageModelTemplate}"/>
+                                                    <!-- Triggers -->
+                                                    <DataTemplate.Triggers>
+                                                        <!-- If IsVideo, use the VideoTemplate instead -->
+                                                        <DataTrigger Binding="{Binding IsImageSet}" Value="True">
+                                                            <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource ImageSetModelTemplate}"/>
+                                                        </DataTrigger>
+                                                    </DataTemplate.Triggers>
+                                                </DataTemplate>
+                                            </ContentControl.ContentTemplate>
+                                        </ContentControl>
+                                    </MenuItem.Header>
+
+*/

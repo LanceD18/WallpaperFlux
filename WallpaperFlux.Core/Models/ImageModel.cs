@@ -134,6 +134,15 @@ namespace WallpaperFlux.Core.Models
 
         public sealed override bool IsVideo => WallpaperUtil.IsVideo(Path);
 
+        public bool IsWebm
+        {
+            get
+            {
+                string extension = System.IO.Path.GetExtension(Path);
+                return extension == ".webm";
+            }
+        }
+
         public bool IsWebmOrGif
         {
             get
@@ -161,8 +170,6 @@ namespace WallpaperFlux.Core.Models
         public IMvxCommand OpenFileCommand { get; set; }
 
         public IMvxCommand InspectCommand { get; set; }
-
-        public IMvxCommand SetWallpaperCommand { get; set; }
 
         public IMvxCommand RenameImageCommand { get; set; }
 
@@ -251,7 +258,6 @@ namespace WallpaperFlux.Core.Models
             ViewFileCommand = new MvxCommand(ViewFile);
             OpenFileCommand = new MvxCommand(OpenFile);
             InspectCommand = new MvxCommand(Inspect);
-            SetWallpaperCommand = new MvxCommand(() => ImageUtil.SetWallpaper(this));
 
             RenameImageCommand = new MvxCommand(() => ImageRenamer.AutoRenameImage(this));
             MoveImageCommand = new MvxCommand(() => ImageRenamer.AutoMoveImage(this));

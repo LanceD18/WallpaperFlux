@@ -229,8 +229,6 @@ namespace WallpaperFlux.Core.Models
 
         public bool InvalidSet { get; set; } = false;
 
-        public IMvxCommand SetWallpaperCommand { get; set; }
-
         public ImageSetModel(ImageModel[] relatedImages, ImageType imageType, ImageSetType setType, ImageSetRankingFormat rankingFormat,
             int overrideRank, int overrideRankWeight, bool enabled = true)
         {
@@ -297,8 +295,6 @@ namespace WallpaperFlux.Core.Models
             OverrideRank = overrideRank;
 
             OverrideRankWeight = overrideRankWeight;
-
-            SetWallpaperCommand = new MvxCommand(() => ImageUtil.SetWallpaper(this));
         }
 
         public ImageModel[] GetRelatedImages(bool checkForEnabled = true)

@@ -155,8 +155,12 @@ namespace WallpaperFlux.Core.Models
 
         public IMvxCommand IncreaseRankCommand { get; set; }
 
+        public IMvxCommand SetWallpaperCommand { get; set; }
+
         protected BaseImageModel()
         {
+            SetWallpaperCommand = new MvxCommand(() => ImageUtil.SetWallpaper(this));
+
             DecreaseRankCommand = new MvxCommand(() =>
             {
                 switch (this)

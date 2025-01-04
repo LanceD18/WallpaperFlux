@@ -328,8 +328,9 @@ namespace WallpaperFlux.WPF
                 playSuccessful = true; // TODO try to get success information from ConnectedForm.SetWallpaper()
                 DisableUnusedElements(UsedElement.Mpv, imageIsInAnimatedSet);
             }
-            else if (/*wallpaperInfo.Extension == ".webm" ||*/ image.IsGif) //? FFME can't handle .avi files and crashes on some videos depending on their pixel format, this seems to be more common with .webms
+            else if (false /*wallpaperInfo.Extension == ".webm" || image.IsGif*/) //? FFME can't handle .avi files and crashes on some videos depending on their pixel format, this seems to be more common with .webms
             {
+                // ! FFME stutters on loot
                 //xDebug.WriteLine("FFME (Recording path for just in case of crash, convert crashed .webms to .mp4): " + image.Path);
 
                 try
@@ -590,7 +591,8 @@ namespace WallpaperFlux.WPF
 
             if (sender is MediaElement element)
             {
-                element.Position = TimeSpan.Zero;
+                //xelement.Position = TimeSpan.Zero;
+                element.Position = new TimeSpan(0, 0, 1);
                 element.Play();
             }
         }
@@ -650,7 +652,7 @@ namespace WallpaperFlux.WPF
                         }
                         else
                         {
-                            if (Math.Abs(WallpaperMediaElement.Volume - (image.Volume / 100)) > 0.00001 || Math.Abs(WallpaperMediaElementFFME.Volume - (image.Volume / 100)) > 0.00001)
+                            if (Math.Abs(WallpaperMediaElement.Volume - image.ActualVolume) > 0.00001 || Math.Abs(WallpaperMediaElementFFME.Volume - image.ActualVolume) > 0.00001)
                             {
                                 WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = image.Volume;
 
@@ -661,12 +663,12 @@ namespace WallpaperFlux.WPF
 
                                     Dispatcher.Invoke(() =>
                                     {
-                                        WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = image.Volume / 100;
+                                        WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = image.ActualVolume;
                                         Debug.WriteLine("MediaElement Volume: " + WallpaperMediaElement.Volume);
                                         Debug.WriteLine("FFME Volume: " + WallpaperMediaElementFFME.Volume);
 
-                                        if (Math.Abs(WallpaperMediaElement.Volume - (image.Volume / 100)) > 0.00001 ||
-                                            Math.Abs(WallpaperMediaElementFFME.Volume - (image.Volume / 100)) > 0.00001)
+                                        if (Math.Abs(WallpaperMediaElement.Volume - image.ActualVolume) > 0.00001 ||
+                                            Math.Abs(WallpaperMediaElementFFME.Volume - image.ActualVolume) > 0.00001)
                                             UpdateVolume();
                                     });
                                 }, TaskCreationOptions.LongRunning);
@@ -676,7 +678,7 @@ namespace WallpaperFlux.WPF
                 }
                 else
                 {
-                    //? mute regardless of whether or not there is a valid image
+                    //? mute regardless of whether there is a valid image
 
                     WallpaperMediaElement.Volume = WallpaperMediaElementFFME.Volume = 0;
                 }

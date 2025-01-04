@@ -71,13 +71,429 @@
                 </StackPanel>
             </DataTemplate>
 
-                <!--? Image Selector Item Template -->
+            <!-- ? Image Thumbnail Template -->
+            <DataTemplate x:Key="ImageThumbnailTemplate" DataType="{x:Type models:BaseImageModel}">
+                <Image ToolTipService.ShowDuration="{StaticResource MaxInt32}"
+                       Width="{Binding ImageSelectorThumbnailWidth}"
+                       Height="{Binding ImageSelectorThumbnailHeight}"
+                       Margin="3"
+                       HorizontalAlignment="Center"
+                       Loaded="Image_OnLoaded_LowQuality"
+                       Unloaded="Image_OnUnloaded"
+                       MouseEnter="ImageSelector_Image_OnMouseEnter"
+                       MouseLeave="ImaeSelector_Image_OnMouseLeave">
+                </Image>
+            </DataTemplate>
+
+            <!-- ? Image Decorator Template -->
+            <DataTemplate x:Key="ImageDecoratorTemplate" DataType="{x:Type models:BaseImageModel}">
+                <StackPanel Focusable="False">
+                    <ContentControl Content="{Binding Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" Unloaded="FrameworkElement_DisposeOnUnloaded">
+                        <ContentControl.Resources>
+
+                            <DataTemplate x:Key="StaticTemplate" DataType="{x:Type models:BaseImageModel}">
+                                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ImageThumbnailTemplate}"/>
+                            </DataTemplate>
+
+                            <DataTemplate x:Key="AnimatedTemplate" DataType="{x:Type models:BaseImageModel}">
+                                <GroupBox  BorderThickness="2" adonisExtensions:CornerRadiusExtension.CornerRadius="10"
+                                       BorderBrush="{Binding Converter={StaticResource BaseImageModelToBrushConverter}}">
+                                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ImageThumbnailTemplate}"/>
+                                </GroupBox>
+                            </DataTemplate>
+
+                            <DataTemplate x:Key="ImageSetTemplate" DataType="{x:Type models:BaseImageModel}">
+                                <GroupBox  BorderThickness="2" adonisExtensions:CornerRadiusExtension.CornerRadius="10"
+                                       BorderBrush="{Binding Converter={StaticResource BaseImageModelToBrushConverter}}">
+                                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ImageThumbnailTemplate}"/>
+                                </GroupBox>
+                            </DataTemplate>
+                        </ContentControl.Resources>
+
+                        <!--? /// Template Control /// -->
+                        <ContentControl.ContentTemplate>
+                            <DataTemplate>
+                                <!-- Default Control -->
+                                <ContentControl Name="cc" Content="{Binding }" ContentTemplate="{StaticResource StaticTemplate}"/>
+                                <!-- Triggers -->
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding IsAnimated}" Value="True">
+                                        <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource AnimatedTemplate}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsImageSet}" Value="True">
+                                        <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource ImageSetTemplate}"/>
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </ContentControl.ContentTemplate>
+                    </ContentControl>
+
+                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource RankingHandlerTemplate}"/>
+                </StackPanel>
+            </DataTemplate>
+
+            <!--? Image Selector Item Template -->
             <DataTemplate x:Key="ImageSelectorItemTemplate" DataType="{x:Type models:BaseImageModel}">
+                <ContentControl Content="{Binding Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" Unloaded="FrameworkElement_DisposeOnUnloaded">
+                    <ContentControl.Resources>
+                        <!-- ? /// ImageModelTemplate /// -->
+                        <DataTemplate x:Key="ImageModelTemplate" DataType="{x:Type models:ImageModel}">
+                            <GroupBox>
+                                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ImageDecoratorTemplate}">
+                                    <ContentControl.ToolTip>
+                                        <ContentControl Content="{Binding }">
+                                            <ContentControl.Resources>
+
+                                                <!--? FFME -->
+                                                <DataTemplate x:Key="FFME">
+                                                    <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"
+                                                                           Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" 
+                                                                           Volume="{Binding ActualVolume, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                </DataTemplate>
+
+                                                <!--? Windows -->
+                                                <DataTemplate x:Key="Nothing"/>
+
+                                            </ContentControl.Resources>
+                                            <ContentControl.ContentTemplate>
+                                                <DataTemplate>
+                                                    <!-- Default Template -->
+                                                    <ContentControl Name="cc" Content="{Binding }" 
+                                                                                        ContentTemplate="{StaticResource Nothing}"/>
+                                                    <!-- Triggers -->
+                                                    <DataTemplate.Triggers>
+                                                        <DataTrigger Binding="{Binding IsWebmOrGif, Mode=OneTime}" Value="True">
+                                                            <!-- Sets the ContentTemplate to be GIFTemplate instead of StaticTemplate -->
+                                                            <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource FFME}"/>
+                                                        </DataTrigger>
+                                                    </DataTemplate.Triggers>
+                                                </DataTemplate>
+                                            </ContentControl.ContentTemplate>
+                                        </ContentControl>
+
+                                    </ContentControl.ToolTip>
+                                </ContentControl>
+
+                                <GroupBox.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="Open File" Command="{Binding OpenFileCommand}"/>
+                                        <MenuItem Header="Open File Location" Command="{Binding ViewFileCommand}"/>
+                                        <MenuItem Header="Set As Wallpaper" Command="{Binding SetWallpaperCommand}"/>
+                                        <Separator/>
+                                        <MenuItem Header="Rename" Command="{Binding RenameImageCommand}"/>
+                                        <MenuItem Header="Move" Command="{Binding MoveImageCommand}"/>
+                                        <MenuItem Header="Delete" Command="{Binding DeleteImageCommand}"/>
+                                        <MenuItem Header="Rank" Command="{Binding RankImageCommand}"/>
+                                        <MenuItem Header="Paste Tagboard" Command="{Binding PasteTagBoardCommand}"/>
+                                        <Separator/>
+                                        <MenuItem Header="Set Tags to Tagboard" Command="{Binding SetTagsToTagBoardCommand}"/>
+                                        <MenuItem Header="Paste Tagboard to Image" Command="{Binding PasteTagBoardCommand}"/>
+                                        <MenuItem Header="Paste Tags to Tagboard" Command="{Binding PasteTagsToTagBoardCommand}"
+                                                                                ToolTip="Removes existing tags from the tagboard before pasting the current imageSet's tags"/>
+                                        <Separator/>
+                                        <MenuItem Header="Enabled" StaysOpenOnClick="True" IsCheckable="True"
+                                                                                IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                                                ToolTip="Disabling an imageSet will stop it from appearing here, 
+                                                                                      if you want to see the imageSet again select Enable Detection of Inactive Images"/>
+                                        <Separator/>
+                                        <MenuItem Header="Volume" mvx:Bi.nd="Command SetVolumeCommand"
+                                                  Visibility="{Binding IsVideo,
+                                                    Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                        <MenuItem Header="Speed" mvx:Bi.nd="Command SetSpeedCommand"
+                                                  Visibility="{Binding IsAnimated,
+                                                    Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                        <MenuItem Header="Override Max Loop Count"
+                                                  Visibility="{Binding IsAnimated,
+                                                    Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                        <MenuItem Header="Override Max Video Timer"
+                                                  Visibility="{Binding IsAnimated,
+                                                    Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                    </ContextMenu>
+                                </GroupBox.ContextMenu>
+                            </GroupBox>
+                        </DataTemplate>
+                        <!-- ? /// ImageSetModelTemplate /// -->
+                        <DataTemplate x:Key="ImageSetModelTemplate" DataType="{x:Type models:ImageSetModel}">
+                            <GroupBox>
+                                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ImageDecoratorTemplate}"/>
+
+                                <GroupBox.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="Set As Wallpaper" mvx:Bi.nd="Command SetWallpaperCommand"/>
+
+                                        <Separator/>
+
+                                        <!--? Set Type -->
+                                        <MenuItem Header="Set Type">
+                                            <MenuItem StaysOpenOnClick="True">
+                                                <MenuItem.Header>
+                                                    <ComboBox ItemsSource="{Binding Source={extensions:Enumeration {x:Type coreUtil:ImageSetType}}}"
+                                                                              DisplayMemberPath="Description"
+                                                                              SelectedValue="{Binding SetType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                              SelectedValuePath="Value">
+                                                        <ComboBox.ToolTip>
+                                                            <ToolTip Content="Set Type"/>
+                                                        </ComboBox.ToolTip>
+                                                    </ComboBox>
+                                                </MenuItem.Header>
+                                            </MenuItem>
+
+                                            <MenuItem>
+                                                <MenuItem.Header>
+                                                    <!--? /// Set-Dependent Options /// -->
+                                                    <ContentControl Content="{Binding}" HorizontalAlignment="Center">
+                                                        <!-- Resources -->
+                                                        <ContentControl.Resources>
+                                                            <!-- Remember that the Binding context here refers to what's given in the Content of the ContentTemplate, not what ReSharper says -->
+
+                                                            <DataTemplate x:Key="Alt" DataType="{x:Type models:ImageSetModel}"/>
+
+                                                            <DataTemplate x:Key="Animate" DataType="{x:Type models:ImageSetModel}">
+                                                                <StackPanel Orientation="Vertical">
+
+                                                                    <MenuItem StaysOpenOnClick="True">
+                                                                        <MenuItem.Header>
+                                                                            <StackPanel Orientation="Horizontal">
+                                                                                <TextBlock Text="Speed: " VerticalAlignment="Center"/>
+                                                                                <TextBox Text="{Binding Speed}" VerticalAlignment="Center">
+                                                                                    <TextBox.Style>
+                                                                                        <Style TargetType="{x:Type TextBox}" 
+                                                                                                            BasedOn="{StaticResource TextBoxNumInputDecimal}"/>
+                                                                                    </TextBox.Style>
+                                                                                </TextBox>
+                                                                            </StackPanel>
+                                                                        </MenuItem.Header>
+                                                                    </MenuItem>
+
+                                                                    <MenuItem Header="Fraction Intervals" IsCheckable="True" StaysOpenOnClick="True" 
+                                                                                        IsChecked="{Binding FractionIntervals}"
+                                                                            ToolTip="Interval amount is determined by the wallpaper change interval (Multiplied by Speed)"/>
+                                                                    <MenuItem Header="Static Intervals" IsCheckable="True" StaysOpenOnClick="True" 
+                                                                                        IsChecked="{Binding StaticIntervals}"
+                                                                            ToolTip="Speed will instead represent the length of each frame"/>
+                                                                    <MenuItem Header="Weighted Intervals" IsCheckable="True" StaysOpenOnClick="True" 
+                                                                                        IsChecked="{Binding WeightedIntervals}"
+                                                                            ToolTip="Gives each imageSet an interval weighted to their rank (Requires Static or Fraction intervals to function)"/>
+
+                                                                    <Separator/>
+
+                                                                    <MenuItem Header="Override Minimum Loops" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding OverrideMinimumLoops}"/>
+                                                                    <MenuItem StaysOpenOnClick="True" IsEnabled="{Binding OverrideMinimumLoops}">
+                                                                        <MenuItem.Header>
+                                                                            <StackPanel Orientation="Horizontal">
+                                                                                <TextBlock Text="Min Loops: " VerticalAlignment="Center"/>
+                                                                                <TextBox Text="{Binding MinimumLoops}" VerticalAlignment="Center">
+                                                                                    <TextBox.Style>
+                                                                                        <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                                                                                    </TextBox.Style>
+                                                                                </TextBox>
+                                                                            </StackPanel>
+                                                                        </MenuItem.Header>
+                                                                    </MenuItem>
+
+                                                                    <Separator/>
+
+                                                                    <MenuItem Header="Override Maximum Time" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding OverrideMaximumTime}"/>
+                                                                    <MenuItem StaysOpenOnClick="True" IsEnabled="{Binding OverrideMaximumTime}">
+                                                                        <MenuItem.Header>
+                                                                            <StackPanel Orientation="Horizontal">
+                                                                                <TextBlock Text="Max Time: " VerticalAlignment="Center"/>
+                                                                                <TextBox Text="{Binding MaximumTime}" VerticalAlignment="Center">
+                                                                                    <TextBox.Style>
+                                                                                        <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxNumInput}"/>
+                                                                                    </TextBox.Style>
+                                                                                </TextBox>
+                                                                            </StackPanel>
+                                                                        </MenuItem.Header>
+                                                                    </MenuItem>
+                                                                </StackPanel>
+                                                            </DataTemplate>
+
+                                                            <DataTemplate x:Key="Merge" DataType="{x:Type models:ImageSetModel}"/>
+                                                        </ContentControl.Resources>
+
+                                                        <!-- // Template Control // -->
+                                                        <ContentControl.ContentTemplate>
+                                                            <DataTemplate>
+                                                                <!-- Default Control -->
+                                                                <ContentControl Name="cc" Content="{Binding}" ContentTemplate="{StaticResource Alt}"/>
+                                                                <!-- Triggers -->
+                                                                <DataTemplate.Triggers>
+                                                                    <!-- If IsVideo, use the VideoTemplate instead -->
+                                                                    <DataTrigger Binding="{Binding IsAnimated}" Value="True">
+                                                                        <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource Animate}"/>
+                                                                    </DataTrigger>
+                                                                    <!-- TODO
+                                                                        <DataTrigger Binding="{Binding IsMerged}" Value="True">
+                                                                            <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource RelatedImageTemplate}"/>
+                                                                        </DataTrigger>
+                                                                        -->
+                                                                </DataTemplate.Triggers>
+                                                            </DataTemplate>
+                                                        </ContentControl.ContentTemplate>
+                                                    </ContentControl>
+                                                </MenuItem.Header>
+                                            </MenuItem>
+                                        </MenuItem>
+
+                                        <Separator/>
+
+                                        <!--? Ranking Format -->
+                                        <MenuItem Header="Ranking Format" IsEnabled="False"/>
+                                        <MenuItem Header="Average" IsChecked="{Binding UsingAverageRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                                  StaysOpenOnClick="True" IsCheckable="True"
+                                                                  IsEnabled="{Binding UsingAverageRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, 
+                                                            Converter={StaticResource BooleanInverterConverter}}"/>
+                                        <MenuItem Header="Override" IsChecked="{Binding UsingOverrideRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                                  StaysOpenOnClick="True" IsCheckable="True"
+                                                                  IsEnabled="{Binding UsingOverrideRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, 
+                                                            Converter={StaticResource BooleanInverterConverter}}"/>
+                                        <MenuItem Header="Weighted Average" IsChecked="{Binding UsingWeightedAverage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                                  StaysOpenOnClick="True" IsCheckable="True"
+                                                                  IsEnabled="{Binding UsingWeightedAverage, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, 
+                                                            Converter={StaticResource BooleanInverterConverter}}"/>
+                                        <MenuItem Header="Weighted Override" IsChecked="{Binding UsingWeightedOverride, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                                  StaysOpenOnClick="True" IsCheckable="True"
+                                                                  IsEnabled="{Binding UsingWeightedOverride, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, 
+                                                            Converter={StaticResource BooleanInverterConverter}}"/>
+                                        <MenuItem Header="{Binding OverrideRankWeightText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="False"/>
+                                        <Slider Value="{Binding OverrideRankWeight}" IsEnabled="{Binding UsingWeightedOverride}" Minimum="0" Maximum="100"/>
+
+                                        <Separator/>
+
+                                        <MenuItem Header="Enabled" StaysOpenOnClick="True" IsCheckable="True"
+                                                                  IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                  ToolTip="Disabling a set will stop it from appearing here, 
+                                                                                      if you want to see the set again select Enable Detection of Inactive Images"/>
+                                        <MenuItem Header="Retain Image Independence" StaysOpenOnClick="True" IsCheckable="True"
+                                                                  IsChecked="{Binding RetainImageIndependence, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                  ToolTip="Allows independent images and the set to co-exist in the theme"/>
+                                    </ContextMenu>
+                                </GroupBox.ContextMenu>
+                            </GroupBox>
+                        </DataTemplate>
+                    </ContentControl.Resources>
+                    <!--? /// Template Control /// -->
+                    <ContentControl.ContentTemplate>
+                        <DataTemplate>
+                            <!-- Default Control -->
+                            <ContentControl Name="cc" Content="{Binding }" ContentTemplate="{StaticResource ImageModelTemplate}"/>
+                            <!-- Triggers -->
+                            <DataTemplate.Triggers>
+                                <!-- If IsVideo, use the VideoTemplate instead -->
+                                <DataTrigger Binding="{Binding IsImageSet}" Value="True">
+                                    <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource ImageSetModelTemplate}"/>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ContentControl.ContentTemplate>
+                </ContentControl>
+            </DataTemplate>
+
+            <!--? Image Selector Item Template -->
+            <DataTemplate x:Key="ImageSelectorItemTemplate3" DataType="{x:Type models:BaseImageModel}">
+                <GroupBox HorizontalAlignment="Center" Loaded="ImageSelector_GroupBox_OnLoaded" Unloaded="FrameworkElement_DisposeOnUnloaded">
+                    <StackPanel Focusable="False">
+                        <ContentControl Content="{Binding Mode=OneTime}" HorizontalAlignment="Center">
+                            <ContentControl.Resources>
+                                <!-- ? StaticTemplate - Thumbnail -->
+                                <DataTemplate x:Key="StaticTemplate" DataType="{x:Type models:BaseImageModel}">
+                                    <GroupBox BorderThickness="2" adonisExtensions:CornerRadiusExtension.CornerRadius="10"
+                                              BorderBrush="{Binding Converter={StaticResource BaseImageModelToBrushConverter}}">
+                                        <Image ToolTipService.ShowDuration="{StaticResource MaxInt32}"
+                                               Width="{Binding ImageSelectorThumbnailWidth}"
+                                           Height="{Binding ImageSelectorThumbnailHeight}"
+                                           Margin="3"
+                                           HorizontalAlignment="Center"
+                                           Loaded="Image_OnLoaded_LowQuality"
+                                           Unloaded="Image_OnUnloaded"
+                                           MouseEnter="ImageSelector_Image_OnMouseEnter"
+                                           MouseLeave="ImaeSelector_Image_OnMouseLeave">
+                                        </Image>
+                                    </GroupBox>
+                                </DataTemplate>
+
+                                <!-- ? AnimationTemplate - Thumbnail -->
+                                <DataTemplate x:Key="AnimationTemplate" DataType="{x:Type models:ImageModel}">
+                                    <GroupBox BorderThickness="2" adonisExtensions:CornerRadiusExtension.CornerRadius="10"
+                                              BorderBrush="{Binding Converter={StaticResource BaseImageModelToBrushConverter}}">
+                                        <Image ToolTipService.ShowDuration="{StaticResource MaxInt32}"
+                                               Width="{Binding ImageSelectorThumbnailWidth}"
+                                               Height="{Binding ImageSelectorThumbnailHeight}"
+                                               Margin="3"
+                                               HorizontalAlignment="Center"
+                                               Loaded="Image_OnLoaded_LowQuality"
+                                               Unloaded="Image_OnUnloaded">
+                                        </Image>
+                                        <!-- The media element will fail to process the Tooltip & Context Menu, so we used a GroupBox -->
+                                        <!--? Media Element Tooltip-->
+                                        <GroupBox.ToolTip>
+                                            <ContentControl Content="{Binding }">
+                                                <ContentControl.Resources>
+
+                                                    <!--? FFME -->
+                                                    <DataTemplate x:Key="FFME">
+                                                        <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"
+                                                                           Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" 
+                                                                           Volume="{Binding ActualVolume, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                    </DataTemplate>
+
+                                                    <!--? Windows -->
+                                                    <DataTemplate x:Key="Windows">
+                                                        <MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" MediaEnded="MediaElement_OnMediaEnded"
+                                                                                        Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" 
+                                                                                        Volume="{Binding ActualVolume, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                    </DataTemplate>
+
+                                                </ContentControl.Resources>
+                                                <ContentControl.ContentTemplate>
+                                                    <DataTemplate>
+                                                        <!-- Default Template -->
+                                                        <ContentControl Name="cc" Content="{Binding }" 
+                                                                                        ContentTemplate="{StaticResource Windows}"/>
+                                                        <!-- Triggers -->
+                                                        <DataTemplate.Triggers>
+                                                            <DataTrigger Binding="{Binding IsWebmOrGif, Mode=OneTime}" Value="True">
+                                                                <!-- Sets the ContentTemplate to be GIFTemplate instead of StaticTemplate -->
+                                                                <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource FFME}"/>
+                                                            </DataTrigger>
+                                                        </DataTemplate.Triggers>
+                                                    </DataTemplate>
+                                                </ContentControl.ContentTemplate>
+                                            </ContentControl>
+                                        </GroupBox.ToolTip>
+                                    </GroupBox>
+                                </DataTemplate>
+                            </ContentControl.Resources>
+
+                            <!--? // Template Control - Thumbnail // -->
+                            <ContentControl.ContentTemplate>
+                                <DataTemplate>
+                                    <!-- Default Control -->
+                                    <ContentControl Name="cc" Content="{Binding}" ContentTemplate="{StaticResource StaticTemplate}"/>
+                                    <!-- Triggers -->
+                                    <DataTemplate.Triggers>
+                                        <!-- If IsVideo, use the VideoTemplate instead -->
+                                        <DataTrigger Binding="{Binding IsAnimated}" Value="True">
+                                            <Setter TargetName="cc" Property="ContentTemplate" Value="{StaticResource AnimationTemplate}"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ContentControl.ContentTemplate>
+                        </ContentControl>
+
+                        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource RankingHandlerTemplate}"/>
+
+                    </StackPanel>
+                </GroupBox>
+            </DataTemplate>
+
+                <!--? Image Selector Item Template -->
+            <DataTemplate x:Key="ImageSelectorItemTemplate2" DataType="{x:Type models:BaseImageModel}">
                 <GroupBox HorizontalAlignment="Center" Unloaded="FrameworkElement_DisposeOnUnloaded">
                     <StackPanel Focusable="False">
-
                         <!-- /// Binding to ImageModel /// -->
-                        <ContentControl Content="{Binding Mode=OneTime}" HorizontalAlignment="Center" Unloaded="FrameworkElement_DisposeOnUnloaded">
+                        <ContentControl Content="{Binding Mode=TwoWay}" HorizontalAlignment="Center" Unloaded="FrameworkElement_DisposeOnUnloaded">
                             <!-- Resources -->
                             <ContentControl.Resources>
                                 <!-- Remember that the Binding context here refers to what's given in the Content of the ContentTemplate, not what ReSharper says -->
@@ -115,8 +531,8 @@
                                                 <Separator/>
                                                 <MenuItem Header="Enabled" StaysOpenOnClick="True" IsCheckable="True"
                                                                                 IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                                                ToolTip="Disabling an imageSet will stop it from appearing here, 
-                                                                                      if you want to see the imageSet again select Enable Detection of Inactive Images"/>
+                                                                                ToolTip="Disabling will stop the image from appearing here, 
+                                                                                      if you want to see the image again select Enable Detection of Inactive Images under Settings"/>
                                             </ContextMenu>
                                         </Image.ContextMenu>
                                     </Image>
