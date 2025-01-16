@@ -377,12 +377,12 @@ namespace WallpaperFlux.Core.Util
             int priorityA = folderModelA == null ? -10 : GetPriorityIndex(folderModelA.PriorityName, out priorityModelA, false);
             int priorityB = folderModelB == null ? -10 : GetPriorityIndex(folderModelB.PriorityName, out priorityModelB, false);
 
-            Debug.WriteLine("Comparing: " + folderA + " | " + folderB);
-            Debug.WriteLine("Priorities: " + priorityA + " | " + priorityB);
+            //xDebug.WriteLine("Comparing: " + folderA + " | " + folderB);
+            //xDebug.WriteLine("Priorities: " + priorityA + " | " + priorityB);
 
             if (priorityB > priorityA) // higher priority folder found
             {
-                Debug.WriteLine("Higher Priority: " + folderB);
+                //xDebug.WriteLine("Higher Priority: " + folderB);
                 return folderB;
             }
 
@@ -428,12 +428,12 @@ namespace WallpaperFlux.Core.Util
                     }
 
                     //? if both of these conditions fail, just go to the default fail route where folderA wins
-                    Debug.WriteLine("Retained for having higher priority: " + folderA);
+                    Debug.WriteLine("Retained for having higher priority (Double override scenario): " + folderA);
                     return folderA;
                 }
             }
 
-            Debug.WriteLine("Retained for having higher priority: " + folderA);
+            //xDebug.WriteLine("Retained for having higher priority: " + folderA);
             return folderA;
         }
 

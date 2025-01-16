@@ -427,6 +427,7 @@ namespace WallpaperFlux.Core.ViewModels
         {
             //? We will use this theme reference for categories so that tags and categories can be referenced outside of this control
             //! So do NOT add Category functionality here, give it to TaggingUtil
+
             Categories.SwitchTo(ThemeUtil.Theme.Categories);
 
             AddCategoryCommand = new MvxCommand(() =>
@@ -815,8 +816,9 @@ namespace WallpaperFlux.Core.ViewModels
 
         public FolderPriorityModel[] GetSelectedFolderPriorities() => FolderPriorities.Where(f => f.IsSelected).ToArray();
 
-        public void RebuildFolderPriorities(SimplifiedFolderPriority[] newFolderPriorities)
+        public void InitFolderPriorities(SimplifiedFolderPriority[] newFolderPriorities)
         {
+            // ! no need to use .SwitchTo here, this is where FolderPriorities is initialized
             FolderPriorities = new MvxObservableCollection<FolderPriorityModel>();
 
             foreach (SimplifiedFolderPriority priority in newFolderPriorities)

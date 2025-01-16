@@ -608,7 +608,7 @@ namespace WallpaperFlux.Core.Util
             ThemeUtil.Theme.Categories = new List<CategoryModel>(orderedCategories);
             TaggingUtil.UpdateCategoryView(); // don't forget to update the view
             
-            TagViewModel.Instance.RebuildFolderPriorities(wallpaperData.FolderPriorities);
+            TagViewModel.Instance.InitFolderPriorities(wallpaperData.FolderPriorities);
         }
 
         private static void ConvertImagesAndFolders(JsonWallpaperData wallpaperData)

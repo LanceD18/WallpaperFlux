@@ -160,25 +160,33 @@ namespace WallpaperFlux.WPF.Views
                     if (ToolTipImageThread is { IsAlive: true }) ToolTipImageThread.Join(); // ? checks if ToolTipImageThread is null & alive
                     if (imageWithContext == CorrectToolTipStaticImage)
                     {
-                        ToolTipImageThread = new Thread(() => { FinishLoadImage(image, thumbnailSource); });
-                        ToolTipImageThread.Start();
+                        ToolTipImageThread = new Thread(() => { FinishLoadImage(image, thumbnailSource, highQuality); });
+
+                        try
+                        {
+                            ToolTipImageThread.Start();
+                        }
+                        catch
+                        {
+                            // thread failed to start
+                        }
                     }
                 }
                 else
                 {
-                    FinishLoadImage(image, thumbnailSource);
+                    FinishLoadImage(image, thumbnailSource, highQuality);
                 }
 
             }).ConfigureAwait(false);
         }
 
-        private void FinishLoadImage(Image image, ImageModel thumbnailSource)
+        private void FinishLoadImage(Image image, ImageModel thumbnailSource, bool highQuality)
         {
             if (!FileUtil.Exists(thumbnailSource.Path)) return;
 
             try
             {
-                LoadBitmapImage(image, thumbnailSource.IsGif/*x, highQuality*/, path: thumbnailSource.Path);
+                LoadBitmapImage(image, thumbnailSource.IsGif, highQuality, path: thumbnailSource.Path);
             }
             catch (Exception e)
             {
@@ -227,7 +235,7 @@ namespace WallpaperFlux.WPF.Views
         //? https://stackoverflow.com/questions/8352787/how-to-free-the-memory-after-the-bitmapimage-is-no-longer-needed
         //? https://stackoverflow.com/questions/2631604/get-absolute-file-path-from-image-in-wpf
         //? prevents the application from continuing to 'use' the image after loading it in, which also saves some memory
-        private void LoadBitmapImage(Image image, bool isGif, string path = "", int decodePixelHeight = 0, MemoryStream ms = null)
+        private void LoadBitmapImage(Image image, bool isGif, bool highQuality, string path = "", int decodePixelHeight = 0, MemoryStream ms = null)
         {
             // TODO THIS METHOD IS BEING CALLED MULTIPLE TIMES PER INSPECTOR SWITCH, FIX
             try // ! this can accidentally fire off multiple times and cause crashes when trying to load videos
@@ -238,7 +246,7 @@ namespace WallpaperFlux.WPF.Views
                 bitmap.BeginInit();
                 if (ms != null) ms.Seek(0, SeekOrigin.Begin);
                 if (decodePixelHeight != 0) bitmap.DecodePixelHeight = decodePixelHeight; // ! only set either Height of Width (preferably whichever is larger) to prevent stretching
-                //xif (!highQuality) RenderOptions.SetBitmapScalingMode(bitmap, BitmapScalingMode.LowQuality);
+                if (highQuality) RenderOptions.SetBitmapScalingMode(bitmap, BitmapScalingMode.HighQuality);
                 RenderOptions.SetBitmapScalingMode(bitmap, BitmapScalingMode.LowQuality); // ! high quality does not really matter for thumbnails
 
                 // ! ignoring cache & OnDemand will break videos
@@ -320,16 +328,17 @@ namespace WallpaperFlux.WPF.Views
 
             try // for just in case the casting fails, we can just use the normal size
             {
-                async void AttemptSetSize(int retries = 0)
+                async void AttemptSetSize(Image imageToResize, Image imageWithContext, int retries = 0)
                 {
-                    if (retries > 3) return; // tried too many times, just return
+                    if (retries > 100) return; // tried too many times, just return
 
-                    if (wallpaperIndex != -1 && image.Source != null)
+                    if (wallpaperIndex != -1 && imageToResize != null && imageToResize.Source != null && imageWithContext == CorrectToolTipStaticImage)
                     {
-                        int pxWidth = ((BitmapSource)image.Source).PixelWidth;
-                        int pxHeight = ((BitmapSource)image.Source).PixelHeight;
+                        int pxWidth = ((BitmapSource)imageToResize.Source).PixelWidth;
+                        int pxHeight = ((BitmapSource)imageToResize.Source).PixelHeight;
 
-                        double wallWidth = MainWindow.Instance.Wallpapers[wallpaperIndex].Width;
+                        // ? if the image is too wide the ToolTip will fail to render most of the image regardless of aspect ratio adjustments
+                        double wallWidth = MainWindow.Instance.Wallpapers[wallpaperIndex].Width / 1.5f;
                         double wallHeight = MainWindow.Instance.Wallpapers[wallpaperIndex].Height;
                         //xDebug.WriteLine("Pixel Width: " + pxWidth);
                         //xDebug.WriteLine("Pixel Height: " + pxHeight);
@@ -344,40 +353,54 @@ namespace WallpaperFlux.WPF.Views
 
                             if (pxWidth > pxHeight) // the larger value indicates which direction the image will stretch, indicating which direction we need to shorten
                             {
-                                ratio = wallHeight / pxWidth;
+                                ratio = wallWidth / pxWidth;
                             }
                             else
                             {
                                 ratio = wallHeight / pxHeight;
                             }
 
+                            // ? depending on the aspect ratio of the image and the monitor
+                            // ? we may need to use the smaller side as it can stretch beyond the Tooltip range
+                            if (pxHeight * ratio > wallHeight)
+                            {
+                                ratio = wallHeight / pxHeight;
+                            }
+                            else if (pxWidth * ratio > wallWidth)
+                            {
+                                ratio = wallWidth / pxWidth;
+                            }
+
                             pxWidth = (int)(pxWidth * ratio);
                             pxHeight = (int)(pxHeight * ratio);
                         }
 
-                        image.Width = pxWidth;
-                        image.Height = pxHeight;
-                        //xDebug.WriteLine("Image Width: " + image.Width); 
-                        //xDebug.WriteLine("Image Height: " + image.Height);
+                        if (imageWithContext != CorrectToolTipStaticImage) return; // ? new image loading, abort
+                        imageToResize.Width = pxWidth;
+                        imageToResize.Height = pxHeight;
+                        //xDebug.WriteLine("Image Width: " + imageToResize.Width); 
+                        //xDebug.WriteLine("Image Height: " + imageToResize.Height);
                     }
                     else
                     {
                         Debug.WriteLine("Potential invalid image source, try again");
-
+                        //xif (image != null && image.Source == null) retries -= 1;
+                        
                         await Task.Run(() =>
                         {
-                            Thread.Sleep((int)Math.Pow(10, retries + 1)); // increment the delay so that we don't spam retries
+                            Thread.Sleep(100); // increment the delay so that we don't spam retries
+                            if (imageWithContext != CorrectToolTipStaticImage) return; // ? new image loading, abort
 
                             Dispatcher.Invoke(() =>
                             {
-                                AttemptSetSize(++retries); //? sometimes the image source won't load fast enough and we'll need to try again
+                                AttemptSetSize(ToolTipThumbnailImage, imageWithContext, ++retries); //? sometimes the image source won't load fast enough and we'll need to try again
                             });
                         });
                     }
                 }
 
                 // start attempts
-                //xAttemptSetSize();
+                AttemptSetSize(ToolTipThumbnailImage, ThumbnailImage);
             }
             catch (Exception exception)
             {
@@ -417,7 +440,7 @@ namespace WallpaperFlux.WPF.Views
                         if (!imageModel.IsVideo)
                         {
                             // ? don't load gifs on low quality
-                            LoadBitmapImage(image, false /*x, false*/, imageModel.Path, imageModel.ImageSelectorThumbnailHeight);
+                            LoadBitmapImage(image, false , false, imageModel.Path, imageModel.ImageSelectorThumbnailHeight);
                         }
                         else
                         {
@@ -448,7 +471,7 @@ namespace WallpaperFlux.WPF.Views
                     using (MemoryStream ms = new MemoryStream())
                     {
                         bm.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
-                        LoadBitmapImage(img, false /*x, false*/, decodePixelHeight: imageModel.ImageSelectorThumbnailHeight, ms: ms);
+                        LoadBitmapImage(img, false , false, decodePixelHeight: imageModel.ImageSelectorThumbnailHeight, ms: ms);
                     }
                 }
             }

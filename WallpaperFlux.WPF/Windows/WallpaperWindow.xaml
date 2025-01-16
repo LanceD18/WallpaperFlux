@@ -14,10 +14,12 @@
         Title="WallpaperWindow" Height="450" Width="800" WindowStyle="None">
     <Grid>
 
-        <Image x:Name="WallpaperImage" Width="auto" Height="auto" Visibility="Hidden"/>
+        <Image x:Name="WallpaperImage" Width="auto" Height="auto" Visibility="Hidden" RenderOptions.BitmapScalingMode="HighQuality"/>
         <ffme:MediaElement x:Name="WallpaperMediaElementFFME" Width="auto" Height="auto" UnloadedBehavior="Manual"
-                           LoadedBehavior="Play" LoopingBehavior="Play" MediaEnded="WallpaperMediaElementFFME_OnMediaEnded" Visibility="Hidden"/>
-        <MediaElement x:Name="WallpaperMediaElement" Width="auto" Height="auto" UnloadedBehavior="Manual" LoadedBehavior="Play" MediaEnded="WallpaperMediaElement_OnMediaEnded" Visibility="Hidden"/>
+                           LoadedBehavior="Play" LoopingBehavior="Play" MediaEnded="WallpaperMediaElementFFME_OnMediaEnded" Visibility="Hidden" 
+                           RenderOptions.BitmapScalingMode="HighQuality"/>
+        <MediaElement x:Name="WallpaperMediaElement" Width="auto" Height="auto" UnloadedBehavior="Manual" LoadedBehavior="Play" 
+                      MediaEnded="WallpaperMediaElement_OnMediaEnded" Visibility="Hidden" RenderOptions.BitmapScalingMode="HighQuality"/>
         <!--
         <hc:GifImage x:Name="WallpaperGif" Width="auto" Height="auto"/>
         -->
