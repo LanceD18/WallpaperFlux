@@ -428,10 +428,7 @@ namespace WallpaperFlux.Core.Models
         }
         #endregion
 
-        protected bool Equals(ImageModel other)
-        {
-            return _path == other._path;
-        }
+        protected bool Equals(ImageModel other) => _path == other._path;
 
         public override bool Equals(object obj)
         {

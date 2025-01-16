@@ -138,57 +138,59 @@ namespace WallpaperFlux.Core.ViewModels
             }
             else
             {
+                HashSet<BaseImageModel> imageFilter = new HashSet<BaseImageModel>(); // ! note that as an array the Contains() checks would take forever
                 if (RadioAllRanks && !RadioAllTypes)
                 {
                     // do nothing ; keep default
                 }
                 else if (RadioUnranked) // filter down to all unranked images
                 {
-                    images = ThemeUtil.RankController.GetAllUnrankedImages();
+                    imageFilter = ThemeUtil.RankController.GetAllUnrankedImages().ToHashSet();
                 }
                 else if (RadioRanked) // filter down to all ranked images
                 {
-                    images = ThemeUtil.RankController.GetAllRankedImages();
+                    imageFilter = ThemeUtil.RankController.GetAllRankedImages().ToHashSet();
                 }
                 else if (RadioSpecificRank)
                 {
-                    images = ThemeUtil.RankController.GetImagesOfRank(SpecifiedRank);
+                    imageFilter = ThemeUtil.RankController.GetImagesOfRank(SpecifiedRank).ToHashSet();
                 }
                 else if (RadioRankRange)
                 {
-                    images = ThemeUtil.RankController.GetImagesOfRankRange(MinSpecifiedRank, MaxSpecifiedRank);
+                    imageFilter = ThemeUtil.RankController.GetImagesOfRankRange(MinSpecifiedRank, MaxSpecifiedRank).ToHashSet();
                 }
-
-                if (images == null) return null;
 
                 foreach (BaseImageModel image in images)
                 {
-                    // check the set for filters instead if one exists
-                    if (VerifyImageType(image))
+                    if (imageFilter.Contains(image))
                     {
-                        switch (image)
+                        // check the set for filters instead if one exists
+                        if (VerifyImageType(image))
                         {
-                            case ImageModel imageModel:
+                            switch (image)
                             {
-                                if (!imageModel.IsInImageSet)
+                                case ImageModel imageModel:
                                 {
-                                    filteredImages.Add(imageModel);
-                                }
-                                else
-                                {
-                                    //! if multiple images from one set are in the search, we could accidentally add the same set multiple times without this
-                                    if (!filteredImages.Contains(imageModel.ParentImageSet))
+                                    if (!imageModel.IsInImageSet)
                                     {
-                                        filteredImages.Add(imageModel.ParentImageSet);
+                                        filteredImages.Add(imageModel);
                                     }
+                                    else
+                                    {
+                                        //! if multiple images from one set are in the search, we could accidentally add the same set multiple times without this
+                                        if (!filteredImages.Contains(imageModel.ParentImageSet))
+                                        {
+                                            filteredImages.Add(imageModel.ParentImageSet);
+                                        }
+                                    }
+
+                                    break;
                                 }
 
-                                break;
+                                case ImageSetModel _:
+                                    filteredImages.Add(image);
+                                    break;
                             }
-                            
-                            case ImageSetModel _:
-                                filteredImages.Add(image);
-                                break;
                         }
                     }
                 }
