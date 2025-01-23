@@ -24,10 +24,18 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10 0 10 0">
-            <CheckBox Content="Randomize" HorizontalAlignment="Center" Margin="5" adonisExtensions:LayerExtension.Layer="1" IsChecked="{Binding Randomize}"/>
-            <CheckBox Content="Reverse" HorizontalAlignment="Center" Margin="5" adonisExtensions:LayerExtension.Layer="1" IsChecked="{Binding Reverse}"/>
-            <CheckBox Content="Date" HorizontalAlignment="Center" Margin="5" adonisExtensions:LayerExtension.Layer="1" IsChecked="{Binding DateTime}"/>
-            <CheckBox Content="Sets Only" HorizontalAlignment="Center" Margin="5" adonisExtensions:LayerExtension.Layer="1" IsChecked="{Binding ImageSetRestriction}"/>
+            <TextBlock Text="Order By" Margin="5">
+                <TextBlock.Style>
+                    <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintBold}"/>
+                </TextBlock.Style>
+            </TextBlock>
+            <CheckBox Content="Date" Margin="5" adonisExtensions:LayerExtension.Layer="1" IsChecked="{Binding OrderByDate}"
+                      IsEnabled="{Binding CanOrderByDate}"/>
+            <CheckBox Content="Rank" Margin="5" adonisExtensions:LayerExtension.Layer="1" IsChecked="{Binding OrderByRank}"
+                      IsEnabled="{Binding CanOrderByRank}"/>
+            <CheckBox Content="Reverse" Margin="5" adonisExtensions:LayerExtension.Layer="1" IsChecked="{Binding OrderByReverse}"
+                      IsEnabled="{Binding OrderByRandomize, Converter={StaticResource BooleanInverterConverter}}"/>
+            <CheckBox Content="Randomize" Margin="5" adonisExtensions:LayerExtension.Layer="1" IsChecked="{Binding OrderByRandomize}"/>
         </StackPanel>
 
         <GroupBox Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center" Margin="5">
@@ -48,6 +56,7 @@
                     <Button Content="Select Images" Margin="5" Command="{Binding SelectImagesCommand}"/>
                     <Button Content="Select Images in Folder" Margin="5" Command="{Binding SelectImagesInFolderCommand}"/>
                     <CheckBox HorizontalAlignment="Center" Margin="5" Content="Tagboard Filter" ToolTip="Filters based on the current Tagboard selection" IsChecked="{Binding TagboardFilter}"/>
+                    <CheckBox Content="Sets Only" HorizontalAlignment="Center" Margin="5" IsChecked="{Binding ImageSetRestriction}"/>
                 </StackPanel>
 
                 <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Vertical" VerticalAlignment="Center" Margin="10 0 10 0">

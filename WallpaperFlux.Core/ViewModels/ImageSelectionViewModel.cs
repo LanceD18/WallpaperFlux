@@ -36,6 +36,10 @@ namespace WallpaperFlux.Core.ViewModels
         }
 
         private int _maxSpecifiedRank;
+        private bool _orderByDate;
+        private bool _orderByRank;
+        private bool _orderByRandomize;
+
         public int MaxSpecifiedRank
         {
             get => _maxSpecifiedRank;
@@ -46,11 +50,42 @@ namespace WallpaperFlux.Core.ViewModels
 
         #region Checkboxes & Radio Buttons
 
-        public bool Randomize { get; set; }
+        public bool OrderByRandomize
+        {
+            get => _orderByRandomize;
+            set
+            {
+                if (SetProperty(ref _orderByRandomize, value))
+                {
+                    RaisePropertyChanged(nameof(CanOrderByDate));
+                    RaisePropertyChanged(nameof(CanOrderByRank));
+                }
+            }
+        }
 
-        public bool Reverse { get; set; }
+        public bool OrderByReverse { get; set; }
 
-        public bool DateTime { get; set; }
+        public bool OrderByDate
+        {
+            get => _orderByDate;
+            set
+            {
+                if (SetProperty(ref _orderByDate, value)) RaisePropertyChanged(nameof(CanOrderByRank));
+            }
+        }
+
+        public bool OrderByRank
+        {
+            get => _orderByRank;
+            set
+            {
+                if (SetProperty(ref _orderByRank, value)) RaisePropertyChanged(nameof(CanOrderByDate));
+            }
+        }
+
+        public bool CanOrderByDate => !OrderByRandomize && !OrderByRank;
+
+        public bool CanOrderByRank => !OrderByRandomize && !OrderByDate;
 
         public bool ImageSetRestriction { get; set; }
 
@@ -92,30 +127,32 @@ namespace WallpaperFlux.Core.ViewModels
 
         public ImageSelectionViewModel()
         {
-            SelectImagesCommand = new MvxCommand( () =>
-            {
-                BaseImageModel[] images;
-
-                // TODO With this set up, we will check for image sets twice (second time in RebuildImageSelector()) ; find a better way to do this
-                if (!ImageSetRestriction)
-                {
-                    images = ThemeUtil.Theme.Images.GetAllImages();
-                }
-                else
-                {
-                    images = ThemeUtil.Theme.Images.GetAllImageSets();
-                }
-
-                RebuildImageSelectorWithOptions(FilterImages(images));
-            });
+            SelectImagesCommand = new MvxCommand(SelectImages);
             SelectImagesInFolderCommand = new MvxCommand(PromptFolder);
             SelectActiveWallpapersCommand = new MvxCommand(SelectActiveWallpapers);
             SelectDisabledImagesCommand = new MvxCommand(SelectDisabledImages);
         }
 
+        private void SelectImages()
+        {
+            BaseImageModel[] images;
+
+            // TODO With this set up, we will check for image sets twice (second time in RebuildImageSelector()) ; find a better way to do this
+            if (!ImageSetRestriction)
+            {
+                images = ThemeUtil.Theme.Images.GetAllImages();
+            }
+            else
+            {
+                images = ThemeUtil.Theme.Images.GetAllImageSets();
+            }
+
+            RebuildImageSelectorWithOptions(FilterImages(images));
+        }
+
         public void RebuildImageSelectorWithOptions(BaseImageModel[] images, bool closeWindow = true)
         {
-            WallpaperFluxViewModel.Instance.RebuildImageSelector(images, Randomize, Reverse, DateTime, ImageSetRestriction);
+            WallpaperFluxViewModel.Instance.RebuildImageSelector(images, OrderByRandomize, OrderByReverse, OrderByDate, OrderByRank, ImageSetRestriction);
 
             if (closeWindow)
             {

@@ -943,7 +943,7 @@ namespace WallpaperFlux.Core.ViewModels
         private readonly string INVALID_IMAGE_STRING_ALL_INVALID = "None of the selected images exist in your theme.\nPlease add the folder that they exist in to include them.";
 
         //! This variant of RebuildImageSelector is typically used by Folder Selection
-        public void RebuildImageSelector(string[] selectedImages, bool randomize = false, bool reverseOrder = false, bool dateTime = false)
+        public void RebuildImageSelector(string[] selectedImages)
         {
             List<BaseImageModel> selectedImageModels = new List<BaseImageModel>();
 
@@ -991,11 +991,13 @@ namespace WallpaperFlux.Core.ViewModels
                 MessageBoxUtil.ShowError(invalidImageString);
             }
 
-            RebuildImageSelector(selectedImageModels.ToArray(), randomize, reverseOrder, dateTime);
+            RebuildImageSelector(selectedImageModels.ToArray());
         }
 
+        public void RebuildImageSelector(BaseImageModel[] selectedImages) => RebuildImageSelector(selectedImages, false, false, false, false, false);
+
         //? ----- Rebuild Image Selector (ImageModel) -----
-        public void RebuildImageSelector(BaseImageModel[] selectedImages, bool randomize = false, bool reverseOrder = false, bool dateTime = false, bool imageSetRestriction = false)
+        public void RebuildImageSelector(BaseImageModel[] selectedImages, bool randomize, bool reverseOrder, bool orderByDate, bool orderByRank, bool imageSetRestriction)
         {
             //-----Checking Validation Conditions-----
             if (selectedImages == null || selectedImages.Length == 0)
@@ -1018,13 +1020,16 @@ namespace WallpaperFlux.Core.ViewModels
             else //? it is redundant to randomize and reverse the order at the same time as the randomization will end up being the only factor
             {
                 // TODO Make the redundancy apparent in the interface by disabling everything else if random is picked
-                if (dateTime)
+                if (orderByDate)
                 {
                     selectedImages = selectedImages.OrderBy(f => new FileInfo(ImageUtil.GetImageModel(f, false).Path).CreationTime).ToArray();
                 }
+                else if (orderByRank)
+                {
+                    selectedImages = selectedImages.OrderBy(f => f.Rank).ToArray();
+                }
 
-                //! order by date time before reversing
-
+                //! reverse order can be combined with other orderings, just perform it last
                 if (reverseOrder)
                 {
                     selectedImages = selectedImages.Reverse().ToArray();

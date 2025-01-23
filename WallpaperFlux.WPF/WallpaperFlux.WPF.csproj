@@ -26,7 +26,6 @@
     <PackageReference Include="Serilog.Extensions.Logging" Version="3.0.1" />
     <PackageReference Include="Serilog.Sinks.Trace" Version="2.1.0" />
     <PackageReference Include="SharpGen.Runtime" Version="1.2.1" />
-    <PackageReference Include="WPFMediaKit" Version="2.3.0" />
     <PackageReference Include="WpfScreenHelper" Version="2.1.0" />
     <PackageReference Include="XamlAnimatedGif" Version="2.1.0" />
   </ItemGroup>
@@ -50,6 +49,10 @@
     <Reference Include="LanceTools.WPF.MVVM">
       <HintPath>..\..\..\..\Code Library\C#\LanceTools\LanceTools\LanceTools.WPF.MVVM\bin\Release\netcoreapp3.1\LanceTools.WPF.MVVM.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="C:\Users\lance\.nuget\packages\wpfmediakit\2.3.0\build\DirectShowLib-2005.dll" />
   </ItemGroup>
 
 </Project>

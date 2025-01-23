@@ -70,9 +70,19 @@
                         <EventSetter Event="PreviewMouseUp" Handler="TextBox_MouseEvent_FocusText"/>
                     </Style>
 
-                    <Style x:Key="FaintHeader" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type TextBlock}}">
+                    <Style x:Key="Faint" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type TextBlock}}">
                         <Setter Property="Foreground" Value="LightSlateGray"/>
+                    </Style>
+
+                    <Style x:Key="FaintBold" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource Faint}">
+                        <Setter Property="FontWeight" Value="Bold"/>
+                    </Style>
+
+                    <Style x:Key="FaintItalic" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource Faint}">
                         <Setter Property="FontStyle" Value="Italic"/>
+                    </Style>
+
+                    <Style x:Key="FaintHeader" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintItalic}">
                         <Setter Property="FontSize" Value="14"/>
                     </Style>
                 </ResourceDictionary>
