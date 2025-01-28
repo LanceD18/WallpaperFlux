@@ -21,12 +21,8 @@ namespace WallpaperFlux.Core.Models
         protected int _rank;
         public int Rank
         {
-            get
-            {
-                VerifyImageSetRank();
-
-                return _rank;
-            }
+                //xif (this is ImageSetModel imageSet) { imageSet.UpdateImageSetRank(); }
+            get => _rank;
 
             set
             {
@@ -37,9 +33,9 @@ namespace WallpaperFlux.Core.Models
                         ThemeUtil.Theme.RankController.ModifyRank(this, _rank, ref value); //? this should be called first to allow the old rank to be identified
 
                         SetProperty(ref _rank, value);
-                        RaisePropertyChanged(() => Rank);
+                        //xRaisePropertyChanged(() => Rank);
 
-                        if (imageModel.IsInImageSet) imageModel.ParentImageSet.UpdateAverageRankAndWeightedAverage();
+                        if (imageModel.IsInImageSet) imageModel.ParentImageSet.UpdateImageSetRank(); // ? property set internally
                         break;
 
                     case ImageSetModel imageSet:
@@ -48,6 +44,8 @@ namespace WallpaperFlux.Core.Models
                         {
                             imageSet.OverrideRank = value;
                         }
+
+                        imageSet.UpdateImageSetRank(); // ? property set internally
 
                         break;
                 }
@@ -174,7 +172,6 @@ namespace WallpaperFlux.Core.Models
                         {
                             imageSet.OverrideRank--;
                         }
-
                         break;
                 }
             });
@@ -192,35 +189,9 @@ namespace WallpaperFlux.Core.Models
                         {
                             imageSet.OverrideRank++;
                         }
-
                         break;
                 }
             });
-        }
-
-        public void VerifyImageSetRank()
-        {
-            if (this is ImageSetModel imageSet)
-            {
-                int oldRank = _rank;
-
-                if (imageSet.RankingFormat == ImageSetRankingFormat.Average) _rank = imageSet.AverageRank;
-
-                if (imageSet.RankingFormat == ImageSetRankingFormat.Override) _rank = imageSet.OverrideRank;
-
-                if (imageSet.RankingFormat == ImageSetRankingFormat.WeightedOverride) _rank = imageSet.WeightedRank;
-
-                if (imageSet.RankingFormat == ImageSetRankingFormat.WeightedAverage) _rank = imageSet.WeightedAverage;
-
-                //! safety precaution ; if a calculation sends _rank above max rank or below 0 we will get a stack overflow as the old rank will always be bound to the rank range
-                _rank = ThemeUtil.Theme.RankController.ClampValueToRankRange(_rank);
-
-                if (oldRank != _rank)
-                {
-                    ThemeUtil.Theme.RankController.ModifyRank(this, oldRank, ref _rank);
-                    WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.InspectedImageRankText);
-                }
-            }
         }
 
         public void VerifyIfRankValid()
@@ -249,16 +220,25 @@ namespace WallpaperFlux.Core.Models
         {
             if (JsonUtil.IsLoadingData) return;
 
+            bool verifyRank = false;
             if (this is ImageModel iModel )
             {
                 if (iModel.IsInImageSet) //? ensures that the set is added to the randomizer if enabled
                 {
-                    iModel.ParentImageSet.VerifyImageSetRank();
-                    iModel.ParentImageSet.UpdateEnabledState(); //! VerifySetRank may or may not check ModifyRank, so we will need to call this regardless
+                    iModel.ParentImageSet.UpdateEnabledState();
+                }
+
+                verifyRank = true;
+            }
+            else if (this is ImageSetModel iSet)
+            {
+                if (iSet.GetRelatedImages() != null) // ? if this is null then it is likely that the set is still being initialized
+                {
+                    verifyRank = !iSet.UpdateImageSetRank(); // ? we only need to verify the rank (i.e., enabled state) if it was not updated (otherwise IsEnabled() will be checked twice)
                 }
             }
 
-            VerifyIfRankValid();
+            if (verifyRank) VerifyIfRankValid();
         }
 
         protected virtual bool Equals(BaseImageModel other) => throw new NotImplementedException();

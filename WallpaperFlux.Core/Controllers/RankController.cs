@@ -74,6 +74,9 @@ namespace WallpaperFlux.Core.Controllers
             RankData[image.ImageType][newRank].Add(image);
         }
 
+        // ? verify that an image is correctly ranked
+        public bool VerifyImageRanking(BaseImageModel image) => RankData[image.ImageType][image.Rank].Contains(image) && image.IsEnabled();
+
         //! should only be used in limited circumstances, the bool only exists to remind us of that (we don't want lost images)
         //! find a better solution to limit this procedure's access in the future
         public void RemoveRankedImage(BaseImageModel image, bool validUseCase_dummyParam)
@@ -91,8 +94,9 @@ namespace WallpaperFlux.Core.Controllers
         public VariableRef<Dictionary<ImageType, ReactiveList<ReactiveHashSet<BaseImageModel>>>> CreateRankDataRef()
         {
             return new VariableRef<Dictionary<ImageType, ReactiveList<ReactiveHashSet<BaseImageModel>>>>(
-                () => RankData, 
-                dictionary => throw new Exception("Cannot set RankData"));
+                () => RankData,
+                dictionary => throw new Exception("Cannot set RankData")
+            );
         }
 
         private bool ContainsRank(int rank, ImageType imageType) => rank >= 0 && rank < RankData[imageType].Count; // implies that everything is set up correctly but forgoes looping

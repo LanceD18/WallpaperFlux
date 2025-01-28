@@ -91,12 +91,6 @@ namespace WallpaperFlux.Core.Collections
             ImageSets.Add(imageSet);
         }
 
-        public void ReplaceImageSet(ImageSetModel oldImageSet, ImageSetModel newImageSet)
-        {
-            ImageSets.Remove(oldImageSet);
-            ImageSets.Add(newImageSet);
-        }
-
         public void UpdateImageCollectionPath(ImageModel image, string oldPath, string newPath)
         {
             // TODO YOU FORGOT TO UPDATE THE RANK CONTROLLER (Might want to do this in the ImageModel instead)
@@ -120,7 +114,9 @@ namespace WallpaperFlux.Core.Collections
 
             if (image.IsInImageSet)
             {
-                ImageUtil.RemoveFromImageSet(new ImageModel[] {image}, image.ParentImageSet);
+                image.ParentImageSet.RemoveImage(image);
+                WallpaperFluxViewModel.Instance.UpdateTabFromImageSetRemoval(new ImageModel[] { image }); // TODO Move this back to WallpaperFluxViewModel
+                //xImageUtil.RemoveFromImageSet(new ImageModel[] {image}, image.ParentImageSet);
             }
 
             return ImageContainer[image.ImageType].Remove(image.Path);

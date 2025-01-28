@@ -64,7 +64,7 @@ namespace WallpaperFlux.Core.Models.Controls
             {
                 VerifyImageThread = new Thread(() =>
                 {
-                    Thread.Sleep(1000);
+                    Thread.Sleep(250); // ? delay implemented so that we will wait on all potential changes to the collection to be processed before scanning this
                     VerifyImages();
                 });
 
@@ -178,7 +178,7 @@ namespace WallpaperFlux.Core.Models.Controls
 
             Items.RemoveItems(images);
         }
-
+        
         public void ReplaceImage(BaseImageModel oldImage, BaseImageModel newImage)
         {
              //? without this process the thumbnail of the image won't update

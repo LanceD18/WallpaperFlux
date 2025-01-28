@@ -572,7 +572,8 @@ namespace WallpaperFlux.WPF.Views
         private void ImageSelectorTabListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             //x Debug.WriteLine("Image Selection changed"); [This debug statement will cause lag on large selections]
-            if (!WallpaperFluxViewModel.Instance.TogglingAllSelections)
+            WallpaperFluxViewModel viewModel = (WallpaperFluxViewModel)this.DataContext;
+            if (!viewModel.TogglingAllSelections)
             {
                 if (e.AddedItems.Count >= 1) // TODO Make this apply to actually 1 image once you fix the other issues with selecting between pages
                 {

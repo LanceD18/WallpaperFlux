@@ -86,6 +86,7 @@ namespace WallpaperFlux.Core.Models
             get => _parentImageSet;
             set
             {
+                if (_parentImageSet != null && value != null) throw new Exception("You should only be able to set the Parent Image Set when the image does not have a set");
                 _parentImageSet = value;
 
                 UpdateEnabledState();

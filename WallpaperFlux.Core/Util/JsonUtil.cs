@@ -701,7 +701,7 @@ namespace WallpaperFlux.Core.Util
                 foreach (SimplifiedImageSet imageSet in imageSets)
                 {
                     ImageModel[] images = ThemeUtil.Theme.Images.GetImageRange(imageSet.ImagePaths);
-                    ImageSetModel imageSetModel = ImageUtil.CreateRelatedImageSet(images, false);
+                    ImageSetModel imageSetModel = new ImageSetModel.Builder(images).Build();
 
                     if (imageSetModel != null)
                     {

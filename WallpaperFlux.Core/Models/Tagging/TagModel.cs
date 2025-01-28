@@ -524,7 +524,7 @@ namespace WallpaperFlux.Core.Models.Tagging
         /// <returns></returns>
         public bool ContainsLinkedImage(BaseImageModel image)
         {
-            return ImageUtil.PerformImageCheck(image, ContainsLinkedImage); // we only need one valid image to verify an image set
+            return ImageUtil.PerformImageCheck(image, ContainsLinkedImage, !ThemeUtil.Theme.Settings.ThemeSettings.EnableDetectionOfInactiveImages); // we only need one valid image to verify an image set
         }
 
         public bool ContainsLinkedImage(ImageModel image)

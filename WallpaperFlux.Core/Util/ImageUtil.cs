@@ -33,7 +33,7 @@ namespace WallpaperFlux.Core.Util
     {
         public static Thread SetImageThread = new Thread(() => { }); // dummy null state to avoid error checking
 
-        public static readonly string INVALID_IMAGE_SET_MESSAGE = "Mixed image types found, image set creation failed";
+        public static readonly string INVALID_IMAGE_SET_MESSAGE = "A set with mixed image types (Static/Gif/Video) is not yet supported";
 
         public static void PromptRankImage(ImageModel image)
         {
@@ -95,108 +95,13 @@ namespace WallpaperFlux.Core.Util
             }
         }
 
-        public static ImageSetModel CreateRelatedImageSet(ImageModel[] images, bool modifyTabs)
-        {
-            if (images == null) return null; // likely a cancelled operation
-            if (images.Length == 0) return null; // invalid
-
-            //? Having mixed image types in an image set is currently invalid, may implement in the future
-            HashSet<ImageType> encounteredImageTypes = new HashSet<ImageType>();
-
-            foreach (ImageModel image in images)
-            {
-                encounteredImageTypes.Add(image.ImageType);
-
-                if (encounteredImageTypes.Count > 1)
-                {
-                    MessageBoxUtil.ShowError(INVALID_IMAGE_SET_MESSAGE);
-                    return null;
-                }
-            }
-
-            // Create a Related Image Set Model out of the selected images
-            ImageSetModel relatedImages = new ImageSetModel(images, encounteredImageTypes.First(), ImageSetType.Alt, ImageSetRankingFormat.WeightedAverage, 0, 50);
-            if (relatedImages.InvalidSet) return null; // if the set becomes invalid, cancel the process
-
-            if (modifyTabs) // not needed if the image selector isn't even open
-            {
-                // Remove the selected images from the image selector
-                //xImageSelectorTabModel initialTab = WallpaperFluxViewModel.Instance.GetSelectorTabOfImage(images[0]);
-
-                ImageSelectorTabModel tabToAddTo = WallpaperFluxViewModel.Instance.GetSelectorTabOfImage(images[0]); // for use later
-                WallpaperFluxViewModel.Instance.RemoveImageRangeFromTabs(images);
-
-                // Add the Related Image Set to the Image selector
-                tabToAddTo.AddImage(relatedImages);
-            }
-
-            ThemeUtil.Theme.Images.AddImageSet(relatedImages);
-
-            return relatedImages;
-        }
-
-        public static void AddToImageSet(ImageModel[] images, ImageSetModel targetSet)
-        {
-            foreach (ImageModel image in images)
-            {
-                if (image.ImageType != targetSet.ImageType)
-                {
-                    MessageBoxUtil.ShowError("Image Type mismatch between image and set, operation cancelled");
-                    return;
-                }
-            }
-
-            ImageSelectorTabModel targetTab = WallpaperFluxViewModel.Instance.GetSelectorTabOfImage(targetSet);
-
-            ImageSetModel newImageSet = new ImageSetModel(targetSet.GetRelatedImages(false).Union(images).ToArray(), targetSet.ImageType, targetSet.SetType, targetSet.RankingFormat,
-                targetSet.OverrideRank, targetSet.OverrideRankWeight);
-            ReplaceImageSet(targetSet, newImageSet, targetTab);
-
-            WallpaperFluxViewModel.Instance.RemoveImageRangeFromTabs(images);
-        }
-
-        public static void RemoveFromImageSet(ImageModel[] images, ImageSetModel targetSet)
-        {
-            foreach (ImageModel image in images)
-            {
-                image.ParentImageSet = null;
-            }
-
-            ImageSelectorTabModel targetTab = WallpaperFluxViewModel.Instance.GetSelectorTabOfImage(targetSet);
-
-            ImageSetModel newImageSet = new ImageSetModel(targetSet.GetRelatedImages(false).Except(images).ToArray(), targetSet.ImageType, targetSet.SetType, targetSet.RankingFormat,
-                targetSet.OverrideRank, targetSet.OverrideRankWeight);
-
-            if (newImageSet.GetRelatedImages(false).Length != 0)
-            {
-                ReplaceImageSet(targetSet, newImageSet, targetTab);
-            }
-            else //? just remove the image set if it's empty
-            {
-                targetTab.RemoveImage(targetSet);
-                ThemeUtil.Theme.Images.RemoveSet(targetSet);
-            }
-
-            targetTab.AddImageRange(images);
-            WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.InspectedImageSetImages);
-        }
-
-        public static void ReplaceImageSet(ImageSetModel oldImageSet, ImageSetModel newImageSet, ImageSelectorTabModel targetTab)
-        {
-            if (WallpaperFluxViewModel.Instance.InspectedImageSet != null && WallpaperFluxViewModel.Instance.InspectedImageSet.Equals(oldImageSet))
-            {
-                WallpaperFluxViewModel.Instance.InspectedImageSet = newImageSet; //? replacing removes the reference to the old image set, causing errors
-            }
-
-            ThemeUtil.Theme.Images.ReplaceImageSet(oldImageSet, newImageSet);
-            targetTab.ReplaceImage(oldImageSet, newImageSet);
-        }
-
         public static void PerformImageAction(BaseImageModel image, Action<ImageModel> action, bool checkForEnabled = true)
         {
             switch (image)
             {
                 case ImageModel imageModel:
+                    if (checkForEnabled && !image.IsEnabled(true)) return;
+
                     action.Invoke(imageModel);
                     break;
 
@@ -217,6 +122,8 @@ namespace WallpaperFlux.Core.Util
             switch (image)
             {
                 case ImageModel imageModel:
+                    if (checkForEnabled && !image.IsEnabled(true)) return false;
+
                     return func.Invoke(imageModel);
 
                 case ImageSetModel imageSet:

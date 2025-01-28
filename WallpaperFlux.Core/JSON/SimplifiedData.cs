@@ -79,6 +79,7 @@ namespace WallpaperFlux.Core.JSON
         }
     }
 
+    // TODO Combine SimplifiedImage and SimplifiedImageSet in some form to avoid duplicate variables (can't use inheritance)
     public struct SimplifiedImage
     {
         public string Path;
@@ -124,6 +125,7 @@ namespace WallpaperFlux.Core.JSON
         }
     }
 
+    // TODO Combine SimplifiedImage and SimplifiedImageSet in some form to avoid duplicate variables (can't use inheritance)
     public struct SimplifiedImageSet
     {
         public string[] ImagePaths;

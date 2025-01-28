@@ -341,6 +341,7 @@
 
                                         <!--? Ranking Format -->
                                         <MenuItem Header="Ranking Format" IsEnabled="False"/>
+                                        <!-- TODO Would this work better as a radial menu? -->
                                         <MenuItem Header="Average" IsChecked="{Binding UsingAverageRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                                                                   StaysOpenOnClick="True" IsCheckable="True"
                                                                   IsEnabled="{Binding UsingAverageRank, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, 
@@ -357,6 +358,7 @@
                                                                   StaysOpenOnClick="True" IsCheckable="True"
                                                                   IsEnabled="{Binding UsingWeightedOverride, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, 
                                                             Converter={StaticResource BooleanInverterConverter}}"/>
+
                                         <MenuItem Header="{Binding OverrideRankWeightText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="False"/>
                                         <Slider Value="{Binding OverrideRankWeight}" IsEnabled="{Binding UsingWeightedOverride}" Minimum="0" Maximum="100"/>
 
@@ -673,7 +675,7 @@
                     <CheckBox Content="Rename Grouping" Margin="3" IsChecked="{Binding GroupRenamed}"
                               ToolTip="While this is checked, if multiple images with the same tags are renamed simultaneously, their numbering will be grouped together"/>
                     <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
-                    <Button Width="75" Height="25" Content="Create Set" Margin="3 0 3 0 " Command="{Binding CreateRelatedImageSetCommand}"  IsEnabled="{Binding IsImageSelected}"
+                    <Button Width="75" Height="25" Content="Create Set" Margin="3 0 3 0 " Command="{Binding CreateImageSetCommand}"  IsEnabled="{Binding IsImageSelected}"
                             ToolTip="Builds a 'related imageSet set' out of the selected images"/>
                     <Button Width="75" Height="25" Content="Add To Set" Margin="3 0 3 0 " Command="{Binding AddToImageSetCommand}" IsEnabled="{Binding IsImageSelected}"
                             ToolTip="If one set is selected, adds the currently selected images to the selected set"/>

@@ -229,6 +229,10 @@ namespace WallpaperFlux.Core.ViewModels
                     SelectedImageModel = imageModel;
                     RaisePropertyChanged(() => SelectedImageModel);
                 }
+                else
+                {
+                    SelectedImageModel = null;
+                }
 
                 MuteIfInspectorHasAudio(); // changing the selected image may change the inspector to a video with audio, in this case, mute wallpapers with audio
             }
@@ -307,7 +311,19 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
-        public ImageSetModel InspectedImageSet;
+        private ImageSetModel _inspectedImageSet;
+        public ImageSetModel InspectedImageSet
+        {
+            get => _inspectedImageSet;
+            set
+            {
+                if (SetProperty(ref _inspectedImageSet, value))
+                {
+                    RaisePropertyChanged(nameof(InspectedImageSetImages));
+                    RaisePropertyChanged(nameof(InspectedImageRankText));
+                }
+            }
+        }
 
         public string InspectedImageRankText
         {
@@ -404,6 +420,7 @@ namespace WallpaperFlux.Core.ViewModels
 
                 if (value)
                 {
+                    if (SelectedImage is ImageSetModel imageSet) InspectedImageSet = imageSet;
                     RaisePropertyChanged(() => InspectedImageSetImages);
                     RaisePropertyChanged(() => InspectedImageRankText);
                     DeselectAllImages(); // don't want any regular images selected when viewing a set
@@ -464,7 +481,7 @@ namespace WallpaperFlux.Core.ViewModels
 
         public IMvxCommand RankImagesCommand { get; set; }
 
-        public IMvxCommand CreateRelatedImageSetCommand { get; set; }
+        public IMvxCommand CreateImageSetCommand { get; set; }
 
         public IMvxCommand AddToImageSetCommand { get; set; }
 
@@ -577,7 +594,7 @@ namespace WallpaperFlux.Core.ViewModels
                 }
             });
             RankImagesCommand = new MvxCommand(() => ImageUtil.PromptRankImageRange(GetAllHighlightedImages()));
-            CreateRelatedImageSetCommand = new MvxCommand(() => ImageUtil.CreateRelatedImageSet(GetAllHighlightedImages(true), true));
+            CreateImageSetCommand = new MvxCommand(CreateImageSetWithHighlightedImages);
             AddToImageSetCommand = new MvxCommand(AddToImageSet);
             RemoveFromSetCommand = new MvxCommand(RemoveFromImageSet);
 
@@ -585,6 +602,21 @@ namespace WallpaperFlux.Core.ViewModels
             ToggleInspectorCommand = new MvxCommand(ToggleInspector);
             CloseInspectorCommand = new MvxCommand(CloseInspector);
             CloseImageSetInspectorCommand = new MvxCommand(CloseImageSetInspector);
+        }
+
+        private void CreateImageSetWithHighlightedImages()
+        {
+            var images = GetAllHighlightedImages(true);
+            ImageSetModel imageSet = new ImageSetModel.Builder(images).Build();
+
+            if (imageSet != null)
+            {
+                ImageSelectorTabModel tabToAddTo = GetSelectorTabOfImage(images[0]); // for use later
+                RemoveImageRangeFromTabs(images);
+
+                // Add the Related Image Set to the Image selector
+                tabToAddTo.AddImage(imageSet);
+            }
         }
 
         public void MuteIfInspectorHasAudio()
@@ -1375,8 +1407,13 @@ namespace WallpaperFlux.Core.ViewModels
 
         public void CloseInspector() => InspectorToggle = false;
 
-        public void CloseImageSetInspector() => ImageSetInspectorToggle = false;
-        
+        // ! this distinction is needed because you can inspect a regular image while the image selector inspector is open
+        public void CloseImageSetInspector()
+        {
+            SelectedImage = InspectedImageSet; // ? reselect the image set after closing (outside selection wouldn't have changed)
+            ImageSetInspectorToggle = false;
+        }
+
         public void SetInspectorHeight(double newHeight) => InspectorHeight = newHeight;
 
         #endregion
@@ -1419,7 +1456,12 @@ namespace WallpaperFlux.Core.ViewModels
                 return;
             }
 
-            ImageUtil.AddToImageSet(imagesFound.ToArray(), imageSetsFound.First());
+            var targetImageSet = imageSetsFound[0];
+            UpdateTabFromImageSetAddition(
+                targetImageSet,
+                // ? [LINQ] we do not want to add images that are already in sets (could include the images within the set itself)
+                imagesFound.Where(f => f.ParentImageSet == null).ToArray()
+            );
         }
 
         private void RemoveFromImageSet()
@@ -1433,11 +1475,42 @@ namespace WallpaperFlux.Core.ViewModels
                     if (image.IsSelected)
                     {
                         imagesFound.Add(image);
+                        InspectedImageSet.RemoveImage(image);
                     }
                 }
 
-                ImageUtil.RemoveFromImageSet(imagesFound.ToArray(), InspectedImageSet);
+                UpdateTabFromImageSetRemoval(imagesFound.ToArray());
             }
+        }
+
+        public void UpdateTabFromImageSetAddition(ImageSetModel targetSet, ImageModel[] imageRange)
+        {
+            targetSet.AddImageRange(imageRange);
+
+            RemoveImageRangeFromTabs(imageRange);
+
+            RaisePropertyChanged(nameof(InspectedImageSetImages));
+            RaisePropertyChanged(nameof(InspectedImageRankText));
+            //xImageUtil.AddToImageSet(imagesFound.ToArray(), imageSetsFound.First());
+        }
+
+        public void UpdateTabFromImageSetRemoval(ImageModel[] imagesRemoved)
+        {
+            // remove set from tab and close the inspector if all images are removed
+            ImageSelectorTabModel targetTab = GetSelectorTabOfImage(InspectedImageSet);
+            if (InspectedImageSet.GetRelatedImages(false).Length == 0)
+            {
+                targetTab.RemoveImage(InspectedImageSet);
+                ThemeUtil.Theme.Images.RemoveSet(InspectedImageSet); // ? remove set if empty
+                CloseImageSetInspector();
+            }
+
+            // add removed images back to the tab
+            if (imagesRemoved.Length > 0) targetTab.AddImageRange(imagesRemoved);
+
+            RaisePropertyChanged(nameof(InspectedImageSetImages));
+            RaisePropertyChanged(nameof(InspectedImageRankText));
+            //xImageUtil.RemoveFromImageSet(imagesFound.ToArray(), InspectedImageSet);
         }
 
         #endregion
