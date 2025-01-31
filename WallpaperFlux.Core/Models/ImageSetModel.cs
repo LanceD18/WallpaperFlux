@@ -15,8 +15,9 @@ namespace WallpaperFlux.Core.Models
     public sealed class ImageSetModel : BaseImageModel
     {
         private readonly List<ImageModel> RelatedImages;
-
+        private readonly HashSet<ImageModel> _activeImages = new HashSet<ImageModel>();
         public override bool IsImageSet => true;
+        public override bool Active => IsEnabled(); // ? ImageSets are a lot less expensive to check the Enabled State of so due to difficulties with updating images we will just check this
 
         private ImageSetType _setType;
         public ImageSetType SetType
@@ -40,34 +41,6 @@ namespace WallpaperFlux.Core.Models
             {
                 SetProperty(ref _rankingFormat, value);
 
-                /*
-                switch (value)
-                {
-                    case ImageSetRankingFormat.Average:
-                        UsingAverageRank = true;
-                        break;
-
-                    case ImageSetRankingFormat.WeightedAverage:
-                        UsingWeightedAverage = true;
-                        break;
-
-                    case ImageSetRankingFormat.Override:
-                        UsingOverrideRank = true;
-                        break;
-
-                    case ImageSetRankingFormat.WeightedOverride:
-                        UsingWeightedOverride = true;
-                        break;
-
-                    default: throw new NotImplementedException();
-                }
-
-                if (RankingFormat != ImageSetRankingFormat.Average) UsingAverageRank = false;
-                if (RankingFormat != ImageSetRankingFormat.Override) UsingOverrideRank = false;
-                if (RankingFormat != ImageSetRankingFormat.WeightedAverage) UsingWeightedAverage = false;
-                if (RankingFormat != ImageSetRankingFormat.WeightedOverride) UsingWeightedOverride = false;
-                */
-
                 RaisePropertyChanged(() => UsingAverageRank);
                 RaisePropertyChanged(() => UsingOverrideRank);
                 RaisePropertyChanged(() => UsingWeightedAverage);
@@ -77,7 +50,6 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
-        private bool _usingAverageRank;
         public bool UsingAverageRank
         {
             get => RankingFormat == ImageSetRankingFormat.Average;
@@ -87,7 +59,6 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
-        private bool _usingWeightedAverage = true;
         // uses the weight scaling for wallpaper randomization & applies it to determining an average rank
         //? while with other methods the ranking may act as being within the bubble of the image set, weighted average takes into perspective the actual rate an image's rank
         public bool UsingWeightedAverage
@@ -99,7 +70,6 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
-        private bool _usingOverrideRank;
         public bool UsingOverrideRank
         {
             get => RankingFormat == ImageSetRankingFormat.Override;
@@ -109,7 +79,6 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
-        private bool _usingWeightedOverride;
         public bool UsingWeightedOverride // combines average rank & override rank using a weight slider
         {
             get => RankingFormat == ImageSetRankingFormat.WeightedOverride;
@@ -241,7 +210,10 @@ namespace WallpaperFlux.Core.Models
                 Debug.WriteLine("Updating selection of all images in image set to " + "[" + this.IsSelected + "]");
                 foreach (ImageModel image in RelatedImages)
                 {
-                    image.IsSelected = this.IsSelected;
+                    if (image.IsEnabled(true))
+                    {
+                        image.IsSelected = this.IsSelected;
+                    }
                 }
             };
 
@@ -554,6 +526,23 @@ namespace WallpaperFlux.Core.Models
                 WallpaperFluxViewModel.Instance.RaisePropertyChanged(() => WallpaperFluxViewModel.Instance.InspectedImageRankText);
 
                 return true;
+            }
+
+            return false;
+        }
+
+        public override bool IsEnabled(bool ignoreSet = false)
+        {
+            if (!base.IsEnabled(ignoreSet)) return false;
+            //xActive = false; //! we need to set this to false AGAIN because base.IsEnabled() will set Active to TRUE if successful
+
+            foreach (ImageModel image in RelatedImages)
+            {
+                if (image.IsEnabled(true)) // ? if any image is enabled then the set can be displayed
+                {
+                    //xActive = true;
+                    return true;
+                }
             }
 
             return false;

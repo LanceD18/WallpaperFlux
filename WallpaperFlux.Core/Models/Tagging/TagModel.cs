@@ -311,7 +311,7 @@ namespace WallpaperFlux.Core.Models.Tagging
         
         private void InitCommands()
         {
-            SelectImagesWithTag = new MvxCommand(() => TaggingUtil.RebuildImageSelectorWithTagOptions(GetLinkedImages().ToArray()));
+            SelectImagesWithTag = new MvxCommand(() => TaggingUtil.RebuildImageSelectorWithTagFilter(GetLinkedImages().ToArray()));
             RenameTagCommand = new MvxCommand(PromptRename);
             RemoveTagCommand = new MvxCommand(PromptRemoveTag);
             TagInteractCommand = new MvxCommand(InteractTag);

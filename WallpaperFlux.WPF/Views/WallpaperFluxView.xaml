@@ -139,7 +139,11 @@
                         <!-- ? /// ImageModelTemplate /// -->
                         <DataTemplate x:Key="ImageModelTemplate" DataType="{x:Type models:ImageModel}">
                             <GroupBox>
-                                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ImageDecoratorTemplate}" MouseEnter="ImageSelector_Webm_ContentControl_OnMouseEnter">
+                                <ContentControl 
+                                    Content="{Binding}" 
+                                    ContentTemplate="{StaticResource ImageDecoratorTemplate}" 
+                                    MouseEnter="ImageSelector_Webm_ContentControl_OnMouseEnter"
+                                    ToolTipService.ShowDuration="{StaticResource MaxInt32}">
                                     <ContentControl.ToolTip>
                                         <ContentControl Content="{Binding }">
                                             <ContentControl.Resources>

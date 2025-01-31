@@ -276,7 +276,7 @@ namespace WallpaperFlux.Core.Util
         /// Rebuilds the image selector using the randomization and reversal options of the TagView
         /// </summary>
         /// <param name="images">The images to rebuild the image selector with</param>
-        public static void RebuildImageSelectorWithTagOptions(BaseImageModel[] images)
+        public static void RebuildImageSelectorWithTagFilter(BaseImageModel[] images)
         {
             if (!InstanceExists) return;
 

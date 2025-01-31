@@ -323,16 +323,8 @@ namespace WallpaperFlux.Core.Models
 
         public override bool IsEnabled(bool ignoreSet = false) //! ignore set ensures that we can avoid disabling images that are in sets *when they are needed*
         {
-            if (!base.IsEnabled(ignoreSet))
-            {
-                Active = false;
-                return false;
-            }
-
-            //xif (!ignoreSet)
-            //x{
-                Active = false; //! we need to set this to false AGAIN because base.IsEnabled() will set Active to TRUE if successful
-            //x}
+            if (!base.IsEnabled(ignoreSet)) return false;
+            Active = false; //! we need to set this to false AGAIN because base.IsEnabled() will set Active to TRUE if successful
                 
             if (IsDependentOnImageSet && !ignoreSet) return false;
 
@@ -344,7 +336,7 @@ namespace WallpaperFlux.Core.Models
                 }
             }
 
-            if (ParentFolder == null) 
+            if (ParentFolder == null)
             {
                 Debug.Write("Error: Parent Folder still null after updating on image: " + Path);
                 return false; // if still null, return false

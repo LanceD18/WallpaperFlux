@@ -67,11 +67,10 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
-        public bool Active { get; protected set; } = false; //? so that we don't have to check IsEnabled() every time we want to see if the image is available
+        public virtual bool Active { get; protected set; } = false; //? so that we don't have to check IsEnabled() every time we want to see if the image is available
 
         [DataMember(Name = "Image Type")]
         public ImageType ImageType { get; set; }
-
 
         // Video, Gif, & Animated Set Properties
         public bool IsAnimated

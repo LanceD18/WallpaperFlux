@@ -15,8 +15,6 @@ using WallpaperFlux.Core.Util;
 
 namespace WallpaperFlux.Core.ViewModels
 {
-
-
     public class ImageSelectionViewModel : MvxViewModel
     {
         public static ImageSelectionViewModel Instance; // allows the data to remain persistent without having to reload everything once the view is closed
@@ -140,7 +138,15 @@ namespace WallpaperFlux.Core.ViewModels
             // TODO With this set up, we will check for image sets twice (second time in RebuildImageSelector()) ; find a better way to do this
             if (!ImageSetRestriction)
             {
-                images = ThemeUtil.Theme.Images.GetAllImages();
+                //xImageModel[] imageModels = ThemeUtil.Theme.Images.GetAllImages().ToArray();
+                //ximages = ImageUtil.CollapseImages(imageModels);
+
+                images = ThemeUtil.Theme.Images.GetAllImages().ToArray();
+
+                // ? the below will work as well but cause images sets to appear at the end of all searches
+                //x ? split images and image sets
+                //ximages = ThemeUtil.Theme.Images.GetAllImages().Where(f => !f.IsInImageSet).ToArray();
+                //ximages = images.Union(ThemeUtil.Theme.Images.GetAllImageSets().Where(f => f.IsImageSet)).ToArray();
             }
             else
             {
@@ -154,10 +160,7 @@ namespace WallpaperFlux.Core.ViewModels
         {
             WallpaperFluxViewModel.Instance.RebuildImageSelector(images, OrderByRandomize, OrderByReverse, OrderByDate, OrderByRank, ImageSetRestriction);
 
-            if (closeWindow)
-            {
-                Mvx.IoCProvider.Resolve<IExternalViewPresenter>().CloseImageSelectionOptions();
-            }
+            if (closeWindow) Mvx.IoCProvider.Resolve<IExternalViewPresenter>().CloseImageSelectionOptions();
         }
 
         public BaseImageModel[] FilterImages(BaseImageModel[] images)
@@ -204,6 +207,9 @@ namespace WallpaperFlux.Core.ViewModels
                         // check the set for filters instead if one exists
                         if (VerifyImageType(image))
                         {
+                            filteredImages.Add(image);
+
+                            /*x
                             switch (image)
                             {
                                 case ImageModel imageModel:
@@ -228,6 +234,7 @@ namespace WallpaperFlux.Core.ViewModels
                                     filteredImages.Add(image);
                                     break;
                             }
+                            */
                         }
                     }
                 }

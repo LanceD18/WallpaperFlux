@@ -50,12 +50,18 @@ namespace WallpaperFlux.Core.ViewModels
 
         // TODO When you need more view models, initialize them in the constructor here
 
-        //? this variable exists for use with the xaml despite the Static Reference
+        //! this variable exists for use with the xaml despite the Static Reference
         // allows the data of settings to be accessed by the xaml code
+        // ! FOR USE WITH XAML
+        // ! FOR USE WITH XAML
+        // ! FOR USE WITH XAML
         public ThemeModel Theme_USE_STATIC_REFERENCE_FIX_LATER { get; set; } = ThemeUtil.Theme; //! don't forget to update WallpaperFluxView.xaml when you changed this
-        //? this variable exists for use with the xaml despite the Static Reference
-        //? this variable exists for use with the xaml despite the Static Reference
-        //? this variable exists for use with the xaml despite the Static Reference
+        // ! FOR USE WITH XAML
+        // ! FOR USE WITH XAML
+        // ! FOR USE WITH XAML
+        //! this variable exists for use with the xaml despite the Static Reference
+        //! this variable exists for use with the xaml despite the Static Reference
+        //! this variable exists for use with the xaml despite the Static Reference
 
         #region View Variables
         //-----View Variables-----
@@ -152,15 +158,21 @@ namespace WallpaperFlux.Core.ViewModels
                     {
                         return selectedImage.Path;
                     }
-                    else
+                    
+                    if (SelectedImage is ImageSetModel selectedSet)
                     {
-                        return "";
+                        if (selectedSet.GetRelatedImages(true)[0] is ImageModel setImage)
+                        {
+                            return setImage.Path;
+                        }
                     }
                 }
                 else
                 {
                     return "Selected Images: " + SelectedImageCount;
                 }
+
+                return "";
             }
         }
 
@@ -204,7 +216,7 @@ namespace WallpaperFlux.Core.ViewModels
                     }
 
                     case ImageSetModel selectedImageSet:
-                        return "Images in Set: " + selectedImageSet.GetRelatedImages().Length;
+                        return "Images in Set: " + selectedImageSet.GetRelatedImages(true).Length;
                 }
 
                 return "[ERROR]";
@@ -1031,27 +1043,27 @@ namespace WallpaperFlux.Core.ViewModels
         //? ----- Rebuild Image Selector (ImageModel) -----
         public void RebuildImageSelector(BaseImageModel[] selectedImages, bool randomize, bool reverseOrder, bool orderByDate, bool orderByRank, bool imageSetRestriction)
         {
-            //-----Checking Validation Conditions-----
+            // -----Checking Validation Conditions-----
             if (selectedImages == null || selectedImages.Length == 0)
             {
                 MessageBoxUtil.ShowError("No images were selected");
                 return;
             }
 
+            selectedImages = ImageUtil.CollapseImages(selectedImages); // collapse images before checking for set restriction
             if (imageSetRestriction)
             {
                 selectedImages = selectedImages.Where(f => f.IsImageSet).ToArray();
             }
 
-            //----- Apply Optional Modification Conditions -----
+            // ----- Apply Optional Modification Conditions -----
             //? should come after checking conditions, no need to process this if something is wrong
             if (randomize)
             {
                 selectedImages = selectedImages.Randomize().ToArray();
             }
-            else //? it is redundant to randomize and reverse the order at the same time as the randomization will end up being the only factor
+            else //? it is redundant to randomize and change the order at the same time as the randomization will end up being the only factor
             {
-                // TODO Make the redundancy apparent in the interface by disabling everything else if random is picked
                 if (orderByDate)
                 {
                     selectedImages = selectedImages.OrderBy(f => new FileInfo(ImageUtil.GetImageModel(f, false).Path).CreationTime).ToArray();
@@ -1068,7 +1080,7 @@ namespace WallpaperFlux.Core.ViewModels
                 }
             }
 
-            //-----Rebuild-----
+            // -----Rebuild-----
             ImageSelectorTabs.Clear();
 
             int tabCount = (selectedImages.Length / IMAGES_PER_PAGE) + 1;
@@ -1077,7 +1089,7 @@ namespace WallpaperFlux.Core.ViewModels
             int invalidCounter = 0;
             string invalidImageString = INVALID_IMAGE_STRING_DEFAULT;
 
-            HashSet<ImageSetModel> encounteredSets = new HashSet<ImageSetModel>();
+            //xHashSet<ImageSetModel> encounteredSets = new HashSet<ImageSetModel>();
 
             for (int i = 0; i < tabCount; i++)
             {
@@ -1096,38 +1108,40 @@ namespace WallpaperFlux.Core.ViewModels
                         
                         if (image != null /*x&& ThemeUtil.Theme.Images.ContainsImage(image) ThemeUtil.Theme.Images.ContainsImage(image.Path, image.ImageType)*/)
                         {
-                            Func<ImageSetModel, bool> checkForSet = set =>
+                            /*x
+                            Func<ImageSetModel, bool> checkForSet = possibleSet =>
                             {
-                                if (!encounteredSets.Contains(set))
+                                if (encounteredSets.Add(possibleSet))
                                 {
-                                    encounteredSets.Add(set);
-                                    image = set;
-
-                                    if (set.GetRelatedImages(true).Length > 0) // if all images in a set are disabled, no need to add the set
-                                    {
-                                        return true;
-                                    }
+                                    image = possibleSet;
+                                    return true;
                                 }
 
                                 return false;
                             };
+                            */
 
+                            /*x
                             switch (image)
                             {
                                 case ImageModel imageModel:
                                 {
-                                    if (imageModel.IsInImageSet)
+                                    if ((ThemeUtil.ThemeSettings.EnableDetectionOfInactiveImages && ThemeUtil.Theme.Images.ContainsImage(image))
+                                        || image.Active || imageModel.IsInImageSet) //? we don't need to send an error message for user-disabled images
                                     {
-                                        // not much of a downside to using IsEnabled() on sets, sets have significantly less IsEnabled() checks anyways
-                                        if (imageModel.ParentImageSet.IsEnabled()) //! this should NOT be combined with the above if statement! (would conflict with the else)
+                                        if (imageModel.IsInImageSet)
                                         {
-                                            success = checkForSet.Invoke(imageModel.ParentImageSet);
+                                            // not much of a downside to using IsEnabled() on sets, sets have significantly less IsEnabled() checks anyways
+                                            if (imageModel.ParentImageSet.IsEnabled()) //! this should NOT be combined with the above if statement! (would conflict with the else)
+                                            {
+                                                success = checkForSet.Invoke(imageModel.ParentImageSet);
+                                            }
                                         }
-                                    }
-                                    else if ((ThemeUtil.ThemeSettings.EnableDetectionOfInactiveImages && ThemeUtil.Theme.Images.ContainsImage(image))
-                                             || image.Active) //? we don't need to send an error message for user-disabled images
-                                    {
-                                        success = true;
+                                        else
+                                        {
+                                            success = true;
+                                        }
+
                                     }
 
                                     break;
@@ -1137,11 +1151,18 @@ namespace WallpaperFlux.Core.ViewModels
                                     success = checkForSet.Invoke(imageSet);
                                     break;
                             }
+                            */
 
-                            if (success)
+                            success = ThemeUtil.ThemeSettings.EnableDetectionOfInactiveImages && ThemeUtil.Theme.Images.ContainsImage(image) || image.Active;
+
+                            /*x
+                            if (image.IsImageSet)
                             {
-                                tabModel.Items.Add(image);
+                                Debug.WriteLine("wut: " + success);
                             }
+                            */
+
+                            if (success) tabModel.Items.Add(image);
                         }
                         else
                         {

@@ -635,6 +635,7 @@ namespace WallpaperFlux.WPF.Views
             {
                 ThumbnailImage = image;
                 ImageModel imageModel = GetImageModelFromContext(image);
+                if (imageModel == null) return;
 
                 if (imageModel.IsStatic)
                 {

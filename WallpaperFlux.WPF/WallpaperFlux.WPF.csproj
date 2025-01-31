@@ -13,12 +13,9 @@
     <PackageReference Include="FFME.Windows" Version="4.4.350" />
     <PackageReference Include="FFmpeg.AutoGen" Version="4.4.1.1" />
     <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="1.1.0" />
-    <PackageReference Include="LibVLCSharp" Version="3.6.7" />
-    <PackageReference Include="LibVLCSharp.WPF" Version="3.6.7" />
     <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.0-beta.701" />
     <PackageReference Include="MediaPlayer.Wpf.Mpv" Version="1.0.1" />
     <PackageReference Include="MediaToolkit" Version="1.1.0.1" />
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.1661.34" />
     <PackageReference Include="Mpv.NET" Version="1.2.0" />
     <PackageReference Include="MvvmCross.Platforms.Wpf" Version="8.0.2" />
     <PackageReference Include="PresentationFramework" Version="4.6.0" />

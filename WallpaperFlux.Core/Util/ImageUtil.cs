@@ -35,6 +35,40 @@ namespace WallpaperFlux.Core.Util
 
         public static readonly string INVALID_IMAGE_SET_MESSAGE = "A set with mixed image types (Static/Gif/Video) is not yet supported";
 
+        /// <summary>
+        /// return the given array of images where all images in sets have been 'collapsed' into their sets
+        /// </summary>
+        /// <returns></returns>
+        public static BaseImageModel[] CollapseImages(BaseImageModel[] images)
+        {
+            HashSet<ImageSetModel> encounteredSets = new HashSet<ImageSetModel>();
+            List<BaseImageModel> collapsedImages = new List<BaseImageModel>(); // 'collapsed' meaning that images are put in their sets
+
+            for (int i = 0; i < images.Length; i++)
+            {
+                if (images[i] is ImageModel image)
+                {
+                    if (image.IsInImageSet)
+                    {
+                        if (encounteredSets.Add(image.ParentImageSet))
+                        {
+                            collapsedImages.Add(image.ParentImageSet);
+                        }
+                    }
+                    else
+                    {
+                        collapsedImages.Add(image);
+                    }
+                }
+                else
+                {
+                    collapsedImages.Add(images[i]);
+                }
+            }
+
+            return collapsedImages.ToArray();
+        }
+
         public static void PromptRankImage(ImageModel image)
         {
             PromptRankImageRange(new ImageModel[] {image});

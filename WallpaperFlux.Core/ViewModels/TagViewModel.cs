@@ -448,7 +448,7 @@ namespace WallpaperFlux.Core.ViewModels
         {
             //? --- TagBoard ---
             CloseTagBoardCommand = new MvxCommand(CloseTagBoard); //? the open/toggle TagBoard is initially called by CategoryModel and sent to a method here
-            SelectImagesFromTagBoardCommand = new MvxCommand(() => TaggingUtil.RebuildImageSelectorWithTagOptions(SearchValidImagesWithTagBoard()));
+            SelectImagesFromTagBoardCommand = new MvxCommand(() => TaggingUtil.RebuildImageSelectorWithTagFilter(SearchValidImagesWithTagBoard()));
             SetMandatoryTagBoardSelectionCommand = new MvxCommand(() => SetAllTagBoardTagsSearchType(TagSearchType.Mandatory));
             SetOptionalTagBoardSelectionCommand = new MvxCommand(() => SetAllTagBoardTagsSearchType(TagSearchType.Optional));
             SetExcludedTagBoardSelectionCommand = new MvxCommand(() => SetAllTagBoardTagsSearchType(TagSearchType.Excluded));
