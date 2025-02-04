@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Emgu.CV" Version="4.6.0.5131" />
+    <PackageReference Include="Emgu.CV.runtime.windows" Version="4.6.0.5131" />
+    <PackageReference Include="Mpv.NET" Version="1.2.0" />
+    <PackageReference Include="WpfScreenHelper" Version="2.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WallpaperFlux.Core\WallpaperFlux.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="LanceTools">
+      <HintPath>..\..\..\..\Code Library\C#\LanceTools\LanceTools\LanceTools\bin\Release\LanceTools.dll</HintPath>
+    </Reference>
+    <Reference Include="LanceTools.MpvExtensions">
+      <HintPath>..\..\..\..\Code Library\C#\LanceTools\LanceTools\LanceTools.MpvExtensions\bin\Release\LanceTools.MpvExtensions.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
