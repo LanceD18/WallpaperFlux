@@ -286,7 +286,7 @@ namespace WallpaperFlux.Core.Util
             }
             else
             {
-                ImageSelectionViewModel.Instance.RebuildImageSelectorWithOptions(ImageSelectionViewModel.Instance.FilterImages(images), false);
+                ImageSelectionViewModel.Instance.RebuildImageSelectorWithOptions(ImageSelectionViewModel.Instance.FilterImages(images, false), true);
             }
         }
 

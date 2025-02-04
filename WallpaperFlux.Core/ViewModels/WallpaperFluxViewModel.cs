@@ -161,7 +161,8 @@ namespace WallpaperFlux.Core.ViewModels
                     
                     if (SelectedImage is ImageSetModel selectedSet)
                     {
-                        if (selectedSet.GetRelatedImages(true)[0] is ImageModel setImage)
+                        var relatedImages = selectedSet.GetRelatedImages(true);
+                        if (relatedImages.Length > 0 && relatedImages[0] is ImageModel setImage)
                         {
                             return setImage.Path;
                         }
@@ -1038,10 +1039,10 @@ namespace WallpaperFlux.Core.ViewModels
             RebuildImageSelector(selectedImageModels.ToArray());
         }
 
-        public void RebuildImageSelector(BaseImageModel[] selectedImages) => RebuildImageSelector(selectedImages, false, false, false, false, false);
+        public void RebuildImageSelector(BaseImageModel[] selectedImages) => RebuildImageSelector(selectedImages, false, false, false, false, false, false);
 
         //? ----- Rebuild Image Selector (ImageModel) -----
-        public void RebuildImageSelector(BaseImageModel[] selectedImages, bool randomize, bool reverseOrder, bool orderByDate, bool orderByRank, bool imageSetRestriction)
+        public void RebuildImageSelector(BaseImageModel[] selectedImages, bool randomize, bool reverseOrder, bool orderByDate, bool orderByRank, bool imageSetRestriction, bool alreadyCollapsed)
         {
             // -----Checking Validation Conditions-----
             if (selectedImages == null || selectedImages.Length == 0)
@@ -1050,7 +1051,11 @@ namespace WallpaperFlux.Core.ViewModels
                 return;
             }
 
-            selectedImages = ImageUtil.CollapseImages(selectedImages); // collapse images before checking for set restriction
+            if (!alreadyCollapsed) // ? to avoid running this twice
+            {
+                selectedImages = ImageUtil.CollapseImages(selectedImages); // collapse images before checking for set restriction
+            }
+
             if (imageSetRestriction)
             {
                 selectedImages = selectedImages.Where(f => f.IsImageSet).ToArray();

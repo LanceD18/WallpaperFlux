@@ -135,6 +135,8 @@ namespace WallpaperFlux.Core.ViewModels
         {
             BaseImageModel[] images;
 
+            bool alreadyCollapsed = false;
+
             // TODO With this set up, we will check for image sets twice (second time in RebuildImageSelector()) ; find a better way to do this
             if (!ImageSetRestriction)
             {
@@ -151,19 +153,20 @@ namespace WallpaperFlux.Core.ViewModels
             else
             {
                 images = ThemeUtil.Theme.Images.GetAllImageSets();
+                alreadyCollapsed = true;
             }
 
-            RebuildImageSelectorWithOptions(FilterImages(images));
+            RebuildImageSelectorWithOptions(FilterImages(images, alreadyCollapsed), true);
         }
 
-        public void RebuildImageSelectorWithOptions(BaseImageModel[] images, bool closeWindow = true)
+        public void RebuildImageSelectorWithOptions(BaseImageModel[] images, bool alreadyCollapsed, bool closeWindow = true)
         {
-            WallpaperFluxViewModel.Instance.RebuildImageSelector(images, OrderByRandomize, OrderByReverse, OrderByDate, OrderByRank, ImageSetRestriction);
+            WallpaperFluxViewModel.Instance.RebuildImageSelector(images, OrderByRandomize, OrderByReverse, OrderByDate, OrderByRank, ImageSetRestriction, alreadyCollapsed);
 
             if (closeWindow) Mvx.IoCProvider.Resolve<IExternalViewPresenter>().CloseImageSelectionOptions();
         }
 
-        public BaseImageModel[] FilterImages(BaseImageModel[] images)
+        public BaseImageModel[] FilterImages(BaseImageModel[] images, bool alreadyCollapsed)
         {
             if (images == null) return new BaseImageModel[] { };
 
@@ -200,11 +203,16 @@ namespace WallpaperFlux.Core.ViewModels
                     imageFilter = ThemeUtil.RankController.GetImagesOfRankRange(MinSpecifiedRank, MaxSpecifiedRank).ToHashSet();
                 }
 
+                if (!alreadyCollapsed)
+                {
+                    // ? if the images are not collapsed before being checked by the filter, the filter will remove images from sets that are not independent
+                    images = ImageUtil.CollapseImages(images); 
+                }
+
                 foreach (BaseImageModel image in images)
                 {
                     if (imageFilter.Contains(image))
                     {
-                        // check the set for filters instead if one exists
                         if (VerifyImageType(image))
                         {
                             filteredImages.Add(image);
@@ -266,13 +274,13 @@ namespace WallpaperFlux.Core.ViewModels
 
         private void PromptFolder()
         {
-            RebuildImageSelectorWithOptions(FilterImages(FolderUtil.PromptValidFolderModel()?.GetImageModels()));
+            RebuildImageSelectorWithOptions(FilterImages(FolderUtil.PromptValidFolderModel()?.GetImageModels(), false), true);
         }
 
         private void SelectActiveWallpapers()
         {
             BaseImageModel[] activeImages = ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers.ToArray();
-            RebuildImageSelectorWithOptions(activeImages);
+            RebuildImageSelectorWithOptions(activeImages, false);
         }
 
         private void SelectDisabledImages()
@@ -286,7 +294,7 @@ namespace WallpaperFlux.Core.ViewModels
                 allImages.Where(f => !f.Active).ToArray() : 
                 allImages.Where(f => !f.Active && !f.IsDependentOnImageSet).ToArray();
 
-            RebuildImageSelectorWithOptions(FilterImages(disabledImages));
+            RebuildImageSelectorWithOptions(FilterImages(disabledImages, false), true);
         }
     }
 }
