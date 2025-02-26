@@ -30,7 +30,6 @@
   <ItemGroup>
     <ProjectReference Include="..\WallpaperFlux.Core\WallpaperFlux.Core.csproj" />
     <ProjectReference Include="..\WallpaperFlux.Winform\WallpaperFlux.Winform.csproj" />
-    <ProjectReference Include="..\WallpaperFlux.Winform\WallpaperFlux.Winform_broken.csproj" />
   </ItemGroup>
 
   <ItemGroup>

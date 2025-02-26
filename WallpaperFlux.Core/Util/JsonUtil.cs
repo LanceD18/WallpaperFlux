@@ -167,40 +167,20 @@ namespace WallpaperFlux.Core.Util
 
         public static bool IsLoadingData { get; private set; } // used to speed up the loading process by preventing unnecessary calls
 
-        public static List<Action> ActionsPendingLoad = new List<Action>();
+        private static Queue<Action> ActionsPendingLoad = new Queue<Action>();
+
+        public static void QueueLoadAction(Action action) => ActionsPendingLoad.Enqueue(action);
 
         public static void SetIsLoadingData(bool isLoadingData)
         {
             IsLoadingData = isLoadingData;
 
-            if (isLoadingData)
-            {
-                ActionsPendingLoad.Add(() =>
-                {
-                    // --- Update Tag Information ---
-                    //! This does not go into ConvertTags as images have to add the tags first, doing this here instead of while loading the images improves performance
-                    foreach (CategoryModel category in ThemeUtil.Theme.Categories)
-                    {
-                        foreach (TagModel tag in category.GetTags())
-                        {
-                            tag.RaisePropertyChangedImageCount();
-                        }
-                    }
-
-                    WallpaperFluxViewModel.Instance.ImageFolders.ValidateImageFolders(true); // validation was cancelled beforehand
-
-                    SettingsViewModel.Instance.Settings = ThemeUtil.Theme.Settings;
-                });
-            }
-
             if (!isLoadingData) // we are no longer loading data, call all pending actions
             {
                 // ? Call methods / actions that were disabled doing the loading process but need to be called once loading is finished
                 // ? (Many were disabled for being called too frequently or when information they need is unavailable)
-                // TODO Would be better to try and design a way to avoid needing this (avoid running into loading complications, that is) if you can
 
-                foreach (Action action in ActionsPendingLoad) action?.Invoke();
-                ActionsPendingLoad.Clear();
+                while (ActionsPendingLoad.Count > 0) ActionsPendingLoad.Dequeue()?.Invoke();
             }
         }
 
@@ -475,6 +455,27 @@ namespace WallpaperFlux.Core.Util
 
             if (FileUtil.Exists(path))
             {
+                QueueLoadAction(
+                    () =>
+                    {
+                        // --- Update Tag Information ---
+                        //! This does not go into ConvertTags as images have to add the tags first, doing this here instead of while loading the images improves performance
+                        foreach (CategoryModel category in ThemeUtil.Theme.Categories)
+                        {
+                            foreach (TagModel tag in category.GetTags())
+                            {
+                                tag.RaisePropertyChangedImageCount();
+                            }
+                        }
+
+                        WallpaperFluxViewModel.Instance.ImageFolders.ValidateImageFolders(true); // validation was cancelled beforehand
+
+                        SettingsViewModel.Instance.Settings = ThemeUtil.Theme.Settings;
+
+                        WallpaperFluxViewModel.Instance.NextWallpaper();
+                    }
+                );
+
                 Debug.WriteLine("Loading JSON Data");
                 //? RankData and ActiveImages will both be automatically set when jsonWallpaperData is loaded as the constructors for ImageData is what sets them
                 JsonWallpaperData jsonWallpaperData;

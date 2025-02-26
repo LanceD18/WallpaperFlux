@@ -216,6 +216,8 @@ namespace WallpaperFlux.WPF.Views
                 try
                 {
                     element.Open(new Uri(elementImage.Path));
+                    element.Volume = elementImage.Volume;
+                    element.Play();
                 }
                 catch (Exception e)
                 {

@@ -728,11 +728,12 @@ namespace WallpaperFlux.Core.Models.Tagging
 
         public void ChangeRelativeFrequency()
         {
-            MessageBoxUtil.GetInteger("Relative Frequency", "Set Frequency", out int frequency, "Relative Frequency...");
+            if (MessageBoxUtil.GetInteger("Relative Frequency", "Set Frequency", out int frequency, "Relative Frequency..."))
+            {
+                TaggingUtil.TagFrequencies.ModifyFrequency(this, (double)frequency / 100);
 
-            TaggingUtil.TagFrequencies.ModifyFrequency(this, (double)frequency / 100);
-
-            UpdateFrequencies();
+                UpdateFrequencies();
+            }
         }
 
         #endregion

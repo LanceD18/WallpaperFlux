@@ -147,8 +147,9 @@
                                     <ContentControl.ToolTip>
                                         <ContentControl Content="{Binding }">
                                             <ContentControl.Resources>
-
                                                 <!--? FFME -->
+                                                <!-- ! this probably has the same risk as the Inspector view .webms -->
+                                                <!-- ! although this might be minimized by the way the tooltip handles reloading child controls -->
                                                 <DataTemplate x:Key="FFME">
                                                     <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"
                                                                            Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" 
@@ -737,7 +738,7 @@
                                 <ListBox ItemsSource="{Binding Items}" 
                                          SelectedItem="{Binding SelectedImage}"
                                          SelectionMode="Extended" SelectionChanged="ImageSelectorTabListBox_SelectionChanged"
-                                         VirtualizingPanel.IsVirtualizing="true" 
+                                         VirtualizingPanel.IsVirtualizing="true"
                                          VirtualizingPanel.VirtualizationMode="Recycling"
                                          ItemTemplate="{StaticResource ImageSelectorItemTemplate}">
 
@@ -745,7 +746,8 @@
                                     <ListBox.ItemsPanel>
                                         <ItemsPanelTemplate>
                                             <WrapPanel Width="{Binding ImageSelectorTabWrapWidth, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                       ItemWidth="{StaticResource ImageSelectorItemWidth}" ItemHeight="{StaticResource ImageSelectorItemHeight}"  IsItemsHost="True"/>
+                                                       ItemWidth="{StaticResource ImageSelectorItemWidth}" ItemHeight="{StaticResource ImageSelectorItemHeight}" 
+                                                       IsItemsHost="True"/>
                                         </ItemsPanelTemplate>
                                     </ListBox.ItemsPanel>
 
@@ -841,7 +843,8 @@
                                                     <!-- GIF -->
                                                     <DataTemplate x:Key="GIFTemplate">
                                                         <MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play"
-                                                                      Loaded="Tooltip_MediaElement_OnLoaded" DataContextChanged="Inspector_OnDataContextChanged"  MediaEnded="MediaElement_OnMediaEnded"/>
+                                                                      Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" 
+                                                                      DataContextChanged="Inspector_OnDataContextChanged"  MediaEnded="MediaElement_OnMediaEnded"/>
                                                     </DataTemplate>
                                                 </ContentControl.Resources>
                                                 <!-- Template Control -->
@@ -869,14 +872,23 @@
                                                     <ContentControl.Resources>
                                                         <!-- ? FFME -->
                                                         <DataTemplate x:Key="FFME">
+                                                            <TextBlock Text=".webm inspector view is not supported">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource FaintBold}"/>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                            <!-- ! Inconsistent ; will crash the program in rare occasions
                                                             <ffme:MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play" LoopingBehavior="Play"
-                                                                               Loaded="Tooltip_MediaElement_OnLoaded" DataContextChanged="Inspector_OnDataContextChanged"
+                                                                               Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" 
+                                                                               DataContextChanged="Inspector_OnDataContextChanged"
                                                                                Volume="{Binding ActualVolume, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                            -->
                                                         </DataTemplate>
                                                         <!-- ? Windows -->
                                                         <DataTemplate x:Key="Windows">
                                                             <MediaElement UnloadedBehavior="Manual" LoadedBehavior="Play"
-                                                                          Loaded="Tooltip_MediaElement_OnLoaded" DataContextChanged="Inspector_OnDataContextChanged"  MediaEnded="MediaElement_OnMediaEnded"
+                                                                          Loaded="Tooltip_MediaElement_OnLoaded" Unloaded="Tooltip_MediaElement_OnUnloaded" 
+                                                                          DataContextChanged="Inspector_OnDataContextChanged"  MediaEnded="MediaElement_OnMediaEnded"
                                                                           Volume="{Binding ActualVolume, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
                                                         </DataTemplate>
                                                     </ContentControl.Resources>

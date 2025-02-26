@@ -81,9 +81,10 @@ namespace WallpaperFlux.Core.Util
                 if (!MessageBoxUtil.PromptYesNo("Are you sure you want to rank ALL " + images.Length + " images?")) return;
             }
 
-            MessageBoxUtil.GetPositiveInteger("Select Rank", "Enter a rank to apply", out int newRank, "Rank...");
-            
-            RankImageRange(images, newRank);
+            if (MessageBoxUtil.GetPositiveInteger("Select Rank", "Enter a rank to apply", out int newRank, "Rank..."))
+            {
+                RankImageRange(images, newRank);
+            }
         }
 
         public static void RankImage(ImageModel image, int rank) => RankImageRange(new[] { image }, rank);
