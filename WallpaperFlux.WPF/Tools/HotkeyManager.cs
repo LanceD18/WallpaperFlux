@@ -21,9 +21,16 @@ namespace WallpaperFlux.WPF.Tools
         {
             _handle = handle;
             _source = HwndSource.FromHwnd(_handle);
-            _source.AddHook(HwndHook);
 
-            RegisterKeys();
+            if (_source != null)
+            {
+                _source.AddHook(HwndHook);
+                RegisterKeys();
+            }
+            else
+            {
+                MessageBoxUtil.ShowError("Hotkey registration failed!");
+            }
         }
 
         private void RegisterKeys()

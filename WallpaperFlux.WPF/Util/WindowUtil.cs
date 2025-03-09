@@ -22,6 +22,8 @@ namespace WallpaperFlux.WPF.Util
         public static ViewPresenter SettingsPresenter;
         public static ViewPresenter PaginationTestPresenter;
 
+        private static HashSet<ViewPresenter> _activePresenters = new HashSet<ViewPresenter>();
+
         public const float TAGGING_WINDOW_WIDTH = TaggingUtil.TAGGING_WINDOW_WIDTH;
         public const float TAGGING_WINDOW_HEIGHT = TaggingUtil.TAGGING_WINDOW_HEIGHT;
 
@@ -55,9 +57,11 @@ namespace WallpaperFlux.WPF.Util
             }
         }
 
-        public static void PresentImageSelectionView() =>
+        public static void PresentImageSelectionView()
+        {
             PresentWindow(ref ImageSelectionPresenter, typeof(ImageSelectionView), typeof(ImageSelectionViewModel),
                 IMAGE_SELECTION_WINDOW_WIDTH, IMAGE_SELECTION_WINDOW_HEIGHT, "Image Selection Options", false);
+        }
 
         public static void PresentTagView(CancelEventHandler e)
         {
@@ -87,7 +91,10 @@ namespace WallpaperFlux.WPF.Util
         {
             if (presenter?.ViewWindow == null) // for the case where either the presenter or the view itself do not exist
             {
+                _activePresenters.Remove(presenter);
                 presenter = new ViewPresenter(viewType, viewModelType, width, height, title, modal);
+                _activePresenters.Add(presenter);
+                Debug.WriteLine("Presenters: " + _activePresenters.Count);
             }
             else // if the window is already open, just focus it
             {
@@ -102,36 +109,32 @@ namespace WallpaperFlux.WPF.Util
 
         public static void HideAllWindows()
         {
+            foreach (ViewPresenter presenter in _activePresenters) HideView(presenter);
+
+            /*
             HideView(TagPresenter);
             HideView(ImageSelectionPresenter);
             HideView(SettingsPresenter);
             HideView(PaginationTestPresenter);
-        }
-
-        public static void HideView(ViewPresenter view)
-        {
-            if (view != null && view.ViewWindow != null)
-            {
-                view.ViewWindow.Hide();
-            }
+            */
         }
 
         public static void ShowAllWindows()
         {
+            foreach (ViewPresenter presenter in _activePresenters) ShowView(presenter);
+
+            /*
             ShowView(TagPresenter);
             ShowView(ImageSelectionPresenter);
             ShowView(SettingsPresenter);
             ShowView(PaginationTestPresenter);
+            */
         }
 
-        public static void ShowView(ViewPresenter view)
-        {
-            if (view != null && view.ViewWindow != null)
-            {
-                view.ViewWindow.Show();
-            }
-        }
+        public static void HideView(ViewPresenter presenter) => presenter?.ViewWindow?.Hide();
 
-        public static void CloseWindow(ViewPresenter presenter) => presenter.ViewWindow.Close();
+        public static void ShowView(ViewPresenter presenter) => presenter?.ViewWindow?.Show();
+
+        public static void CloseWindow(ViewPresenter presenter) => presenter?.ViewWindow?.Close();
     }
 }

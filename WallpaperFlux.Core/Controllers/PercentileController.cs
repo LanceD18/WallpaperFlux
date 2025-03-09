@@ -59,7 +59,7 @@ namespace WallpaperFlux.Core.Controllers
         {
             // Set Rank Percentiles
             RankPercentiles = new double[newMaxRank];
-            double rankMultiplier = 10.0 / newMaxRank;
+            double rankMultiplier = 10.0 / newMaxRank; // ? prevents high ranks from multiplying above the max double
 
             for (int i = 1; i < newMaxRank + 1; i++) //? the + 1 allows us to calculate the max rank, we don't need to worry about calculating rank 0
             {
@@ -71,6 +71,13 @@ namespace WallpaperFlux.Core.Controllers
                 //? the range from 0 to 1 instead of the 0 itself
                 RankPercentiles[i - 1] = Math.Pow(2, i * rankMultiplier);
             }
+        }
+
+        public double GetRankPercentile(int rank)
+        {
+            //? remember that rank 0 is not added to the percentiles dict, if a max rank image were to be entered we would get an exception
+            if (rank == 0) return 0;
+            return RankPercentiles[rank - 1];
         }
 
         /// <summary>
@@ -135,7 +142,7 @@ namespace WallpaperFlux.Core.Controllers
             foreach (int rank in validRanks)
             {
                 // If an image type is being searched for then only include the number of images from said image type
-                double percentileModifier = ((double)RankData.Get()[imageType][rank].Count / rankedImageCount);
+                double percentileModifier = (double)RankData.Get()[imageType][rank].Count / rankedImageCount;
 
                 modifiedRankPercentiles[rank] *= percentileModifier;
                 newRankPercentageTotal += modifiedRankPercentiles[rank];

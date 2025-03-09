@@ -531,6 +531,19 @@ namespace WallpaperFlux.Core.Models
             return false;
         }
 
+        public bool AreAnyImagesRanked()
+        {
+            foreach (ImageModel image in RelatedImages)
+            {
+                if (image.Rank != 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public override bool IsEnabled(bool ignoreSet = false)
         {
             if (!base.IsEnabled(ignoreSet)) return false;

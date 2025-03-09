@@ -81,7 +81,7 @@ namespace WallpaperFlux.Core.Models
             ViewFolderCommand = new MvxCommand(ViewFolder);
             SelectFolderImagesCommand = new MvxCommand(() => WallpaperFluxViewModel.Instance.RebuildImageSelector(GetImageModels()));
             SelectFolderImagesSelectionFilterCommand = new MvxCommand(() => 
-                ImageSelectionViewModel.Instance.RebuildImageSelectorWithOptions(ImageSelectionViewModel.Instance.FilterImages(GetImageModels(), false), true));
+                ImageSelectionViewModel.Instance.RebuildImageSelectorWithOptions(ImageSelectionViewModel.Instance.FilterImages(GetImageModels(), false), true, false));
         }
 
         public void ViewFolder()

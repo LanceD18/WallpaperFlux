@@ -245,6 +245,8 @@ namespace WallpaperFlux.WPF
         {
             animatedWallpaperSet = false;
 
+            if (!imageSet.AreAnyImagesRanked()) return; // just don't do anything if none of the images are ranked
+
             switch (imageSet.SetType)
             {
                 case ImageSetType.Alt:
@@ -259,7 +261,7 @@ namespace WallpaperFlux.WPF
                     break;
 
                 case ImageSetType.Animate:
-                    
+
                     AnimatedSetIndex = 0;
                     ImageModel[] relatedImages = imageSet.GetRelatedImages();
                     if (relatedImages.Length == 0) return;
@@ -294,7 +296,7 @@ namespace WallpaperFlux.WPF
                     // Timer Setup
                     DisableSet(); //! if the timer is not stopped before resetting the previous set will play indefinitely
                     AnimatedImageSetTimer = new DispatcherTimer(DispatcherPriority.Background, Application.Current.Dispatcher); //? resetting events
-                    AnimatedImageSetTimer.Interval = !imageSet.WeightedIntervals ? TimeSpan.FromSeconds(intervalTime) : GetWeightedInterval(relatedImages);
+                    AnimatedImageSetTimer.Interval = !imageSet.WeightedIntervals ? TimeSpan.FromSeconds(AnimatedImageUnweightedInterval) : GetWeightedInterval(relatedImages);
                     AnimatedImageSetTimer.Tick += (sender, e) => AdvanceAnimatedImageSet(imageSet);
                     AnimatedImageSetTimer.Start();
                     animatedWallpaperSet = true;
@@ -381,16 +383,22 @@ namespace WallpaperFlux.WPF
 
             if (AnimatedSetIndex < relatedImages.Length)
             {
-                int curImageWeight = relatedImages[AnimatedSetIndex].Rank;
-                int weightTotal = 0;
+                double curImageWeight = 0;
+                double weightTotal = 0;
                 for (int i = 0; i < relatedImages.Length; i++)
                 {
-                    weightTotal += relatedImages[i].Rank;
+                    double imageWeight = ThemeUtil.RankController.PercentileController.GetRankPercentile(relatedImages[i].Rank);
+
+                    weightTotal += imageWeight;
+                    if (i == AnimatedSetIndex)
+                    {
+                        curImageWeight = imageWeight;
+                    }
                 }
 
                 if (weightTotal == 0) return TimeSpan.Zero; // either all images are unranked or none were found
 
-                return TimeSpan.FromSeconds(totalTime * ((double)curImageWeight / weightTotal));
+                return TimeSpan.FromSeconds(totalTime * (curImageWeight / weightTotal));
             }
             else
             {
@@ -406,25 +414,36 @@ namespace WallpaperFlux.WPF
             ImageModel[] relatedImages = set.GetRelatedImages();
 
             AnimatedSetIndex++;
-            if (AnimatedSetIndex >= relatedImages.Length)
+            if (AnimatedSetIndex >= relatedImages.Length) AnimatedSetIndex = 0; // loop on reaching limit
+            if (AnimatedSetIndex == relatedImages.Length - 1) LoopCount++; // increase loop count on approaching limit
+
+            ImageModel curImage = relatedImages[AnimatedSetIndex];
+
+            // ? not only do these images not need to be set, attempting to set them in a weighted set will may override the next valid image due to threaded loading
+            if (curImage.Rank == 0)
             {
-                AnimatedSetIndex = 0;
+                if (LoopCount >= GetMinLoops(curImage))
+                   return;
+
+                AdvanceAnimatedImageSet(set);
             }
 
             //! we start the loop count on the prior image to prevent fraction intervals from having an extra loop due to them ending right on the wallpaper change
-            if (AnimatedSetIndex >= relatedImages.Length - 1)
-            {
-                LoopCount++;
-            }
 
             if (set.WeightedIntervals)
             {
                 AnimatedImageSetTimer.Interval = GetWeightedInterval(relatedImages);
             }
 
-            SetWallpaper(set.GetRelatedImage(AnimatedSetIndex), true);
+            Debug.WriteLine(set.GetRelatedImage(AnimatedSetIndex).PathName + " | " + AnimatedImageSetTimer.Interval);
+
+            SetWallpaper(relatedImages[AnimatedSetIndex], true);
         }
         #endregion
+
+        private int GetMinLoops(BaseImageModel image) => image.OverrideMinimumLoops ? image.MinimumLoops : ThemeUtil.VideoSettings.MinimumLoops;
+
+        private int GetMaxTime(BaseImageModel image) => image.OverrideMaximumTime ? image.MaximumTime : ThemeUtil.VideoSettings.MaximumTime;
 
         /// <summary>
         /// Scan video wallpapers for loop & max time settings
@@ -439,8 +458,8 @@ namespace WallpaperFlux.WPF
 
             if (!forceChange && isAnimated) // we can only make these checks if the previous wallpaper was a video or gif
             {
-                int minLoops = ActiveImage.OverrideMinimumLoops ? ActiveImage.MinimumLoops : ThemeUtil.VideoSettings.MinimumLoops;
-                int maxTime = ActiveImage.OverrideMaximumTime ? ActiveImage.MaximumTime : ThemeUtil.VideoSettings.MaximumTime;
+                int minLoops = GetMinLoops(ActiveImage);
+                int maxTime = GetMaxTime(ActiveImage);
 
                 Debug.WriteLine("LoopCount: " + LoopCount + " | MinimumVideoLoops: " + minLoops);
                 if (LoopCount < minLoops)

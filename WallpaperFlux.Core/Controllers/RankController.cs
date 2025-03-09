@@ -207,6 +207,13 @@ namespace WallpaperFlux.Core.Controllers
 
         private void SetRankDataSize(int maxRank)
         {
+            int maxRankLimit = 99999;
+            if (maxRank > maxRankLimit)
+            {
+                MessageBoxUtil.ShowError($"Cannot set a max rank above {maxRankLimit}");
+                return;
+            }
+
             bool isRankDataEmpty = true; //? this includes unranked images so we cannot use GetAllRankedImages()
             foreach (ImageType imageType in RankData.Keys)
             {
@@ -281,7 +288,7 @@ namespace WallpaperFlux.Core.Controllers
                         if (JsonUtil.IsLoadingData) Debug.WriteLine("ERROR: This is unnecessary processing that should be avoided, especially for larger themes, under UpdateMaxRank()");
 
                         RankData[imageType].Add(new ReactiveHashSet<BaseImageModel>());
-                        Debug.WriteLine(i + " | " + imageType);
+                        //xDebug.WriteLine(i + " | " + imageType);
                     }
                 }
             }
