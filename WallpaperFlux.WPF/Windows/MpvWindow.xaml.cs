@@ -11,7 +11,6 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using LanceTools.WindowsUtil;
 using WallpaperFlux.WPF.Util;
 
 namespace WallpaperFlux.WPF.Windows

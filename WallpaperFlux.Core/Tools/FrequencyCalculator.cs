@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using LanceTools;
+using LanceTools.Util;
 using LanceTools.WPF.Adonis.Util;
 using WallpaperFlux.Core.Controllers;
 using WallpaperFlux.Core.Models;

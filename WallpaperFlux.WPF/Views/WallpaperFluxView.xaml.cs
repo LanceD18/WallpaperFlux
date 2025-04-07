@@ -52,7 +52,6 @@ using Size = System.Windows.Size;
 
 namespace WallpaperFlux.WPF.Views
 {
-
     /// <summary>
     /// Interaction logic for WallpaperFluxView.xaml
     /// </summary>
@@ -75,7 +74,6 @@ namespace WallpaperFlux.WPF.Views
         public WallpaperFluxView()
         {
             InitializeComponent();
-
             InitToolTipItems();
         }
 
@@ -143,6 +141,8 @@ namespace WallpaperFlux.WPF.Views
 
         private async void LoadImage(Image image, bool highQuality, Image imageWithContext, bool isToolTip)
         {
+            if (imageWithContext == null) return;
+
             ImageModel thumbnailSource = imageWithContext.DataContext switch
             {
                 ImageModel imageModel => imageModel,

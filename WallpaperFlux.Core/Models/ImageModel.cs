@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using AdonisUI.Controls;
 using LanceTools;
 using LanceTools.DiagnosticsUtil;
+using LanceTools.Util;
 using LanceTools.WPF.Adonis.Util;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using MvvmCross;

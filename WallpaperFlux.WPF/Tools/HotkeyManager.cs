@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 using System.Windows.Interop;
-using LanceTools.FormUtil;
+using LanceTools.WinForm.FormUtil;
 using LanceTools.WPF.Adonis.Util;
 using WallpaperFlux.Core.Util;
 using static System.String;

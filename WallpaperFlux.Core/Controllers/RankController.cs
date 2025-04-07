@@ -5,6 +5,7 @@ using System.Linq;
 using AdonisUI.Controls;
 using LanceTools;
 using LanceTools.Collections.Reactive;
+using LanceTools.Util;
 using LanceTools.WPF.Adonis.Util;
 using WallpaperFlux.Core.Collections;
 using WallpaperFlux.Core.Models;

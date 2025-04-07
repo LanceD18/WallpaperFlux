@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,7 +22,7 @@
 
   <ItemGroup>
     <Reference Include="LanceTools">
-      <HintPath>..\..\..\..\Code Library\C#\LanceTools\LanceTools\LanceTools\bin\Release\LanceTools.dll</HintPath>
+      <HintPath>..\..\..\..\Code Library\C#\LanceTools\LanceTools\LanceTools\bin\Release\netstandard2.1\LanceTools.dll</HintPath>
     </Reference>
     <Reference Include="LanceTools.WPF.Adonis">
       <HintPath>..\..\..\..\Code Library\C#\LanceTools\LanceTools\LanceTools.WPF.Adonis\bin\Release\netcoreapp3.1\LanceTools.WPF.Adonis.dll</HintPath>

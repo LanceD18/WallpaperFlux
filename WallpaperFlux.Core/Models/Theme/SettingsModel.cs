@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using LanceTools;
+using LanceTools.Util;
 using LanceTools.WPF.Adonis.Util;
 using MvvmCross;
 using MvvmCross.Commands;
