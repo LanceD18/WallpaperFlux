@@ -74,6 +74,8 @@ namespace WallpaperFlux.WPF
 
         public double AnimatedImageUnweightedInterval;
 
+        Action _onMediaEnd;
+
         public WallpaperWindow(Screen display, IntPtr workerw, int displayIndex)
         {
             InitializeComponent();
@@ -102,8 +104,24 @@ namespace WallpaperFlux.WPF
             //? (Would have to use WH_KEYBOARD_LL and WH_MOUSE_LL hooks to capture mouse and keyboard input)
             Win32.SetParent(new WindowInteropHelper(this).Handle, _workerw);
 
-            MainWindow.Instance.OpenWinform(Display, _workerw, DisplayIndex, IncrementLoopCount);
+            MainWindow.Instance.OpenWinform(Display, _workerw, DisplayIndex, OnMediaEnd);
             DisableMpv();
+        }
+
+        private void OnMediaEnd()
+        {
+            if (ActiveImage is ImageSetModel set)
+            {
+                if (set.IsAnimated && set.AnimationIntervals)
+                {
+                    AdvanceAnimatedImageSet(set);
+                    return;
+                }
+
+                // we still want to increment the loop count if possible in this scenario
+            }
+
+            IncrementLoopCount();
         }
 
         private void OnClosed(object sender, EventArgs e)
@@ -144,7 +162,7 @@ namespace WallpaperFlux.WPF
         public void OnWallpaperChange(BaseImageModel image, bool forceChange)
         {
             // --- If the scan is true we end this method early as the video's display time is still valid ---
-            if (VerifyMinLoopMaxTimeSettings(forceChange)) return;
+            if (CheckIfCanSkipChange(forceChange)) return;
 
             LoopCount = 0; // if we are allowed to make a change, reset the loop count
 
@@ -275,32 +293,38 @@ namespace WallpaperFlux.WPF
                         Debug.WriteLine("Error: Invalid Animation Index Selected");
                     }
 
-                    double intervalTime = 0;
-                    int displayTimerMax = WallpaperFluxViewModel.Instance.DisplaySettings[DisplayIndex].DisplayTimerMax;
-
-                    // Fraction Intervals
-                    if (imageSet.FractionIntervals)
-                    {
-                        intervalTime = displayTimerMax / (double)relatedImages.Length;
-                        intervalTime /= imageSet.Speed;
-                    }
-
-                    // Static Intervals
-                    if (imageSet.StaticIntervals) intervalTime = imageSet.Speed;
-
-                    if (intervalTime == 0) intervalTime = displayTimerMax; //? if a time of 0 is set, we will end up just playing one image per interval
-
-                    // Weighted Intervals
-                    AnimatedImageUnweightedInterval = intervalTime; //! for use with WeightedIntervals, requires prior interval times to be set
-
                     // Timer Setup
                     DisableSet(); //! if the timer is not stopped before resetting the previous set will play indefinitely
                     AnimatedImageSetTimer = new DispatcherTimer(DispatcherPriority.Background, Application.Current.Dispatcher); //? resetting events
-                    AnimatedImageSetTimer.Interval = !imageSet.WeightedIntervals ? TimeSpan.FromSeconds(AnimatedImageUnweightedInterval) : GetWeightedInterval(relatedImages);
-                    AnimatedImageSetTimer.Tick += (sender, e) => AdvanceAnimatedImageSet(imageSet);
-                    AnimatedImageSetTimer.Start();
-                    animatedWallpaperSet = true;
 
+                    AnimatedImageSetTimer.Tick += (sender, e) => AdvanceAnimatedImageSet(imageSet);
+                    _onMediaEnd = () => AdvanceAnimatedImageSet(imageSet); // if we are using animation intervals, we will move to the next media on ending the current one
+
+                    if (!imageSet.AnimationIntervals)
+                    {
+                        double intervalTime = 0;
+                        int displayTimerMax = WallpaperFluxViewModel.Instance.DisplaySettings[DisplayIndex].DisplayTimerMax;
+
+                        // Fraction Intervals
+                        if (imageSet.FractionIntervals)
+                        {
+                            intervalTime = displayTimerMax / (double)relatedImages.Length;
+                            intervalTime /= imageSet.Speed;
+                        }
+
+                        // Static Intervals
+                        if (imageSet.StaticIntervals) intervalTime = imageSet.Speed;
+
+                        if (intervalTime == 0) intervalTime = displayTimerMax; //? if a time of 0 is set, we will end up just playing one image per interval
+
+                        // Weighted Intervals
+                        AnimatedImageUnweightedInterval = intervalTime; //! for use with WeightedIntervals, requires prior interval times to be set
+
+                        AnimatedImageSetTimer.Interval = !imageSet.WeightedIntervals ? TimeSpan.FromSeconds(AnimatedImageUnweightedInterval) : GetWeightedInterval(relatedImages);
+                        AnimatedImageSetTimer.Start();
+                    }
+
+                    animatedWallpaperSet = true;
                     break;
 
                 case ImageSetType.Merge:
@@ -317,16 +341,20 @@ namespace WallpaperFlux.WPF
 
             bool playSuccessful = false;
 
-            if (WallpaperUtil.IsSupportedVideoType_GivenExtension(wallpaperInfo.Extension))
+            double duration = 0;
+
+            //xif (WallpaperUtil.IsSupportedVideoType_GivenExtension(wallpaperInfo.Extension) || WallpaperUtil.IsGif_GivenExtension(wallpaperInfo.Extension))
+            if (image.IsAnimated)
             {
                 Dispatcher.Invoke(() =>
                 {
                     ConnectedForm.Enabled = true;
                     ConnectedForm.Visible = true;
-                    ConnectedForm.BringToFront();
+                    // ! BringToFront() will cause the application to focus on the media every time it changes
+                    //xConnectedForm.BringToFront();
                 });
 
-                await Task.Run(() => ConnectedForm.SetWallpaper(image)).ConfigureAwait(false);
+                await Task.Run(() => ConnectedForm.SetAnimatedWallpaper(image)).ConfigureAwait(false);
                 playSuccessful = true; // TODO try to get success information from ConnectedForm.SetWallpaper()
                 DisableUnusedElements(UsedElement.Mpv, imageIsInAnimatedSet);
             }
@@ -413,11 +441,33 @@ namespace WallpaperFlux.WPF
 
             ImageModel[] relatedImages = set.GetRelatedImages();
 
+            bool canIncrementLoopCount = false;
             AnimatedSetIndex++;
-            if (AnimatedSetIndex >= relatedImages.Length) AnimatedSetIndex = 0; // loop on reaching limit
-            if (AnimatedSetIndex == relatedImages.Length - 1) LoopCount++; // increase loop count on approaching limit
+            if (AnimatedSetIndex >= relatedImages.Length)
+            {
+                AnimatedSetIndex = 0; // loop on reaching limit
 
-            ImageModel curImage = relatedImages[AnimatedSetIndex];
+                canIncrementLoopCount = set.AnimationIntervals; // we can accurately know when animation interval sets loop, so we can save the loop incrementing for here
+            }
+
+            if (AnimatedSetIndex == relatedImages.Length - 1) // increase loop count on approaching limit
+            {
+                canIncrementLoopCount = !set.AnimationIntervals; // we cannot accurately know when non-animation interval sets loop (without the implementation of a timer that is)
+            }
+
+            if (canIncrementLoopCount) IncrementLoopCount();
+
+            ImageModel curImage;
+
+            try
+            {
+                curImage = relatedImages[AnimatedSetIndex];
+            }
+            catch(Exception e) // can occur if the set is edited while being active, just max the loop count and lock the set
+            {
+                LoopCount = set.MinimumLoops + 1;
+                return;
+            }
 
             // ? not only do these images not need to be set, attempting to set them in a weighted set will may override the next valid image due to threaded loading
             if (curImage.Rank == 0)
@@ -437,7 +487,7 @@ namespace WallpaperFlux.WPF
 
             Debug.WriteLine(set.GetRelatedImage(AnimatedSetIndex).PathName + " | " + AnimatedImageSetTimer.Interval);
 
-            SetWallpaper(relatedImages[AnimatedSetIndex], true);
+            SetWallpaper(curImage, true);
         }
         #endregion
 
@@ -450,13 +500,14 @@ namespace WallpaperFlux.WPF
         /// </summary>
         /// <param name="forceChange"></param>
         /// <returns></returns>
-        private bool VerifyMinLoopMaxTimeSettings(bool forceChange)
+        private bool CheckIfCanSkipChange(bool forceChange)
         {
+            if (forceChange) return false;
             if (ActiveImage == null) return false;
 
             bool isAnimated = ActiveImage.IsAnimated || ActiveImage is ImageModel { IsDependentOnAnimatedImageSet: true };
 
-            if (!forceChange && isAnimated) // we can only make these checks if the previous wallpaper was a video or gif
+            if (isAnimated) // we can only make these checks if the previous wallpaper was a video or gif
             {
                 int minLoops = GetMinLoops(ActiveImage);
                 int maxTime = GetMaxTime(ActiveImage);
@@ -606,7 +657,8 @@ namespace WallpaperFlux.WPF
 
         private void WallpaperMediaElement_OnMediaEnded(object sender, RoutedEventArgs e)
         {
-            LoopCount++;
+            //xDebug.WriteLine("media end");
+            OnMediaEnd();
 
             if (sender is MediaElement element)
             {
@@ -616,7 +668,7 @@ namespace WallpaperFlux.WPF
             }
         }
 
-        private void WallpaperMediaElementFFME_OnMediaEnded(object? sender, EventArgs e) => LoopCount++;
+        private void WallpaperMediaElementFFME_OnMediaEnded(object? sender, EventArgs e) => OnMediaEnd();
         #endregion
 
         #region Volume
@@ -744,6 +796,10 @@ namespace WallpaperFlux.WPF
             await WallpaperMediaElementFFME.Open(new Uri(path));
         }
 
-        public void IncrementLoopCount() => LoopCount++;
+        public void IncrementLoopCount()
+        {
+            Debug.WriteLine("INCREMENTING LOOP COUNT");
+            LoopCount++;
+        }
     }
 }

@@ -135,7 +135,7 @@ namespace WallpaperFlux.WPF.Views
             }
             catch (Exception exception)
             {
-                Console.WriteLine("ERROR: Element Unload Failed: " + exception);
+                Debug.WriteLine("ERROR: Element Unload Failed: " + exception);
             }
         }
 
@@ -466,16 +466,24 @@ namespace WallpaperFlux.WPF.Views
         
         private void ConvertBitmapToThumbnailBitmapImage(Image img, ImageModel imageModel)
         {
-            using (ShellFile shellFile = ShellFile.FromFilePath(imageModel.Path))
+            try
             {
-                using (Bitmap bm = shellFile.Thumbnail.Bitmap)
+                using (ShellFile shellFile = ShellFile.FromFilePath(imageModel.Path))
                 {
-                    using (MemoryStream ms = new MemoryStream())
+                    using (Bitmap bm = shellFile.Thumbnail.Bitmap)
                     {
-                        bm.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
-                        LoadBitmapImage(img, false , false, decodePixelHeight: imageModel.ImageSelectorThumbnailHeight, ms: ms);
+                        using (MemoryStream ms = new MemoryStream())
+                        {
+                            bm.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
+                            LoadBitmapImage(img, false, false, decodePixelHeight: imageModel.ImageSelectorThumbnailHeight, ms: ms);
+                        }
                     }
                 }
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+                // do nothing, the file may have been deleted
             }
         }
 

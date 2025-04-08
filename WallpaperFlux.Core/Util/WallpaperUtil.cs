@@ -55,9 +55,7 @@ namespace WallpaperFlux.Core.Util
 
         public static bool IsGif_GivenExtension(string extension) => extension == ".gif";
 
-        public static bool IsVideo(string filePath) => IsVideo_GivenExtension(Path.GetExtension(filePath.ToLower()));
-
-        public static bool IsVideo_GivenExtension(string extension) => IsSupportedVideoType_GivenExtension(extension);
+        public static bool IsVideo(string filePath) => IsSupportedVideoType_GivenExtension(Path.GetExtension(filePath.ToLower()));
 
         public static bool IsSupportedVideoType(string filePath) => IsSupportedVideoType_GivenExtension(Path.GetExtension(filePath.ToLower()));
 

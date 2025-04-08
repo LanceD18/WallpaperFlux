@@ -28,7 +28,7 @@ namespace WallpaperFlux.Winform
 
         public MpvPlayer Player;
 
-        public int Loops { get; private set; }
+        //xpublic int Loops { get; private set; }
 
         public Stopwatch WallpaperUptime { get; private set; } = new Stopwatch();
         //xpublic bool IsPlayingVideo { get; private set; }
@@ -125,11 +125,11 @@ namespace WallpaperFlux.Winform
 
         // TODO Create a queue that stores pictureBoxes/axWindowMediaPlayers for each wallpaper. This will be used to allow transitions & prevent flickering from
         // TODO style readjustment when changing wallpapers by *locking* the previous wallpaper in place
-        public async void SetWallpaper(ImageModel image)
+        public async void SetAnimatedWallpaper(ImageModel image)
         {
             if (IsDisposed) return; // for uses of this.<>
 
-            Loops = 0;
+            //xLoops = 0;
             WallpaperUptime.Stop();
 
             if (!IsHandleCreated) return;
@@ -140,19 +140,20 @@ namespace WallpaperFlux.Winform
             {
                 this.BeginInvoke((MethodInvoker)delegate
                 {
-                    SetWallpaperInternal(image);
+                    SetWallpaperInternal();
                     setWallpaperResult = true;
                 });
             }
             else
             {
-                await Task.Run(() => SetWallpaperInternal(image)).ConfigureAwait(false);
+                await Task.Run(SetWallpaperInternal).ConfigureAwait(false);
                 setWallpaperResult = true;
             }
 
-            async void SetWallpaperInternal(ImageModel image)
+            async void SetWallpaperInternal()
             {
                 // --- Verify Wallpaper ---
+                /*x
                 FileInfo wallpaperInfo;
                 string wallpaperPath = image.Path;
 
@@ -165,9 +166,10 @@ namespace WallpaperFlux.Winform
                     Debug.WriteLine("Null Wallpaper Path found when calling OnWallpaperChange");
                     return; //xfalse;
                 }
+                */
 
-                if (WallpaperUtil.IsSupportedVideoType_GivenExtension(wallpaperInfo.Extension))
-                {
+                //xif (WallpaperUtil.IsSupportedVideoType_GivenExtension(wallpaperInfo.Extension) || WallpaperUtil.IsGif_GivenExtension(wallpaperInfo.Extension))
+
                     //xIsPlayingVideo = true;
 
                     //xpictureBoxWallpaper.Visible = false; // TODO Redundant, only needs to be called once
@@ -177,16 +179,15 @@ namespace WallpaperFlux.Winform
                     panelWallpaper.Enabled = true;
                     panelWallpaper.Visible = true;
 
-                    await Task.Run(() =>
-                    {
-                        Player.Reload(image.Path, true);
-                        WallpaperUptime.Restart();
+                    Player.Speed = image.Speed;
 
-                        UpdateVolume(image);
+                    await Task.Run(() => 
+                        Player.Reload(image.Path, true))
+                        .ConfigureAwait(false);
 
-                        Player.Speed = image.Speed;
-                    }).ConfigureAwait(false);
-                }
+                    UpdateVolume(image);
+
+                    WallpaperUptime.Restart();
                 /*x
                 else
                 {

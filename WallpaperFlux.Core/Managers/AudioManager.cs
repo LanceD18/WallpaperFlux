@@ -56,17 +56,35 @@ namespace WallpaperFlux.Core.Managers
                 int potentialAudioCount = 0;
                 foreach (BaseImageModel wallpaper in ThemeUtil.Theme.WallpaperRandomizer.ActiveWallpapers)
                 {
-                    if (wallpaper is ImageModel imageModel)
-                    {
-                        string wallpaperPath = imageModel.Path;
+                    if (wallpaper == null) continue;
 
-                        if (FileUtil.Exists(wallpaperPath))
+                    switch (wallpaper)
+                    {
+                        case ImageModel imageModel:
                         {
-                            if (WallpaperUtil.IsSupportedVideoType(wallpaperPath))
+                            string wallpaperPath = imageModel.Path;
+
+                            if (FileUtil.Exists(wallpaperPath))
+                            {
+                                if (WallpaperUtil.IsSupportedVideoType(wallpaperPath))
+                                {
+                                    potentialAudioCount++;
+                                }
+                            }
+
+                            break;
+                        }
+                        case ImageSetModel set:
+                        {
+                            if (set.TypeOfImagesInSet == ImageType.Video)
                             {
                                 potentialAudioCount++;
                             }
+
+                            break;
                         }
+
+                        default: throw new NotImplementedException();
                     }
                 }
 

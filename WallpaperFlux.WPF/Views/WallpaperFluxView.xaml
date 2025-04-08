@@ -259,7 +259,9 @@
 
                                                                     <MenuItem StaysOpenOnClick="True">
                                                                         <MenuItem.Header>
-                                                                            <StackPanel Orientation="Horizontal">
+                                                                            <StackPanel Orientation="Horizontal"
+                                                                                IsEnabled="{Binding AnimationIntervals,
+                                                                                Converter={StaticResource BooleanInverterConverter}}">
                                                                                 <TextBlock Text="Speed: " VerticalAlignment="Center"/>
                                                                                 <TextBox Text="{Binding Speed}" VerticalAlignment="Center">
                                                                                     <TextBox.Style>
@@ -273,13 +275,24 @@
 
                                                                     <MenuItem Header="Fraction Intervals" IsCheckable="True" StaysOpenOnClick="True" 
                                                                                         IsChecked="{Binding FractionIntervals}"
+                                                                                        IsEnabled="{Binding AnimationIntervals,
+                                                                                Converter={StaticResource BooleanInverterConverter}}"
                                                                             ToolTip="Interval amount is determined by the wallpaper change interval (Multiplied by Speed)"/>
                                                                     <MenuItem Header="Static Intervals" IsCheckable="True" StaysOpenOnClick="True" 
                                                                                         IsChecked="{Binding StaticIntervals}"
+                                                                                        IsEnabled="{Binding AnimationIntervals,
+                                                                                Converter={StaticResource BooleanInverterConverter}}"
                                                                             ToolTip="Speed will instead represent the length of each frame"/>
                                                                     <MenuItem Header="Weighted Intervals" IsCheckable="True" StaysOpenOnClick="True" 
                                                                                         IsChecked="{Binding WeightedIntervals}"
+                                                                                        IsEnabled="{Binding AnimationIntervals,
+                                                                                Converter={StaticResource BooleanInverterConverter}}"
                                                                             ToolTip="Gives each imageSet an interval weighted to their rank (Requires Static or Fraction intervals to function)"/>
+                                                                    <MenuItem Header="Animation Intervals" IsCheckable="True" StaysOpenOnClick="True"
+                                                                              Visibility="{Binding CanUseAnimationInterval,
+                                                                                Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                                              IsChecked="{Binding AnimationIntervals}"
+                                                                              ToolTip="Once the animation ends the next animation in the set will play"/>
 
                                                                     <Separator/>
 
@@ -1195,12 +1208,15 @@
                         <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
                         <Button Width="60" Height="25" Content="Rename" Margin="3 0 3 0" Command="{Binding RenameImagesCommand}"  IsEnabled="{Binding IsImageSelected}"/>
                         <Button Width="60" Height="25" Content="Move" Margin="3 0 3 0" Command="{Binding MoveImagesCommand}"  IsEnabled="{Binding IsImageSelected}"/>
+                        <!-- ! Will only delete the first image then simply remove the rest from the image set ; fix this
                         <Button Width="60" Height="25" Content="Delete" Margin="3 0 3 0" Command="{Binding DeleteImagesCommand}"  IsEnabled="{Binding IsImageSelected}"/>
+                        -->
                         <Button Width="60" Height="25" Content="Rank" Margin="3 0 3 0" Command="{Binding RankImagesCommand}"  IsEnabled="{Binding IsImageSelected}"/>
                         <Button Width="105" Height="25" Content="Paste Tagboard" Margin="3 0 3 0" Command="{Binding PasteTagBoardCommand}"  IsEnabled="{Binding IsImageSelected}"/>
                         <Button Width="110" Height="25" Content="Remove From Set" Margin="3 0 3 0" Command="{Binding RemoveFromSetCommand}"  IsEnabled="{Binding IsImageSelected}"/>
+                        <Button Width="110" Height="25" Content="Reverse Order" Margin="3 0 3 0" Command="{Binding ReverseSetOrderCommand}"/>
                         <CheckBox Content="Rename Grouping" Margin="3" IsChecked="{Binding GroupRenamed}"
-                              ToolTip="While this is checked, if multiple images with the same tags are renamed simultaneously, their numbering will be grouped together"/>
+                                  ToolTip="While this is checked, if multiple images with the same tags are renamed simultaneously, their numbering will be grouped together"/>
                     </StackPanel>
 
                     <!--? Selection Info -->

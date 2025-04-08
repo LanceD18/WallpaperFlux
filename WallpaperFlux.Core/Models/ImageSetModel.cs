@@ -32,6 +32,8 @@ namespace WallpaperFlux.Core.Models
             }
         }
 
+        public ImageType TypeOfImagesInSet;
+
         #region Ranking Format
 
         private ImageSetRankingFormat _rankingFormat;
@@ -178,6 +180,15 @@ namespace WallpaperFlux.Core.Models
         }
 
         public bool WeightedIntervals { get; set; } = true;
+
+        private bool _animationIntervals;
+        public bool AnimationIntervals
+        {
+            get => _animationIntervals;
+            set => SetProperty(ref _animationIntervals, value);
+        }
+
+        public bool CanUseAnimationInterval => TypeOfImagesInSet == ImageType.Video || TypeOfImagesInSet == ImageType.GIF;
 
         #endregion
 
@@ -330,6 +341,8 @@ namespace WallpaperFlux.Core.Models
         {
             if (ValidateType(image.ImageType))
             {
+                TypeOfImagesInSet = image.ImageType;
+
                 // if the image was selected, deselect it on entering the image set (they should only be selectable on selecting or inspecting the image set)
                 image.IsSelected = false;
                 image.ParentImageSet = this;
@@ -369,6 +382,8 @@ namespace WallpaperFlux.Core.Models
             bool success = RelatedImages.Remove(image);
             return success;
         }
+
+        public void ReverseSetOrder() => RelatedImages.Reverse();
 
         public bool ValidateType(ImageType otherType)
         {

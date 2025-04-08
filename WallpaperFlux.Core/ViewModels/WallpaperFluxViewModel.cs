@@ -500,6 +500,8 @@ namespace WallpaperFlux.Core.ViewModels
 
         public IMvxCommand RemoveFromSetCommand { get; set; }
 
+        public IMvxCommand ReverseSetOrderCommand { get; set; }
+
         #endregion
 
         #region Inspector
@@ -607,9 +609,12 @@ namespace WallpaperFlux.Core.ViewModels
                 }
             });
             RankImagesCommand = new MvxCommand(() => ImageUtil.PromptRankImageRange(GetAllHighlightedImages()));
+
+            // - Image Selector: Sets
             CreateImageSetCommand = new MvxCommand(CreateImageSetWithHighlightedImages);
             AddToImageSetCommand = new MvxCommand(AddToImageSet);
             RemoveFromSetCommand = new MvxCommand(RemoveFromImageSet);
+            ReverseSetOrderCommand = new MvxCommand(ReverseImageSet);
 
             // Image Inspector
             ToggleInspectorCommand = new MvxCommand(ToggleInspector);
@@ -1506,6 +1511,16 @@ namespace WallpaperFlux.Core.ViewModels
                 }
 
                 UpdateTabFromImageSetRemoval(imagesFound.ToArray());
+            }
+        }
+
+        private void ReverseImageSet()
+        {
+            if (ImageSetInspectorToggle && InspectedImageSet != null)
+            {
+                InspectedImageSet.ReverseSetOrder();
+
+                RaisePropertyChanged(nameof(InspectedImageSetImages));
             }
         }
 

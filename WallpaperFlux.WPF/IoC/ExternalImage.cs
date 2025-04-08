@@ -37,7 +37,7 @@ namespace WallpaperFlux.WPF.IoC
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine(e);
+                            Debug.WriteLine(e);
                             success = false;
                         }
 
