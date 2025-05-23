@@ -7,11 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WallpaperFlux.Core", "Wallp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WallpaperFlux.WPF", "WallpaperFlux.WPF\WallpaperFlux.WPF.csproj", "{DFCD2115-8318-43E0-8214-B52A2D1919AE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WallpaperFlux.Tests", "WallpaperFlux.Tests\WallpaperFlux.Tests.csproj", "{2AF605AF-4A9F-478B-8209-DFEB63D5163E}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WallpaperFlux.Winform", "WallpaperFlux.Winform\WallpaperFlux.Winform.csproj", "{B5693F9A-6735-40E2-A8FC-14AF47F7E54F}"
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "WallpaperFlux.Setup", "WallpaperFlux.Setup\WallpaperFlux.Setup.vdproj", "{1069443D-5274-4C4B-A043-8D1C33B880F0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WallpaperFlux.Tests", "WallpaperFlux.Tests\WallpaperFlux.Tests.csproj", "{CDCDAEE7-6255-426E-B322-10FED27B5C9E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,16 +27,16 @@ Global
 		{DFCD2115-8318-43E0-8214-B52A2D1919AE}.Debug|Any CPU.Build.0 = Debug|x64
 		{DFCD2115-8318-43E0-8214-B52A2D1919AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DFCD2115-8318-43E0-8214-B52A2D1919AE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2AF605AF-4A9F-478B-8209-DFEB63D5163E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2AF605AF-4A9F-478B-8209-DFEB63D5163E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2AF605AF-4A9F-478B-8209-DFEB63D5163E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2AF605AF-4A9F-478B-8209-DFEB63D5163E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B5693F9A-6735-40E2-A8FC-14AF47F7E54F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B5693F9A-6735-40E2-A8FC-14AF47F7E54F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B5693F9A-6735-40E2-A8FC-14AF47F7E54F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B5693F9A-6735-40E2-A8FC-14AF47F7E54F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1069443D-5274-4C4B-A043-8D1C33B880F0}.Debug|Any CPU.ActiveCfg = Debug
 		{1069443D-5274-4C4B-A043-8D1C33B880F0}.Release|Any CPU.ActiveCfg = Release
+		{CDCDAEE7-6255-426E-B322-10FED27B5C9E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CDCDAEE7-6255-426E-B322-10FED27B5C9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CDCDAEE7-6255-426E-B322-10FED27B5C9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CDCDAEE7-6255-426E-B322-10FED27B5C9E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

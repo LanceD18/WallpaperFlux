@@ -92,9 +92,13 @@ namespace WallpaperFlux.Winform
                 });
             };
 
+            LostFocus += (sender, args) => Debug.WriteLine("WallpaperForm: Lost Focus");
+            VisibleChanged += (sender, args) => Debug.WriteLine("WallpaperForm: Visible Changed");
+
             Closing += (s, e) =>
             {
                 //xControls.Remove(pictureBoxWallpaper);
+                Debug.WriteLine("Closing WallpaperForm");
 
                 Player?.Stop();
 

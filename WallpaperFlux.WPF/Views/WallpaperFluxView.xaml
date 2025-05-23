@@ -136,7 +136,7 @@
             <DataTemplate x:Key="ImageSelectorItemTemplate" DataType="{x:Type models:BaseImageModel}">
                 <ContentControl Content="{Binding Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" Unloaded="FrameworkElement_DisposeOnUnloaded">
                     <ContentControl.Resources>
-                        <!-- ? /// ImageModelTemplate /// -->
+                        <!--? /// ImageModelTemplate /// -->
                         <DataTemplate x:Key="ImageModelTemplate" DataType="{x:Type models:ImageModel}">
                             <GroupBox>
                                 <ContentControl 

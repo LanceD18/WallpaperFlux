@@ -346,12 +346,23 @@ namespace WallpaperFlux.WPF
             //xif (WallpaperUtil.IsSupportedVideoType_GivenExtension(wallpaperInfo.Extension) || WallpaperUtil.IsGif_GivenExtension(wallpaperInfo.Extension))
             if (image.IsAnimated)
             {
+                //xDisableMpv(); // ! attempt at fixing the front-screen loss issue
                 Dispatcher.Invoke(() =>
                 {
                     ConnectedForm.Enabled = true;
                     ConnectedForm.Visible = true;
+                    //xConnectedForm.TopMost = true;
                     // ! BringToFront() will cause the application to focus on the media every time it changes
-                    //xConnectedForm.BringToFront();
+                    ConnectedForm.BringToFront();
+
+                    // ! an attempt to perform BringToFront() without assuming focus
+                    /*x
+                    IntPtr HWND_TOPMOST = new IntPtr(-1);
+                    uint SWP_NOACTIVATE = 0x0010;
+                    uint SWP_NOMOVE = 0x0002;
+                    uint SWP_NOSIZE = 0x0001;
+                    Win32.SetWindowPos(ConnectedForm.Handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+                    */
                 });
 
                 await Task.Run(() => ConnectedForm.SetAnimatedWallpaper(image)).ConfigureAwait(false);
