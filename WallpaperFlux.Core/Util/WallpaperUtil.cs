@@ -19,10 +19,10 @@ namespace WallpaperFlux.Core.Util
         //xpublic static Action<int, string> OnWallpaperChange;
         //xpublic static Action<int, WallpaperStyle> OnWallpaperStyleChange;
 
-        public static IExternalWallpaperHandler WallpaperHandler = Mvx.IoCProvider.Resolve<IExternalWallpaperHandler>();
-        public static IExternalDisplayUtil DisplayUtil = Mvx.IoCProvider.Resolve<IExternalDisplayUtil>();
-        public static IExternalVideoUtil VideoUtil = Mvx.IoCProvider.Resolve<IExternalVideoUtil>();
-        public static IExternalAppUtil AppUtil = Mvx.IoCProvider.Resolve<IExternalAppUtil>();
+        public static readonly IExternalWallpaperHandler WallpaperHandler = Mvx.IoCProvider.Resolve<IExternalWallpaperHandler>();
+        public static readonly IExternalDisplayUtil DisplayUtil = Mvx.IoCProvider.Resolve<IExternalDisplayUtil>();
+        public static readonly IExternalVideoUtil VideoUtil = Mvx.IoCProvider.Resolve<IExternalVideoUtil>();
+        public static readonly IExternalAppUtil AppUtil = Mvx.IoCProvider.Resolve<IExternalAppUtil>();
 
         //-----File Types-----
         private static readonly string IMAGE_FILES_DISPLAY_NAME = "Image Files (*.jpg, *.jpeg, *.jpe, *.jfif, *.png, *webp, *.gif, *.mp4, *.webm, *.avi, *.wmv, *.mkv, *.mpg, *.mov)";

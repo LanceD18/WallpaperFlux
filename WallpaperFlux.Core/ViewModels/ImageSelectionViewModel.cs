@@ -95,13 +95,11 @@ namespace WallpaperFlux.Core.ViewModels
         
         public bool RadioRanked { get; set; }
 
-        public bool RadioAllTypes { get; set; } = true;
+        public bool CheckedStatic { get; set; } = true;
 
-        public bool RadioStatic { get; set; }
+        public bool CheckedGif { get; set; } = true;
 
-        public bool RadioGif { get; set; }
-
-        public bool RadioVideo { get; set; }
+        public bool CheckedVideo { get; set; } = true;
 
         public bool RadioSpecificRank { get; set; }
 
@@ -174,7 +172,9 @@ namespace WallpaperFlux.Core.ViewModels
 
             BaseImageModel[] filteredImagesArr;
 
-            if (RadioAllRanks && RadioAllTypes) // if we're specifying a rank then we're be 
+            bool allTypesChecked = CheckedStatic && CheckedGif && CheckedVideo;
+
+            if (RadioAllRanks && allTypesChecked) // if we're specifying a rank then we're be 
             {
                 // no changes needed
                 filteredImagesArr = images;
@@ -182,7 +182,7 @@ namespace WallpaperFlux.Core.ViewModels
             else
             {
                 HashSet<BaseImageModel> imageFilter = new HashSet<BaseImageModel>(); // ! note that as an array the Contains() checks would take forever
-                if (RadioAllRanks && !RadioAllTypes)
+                if (RadioAllRanks && !allTypesChecked)
                 {
                     // do nothing ; keep default
                 }
@@ -213,7 +213,7 @@ namespace WallpaperFlux.Core.ViewModels
                 {
                     if (imageFilter.Contains(image))
                     {
-                        if (VerifyImageType(image))
+                        if (VerifyImageType(image, allTypesChecked))
                         {
                             filteredImages.Add(image);
 
@@ -256,17 +256,13 @@ namespace WallpaperFlux.Core.ViewModels
             return filteredImagesArr;
         }
 
-        private bool VerifyImageType(BaseImageModel image)
+        private bool VerifyImageType(BaseImageModel image, bool allTypesChecked)
         {
-            if (!RadioAllTypes)
+            if (!allTypesChecked)
             {
-                ImageType validImageType = ImageType.None;
-
-                if (RadioStatic) validImageType = ImageType.Static;
-                if (RadioGif) validImageType = ImageType.GIF;
-                if (RadioVideo) validImageType = ImageType.Video;
-
-                return image.ImageType == validImageType;
+                return (CheckedStatic && image.ImageType == ImageType.Static) ||
+                       (CheckedGif && image.ImageType == ImageType.GIF) ||
+                       (CheckedVideo && image.ImageType == ImageType.Video);
             }
 
             return true;

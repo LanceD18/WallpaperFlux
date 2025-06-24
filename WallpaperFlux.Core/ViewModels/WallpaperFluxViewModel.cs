@@ -654,14 +654,17 @@ namespace WallpaperFlux.Core.ViewModels
 
         public void UpdateActiveWallpapers(BaseImageModel wallpaper, int changedIndex)
         {
-            while (ActiveWallpapers.Count != WallpaperUtil.DisplayUtil.GetDisplayCount()) // ensure that we are at the display count
+            var displayCount = WallpaperUtil.DisplayUtil.GetDisplayCount();
+            // checking this everytime allows our program to update to dynamic changes in monitor count
+            // this should be so small that performance isn't a concern
+            while (ActiveWallpapers.Count != displayCount) // ensure that we are at the display count
             {
-                if (ActiveWallpapers.Count < WallpaperUtil.DisplayUtil.GetDisplayCount())
+                if (ActiveWallpapers.Count < displayCount)
                 {
                     ActiveWallpapers.Add(null);
                 }
 
-                if (ActiveWallpapers.Count > WallpaperUtil.DisplayUtil.GetDisplayCount())
+                if (ActiveWallpapers.Count > displayCount)
                 {
                     ActiveWallpapers.RemoveAt(ActiveWallpapers.Count - 1);
                 }

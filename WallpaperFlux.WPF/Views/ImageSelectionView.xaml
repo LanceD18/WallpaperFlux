@@ -98,10 +98,9 @@
                         </StackPanel>
                         <!--? Image Type -->
                         <StackPanel Orientation="Vertical" Margin="10 0 0 0" VerticalAlignment="Center">
-                            <RadioButton Content="All Types" GroupName="ImageType" Margin="0 5 0 5" IsChecked="{Binding RadioAllTypes}"/>
-                            <RadioButton Content="Static" GroupName="ImageType" Margin="0 5 0 5" IsChecked="{Binding RadioStatic}"/>
-                            <RadioButton Content="Gif" GroupName="ImageType" Margin="0 5 0 5" IsChecked="{Binding RadioGif}"/>
-                            <RadioButton Content="Video" GroupName="ImageType" Margin="0 5 0 5" IsChecked="{Binding RadioVideo}"/>
+                            <CheckBox Content="Static" Margin="0 5 0 5" IsChecked="{Binding CheckedStatic}"/>
+                            <CheckBox Content="Gif"  Margin="0 5 0 5" IsChecked="{Binding CheckedGif}"/>
+                            <CheckBox Content="Video" Margin="0 5 0 5" IsChecked="{Binding CheckedVideo}"/>
                         </StackPanel>
                     </StackPanel>
                 </StackPanel>
