@@ -176,7 +176,7 @@ namespace WallpaperFlux.Core.Controllers
             return GetRandomImageOfRank(rank, ref rand, imageType, RankData);
         }
 
-        public BaseImageModel GetRandomImageOfRank(int rank, ref Random rand, ImageType imageType, Dictionary<ImageType, ReactiveList<ReactiveHashSet<BaseImageModel>>> rankData)
+        public static BaseImageModel GetRandomImageOfRank(int rank, ref Random rand, ImageType imageType, Dictionary<ImageType, ReactiveList<ReactiveHashSet<BaseImageModel>>> rankData)
         {
             int randomImage = rand.Next(0, rankData[imageType][rank].Count);
             return rankData[imageType][rank].ElementAt(randomImage);

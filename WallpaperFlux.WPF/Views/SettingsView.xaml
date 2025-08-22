@@ -267,7 +267,10 @@
         <!-- ? Other Settings -->
         <StackPanel Grid.Row="5" Grid.Column="1">
 
-            <Button Width="175" Content="Rank Distribution Graph" Margin="3" Command="{Binding ToggleRankGraphCommand}" HorizontalAlignment="Left"/>
+            <StackPanel Orientation="Horizontal">
+                <Button Width="175" Content="Rank Distribution Graph" Margin="3" Command="{Binding ToggleRankGraphCommand}" HorizontalAlignment="Left"/>
+                <Button Width="135" Content="Rank Chances" Margin="3" Command="{Binding ShowRankChancesCommand}" HorizontalAlignment="Left"/>
+            </StackPanel>
 
             <StackPanel Orientation="Horizontal" DataContext="{Binding Settings}">
                 <TextBlock Text="Window Height Offset" VerticalAlignment="Center"/>

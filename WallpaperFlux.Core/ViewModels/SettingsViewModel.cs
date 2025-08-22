@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using LanceTools.Util;
 using LanceTools.WPF.Adonis.Util;
 using LiveChartsCore;
 using LiveChartsCore.Drawing;
@@ -14,6 +15,7 @@ using MvvmCross;
 using MvvmCross.Commands;
 using MvvmCross.ViewModels;
 using SkiaSharp;
+using WallpaperFlux.Core.Controllers;
 using WallpaperFlux.Core.IoC;
 using WallpaperFlux.Core.Models;
 using WallpaperFlux.Core.Models.Theme;
@@ -189,6 +191,8 @@ namespace WallpaperFlux.Core.ViewModels
 
         public IMvxCommand CloseRankGraphCommand { get; set; }
 
+        public IMvxCommand ShowRankChancesCommand { get; set; }
+
         public IMvxCommand ShiftRanksCommand { get; set; }
 
         #endregion
@@ -217,6 +221,7 @@ namespace WallpaperFlux.Core.ViewModels
             ToggleRankGraphCommand = new MvxCommand(ToggleRankGraph);
             CloseRankGraphCommand = new MvxCommand(CloseRankGraph);
             ShiftRanksCommand = new MvxCommand(ShiftRanks);
+            ShowRankChancesCommand = new MvxCommand(ShowRankChances);
         }
 
         public void ToggleRankGraph() => RankGraphToggle = !RankGraphToggle;
@@ -259,6 +264,31 @@ namespace WallpaperFlux.Core.ViewModels
                     if (set.OverrideRank == 0) set.OverrideRank = 1;
                 }
             }
+        }
+
+        public void ShowRankChances()
+        {
+            StringBuilder output = new StringBuilder();
+
+            int maxRank = ThemeUtil.Theme.RankController.GetMaxRank();
+            int lineLimit = ThemeUtil.Theme.RankController.GetMaxRank() / 10;
+
+            var rankPercentilesStatic = ThemeUtil.RankController.PercentileController.GetRankPercentiles(ImageType.Static);
+            var rankPercentilesGif = ThemeUtil.RankController.PercentileController.GetRankPercentiles(ImageType.GIF);
+            var rankPercentilesVideo = ThemeUtil.RankController.PercentileController.GetRankPercentiles(ImageType.Video);
+
+            for (int i = 0; i < maxRank; i++)
+            {
+                int actualRank = i + 1;
+                output.Append(i % lineLimit == 0 ? "\n" : ", "); // newline if limit hit, otherwise continue
+
+                rankPercentilesStatic.TryGetValue(actualRank, out double percentileStatic);
+                rankPercentilesGif.TryGetValue(actualRank, out double percentileGif);
+                rankPercentilesVideo.TryGetValue(actualRank, out double percentileVideo);
+                output.Append("[" + actualRank + ": " + Math.Round(percentileStatic, 3) + " | " + Math.Round(percentileGif, 3) + " | " + Math.Round(percentileVideo, 3) + "]");
+            }
+
+            MessageBoxUtil.ShowInformation(output.ToString());
         }
     }
 }

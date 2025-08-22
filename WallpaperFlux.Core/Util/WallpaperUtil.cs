@@ -173,6 +173,11 @@ namespace WallpaperFlux.Core.Util
                 WallpaperHandler.OnWallpaperChange(index, wallpaperImage, forceChange); //? hooked to a call from WallpaperFlux.WPF
                 WallpaperFluxViewModel.Instance.DisplaySettings[index].ResetTimer(true);
             }
+            else
+            {
+                Debug.WriteLine("Failed to set wallpaper, does not exist in theme");
+                return false;
+            }
 
             return true;
         }

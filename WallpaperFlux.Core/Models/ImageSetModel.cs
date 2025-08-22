@@ -16,7 +16,7 @@ namespace WallpaperFlux.Core.Models
     public sealed class ImageSetModel : BaseImageModel
     {
         private readonly List<ImageModel> RelatedImages;
-        private readonly HashSet<ImageModel> _activeImages = new HashSet<ImageModel>();
+        //x private readonly HashSet<ImageModel> _activeImages = new HashSet<ImageModel>();
         public override bool IsImageSet => true;
         public override bool Active => IsEnabled(); // ? ImageSets are a lot less expensive to check the Enabled State of so due to difficulties with updating images we will just check this
 

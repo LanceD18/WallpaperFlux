@@ -16,7 +16,12 @@ namespace WallpaperFlux.Core.Controllers
         private double[] RankPercentiles;
 
         // int = rank, double = percentile
-        private Dictionary<int, double> ModifiedRankPercentiles = new Dictionary<int, double>();
+        private Dictionary<ImageType, Dictionary<int, double>> ModifiedRankPercentiles = new Dictionary<ImageType, Dictionary<int, double>>()
+        {
+            { ImageType.Static, new Dictionary<int, double>() },
+            { ImageType.GIF, new Dictionary<int, double>() },
+            { ImageType.Video, new Dictionary<int, double>() }
+        };
 
         private VariableRef<Dictionary<ImageType, ReactiveList<ReactiveHashSet<BaseImageModel>>>> RankData;
 
@@ -161,12 +166,12 @@ namespace WallpaperFlux.Core.Controllers
         public Dictionary<int, double> GetRankPercentiles(ImageType imageType)
         {
             // sets up the ModifiedRankPercentiles variable if it's empty
-            if (ModifiedRankPercentiles.Count == 0)
+            if (ModifiedRankPercentiles[imageType].Count == 0)
             {
                 UpdateRankPercentiles(imageType);
             }
 
-            return ModifiedRankPercentiles;
+            return ModifiedRankPercentiles[imageType];
         }
 
         // TODO Async this at some point, but remember that this has to be done before the wallpaper is set (So the await key must be in the SetWallpaper method)
@@ -176,7 +181,7 @@ namespace WallpaperFlux.Core.Controllers
             PotentialWeightedRankUpdate = false; //? Prevents this from being called often due to the potential performance costs
             PotentialRegularRankUpdate = false; //? Prevents this from being called often due to the potential performance costs
 
-            ModifiedRankPercentiles = ThemeUtil.Theme.Settings.ThemeSettings.WeightedRanks ? GetWeightedRankPercentiles(imageType) : GetModifiedRankPercentiles(imageType);
+            ModifiedRankPercentiles[imageType] = ThemeUtil.Theme.Settings.ThemeSettings.WeightedRanks ? GetWeightedRankPercentiles(imageType) : GetModifiedRankPercentiles(imageType);
 
             // Update Image Type Weights if the Weighted Frequency option is checked
             if (ThemeUtil.Theme.Settings.ThemeSettings.FrequencyModel.WeightedFrequency)
@@ -185,9 +190,7 @@ namespace WallpaperFlux.Core.Controllers
             }
         }
 
-        public BaseImageModel GetRandomImageOfRank(int rank, ref Random rand, ImageType imageType)
-        {
-            return ThemeUtil.RankController.GetRandomImageOfRank(rank, ref rand, imageType, RankData);
-        }
+        public BaseImageModel GetRandomImageOfRank(int rank, ref Random rand, ImageType imageType) 
+            => RankController.GetRandomImageOfRank(rank, ref rand, imageType, RankData);
     }
 }
