@@ -220,14 +220,17 @@ namespace WallpaperFlux.Winform
             if (IsDisposed) return; // for uses of this.<>
 
             Debug.WriteLine("Setting Style");
+            /*x
             if (InvokeRequired)
             {
-                this?.Invoke((MethodInvoker)SetWallpaperStyleInternal);
+                // TODO May get disposed object errors on closing application (may have to do with videos) (noted 10/10/2025)
+                Invoke((MethodInvoker)SetWallpaperStyleInternal);
             }
             else
             {
                 SetWallpaperStyleInternal();
             }
+            */
 
             void SetWallpaperStyleInternal()
             {

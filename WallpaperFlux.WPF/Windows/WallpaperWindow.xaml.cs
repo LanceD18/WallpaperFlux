@@ -37,6 +37,8 @@ using WallpaperFlux.Core.ViewModels;
 using WallpaperFlux.Winform;
 using WallpaperFlux.WPF.Windows;
 using MediaElement = System.Windows.Controls.MediaElement;
+using LanceTools.Util;
+using LanceTools;
 
 namespace WallpaperFlux.WPF
 {
@@ -59,6 +61,7 @@ namespace WallpaperFlux.WPF
         private int LoopCount;
 
         private int AnimatedSetIndex = 0;
+        private List<BaseImageModel> SmartRandomizeImagesList = new List<BaseImageModel>();
 
         public int DisplayIndex;
 
@@ -74,7 +77,7 @@ namespace WallpaperFlux.WPF
 
         public double AnimatedImageUnweightedInterval;
 
-        Action _onMediaEnd;
+        //xAction _onMediaEnd;
 
         public WallpaperWindow(Screen display, IntPtr workerw, int displayIndex)
         {
@@ -110,13 +113,10 @@ namespace WallpaperFlux.WPF
 
         private void OnMediaEnd()
         {
-            if (ActiveImage is ImageSetModel set)
+            if (ActiveImage is ImageSetModel set && set.IsAnimated && set.AnimationIntervals)
             {
-                if (set.IsAnimated && set.AnimationIntervals)
-                {
-                    AdvanceAnimatedImageSet(set);
-                    return;
-                }
+                AdvanceAnimatedImageSet(set);
+                return;
 
                 // we still want to increment the loop count if possible in this scenario
             }
@@ -265,11 +265,14 @@ namespace WallpaperFlux.WPF
 
             if (!imageSet.AreAnyImagesRanked()) return; // just don't do anything if none of the images are ranked
 
+            BaseImageModel wallpaper;
+            ImageModel[] relatedImages = imageSet.GetRelatedImages();
+
             switch (imageSet.SetType)
             {
                 case ImageSetType.Alt:
 
-                    BaseImageModel wallpaper = WallpaperRandomizationController.GetRandomImageFromPreset(imageSet.GetRelatedImages(), imageSet.ImageType, true);
+                    wallpaper = WallpaperRandomizationController.GetRandomImageFromPreset(relatedImages, imageSet.ImageType, true);
 
                     if (wallpaper is ImageModel wallpaperImageModel)
                     {
@@ -280,25 +283,21 @@ namespace WallpaperFlux.WPF
 
                 case ImageSetType.Animate:
 
-                    AnimatedSetIndex = 0;
-                    ImageModel[] relatedImages = imageSet.GetRelatedImages();
                     if (relatedImages.Length == 0) return;
 
-                    if (AnimatedSetIndex < relatedImages.Length)
-                    {
-                        SetWallpaper(relatedImages[AnimatedSetIndex], true); //? starting on the first index
-                    }
-                    else
-                    {
-                        Debug.WriteLine("Error: Invalid Animation Index Selected");
-                    }
+                    AnimatedSetIndex = 0;
+
+                    wallpaper = !imageSet.RandomizeAnimation
+                        ? relatedImages[AnimatedSetIndex]
+                        : GetRandomSetImage(imageSet, false, relatedImages);
+
+                    SetWallpaper(wallpaper, true); //? initial start
 
                     // Timer Setup
-                    DisableSet(); //! if the timer is not stopped before resetting the previous set will play indefinitely
+                    AnimatedImageSetTimer.Stop(); //! if the timer is not stopped before resetting the previous set will play indefinitely
                     AnimatedImageSetTimer = new DispatcherTimer(DispatcherPriority.Background, Application.Current.Dispatcher); //? resetting events
-
                     AnimatedImageSetTimer.Tick += (sender, e) => AdvanceAnimatedImageSet(imageSet);
-                    _onMediaEnd = () => AdvanceAnimatedImageSet(imageSet); // if we are using animation intervals, we will move to the next media on ending the current one
+                    //x _onMediaEnd = () => AdvanceAnimatedImageSet(imageSet); // if we are using animation intervals, we will move to the next media on ending the current one
 
                     if (!imageSet.AnimationIntervals)
                     {
@@ -320,8 +319,11 @@ namespace WallpaperFlux.WPF
                         // Weighted Intervals
                         AnimatedImageUnweightedInterval = intervalTime; //! for use with WeightedIntervals, requires prior interval times to be set
 
-                        AnimatedImageSetTimer.Interval = !imageSet.WeightedIntervals ? TimeSpan.FromSeconds(AnimatedImageUnweightedInterval) : GetWeightedInterval(relatedImages);
-                        AnimatedImageSetTimer.Start();
+                        AnimatedImageSetTimer.Interval = !imageSet.WeightedIntervals 
+                            ? TimeSpan.FromSeconds(AnimatedImageUnweightedInterval) 
+                            : GetWeightedInterval(!imageSet.RandomizeAnimationSmart ? relatedImages : SmartRandomizeImagesList.ToArray(), wallpaper);
+
+                        AnimatedImageSetTimer.Start(); //? animation intervals don't use a timer, they trigger the advance set method on ending the video
                     }
 
                     animatedWallpaperSet = true;
@@ -416,33 +418,26 @@ namespace WallpaperFlux.WPF
             //xreturn playSuccessful;
         }
 
-        private TimeSpan GetWeightedInterval(ImageModel[] relatedImages)
+        private TimeSpan GetWeightedInterval(BaseImageModel[] relatedImages, BaseImageModel image)
         {
             double totalTime = AnimatedImageUnweightedInterval * relatedImages.Length;
+            double curImageWeight = 0;
+            double weightTotal = 0;
 
-            if (AnimatedSetIndex < relatedImages.Length)
+            foreach (BaseImageModel curImage in relatedImages)
             {
-                double curImageWeight = 0;
-                double weightTotal = 0;
-                for (int i = 0; i < relatedImages.Length; i++)
+                double imageWeight = ThemeUtil.RankController.PercentileController.GetRankPercentile(curImage.Rank);
+
+                weightTotal += imageWeight;
+                if (curImage == image)
                 {
-                    double imageWeight = ThemeUtil.RankController.PercentileController.GetRankPercentile(relatedImages[i].Rank);
-
-                    weightTotal += imageWeight;
-                    if (i == AnimatedSetIndex)
-                    {
-                        curImageWeight = imageWeight;
-                    }
+                    curImageWeight = imageWeight;
                 }
-
-                if (weightTotal == 0) return TimeSpan.Zero; // either all images are unranked or none were found
-
-                return TimeSpan.FromSeconds(totalTime * (curImageWeight / weightTotal));
             }
-            else
-            {
-                return TimeSpan.Zero;
-            }
+
+            if (weightTotal.AlmostEqualsTo(0)) return TimeSpan.Zero; // either all images are unranked or none were found
+
+            return TimeSpan.FromSeconds(totalTime * (curImageWeight / weightTotal));
         }
 
         private void AdvanceAnimatedImageSet(ImageSetModel set)
@@ -453,28 +448,34 @@ namespace WallpaperFlux.WPF
             ImageModel[] relatedImages = set.GetRelatedImages();
 
             bool canIncrementLoopCount = false;
-            AnimatedSetIndex++;
-            if (AnimatedSetIndex >= relatedImages.Length)
+
+            if (!set.RandomizeAnimation)
             {
-                AnimatedSetIndex = 0; // loop on reaching limit
+                AnimatedSetIndex++;
+                if (AnimatedSetIndex >= relatedImages.Length)
+                {
+                    AnimatedSetIndex = 0; // loop on reaching limit
 
-                canIncrementLoopCount = set.AnimationIntervals; // we can accurately know when animation interval sets loop, so we can save the loop incrementing for here
+                    canIncrementLoopCount = set.AnimationIntervals; // we can accurately know when animation interval sets loop, so we can save the loop incrementing for here
+                }
+
+                if (AnimatedSetIndex == relatedImages.Length - 1) // increase loop count on approaching limit
+                {
+                    canIncrementLoopCount = !set.AnimationIntervals; // we cannot accurately know when non-animation interval sets loop (without the implementation of a timer that is)
+                }
+
+                if (canIncrementLoopCount) IncrementLoopCount();
             }
-
-            if (AnimatedSetIndex == relatedImages.Length - 1) // increase loop count on approaching limit
-            {
-                canIncrementLoopCount = !set.AnimationIntervals; // we cannot accurately know when non-animation interval sets loop (without the implementation of a timer that is)
-            }
-
-            if (canIncrementLoopCount) IncrementLoopCount();
 
             ImageModel curImage;
 
             try
             {
-                curImage = relatedImages[AnimatedSetIndex];
+                curImage = !set.RandomizeAnimation
+                ? relatedImages[AnimatedSetIndex]
+                : GetRandomSetImage(set, true, relatedImages);
             }
-            catch(Exception e) // can occur if the set is edited while being active, just max the loop count and lock the set
+            catch (Exception e) // can occur if the set is edited while being active, just max the loop count and lock the set
             {
                 LoopCount = set.MinimumLoops + 1;
                 return;
@@ -486,6 +487,7 @@ namespace WallpaperFlux.WPF
                 if (LoopCount >= GetMinLoops(curImage))
                    return;
 
+                // TODO Vulnerability: If randomized in a set with lots of rank 0 images it will keep randomizing until coming across a valid image
                 AdvanceAnimatedImageSet(set);
             }
 
@@ -493,12 +495,35 @@ namespace WallpaperFlux.WPF
 
             if (set.WeightedIntervals)
             {
-                AnimatedImageSetTimer.Interval = GetWeightedInterval(relatedImages);
+                AnimatedImageSetTimer.Interval = GetWeightedInterval(!set.RandomizeAnimationSmart ? relatedImages : SmartRandomizeImagesList.ToArray(), curImage);
             }
 
             Debug.WriteLine(set.GetRelatedImage(AnimatedSetIndex).PathName + " | " + AnimatedImageSetTimer.Interval);
 
             SetWallpaper(curImage, true);
+        }
+
+        // TODO Make this into a method for ImageSetModel (will need to use an out bool for the IncrementLoopCount() and update the randomizer list to account for the change
+        private ImageModel GetRandomSetImage(ImageSetModel set, bool incrementLoopOnSmartReset, ImageModel[] relatedImages = null)
+        {
+            if (set.RandomizeAnimationSmart) // checking ahead of time also helps in the case that the randomization settings are changed while the wallpaper is active
+            {
+                if (SmartRandomizeImagesList.Count == 0) // reset
+                {
+                    Debug.WriteLine("Reset smart randoms");
+                    SmartRandomizeImagesList.AddRange(relatedImages ?? set.GetRelatedImages());
+                    if (incrementLoopOnSmartReset) IncrementLoopCount();
+                }
+
+                Debug.WriteLine("Smart randoms remaining: " + SmartRandomizeImagesList.Count);
+            }
+
+            BaseImageModel[] imageSource = set.RandomizeAnimationSmart ? SmartRandomizeImagesList.ToArray() : relatedImages;
+            ImageModel wallpaper = WallpaperRandomizationController.GetRandomImageFromPreset(imageSource, set.ImageType, true) as ImageModel;
+
+            if (set.RandomizeAnimationSmart) SmartRandomizeImagesList.Remove(wallpaper);
+
+            return wallpaper;
         }
         #endregion
 
@@ -522,6 +547,13 @@ namespace WallpaperFlux.WPF
             {
                 int minLoops = GetMinLoops(ActiveImage);
                 int maxTime = GetMaxTime(ActiveImage);
+
+
+                if (ActiveImage is ImageSetModel { RandomizeAnimation: true, RandomizeAnimationSmart: false })
+                {
+                    Debug.WriteLine("Incrementing loop of randomized set");
+                    IncrementLoopCount(); // randomized sets without smart randomization don't have a loop target, so just loop on finishing a display interval
+                }
 
                 Debug.WriteLine("LoopCount: " + LoopCount + " | MinimumVideoLoops: " + minLoops);
                 if (LoopCount < minLoops)
@@ -621,7 +653,11 @@ namespace WallpaperFlux.WPF
             });
         }
 
-        public void DisableSet() => AnimatedImageSetTimer.Stop();
+        public void DisableSet()
+        {
+            AnimatedImageSetTimer.Stop();
+            SmartRandomizeImagesList.Clear(); // reset
+        }
 
         private void DisableUnusedElements(UsedElement usedElement, bool isAnimatedImage)
         {

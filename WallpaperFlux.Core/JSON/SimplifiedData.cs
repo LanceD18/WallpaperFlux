@@ -164,12 +164,16 @@ namespace WallpaperFlux.Core.JSON
 
         public bool RetainImageIndependence;
 
+        public bool RandomizeAnimation;
+
+        public bool RandomizeAnimationSmart;
+
         public ImageSetType SetType;
 
-        public SimplifiedImageSet(string[] imagePaths, int overrideRank, bool usingAverageRank, bool usingWeightedAverage, 
+        public SimplifiedImageSet(string[] imagePaths, int overrideRank, bool usingAverageRank, bool usingWeightedAverage,
             bool usingOverrideRank, bool usingWeightedRank, int overrideRankWeight, bool enabled, double speed, ImageSetType setType,
             int minLoops, int maxTime, bool overrideMinLoops, bool overrideMaxTime, bool fractionIntervals, bool staticIntervals, bool weightedIntervals,
-            bool animationIntervals, bool retainImageIndependence)
+            bool animationIntervals, bool retainImageIndependence, bool randomizeAnimation, bool randomizeAnimationSmart)
         {
             ImagePaths = imagePaths;
             OverrideRank = overrideRank;
@@ -190,6 +194,8 @@ namespace WallpaperFlux.Core.JSON
             WeightedIntervals = weightedIntervals;
             AnimationIntervals = animationIntervals;
             RetainImageIndependence = retainImageIndependence;
+            RandomizeAnimation = randomizeAnimation;
+            RandomizeAnimationSmart = randomizeAnimationSmart;
         }
     }
 

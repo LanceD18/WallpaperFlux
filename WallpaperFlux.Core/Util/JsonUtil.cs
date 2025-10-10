@@ -389,7 +389,9 @@ namespace WallpaperFlux.Core.Util
                     imageSet.StaticIntervals,
                     imageSet.WeightedIntervals,
                     imageSet.AnimationIntervals,
-                    imageSet.RetainImageIndependence));
+                    imageSet.RetainImageIndependence,
+                    imageSet.RandomizeAnimation,
+                    imageSet.RandomizeAnimationSmart));
             }
 
             return simplifiedImageSets.ToArray();
@@ -725,6 +727,8 @@ namespace WallpaperFlux.Core.Util
                         imageSetModel.WeightedIntervals = imageSet.WeightedIntervals;
                         imageSetModel.AnimationIntervals = imageSet.AnimationIntervals;
                         imageSetModel.RetainImageIndependence = imageSet.RetainImageIndependence;
+                        imageSetModel.RandomizeAnimation = imageSet.RandomizeAnimation;
+                        imageSetModel.RandomizeAnimationSmart = imageSet.RandomizeAnimationSmart;
                     }
                 }
             }

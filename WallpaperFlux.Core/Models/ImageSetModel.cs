@@ -7,6 +7,7 @@ using LanceTools;
 using LanceTools.Util;
 using LanceTools.WPF.Adonis.Util;
 using MvvmCross.Commands;
+using WallpaperFlux.Core.Controllers;
 using WallpaperFlux.Core.Models.Controls;
 using WallpaperFlux.Core.Util;
 using WallpaperFlux.Core.ViewModels;
@@ -189,6 +190,38 @@ namespace WallpaperFlux.Core.Models
         }
 
         public bool CanUseAnimationInterval => TypeOfImagesInSet == ImageType.Video || TypeOfImagesInSet == ImageType.GIF;
+
+        private bool _randomizeAnimation;
+        public bool RandomizeAnimation
+        {
+            get => _randomizeAnimation;
+            set
+            {
+                if (!value)
+                {
+                    RandomizeAnimationSmart = value;
+                    RaisePropertyChanged(() => RandomizeAnimationSmart);
+                }
+
+                SetProperty(ref _randomizeAnimation, value);
+            }
+        }
+
+        private bool _randomizeAnimationSmart;
+        public bool RandomizeAnimationSmart
+        {
+            get => _randomizeAnimationSmart;
+            set
+            {
+                if (RelatedImages.Count <= 1) // minimizes error handling needed in WallpaperWindow.xaml.cs
+                {
+                    MessageBoxUtil.ShowError("You need at least 2 images in a set to use smart randomization");
+                    return;
+                } 
+
+                SetProperty(ref _randomizeAnimationSmart, value);
+            }
+        }
 
         #endregion
 

@@ -296,6 +296,13 @@
 
                                                                     <Separator/>
 
+                                                                    <MenuItem Header="Randomize" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding RandomizeAnimation}"
+                                                                            ToolTip="Randomly pick from the set - weighted by rank (Everytime the display's wallpaper interval progresses a loop is counted)"/>
+                                                                    <MenuItem Header="Smart Randomize" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding RandomizeAnimationSmart}" IsEnabled="{Binding RandomizeAnimation}"
+                                                                            ToolTip="Selected images will be removed from the randomization - once all images have been removed this will loop"/>
+
+                                                                    <Separator/>
+
                                                                     <MenuItem Header="Override Minimum Loops" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding OverrideMinimumLoops}"/>
                                                                     <MenuItem StaysOpenOnClick="True" IsEnabled="{Binding OverrideMinimumLoops}">
                                                                         <MenuItem.Header>
@@ -310,7 +317,6 @@
                                                                         </MenuItem.Header>
                                                                     </MenuItem>
 
-                                                                    <Separator/>
 
                                                                     <MenuItem Header="Override Maximum Time" IsCheckable="True" StaysOpenOnClick="True" IsChecked="{Binding OverrideMaximumTime}"/>
                                                                     <MenuItem StaysOpenOnClick="True" IsEnabled="{Binding OverrideMaximumTime}">
