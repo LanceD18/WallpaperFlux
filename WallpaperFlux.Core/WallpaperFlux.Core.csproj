@@ -21,8 +21,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="LanceTools">
-      <HintPath>..\..\..\..\Code Library\C#\LanceTools\LanceTools\LanceTools\bin\Release\netstandard2.1\LanceTools.dll</HintPath>
+    <Reference Include="LanceTools.Standard">
+      <HintPath>..\..\..\..\Code Library\C#\LanceTools\LanceTools\LanceTools.Standard\bin\Release\netstandard2.1\LanceTools.Standard.dll</HintPath>
     </Reference>
     <Reference Include="LanceTools.WPF.Adonis">
       <HintPath>..\..\..\..\Code Library\C#\LanceTools\LanceTools\LanceTools.WPF.Adonis\bin\Release\netcoreapp3.1\LanceTools.WPF.Adonis.dll</HintPath>

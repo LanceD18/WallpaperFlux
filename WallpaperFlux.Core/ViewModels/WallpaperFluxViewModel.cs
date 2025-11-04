@@ -121,9 +121,22 @@ namespace WallpaperFlux.Core.ViewModels
         }
 
         #region Image Selector
-
         private readonly int IMAGES_PER_PAGE = 20;
+        public bool IsImageSelectorTooBig => ImageSelectorTabs.Count > 200; // may start to experience noticeable lag in the selector ; convert to alternate pagination method
+        public int ImageSelectorTabsCount => ImageSelectorTabs.Count;
 
+        private int _selectedImageSelectorTabPage;
+        public int SelectedImageSelectorTabPage
+        {
+            get => _selectedImageSelectorTabPage;
+            set
+            {
+                Debug.WriteLine("bruh");
+                value = Math.Clamp(value, 1, ImageSelectorTabsCount);
+                SetProperty(ref _selectedImageSelectorTabPage, value);
+                SelectedImageSelectorTab = ImageSelectorTabs[SelectedImageSelectorTabPage - 1];
+            }
+        }
         private MvxObservableCollection<ImageSelectorTabModel> _imageSelectorTabs = new MvxObservableCollection<ImageSelectorTabModel>();
 
         public MvxObservableCollection<ImageSelectorTabModel> ImageSelectorTabs
@@ -474,6 +487,11 @@ namespace WallpaperFlux.Core.ViewModels
 
         public IMvxCommand CloseAppCommand { get; set; }
 
+        public IMvxCommand MoveSelectorPageLeftEnd { get; set; }
+        public IMvxCommand MoveSelectorPageLeft { get; set; }
+        public IMvxCommand MoveSelectorPageRight { get; set; }
+        public IMvxCommand MoveSelectorPageRightEnd { get; set; }
+
         #region Image Selector
 
         public IMvxCommand ClearImagesCommand { get; set; }
@@ -609,6 +627,11 @@ namespace WallpaperFlux.Core.ViewModels
                 }
             });
             RankImagesCommand = new MvxCommand(() => ImageUtil.PromptRankImageRange(GetAllHighlightedImages()));
+
+            MoveSelectorPageLeftEnd = new MvxCommand(() => SelectedImageSelectorTabPage = 1);
+            MoveSelectorPageLeft = new MvxCommand(() => SelectedImageSelectorTabPage--);
+            MoveSelectorPageRight = new MvxCommand(() => SelectedImageSelectorTabPage++);
+            MoveSelectorPageRightEnd = new MvxCommand(() => SelectedImageSelectorTabPage = ImageSelectorTabsCount);
 
             // - Image Selector: Sets
             CreateImageSetCommand = new MvxCommand(CreateImageSetWithHighlightedImages);
@@ -1205,8 +1228,23 @@ namespace WallpaperFlux.Core.ViewModels
             }
             
             RaisePropertyChanged(() => ImageSelectorTabs);
-            if (ImageSelectorTabs.Count > 0) SelectedImageSelectorTab = ImageSelectorTabs[0];
-            SelectedImageCount = 0; // without this the count will jump up to the number of images in the previous selection and be unable to reset
+            RaisePropertyChanged(() => IsImageSelectorTooBig);
+            RaisePropertyChanged(() => ImageSelectorTabsCount);
+
+            if (ImageSelectorTabs.Count > 0)
+            {
+                //? both of these will set the selected tab to index 0
+                if (IsImageSelectorTooBig)
+                {
+                    SelectedImageSelectorTabPage = 1;
+                }
+                else
+                {
+                    SelectedImageSelectorTab = ImageSelectorTabs[0];
+                }
+            }
+
+            SelectedImageCount = 0; //! without this the count will jump up to the number of images in the previous selection and be unable to reset
 
             // ----- Final Validations -----
             if (ImageSelectorTabs.Count == 0)

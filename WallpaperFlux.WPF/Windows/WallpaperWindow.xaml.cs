@@ -244,7 +244,15 @@ namespace WallpaperFlux.WPF
                 bitmap.CacheOption = BitmapCacheOption.OnLoad;
                 //xbitmap.StreamSource = stream;
                 bitmap.UriSource = new Uri(wallpaperPath); // supposedly Uri is asynchronous, test the speed between UriSource & StreamSource, but also test their memory handling
-                bitmap.EndInit();
+                try
+                {
+                    bitmap.EndInit();
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine("SetStatic - bitmap.EndInit() failed" + e);
+                    return;
+                }
                 //? this should also allow the bitmap to be picked up by the automatic garbage collection (so don't GC manually)
                 bitmap.Freeze(); // this needs to be frozen before the bitmap is used in the UI thread, call this right after bitmap.EndInit() | https://stackoverflow.com/questions/46709382/async-load-bitmapimage-in-c-sharp
 
@@ -510,12 +518,9 @@ namespace WallpaperFlux.WPF
             {
                 if (SmartRandomizeImagesList.Count == 0) // reset
                 {
-                    Debug.WriteLine("Reset smart randoms");
                     SmartRandomizeImagesList.AddRange(relatedImages ?? set.GetRelatedImages());
                     if (incrementLoopOnSmartReset) IncrementLoopCount();
                 }
-
-                Debug.WriteLine("Smart randoms remaining: " + SmartRandomizeImagesList.Count);
             }
 
             BaseImageModel[] imageSource = set.RandomizeAnimationSmart ? SmartRandomizeImagesList.ToArray() : relatedImages;

@@ -40,7 +40,6 @@ namespace WallpaperFlux.WPF.IoC
                             Debug.WriteLine(e);
                             success = false;
                         }
-
                     }
                 }
                 else // no need to do anything if the image already exists

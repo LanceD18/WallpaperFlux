@@ -24,9 +24,6 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using HanumanInstitute.MediaPlayer.Wpf.Mpv;
 using LanceTools.IO;
-using MediaToolkit;
-using MediaToolkit.Model;
-using MediaToolkit.Options;
 using Microsoft.VisualBasic.FileIO;
 using Microsoft.WindowsAPICodePack.Shell;
 using MvvmCross.Base;
@@ -587,14 +584,14 @@ namespace WallpaperFlux.WPF.Views
             {
                 if (e.AddedItems.Count >= 1) // TODO Make this apply to actually 1 image once you fix the other issues with selecting between pages
                 {
-                    ControlUtil.EnsureSingularSelection<ImageSelectorTabModel, BaseImageModel>(ImageSelectorTabControl.Items, ImageSelectorTabControl.SelectedItem as ITabModel<BaseImageModel>);
+                    ControlUtil.EnsureSingularSelection(viewModel.ImageSelectorTabs, viewModel.SelectedImageSelectorTab);
                 }
 
                 TaggingUtil.HighlightTags();
             }
         }
 
-        //? it's a bit clunky to introduce a variable for the width of each individual window  but it works
+        //? it's a bit clunky to introduce a variable for the width of each individual window,  but it works
         //? alternative options were hard to find due to the structure of this segment
         private void ImageSelectorTabControl_OnSizeChanged(object sender, SizeChangedEventArgs e) => UpdateImageSelectorTabWrapperWidth();
 
@@ -605,8 +602,18 @@ namespace WallpaperFlux.WPF.Views
             WallpaperFluxViewModel viewModel = (WallpaperFluxViewModel)this.DataContext;
             if (viewModel.SelectedImageSelectorTab != null)
             {
-                viewModel.SelectedImageSelectorTab.ImageSelectorTabWrapWidth = ImageSelectorTabControl.ActualWidth;
+                viewModel.SelectedImageSelectorTab.ImageSelectorTabWrapWidth = ImageSelectorGroupBox.ActualWidth;
                 viewModel.SelectedImageSelectorTab.RaisePropertyChanged(() => viewModel.SelectedImageSelectorTab.ImageSelectorTabWrapWidth);
+            }
+        }
+
+        private void AltPaginationEntry_OnKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                // The update trigger is explicit, so we need to use UpdateSource()
+                // this allows us to control when we update
+                (sender as TextBox).GetBindingExpression(TextBox.TextProperty).UpdateSource();
             }
         }
         #endregion
