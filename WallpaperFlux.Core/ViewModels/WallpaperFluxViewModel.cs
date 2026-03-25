@@ -63,6 +63,8 @@ namespace WallpaperFlux.Core.ViewModels
         //! this variable exists for use with the xaml despite the Static Reference
         //! this variable exists for use with the xaml despite the Static Reference
 
+        public List<BaseImageModel> ImageSelectorItems = new List<BaseImageModel>();
+
         #region View Variables
         //-----View Variables-----
         public int MaxToolTipMilliseconds { get; set; } = int.MaxValue; // TODO See if you can make this a static resource in the main xaml instead
@@ -121,9 +123,18 @@ namespace WallpaperFlux.Core.ViewModels
         }
 
         #region Image Selector
-        private readonly int IMAGES_PER_PAGE = 20;
-        public bool IsImageSelectorTooBig => ImageSelectorTabs.Count > 200; // may start to experience noticeable lag in the selector ; convert to alternate pagination method
-        public int ImageSelectorTabsCount => ImageSelectorTabs.Count;
+        public const int IMAGES_PER_PAGE = 20;
+        public bool IsImageSelectorTooBig => ImageSelectorTabsCount > 500; // may start to experience noticeable lag in the selector ; convert to alternate pagination method
+        public int ImageSelectorTabsCount
+        {
+            get
+            {
+                int count = ImageSelectorItems.Count;
+                if (count == 0) return 0;
+
+                return ((count - 1) / IMAGES_PER_PAGE) + 1; //? count - 1 since if you have exactly a multiple of IMAGES_PER_PAGE you'd end up with an extra empty page
+            }
+        }
 
         private int _selectedImageSelectorTabPage;
         public int SelectedImageSelectorTabPage
@@ -131,10 +142,11 @@ namespace WallpaperFlux.Core.ViewModels
             get => _selectedImageSelectorTabPage;
             set
             {
-                Debug.WriteLine("bruh");
                 value = Math.Clamp(value, 1, ImageSelectorTabsCount);
                 SetProperty(ref _selectedImageSelectorTabPage, value);
-                SelectedImageSelectorTab = ImageSelectorTabs[SelectedImageSelectorTabPage - 1];
+
+                int pageStartIndex = (value - 1) * IMAGES_PER_PAGE;
+                SelectedImageSelectorTab = new ImageSelectorTabModel(value, pageStartIndex);
             }
         }
         private MvxObservableCollection<ImageSelectorTabModel> _imageSelectorTabs = new MvxObservableCollection<ImageSelectorTabModel>();
@@ -145,17 +157,25 @@ namespace WallpaperFlux.Core.ViewModels
             set
             {
                 SetProperty(ref _imageSelectorTabs, value);
-                Debug.WriteLine("Updating ImageSelectorTabs");
+                Debug.WriteLine("ImageSelectorTabs updated");
             }
         }
 
         //! Without this initialization we will crash references on empty themes, may have to fix this for other properties
-        private ImageSelectorTabModel _selectedImageSelectorTab = new ImageSelectorTabModel(-1);
+        private ImageSelectorTabModel _selectedImageSelectorTab = new ImageSelectorTabModel(-1, -1);
 
         public ImageSelectorTabModel SelectedImageSelectorTab
         {
             get => _selectedImageSelectorTab;
-            set => SetProperty(ref _selectedImageSelectorTab, value);
+            set
+            {
+                SetProperty(ref _selectedImageSelectorTab, value);
+
+                if (value != null)
+                {
+                    value.UpdateTabDisplay();
+                }
+            }
         }
 
         //? Updated by RaisePropertyChanged() calls in references
@@ -196,7 +216,7 @@ namespace WallpaperFlux.Core.ViewModels
             get => _selectedImageCount;
             set
             {
-                _selectedImageCount = value;
+                _selectedImageCount = Math.Max(value, 0); //! erroneous selections can cause this to dip below 0
                 RaisePropertyChanged(() => SelectedImagePathText);
 
                 //xTaggingUtil.HighlightTags();
@@ -434,8 +454,6 @@ namespace WallpaperFlux.Core.ViewModels
             get => _imageSetInspectorToggle;
             set
             {
-                SetProperty(ref _imageSetInspectorToggle, value);
-
                 if (!value)
                 {
                     // deselect all potentially selected images in the inspected image set
@@ -443,14 +461,15 @@ namespace WallpaperFlux.Core.ViewModels
 
                     InspectedImageSet = null;
                 }
-
-                if (value)
+                else
                 {
                     if (SelectedImage is ImageSetModel imageSet) InspectedImageSet = imageSet;
                     RaisePropertyChanged(() => InspectedImageSetImages);
                     RaisePropertyChanged(() => InspectedImageRankText);
                     DeselectAllImages(); // don't want any regular images selected when viewing a set
                 }
+
+                SetProperty(ref _imageSetInspectorToggle, value); //! needs to happen before deselecting all images otherwise regular images will be blocked from being disabled
             }
         }
 
@@ -488,8 +507,11 @@ namespace WallpaperFlux.Core.ViewModels
         public IMvxCommand CloseAppCommand { get; set; }
 
         public IMvxCommand MoveSelectorPageLeftEnd { get; set; }
+
         public IMvxCommand MoveSelectorPageLeft { get; set; }
+
         public IMvxCommand MoveSelectorPageRight { get; set; }
+
         public IMvxCommand MoveSelectorPageRightEnd { get; set; }
 
         #region Image Selector
@@ -612,7 +634,7 @@ namespace WallpaperFlux.Core.ViewModels
             SelectImagesCommand = new MvxCommand(PromptImageSelectorRebuild);
             PasteTagBoardCommand = new MvxCommand(PasteTagBoard);
             SelectAllImagesCommand = new MvxCommand(SelectAllImages);
-            DeselectImagesCommand = new MvxCommand(DeselectAllImages);
+            DeselectImagesCommand = new MvxCommand(() => DeselectAllImages());
             RenameImagesCommand = new MvxCommand(() => ImageRenamer.AutoRenameImageRange(GetAllHighlightedImages()));
             MoveImagesCommand = new MvxCommand(() => ImageRenamer.AutoMoveImageRange(GetAllHighlightedImages()));
             DeleteImagesCommand = new MvxCommand(() =>
@@ -652,11 +674,16 @@ namespace WallpaperFlux.Core.ViewModels
 
             if (imageSet != null)
             {
-                ImageSelectorTabModel tabToAddTo = GetSelectorTabOfImage(images[0]); // for use later
-                RemoveImageRangeFromTabs(images);
+                //x ImageSelectorTabModel tabToAddTo = GetSelectorTabOfImage(images[0]); // for use later
+                int insertIndex = ImageSelectorItems.IndexOf(images[0]);
+                ImageSelectorItems.RemoveAll(f => images.Contains(f));
+                //x RemoveImageRangeFromTab(images);
 
                 // Add the Related Image Set to the Image selector
-                tabToAddTo.AddImage(imageSet);
+                //x tabToAddTo.AddImage(imageSet);
+                ImageSelectorItems.Insert(insertIndex, imageSet);
+
+                SelectedImageSelectorTab.UpdateTabDisplay();
             }
         }
 
@@ -1075,6 +1102,7 @@ namespace WallpaperFlux.Core.ViewModels
         //? ----- Rebuild Image Selector (ImageModel) -----
         public void RebuildImageSelector(BaseImageModel[] selectedImages, bool randomize, bool reverseOrder, bool orderByDate, bool orderByRank, bool imageSetRestriction, bool alreadyCollapsed)
         {
+            Debug.WriteLine("Begin Rebuild - Check Validation");
             // -----Checking Validation Conditions-----
             if (selectedImages == null || selectedImages.Length == 0)
             {
@@ -1093,112 +1121,55 @@ namespace WallpaperFlux.Core.ViewModels
             }
 
             // ----- Apply Optional Modification Conditions -----
-            //? should come after checking conditions, no need to process this if something is wrong
-            if (randomize)
-            {
-                selectedImages = selectedImages.Randomize().ToArray();
-            }
-            else //? it is redundant to randomize and change the order at the same time as the randomization will end up being the only factor
-            {
-                if (orderByDate)
-                {
-                    selectedImages = selectedImages.OrderBy(f => new FileInfo(ImageUtil.GetImageModel(f, false).Path).CreationTime).ToArray();
-                }
-                else if (orderByRank)
-                {
-                    selectedImages = selectedImages.OrderBy(f => f.Rank).ToArray();
-                }
-
-                //! reverse order can be combined with other orderings, just perform it last
-                if (reverseOrder)
-                {
-                    selectedImages = selectedImages.Reverse().ToArray();
-                }
-            }
+            Debug.WriteLine("Apply Mods");
+            selectedImages = ApplyOptionalModifications(selectedImages, randomize, reverseOrder, orderByDate, orderByRank);
 
             // -----Rebuild-----
-            ImageSelectorTabs.Clear();
+           //x  int tabCount = (selectedImages.Length / IMAGES_PER_PAGE) + 1;
+            //x int imageIndex = 0;
 
-            int tabCount = (selectedImages.Length / IMAGES_PER_PAGE) + 1;
-            int imageIndex = 0;
-
-            int invalidCounter = 0;
-            string invalidImageString = INVALID_IMAGE_STRING_DEFAULT;
+            //x int invalidCounter = 0;
+            //x string invalidImageString = INVALID_IMAGE_STRING_DEFAULT;
 
             //xHashSet<ImageSetModel> encounteredSets = new HashSet<ImageSetModel>();
 
+            Debug.WriteLine("Rebuild");
+
+            ImageSelectorItems = selectedImages.Where(image =>
+                image != null
+                && (image.Active || ThemeUtil.ThemeSettings.EnableDetectionOfInactiveImages && ThemeUtil.Theme.Images.ContainsImage(image))
+            ).ToList();
+
+            RaisePropertyChanged(() => IsImageSelectorTooBig);
+            RaisePropertyChanged(() => ImageSelectorTabsCount);
+
+            /*x
+            List<ImageSelectorTabModel> tabs = new List<ImageSelectorTabModel>();
             for (int i = 0; i < tabCount; i++)
             {
+                if (i % 500 == 0)
+                {
+                    Debug.WriteLine("Tab: " + i);
+                }
                 // a reference of the index for use with the XAML code
                 ImageSelectorTabModel tabModel = new ImageSelectorTabModel(i + 1);
 
                 // Add images to the current tabModel until we run out of images for this page
                 for (int j = 0; j < IMAGES_PER_PAGE; j++)
                 {
+                    List<BaseImageModel> images = new List<BaseImageModel>();
                     // a needed cutoff to prevent us from going above the max index of selectedImages[] since we are looping by images per page
                     if (j + imageIndex < selectedImages.Length)
                     {
                         BaseImageModel image = selectedImages[j + imageIndex];
 
                         bool success = false;
-                        
-                        if (image != null /*x&& ThemeUtil.Theme.Images.ContainsImage(image) ThemeUtil.Theme.Images.ContainsImage(image.Path, image.ImageType)*/)
+
+                        if (image != null)
                         {
-                            /*x
-                            Func<ImageSetModel, bool> checkForSet = possibleSet =>
-                            {
-                                if (encounteredSets.Add(possibleSet))
-                                {
-                                    image = possibleSet;
-                                    return true;
-                                }
+                            success = (ThemeUtil.ThemeSettings.EnableDetectionOfInactiveImages && ThemeUtil.Theme.Images.ContainsImage(image)) || image.Active;
 
-                                return false;
-                            };
-                            */
-
-                            /*x
-                            switch (image)
-                            {
-                                case ImageModel imageModel:
-                                {
-                                    if ((ThemeUtil.ThemeSettings.EnableDetectionOfInactiveImages && ThemeUtil.Theme.Images.ContainsImage(image))
-                                        || image.Active || imageModel.IsInImageSet) //? we don't need to send an error message for user-disabled images
-                                    {
-                                        if (imageModel.IsInImageSet)
-                                        {
-                                            // not much of a downside to using IsEnabled() on sets, sets have significantly less IsEnabled() checks anyways
-                                            if (imageModel.ParentImageSet.IsEnabled()) //! this should NOT be combined with the above if statement! (would conflict with the else)
-                                            {
-                                                success = checkForSet.Invoke(imageModel.ParentImageSet);
-                                            }
-                                        }
-                                        else
-                                        {
-                                            success = true;
-                                        }
-
-                                    }
-
-                                    break;
-                                }
-
-                                case ImageSetModel imageSet:
-                                    success = checkForSet.Invoke(imageSet);
-                                    break;
-                            }
-                            */
-
-                            success = ThemeUtil.ThemeSettings.EnableDetectionOfInactiveImages && ThemeUtil.Theme.Images.ContainsImage(image) || image.Active;
-
-                            /*x
-                            if (image.IsImageSet)
-                            {
-                                Debug.WriteLine("wut: " + success);
-                            }
-                            */
-
-                            if (success) tabModel.Items.Add(image);
+                            if (success) images.Add(image);
                         }
                         else
                         {
@@ -1223,54 +1194,74 @@ namespace WallpaperFlux.Core.ViewModels
 
                 if (tabModel.GetAllItems().Length > 0) // don't add the page if there's nothing there
                 {
-                    ImageSelectorTabs.Add(tabModel);
+                    tabs.Add(tabModel);
                 }
             }
-            
-            RaisePropertyChanged(() => ImageSelectorTabs);
-            RaisePropertyChanged(() => IsImageSelectorTooBig);
-            RaisePropertyChanged(() => ImageSelectorTabsCount);
+            */
 
-            if (ImageSelectorTabs.Count > 0)
+
+            if (ImageSelectorItems.Count > 0)
             {
-                //? both of these will set the selected tab to index 0
-                if (IsImageSelectorTooBig)
+                if (!IsImageSelectorTooBig) // display all tabs in top bar
                 {
-                    SelectedImageSelectorTabPage = 1;
+                    var pages = Enumerable.Range(1, ImageSelectorTabsCount)
+                        .Select(i => new ImageSelectorTabModel(i, (i - 1) * IMAGES_PER_PAGE)).ToArray();
+
+                    ImageSelectorTabs = new MvxObservableCollection<ImageSelectorTabModel>(pages);
+
+                    SelectedImageSelectorTab = ImageSelectorTabs[0];
                 }
                 else
                 {
-                    SelectedImageSelectorTab = ImageSelectorTabs[0];
+                    SelectedImageSelectorTabPage = 1; //? will cause the tab to render
                 }
             }
 
+            SelectedImage = null;
             SelectedImageCount = 0; //! without this the count will jump up to the number of images in the previous selection and be unable to reset
 
             // ----- Final Validations -----
-            if (ImageSelectorTabs.Count == 0)
+            if (ImageSelectorItems.Count == 0)
             {
                 MessageBoxUtil.ShowError("No valid images were selected");
                 return;
             }
+        }
 
-            if (invalidCounter == selectedImages.Length) // TODO Pretty sure this is inaccessible now, decide what to do with it
+        private static BaseImageModel[] ApplyOptionalModifications(BaseImageModel[] selectedImages, bool randomize, bool reverseOrder, bool orderByDate, bool orderByRank)
+        {
+            //? should come after checking conditions, no need to process this if something is wrong
+            if (randomize)
             {
-                MessageBoxUtil.ShowError(INVALID_IMAGE_STRING_ALL_INVALID);
-                //x //? we don't return here because the collection was modified
-                return;
+                selectedImages = selectedImages.Randomize().ToArray();
+            }
+            else //? it is redundant to randomize and change the order at the same time as the randomization will end up being the only factor
+            {
+                if (orderByDate)
+                {
+                    selectedImages = selectedImages.OrderBy(f => new FileInfo(ImageUtil.GetImageModel(f, false).Path).CreationTimeUtc).ToArray();
+                }
+                else if (orderByRank)
+                {
+                    selectedImages = selectedImages.OrderBy(f => f.Rank).ToArray();
+                }
+
+                //! reverse order can be combined with other orderings, just perform it last
+                if (reverseOrder)
+                {
+                    selectedImages = selectedImages.Reverse().ToArray();
+                }
             }
 
-            if (invalidCounter > 0)
-            {
-                MessageBoxUtil.ShowError(invalidImageString + "\n\nInvalid Images: " + invalidCounter);
-                return;
-            }
+            return selectedImages;
         }
 
         private void ClearImages()
         {
             DeselectAllImages();
             ImageSelectorTabs.Clear();
+            ImageSelectorItems.Clear();
+            RaisePropertyChanged(() => IsImageSelectorTooBig); // will default back to an empty tab control since we've cleared all items
         }
 
         // gathers all images across all image selector tabs
@@ -1281,18 +1272,7 @@ namespace WallpaperFlux.Core.ViewModels
         {
             if (!ImageSetInspectorToggle)
             {
-                List<ImageModel> images = new List<ImageModel>();
-                foreach (ImageSelectorTabModel selectorTab in ImageSelectorTabs)
-                {
-                    images.AddRange(selectorTab.GetAllImages());
-
-                    foreach (ImageSetModel imageSet in selectorTab.GetAllSets())
-                    {
-                        images.AddRange(imageSet.GetRelatedImages());
-                    }
-                }
-
-                return images.ToArray();
+                return GetAllImageSelectorImages();
             }
             else
             {
@@ -1300,34 +1280,71 @@ namespace WallpaperFlux.Core.ViewModels
             }
         }
 
-        // gathers all selected/highlighted images in all image selector tabs
-        public ImageModel[] GetAllHighlightedImages(bool cancelIfSetFound = false)
+        private ImageModel[] GetAllImageSelectorImages()
         {
             List<ImageModel> images = new List<ImageModel>();
 
-            if (!ImageSetInspectorToggle)
+            /*x
+            foreach (ImageSelectorTabModel selectorTab in ImageSelectorTabs)
             {
-                foreach (ImageSelectorTabModel selectorTab in ImageSelectorTabs)
+                images.AddRange(selectorTab.GetAllImages());
+
+                foreach (ImageSetModel imageSet in selectorTab.GetAllSets())
                 {
-                    if (cancelIfSetFound)
+                    images.AddRange(imageSet.GetRelatedImages());
+                }
+            }
+            */
+
+            try
+            {
+                foreach (var image in ImageSelectorItems)
+                {
+                    if (image is ImageModel imageModel)
                     {
-                        if (selectorTab.GetSelectedSets().Length > 0)
-                        {
-                            MessageBoxUtil.ShowError("Sub-sets are not yet supported");
-                            return null;
-                        }
+                        images.Add(imageModel);
                     }
-
-                    images.AddRange(selectorTab.GetSelectedImages());
-
-                    foreach (ImageSetModel imageSet in selectorTab.GetSelectedSets())
+                    else if (image is ImageSetModel imageSet)
                     {
                         images.AddRange(imageSet.GetRelatedImages());
                     }
                 }
             }
+            catch (Exception e)
+            {
+                //! there's an odd possibility for this to fail to a collection modified error (so far only seen on deletion)
+                //! - does not happen all the time, seems to be a rare niche scenario (trace stack with break point on the next occurance)
+                try
+                {
+                    MessageBoxUtil.ShowError("Error on scanning all images in the selector\n\n" + e);
+                }
+                catch (Exception e2) //! thread failure
+                {
+                    Debug.WriteLine("Error on scanning all images in the selector\n\n" + e + "\n\n" + e2);
+                }
+            }
+
+            return images.ToArray();
+        }
+
+        // gathers all selected/highlighted images in all image selector tabs
+        public ImageModel[] GetAllHighlightedImages(bool cancelIfSetFound = false)
+        {
+
+            if (!ImageSetInspectorToggle)
+            {
+                if (cancelIfSetFound && ImageSelectorItems.Exists(f => f.IsImageSet && f.IsSelected))
+                {
+                    MessageBoxUtil.ShowError("Sub-sets are not yet supported");
+                    return null;
+                }
+
+                return GetAllImageSelectorImages().Where(f => f.IsSelected).ToArray();
+            }
             else
             {
+                List<ImageModel> images = new List<ImageModel>();
+
                 foreach (ImageModel image in InspectedImageSet.GetRelatedImages())
                 {
                     if (image.IsSelected)
@@ -1335,22 +1352,25 @@ namespace WallpaperFlux.Core.ViewModels
                         images.Add(image);
                     }
                 }
-            }
 
-            return images.ToArray();
+                return images.ToArray();
+            }
         }
 
         public BaseImageModel[] GetAllHighlightedImageItems()
         {
+            /*x
             List<BaseImageModel> images = new List<BaseImageModel>();
             foreach (ImageSelectorTabModel selectorTab in ImageSelectorTabs)
             {
                 images.AddRange(selectorTab.GetSelectedItems());
             }
+            */
 
-            return images.ToArray();
+            return ImageSelectorItems.Where(f => f.IsSelected).ToArray();
         }
 
+        /*x
         public ImageSelectorTabModel GetSelectorTabOfImage(BaseImageModel image)
         {
             foreach (ImageSelectorTabModel imageSelectorTab in ImageSelectorTabs)
@@ -1363,76 +1383,71 @@ namespace WallpaperFlux.Core.ViewModels
 
             return null;
         }
+        */
 
-        public bool RemoveImageFromTab(BaseImageModel image)
+        public bool IsImageDisplayed(BaseImageModel image)
         {
-            return RemoveImageFromTab(image, out _);
+            if (SelectedImageSelectorTab != null)
+            {
+                return SelectedImageSelectorTab.Items.Contains(image);
+            }
+
+            return false;
         }
 
-        public bool RemoveImageFromTab(BaseImageModel image, out int index)
+        public bool IsAnyImageDisplayed(BaseImageModel[] images)
         {
-            index = -1;
-            ImageSelectorTabModel imageSelectorTab = GetSelectorTabOfImage(image);
-            if (imageSelectorTab == null) return false;
+            if (SelectedImageSelectorTab != null)
+            {
+                return images.Any(f => SelectedImageSelectorTab.Items.Contains(f));
+            }
 
-            index = imageSelectorTab.Items.IndexOf(image);
-            return imageSelectorTab.Items.Remove(image);
+            return false;
+        }
+
+        /*x
+        public void RemoveImageFromTab(BaseImageModel image)
+        {
+            if (!IsImageDisplayed(image)) return;
+            SelectedImageSelectorTab.RemoveImage(image);
         }
 
         //! If this needs to be changed from ImageModel[] to BaseImageModel[], be sure to account for the errors associated with array casting from ImageModel[] to BaseImageModel[]
-        public void RemoveImageRangeFromTabs(ImageModel[] images)
+        public void RemoveImageRangeFromTab(ImageModel[] images)
         {
-            HashSet<ImageSelectorTabModel> tabsToEdit = new HashSet<ImageSelectorTabModel>();
-            foreach (ImageModel image in images)
-            {
-                tabsToEdit.Add(GetSelectorTabOfImage(image));
-            }
-
-            foreach (ImageSelectorTabModel imageSelectorTab in tabsToEdit)
-            {
-                if (imageSelectorTab == null) continue;
-
-                BaseImageModel[] tabImages = imageSelectorTab.Items.ToArray();
-
-                foreach (BaseImageModel image in tabImages)
-                {
-                    if (images.Contains(image))
-                    {
-                        imageSelectorTab.RemoveImage(image);
-                    }
-                }
-            }
+            SelectedImageSelectorTab.RemoveImageRange(images.ToArray());
         }
-
-        public void ReplaceImageWithSet(ImageModel image, ImageSetModel imageSet)
-        {
-            // TODO Remove if not given a purpose
-            RemoveImageFromTab(image, out int index);
-        }
-
-        public void AddSetToTab(ImageSetModel image)
-        {
-            // TODO Remove if not given a purpose
-        }
+        */
 
         private void SelectAllImages()
         {
+            if (ImageSelectorItems == null || ImageSelectorItems.Count == 0) return;
+
             TogglingAllSelections = true;
-            foreach (ImageSelectorTabModel selectorTab in ImageSelectorTabs)
+            // so that methods such as DeselectItems() can function as intended to images being selected in tabs that are not visible
+            if (SelectedImage == null) SelectedImage = ImageSelectorItems[0];
+
+            foreach (BaseImageModel image in ImageSelectorItems)
             {
-                selectorTab.SelectAllItems();
+                image.IsSelected = true;
             }
             TogglingAllSelections = false;
 
             TaggingUtil.HighlightTags();
         }
 
-        public void DeselectAllImages()
+        public void DeselectAllImages(BaseImageModel[] excluded = null)
         {
+            if (ImageSelectorItems == null || ImageSelectorItems.Count == 0) return;
+
             TogglingAllSelections = true;
-            foreach (ImageSelectorTabModel selectorTab in ImageSelectorTabs)
+            if (SelectedImage != null) // if SelectedImage is null, then no images have been selected here so we have no need to deselect
             {
-                selectorTab.DeselectAllItems();
+                foreach (BaseImageModel image in ImageSelectorItems)
+                {
+                    if (excluded != null && excluded.Contains(image)) continue;
+                    image.IsSelected = false;
+                }
             }
             TogglingAllSelections = false;
 
@@ -1548,6 +1563,7 @@ namespace WallpaperFlux.Core.ViewModels
                     {
                         imagesFound.Add(image);
                         InspectedImageSet.RemoveImage(image);
+                        image.IsSelected = false;
                     }
                 }
 
@@ -1569,7 +1585,9 @@ namespace WallpaperFlux.Core.ViewModels
         {
             targetSet.AddImageRange(imageRange);
 
-            RemoveImageRangeFromTabs(imageRange);
+            //x RemoveImageRangeFromTab(imageRange);
+            ImageSelectorItems.RemoveAll(f => imageRange.Contains(f));
+            SelectedImageSelectorTab?.UpdateTabDisplay();
 
             RaisePropertyChanged(nameof(InspectedImageSetImages));
             RaisePropertyChanged(nameof(InspectedImageRankText));
@@ -1579,16 +1597,21 @@ namespace WallpaperFlux.Core.ViewModels
         public void UpdateTabFromImageSetRemoval(ImageModel[] imagesRemoved)
         {
             // remove set from tab and close the inspector if all images are removed
-            ImageSelectorTabModel targetTab = GetSelectorTabOfImage(InspectedImageSet);
+            //x ImageSelectorTabModel targetTab = GetSelectorTabOfImage(InspectedImageSet);
+            int imageSetIndex = ImageSelectorItems.IndexOf(InspectedImageSet);
             if (InspectedImageSet.GetRelatedImages(false).Length == 0)
             {
-                targetTab.RemoveImage(InspectedImageSet);
+                //x targetTab.RemoveImage(InspectedImageSet);
+                ImageSelectorItems.Remove(InspectedImageSet);
                 ThemeUtil.Theme.Images.RemoveSet(InspectedImageSet); // ? remove set if empty
                 CloseImageSetInspector();
             }
 
             // add removed images back to the tab
-            if (imagesRemoved.Length > 0) targetTab.AddImageRange(imagesRemoved);
+            //xif (imagesRemoved.Length > 0) targetTab.AddImageRange(imagesRemoved);
+            ImageSelectorItems.InsertRange(imageSetIndex, imagesRemoved);
+
+            SelectedImageSelectorTab?.UpdateTabDisplay();
 
             RaisePropertyChanged(nameof(InspectedImageSetImages));
             RaisePropertyChanged(nameof(InspectedImageRankText));

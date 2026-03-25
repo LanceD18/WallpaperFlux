@@ -584,7 +584,7 @@ namespace WallpaperFlux.WPF.Views
             {
                 if (e.AddedItems.Count >= 1) // TODO Make this apply to actually 1 image once you fix the other issues with selecting between pages
                 {
-                    ControlUtil.EnsureSingularSelection(viewModel.ImageSelectorTabs, viewModel.SelectedImageSelectorTab);
+                    ControlUtil.EnsureSingularSelection(viewModel.SelectedImageSelectorTab);
                 }
 
                 TaggingUtil.HighlightTags();
@@ -595,7 +595,18 @@ namespace WallpaperFlux.WPF.Views
         //? alternative options were hard to find due to the structure of this segment
         private void ImageSelectorTabControl_OnSizeChanged(object sender, SizeChangedEventArgs e) => UpdateImageSelectorTabWrapperWidth();
 
-        private void ImageSelectorTabControl_OnSelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateImageSelectorTabWrapperWidth();
+        private void ImageSelectorTabControl_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            /*x
+            var tabControl = (TabControl)sender;
+            if (tabControl.SelectedItem is ImageSelectorTabPageModel page)
+            {
+                WallpaperFluxViewModel.Instance.SelectedImageSelectorTabPage = page.Page;
+            }
+            */
+
+            UpdateImageSelectorTabWrapperWidth();
+        }
 
         private void UpdateImageSelectorTabWrapperWidth()
         {

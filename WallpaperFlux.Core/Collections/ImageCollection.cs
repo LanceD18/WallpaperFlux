@@ -103,13 +103,16 @@ namespace WallpaperFlux.Core.Collections
         //? Keep in mind that all Remove methods trace back to this method, so sweeping changes that should apply to all of them should be placed here
         public bool RemoveImage(ImageModel image)
         {
+            image.IsSelected = false;
+
             ThemeUtil.Theme.RankController.RemoveRankedImage(image, true);
 
             image.RemoveAllTags();
 
-            if (WallpaperFluxViewModel.Instance.SelectedImageSelectorTab != null)
+            if (WallpaperFluxViewModel.Instance.IsImageDisplayed(image))
             {
-                WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.RemoveImage(image);
+                WallpaperFluxViewModel.Instance.ImageSelectorItems.Remove(image);
+                WallpaperFluxViewModel.Instance.SelectedImageSelectorTab.UpdateTabDisplay();
             }
 
             if (image.IsInImageSet)

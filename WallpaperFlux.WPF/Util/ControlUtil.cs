@@ -13,7 +13,7 @@ namespace WallpaperFlux.WPF.Util
 {
     public static class ControlUtil
     {
-        public static bool UsingSingularSelection() => Keyboard.Modifiers != ModifierKeys.Control && Keyboard.Modifiers != ModifierKeys.Shift;
+        public static bool UsingSingularSelection => Keyboard.Modifiers != ModifierKeys.Control && Keyboard.Modifiers != ModifierKeys.Shift;
 
         #region Tab Control
 
@@ -22,20 +22,23 @@ namespace WallpaperFlux.WPF.Util
         // Without this other pages will retain their selection as they have separate ListBoxes
         private static void ApplySingularSelectionDeselect<T, U>(IEnumerable<T> items, ITabModel<U> selectedItem)
         {
-            Debug.WriteLine("Singular Selection | Deselecting Other Tabs");
+            Debug.WriteLine("Singular Selection | Deselecting all items");
             foreach (ITabModel<U> tab in items)
             {
                 if (tab != selectedItem) //? the WPF will handle deselecting the selected item itself (without deselecting the singular selection)
                 {
-                    //x Debug.WriteLine("Tab Deselected");
-                    tab.DeselectAllItems();
+                    if (tab is TagTabModel tagTabModel) 
+                    {
+                        //x Debug.WriteLine("Tab Deselected");
+                        tagTabModel.DeselectAllItems();
+                    }
                 }
             }
         }
 
         public static void EnsureSingularSelection<T, U>(IEnumerable<T> items, ITabModel<U> selectedItem)
         {
-            if (UsingSingularSelection())
+            if (UsingSingularSelection)
             {
                 ApplySingularSelectionDeselect(items, selectedItem);
             }
@@ -43,11 +46,20 @@ namespace WallpaperFlux.WPF.Util
 
         public static void EnsureSingularSelection<T, U>(ItemCollection itemCollection, ITabModel<U> selectedItem)
         {
-            if (UsingSingularSelection())
+            if (UsingSingularSelection)
             {
                 IEnumerable<T> items = itemCollection.OfType<T>().ToArray();
 
                 ApplySingularSelectionDeselect(items, selectedItem);
+            }
+        }
+
+        public static void EnsureSingularSelection(ImageSelectorTabModel selectedItem)
+        {
+            if (UsingSingularSelection)
+            {
+                Debug.WriteLine("Singular Selection | Deselecting all items");
+                WallpaperFluxViewModel.Instance.DeselectAllImages(new BaseImageModel[] { selectedItem.SelectedImage });
             }
         }
 

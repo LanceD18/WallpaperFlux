@@ -130,7 +130,7 @@ namespace WallpaperFlux.Core.Util
             }
         }
 
-        public static void PerformImageAction(BaseImageModel image, Action<ImageModel> action, bool checkForEnabled = true)
+        public static void PerformImageAction(BaseImageModel image, Action<ImageModel> action, bool checkForEnabled = true, bool onlyCheckUniqueTypes = false)
         {
             switch (image)
             {
@@ -141,14 +141,32 @@ namespace WallpaperFlux.Core.Util
                     break;
 
                 case ImageSetModel imageSet:
-                {
+
+                    HashSet<ImageType> types = new HashSet<ImageType>()
+                    {
+                        ImageType.Static,
+                        ImageType.GIF,
+                        ImageType.Video
+                    };
+
                     foreach (ImageModel relatedImage in imageSet.GetRelatedImages(checkForEnabled))
                     {
-                        action.Invoke(relatedImage);
+                        if (!onlyCheckUniqueTypes)
+                        {
+                            action.Invoke(relatedImage);
+                        }
+                        else //? sometimes a check only needs to be performed once
+                        {
+                            if (types.Contains(relatedImage.ImageType))
+                            {
+                                types.Remove(relatedImage.ImageType);
+                                action.Invoke(relatedImage);
+                            }
+                        }
                     }
 
                     break;
-                }
+
             }
         }
 

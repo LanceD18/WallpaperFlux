@@ -44,23 +44,32 @@ namespace WallpaperFlux.Core.Models.Controls
             }
         }
 
-        public HashSet<ImageModel> ImageItems = new HashSet<ImageModel>();
+        private List<BaseImageModel> _items = new List<BaseImageModel>();
 
-        public HashSet<ImageSetModel> ImageSetItems = new HashSet<ImageSetModel>();
+        private HashSet<ImageModel> ImageItems = new HashSet<ImageModel>();
+
+        private HashSet<ImageSetModel> ImageSetItems = new HashSet<ImageSetModel>();
 
         private Thread VerifyImageThread;
 
-        public ImageSelectorTabModel(int index) : base(index)
+        public int ImageStartIndex { get; }
+
+        //? Set through the View.xaml.cs
+        public double ImageSelectorTabWrapWidth { get; set; }
+
+        public ImageSelectorTabModel(int tabIndex, int imageStartIndex) : base(tabIndex)
         {
-            Items.CollectionChanged += ItemsOnCollectionChanged;
+            ImageStartIndex = imageStartIndex;
+            //x Items.CollectionChanged += ItemsOnCollectionChanged;
         }
 
+        /*x
         private void ItemsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            // automates addition and removal of images and image sets so that we can have split collections (useful for more efficient searching)
+            // automates addition and removal of images and image sets so that we can have split collections (useful for more efficient selections)
             SplitImagesAndSets(e);
 
-            if (VerifyImageThread == null || (VerifyImageThread != null && !VerifyImageThread.IsAlive))
+            if (VerifyImageThread == null || !VerifyImageThread.IsAlive)
             {
                 VerifyImageThread = new Thread(() =>
                 {
@@ -72,6 +81,7 @@ namespace WallpaperFlux.Core.Models.Controls
             }
         }
 
+        /*x
         private void SplitImagesAndSets(NotifyCollectionChangedEventArgs e)
         {
             if (e.OldItems != null)
@@ -108,24 +118,27 @@ namespace WallpaperFlux.Core.Models.Controls
                 }
             }
         }
-
-        //? Set through the View.xaml.cs
-        public double ImageSelectorTabWrapWidth { get; set; }
+        */
 
         //x//? The items won't on time without this (tags won't be properyl added)
         //xpublic void RaisePropertyChangedImages() => RaisePropertyChanged(() => Items);
 
+        /*x
         public BaseImageModel[] GetSelectedItems() => Items.Where(f => f.IsSelected).ToArray();
 
-        public ImageModel[] GetSelectedImages() => ImageItems.Where(f => f.IsSelected).ToArray();
+        //xpublic ImageModel[] GetSelectedImages() => ImageItems.Where(f => f.IsSelected).ToArray();
+        public ImageModel[] GetSelectedImages() => Items.OfType<ImageModel>().Where(f => f.IsSelected).ToArray();
 
-        public ImageSetModel[] GetSelectedSets() => ImageSetItems.Where(f => f.IsSelected).ToArray();
+        //xpublic ImageSetModel[] GetSelectedSets() => ImageSetItems.Where(f => f.IsSelected).ToArray();
+        public ImageSetModel[] GetSelectedSets() => Items.OfType<ImageSetModel>().Where(f => f.IsSelected).ToArray();
 
         public BaseImageModel[] GetAllItems() => Items.ToArray();
 
-        public ImageModel[] GetAllImages() => ImageItems.ToArray();
+        //xpublic ImageModel[] GetAllImages() => ImageItems.ToArray();
+        public ImageModel[] GetAllImages() => Items.OfType<ImageModel>().ToArray();
 
-        public ImageSetModel[] GetAllSets() => ImageSetItems.ToArray();
+        //xpublic ImageSetModel[] GetAllSets() => ImageSetItems.ToArray();
+        public ImageSetModel[] GetAllSets() => Items.OfType<ImageSetModel>().ToArray();
 
         public void SelectAllItems()
         {
@@ -153,23 +166,24 @@ namespace WallpaperFlux.Core.Models.Controls
             //! TaggingUtil.HighlightTags(); [THIS IS HANDLED IN WallpaperFluxViewModel!!!]
         }
 
-        public void AddImage(BaseImageModel image) => AddImageRange(new BaseImageModel[] { image });
+        public void AddImage(BaseImageModel image, int insertIndex) => AddImageRange(new BaseImageModel[] { image }, insertIndex);
 
-        public void AddImageRange(BaseImageModel[] images)
+
+        public void AddImageRange(BaseImageModel[] images, int insertIndex)
         {
             //! Range actions are not supported by MvxObservableCollections!!!
             //! Range actions are not supported by MvxObservableCollections!!!
-            //! Range actions are not supported by MvxObservableCollections!!! (odd)
+            //! Range actions are not supported by MvxObservableCollections!!!
 
-            foreach (BaseImageModel image in images)
-            {
-                Items.Add(image);
-            }
+            List<BaseImageModel> allImages = Items.ToList();
+            allImages.AddRange(images); //? we don't want to reapetedly call the add() command on the observable collection
+
+            Items = new MvxObservableCollection<BaseImageModel>(allImages);
         }
 
         public void RemoveImage(BaseImageModel image) => RemoveImageRange(new BaseImageModel[] { image });
 
-        public void RemoveImageRange(BaseImageModel[] images)
+        public void RemoveImageRange(IEnumerable<BaseImageModel> images)
         {
             foreach (BaseImageModel image in images)
             {
@@ -178,17 +192,35 @@ namespace WallpaperFlux.Core.Models.Controls
 
             Items.RemoveItems(images);
         }
-        
+
         public void ReplaceImage(BaseImageModel oldImage, BaseImageModel newImage)
         {
-             //? without this process the thumbnail of the image won't update
-             int index = Items.IndexOf(oldImage);
-             RemoveImage(oldImage);
-             Items.Insert(index, newImage);
+            //? without this process the thumbnail of the image won't update
+            int index = Items.IndexOf(oldImage);
+            RemoveImage(oldImage);
+            Items.Insert(index, newImage);
+        }
+        */
+
+        // TODO Apply the changed logic to other TabModels
+        //? we only want to update the observable collection when the tab is being displayed
+        public void UpdateTabDisplay()
+        {
+            if (ImageStartIndex >= WallpaperFluxViewModel.Instance.ImageSelectorItems.Count)
+            {
+                Items.Clear();
+                return;
+            }
+
+            int pageSize = Math.Min(WallpaperFluxViewModel.IMAGES_PER_PAGE, WallpaperFluxViewModel.Instance.ImageSelectorItems.Count - ImageStartIndex);
+            List<BaseImageModel> itemsThisPage = WallpaperFluxViewModel.Instance.ImageSelectorItems.GetRange(ImageStartIndex, pageSize);
+
+            Items = new MvxObservableCollection<BaseImageModel>(itemsThisPage);
+            VerifyImages();
         }
 
         /// <summary>
-        /// Checks for potentially deleted images and removes them accordingly
+        /// Checks for potentially deleted images and removes them accordingly (in the event of externally deleted or invalid images)
         /// </summary>
         private void VerifyImages()
         {

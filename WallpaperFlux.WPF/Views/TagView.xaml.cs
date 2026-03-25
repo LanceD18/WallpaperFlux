@@ -85,7 +85,7 @@ namespace WallpaperFlux.WPF.Views
         // this captures the selection range of the entire listbox item
         private void TagTabControl_ListBoxItem_OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (ControlUtil.UsingSingularSelection()) //? Placing this check ahead of time to avoid the additional processing time
+            if (ControlUtil.UsingSingularSelection) //? Placing this check ahead of time to avoid the additional processing time
             {
                 if (CategoryTabControl.SelectedItem is CategoryModel selectedCategory)
                 {

@@ -220,7 +220,7 @@ namespace WallpaperFlux.Core.Models
             if (JsonUtil.IsLoadingData) return;
 
             bool verifyRank = false;
-            if (this is ImageModel iModel )
+            if (this is ImageModel iModel)
             {
                 if (iModel.IsInImageSet) //? ensures that the set is added to the randomizer if enabled
                 {

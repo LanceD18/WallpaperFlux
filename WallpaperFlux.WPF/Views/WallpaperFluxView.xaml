@@ -758,15 +758,16 @@
                           adonisExtensions:LayerExtension.IncreaseLayer="True" Margin="3">
                     <ContentControl Content="{Binding }">
                         <ContentControl.Resources>
+                            <!--? Tab Control Pagination -->
                             <DataTemplate x:Key="TabControlTemplate" DataType="{x:Type viewModels:WallpaperFluxViewModel}">
                                 <TabControl x:Name="ImageSelectorTabControl" ItemsSource="{Binding ImageSelectorTabs}"
                                 SizeChanged="ImageSelectorTabControl_OnSizeChanged" SelectionChanged="ImageSelectorTabControl_OnSelectionChanged"
-                                SelectedItem="{Binding SelectedImageSelectorTab, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                ContentTemplate="{StaticResource ImageSelectorTabTemplate}">
+                                            SelectedItem="{Binding SelectedImageSelectorTab, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                            ContentTemplate="{StaticResource ImageSelectorTabTemplate}">
 
                                     <!-- Item Template [Header] -->
                                     <TabControl.ItemTemplate>
-                                        <DataTemplate DataType="controlModels:ImageSelectorTabModel">
+                                        <DataTemplate DataType="controlModels:ImageSelectorTabPageModel">
                                             <TextBlock Text="{Binding TabIndex}"/>
                                         </DataTemplate>
                                     </TabControl.ItemTemplate>
@@ -786,8 +787,19 @@
                                             </Grid>
                                         </ControlTemplate>
                                     </TabControl.Template>
+                                    
+                                    <!--
+                                    <TabControl.ContentTemplate>
+                                        <DataTemplate>
+                                            <ContentControl 
+                                                Content="{Binding Tab}" 
+                                                ContentTemplate="{StaticResource ImageSelectorTabTemplate}"/>
+                                        </DataTemplate>
+                                    </TabControl.ContentTemplate>
+                                    -->
                                 </TabControl>
                             </DataTemplate>
+                            <!--? Alt Pagination -->
                             <DataTemplate x:Key="AltPaginationTemplate">
                                 <StackPanel SizeChanged="ImageSelectorTabControl_OnSizeChanged">
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0 0 0 5">
@@ -802,6 +814,10 @@
                                     </StackPanel>
                                     <ContentControl Content="{Binding SelectedImageSelectorTab}" ContentTemplate="{StaticResource ImageSelectorTabTemplate}"/>
                                 </StackPanel>
+                            </DataTemplate>
+
+                            <DataTemplate x:Key="NothingToDisplay">
+                                
                             </DataTemplate>
                         </ContentControl.Resources>
                         <ContentControl.ContentTemplate>

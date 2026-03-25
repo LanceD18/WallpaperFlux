@@ -6,6 +6,7 @@ namespace WallpaperFlux.Core.Models.Controls
 {
     public interface ITabModel<out T>
     {
+        /*x
         T[] GetSelectedItems();
 
         T[] GetAllItems();
@@ -13,5 +14,6 @@ namespace WallpaperFlux.Core.Models.Controls
         void SelectAllItems();
 
         void DeselectAllItems();
+        */
     }
 }

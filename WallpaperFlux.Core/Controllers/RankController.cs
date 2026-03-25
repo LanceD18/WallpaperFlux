@@ -376,8 +376,13 @@ namespace WallpaperFlux.Core.Controllers
             Debug.WriteLine("A recently adjusted rank now has either 0 or 1 images");
             PercentileController.PotentialRegularRankUpdate = true; // ranks that do not have images should not be processed by the percentile controller, and vice versa for adding them back
 
+            bool onlyCheckUniqueTypes = false;
+
+            if (image is ImageSetModel imageSet)
+                onlyCheckUniqueTypes = !imageSet.RetainImageIndependence; //? no need to check multiple times if included images do not retain independence
+
             ImageUtil.PerformImageAction(image,
-                imageModel => ThemeUtil.Theme.Settings.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence(imageModel));
+                imageModel => ThemeUtil.Theme.Settings.ThemeSettings.FrequencyCalc.VerifyImageTypeExistence(imageModel), onlyCheckUniqueTypes);
         }
         #endregion
 
